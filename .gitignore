@@ -1,0 +1,21 @@
+# --- Sách giáo khoa có bản quyền (KHÔNG publish công khai) ---
+# ~640MB gồm PDF SGK và ảnh scan trang sách. Host riêng nếu cần tính năng đọc SGK.
+sach/
+
+# --- Ảnh nguồn thô của mascot (tuỳ chọn giữ local) ---
+# Các sheet gốc chưa cắt; bản đã cắt nằm trong asset/mascot/ vẫn được đưa lên.
+# (Bỏ comment 2 dòng dưới nếu muốn loại luôn ảnh gốc khỏi repo)
+# asset/Gemini_Generated_Image_*.png
+# asset/*.jfif
+
+# --- Hệ điều hành / trình soạn thảo ---
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+
+# --- Tệp tạm ---
+*.tmp
+*.log
+_*.png

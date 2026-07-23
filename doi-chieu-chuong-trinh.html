@@ -1,0 +1,576 @@
+<title>Đối chiếu chương trình — Bám sát GDPT 2018 &amp; SGK</title>
+<style>
+  :root{
+    --paper:#f4f6f3; --surface:#fff; --surface-2:#fafbf9;
+    --ink:#17231f; --muted:#586a62; --faint:#7f8d86;
+    --line:#e4e8e3; --line-2:#d4dad3;
+    --accent:#0f766e; --accent-ink:#0b5a54; --accent-soft:#dcefea; --gold:#8f6410;
+    --sans: system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    --mono: ui-monospace,"Cascadia Code","Segoe UI Mono",Consolas,monospace;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --paper:#0e1512; --surface:#141d19; --surface-2:#111815;
+      --ink:#e7ede9; --muted:#9aa9a2; --faint:#7f8d86;
+      --line:#243029; --line-2:#2f3c34;
+      --accent:#2fd4c0; --accent-ink:#7ee8db; --accent-soft:#12302a; --gold:#e0b258;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#0e1512; --surface:#141d19; --surface-2:#111815;
+    --ink:#e7ede9; --muted:#9aa9a2; --faint:#7f8d86;
+    --line:#243029; --line-2:#2f3c34;
+    --accent:#2fd4c0; --accent-ink:#7ee8db; --accent-soft:#12302a; --gold:#e0b258;
+  }
+
+  *{ box-sizing:border-box; }
+
+  .wrap{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--sans);
+    line-height:1.5;
+    min-height:100vh;
+    padding:clamp(20px,5vw,64px) clamp(16px,4vw,40px) 64px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .container{ max-width:1080px; margin:0 auto; }
+
+  /* ---------- Header ---------- */
+  .eyebrow{
+    display:inline-flex; align-items:center; gap:10px;
+    font-family:var(--mono); font-size:.72rem; letter-spacing:.16em;
+    color:var(--accent-ink); margin:0 0 14px;
+  }
+  .eyebrow::before{
+    content:""; width:26px; height:2px; background:var(--accent); border-radius:2px;
+  }
+  h1{
+    font-size:clamp(1.75rem,4.2vw,2.55rem); line-height:1.14; font-weight:700;
+    letter-spacing:-.02em; color:var(--ink); margin:0 0 18px; max-width:20ch;
+  }
+  .lead{
+    font-size:clamp(1rem,1.4vw,1.1rem); color:var(--muted); line-height:1.62;
+    max-width:64ch; margin:0 0 28px;
+  }
+  .lead strong{ color:var(--ink); font-weight:650; }
+
+  /* ---------- Stats strip ---------- */
+  .stats{
+    display:flex; flex-wrap:wrap;
+    background:var(--surface); border:1px solid var(--line);
+    border-radius:14px; overflow:hidden;
+    box-shadow:0 1px 2px rgba(23,35,31,.04);
+    margin:0 0 8px;
+  }
+  .stat{ flex:1 1 150px; padding:16px 22px; display:flex; flex-direction:column; gap:3px; }
+  .stat + .stat{ border-left:1px solid var(--line); }
+  .stat-num{
+    font-family:var(--mono); font-size:1.65rem; font-weight:700;
+    color:var(--accent-ink); letter-spacing:-.01em; line-height:1;
+  }
+  .stat-lab{ font-size:.86rem; color:var(--muted); }
+
+  /* ---------- Sections ---------- */
+  .section{ margin-top:clamp(38px,5vw,56px); }
+  .section-head{
+    display:flex; align-items:baseline; justify-content:space-between;
+    flex-wrap:wrap; gap:6px 16px;
+    padding-bottom:12px; margin-bottom:22px;
+    border-bottom:2px solid var(--line-2);
+  }
+  .section-head h2{
+    font-size:clamp(1.35rem,2.6vw,1.72rem); font-weight:700;
+    letter-spacing:-.01em; color:var(--ink); margin:0;
+  }
+  .section-meta{ font-family:var(--mono); font-size:.78rem; letter-spacing:.04em; color:var(--faint); }
+
+  /* ---------- Topic cards (masonry) ---------- */
+  .topics{ columns:2; column-gap:20px; }
+  .topic-card{
+    display:inline-block; width:100%;
+    break-inside:avoid; -webkit-column-break-inside:avoid;
+    background:var(--surface); border:1px solid var(--line);
+    border-radius:14px; padding:16px 18px 6px;
+    margin:0 0 20px;
+    box-shadow:0 1px 2px rgba(23,35,31,.04);
+  }
+  .topic-head{
+    display:flex; gap:11px; align-items:stretch;
+    padding-bottom:11px; margin-bottom:4px;
+    border-bottom:1px solid var(--line);
+  }
+  .topic-bar{ flex:0 0 auto; width:3px; background:var(--accent); border-radius:3px; }
+  .topic-kicker{
+    display:block; font-family:var(--mono); font-size:.7rem; letter-spacing:.1em;
+    color:var(--faint); margin-bottom:4px;
+  }
+  .topic-name{ display:block; font-size:1.05rem; font-weight:650; color:var(--accent-ink); margin:0; line-height:1.28; }
+
+  /* ---------- Tables ---------- */
+  .tbl-wrap{ margin-top:2px; }
+  table{ width:100%; border-collapse:collapse; font-size:.925rem; }
+  thead th{
+    font-family:var(--mono); font-size:.68rem; letter-spacing:.07em; font-weight:600;
+    color:var(--faint); text-align:left; padding:8px 8px 7px;
+    border-bottom:1px solid var(--line-2);
+  }
+  tbody td{
+    padding:8px 8px; border-bottom:1px solid var(--line);
+    color:var(--ink); vertical-align:top; line-height:1.42;
+  }
+  tbody tr:last-child td{ border-bottom:none; }
+  tbody tr:nth-child(even) td{ background:var(--surface-2); }
+  .c-num{ width:2.85em; text-align:center; }
+  thead th.c-num{ text-align:center; }
+  tbody td.c-num{
+    font-family:var(--mono); font-weight:600; color:var(--accent-ink);
+    font-variant-numeric:tabular-nums;
+  }
+
+  /* ---------- Footer ---------- */
+  .foot{
+    margin-top:clamp(40px,5vw,56px); padding-top:20px;
+    border-top:1px solid var(--line);
+    font-size:.85rem; color:var(--faint); line-height:1.6; max-width:70ch;
+  }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width:760px){
+    .topics{ columns:1; }
+    .stat + .stat{ border-left:none; border-top:1px solid var(--line); }
+  }
+
+  /* ---------- Print ---------- */
+  @media print{
+    .wrap{ background:#fff; padding:0; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    .stats, .topic-card{ box-shadow:none; }
+    .topic-card, table, tr{ break-inside:avoid; }
+    .section{ break-inside:avoid; }
+  }
+</style>
+
+<div class="wrap">
+  <div class="container">
+
+    <header>
+      <p class="eyebrow">Đối chiếu chương trình</p>
+      <h1>Bám sát Chương trình GDPT 2018 &amp; SGK</h1>
+      <p class="lead">Mỗi bài học trong ứng dụng tương ứng đúng một Bài trong sách giáo khoa bộ Kết nối tri thức với cuộc sống, sắp xếp theo chủ đề. Phần luyện tập bám đúng cấu trúc đề chính thức của Bộ GD&amp;ĐT: <strong>24 câu trắc nghiệm</strong> và <strong>4 câu Đúng/Sai</strong>.</p>
+
+      <div class="stats">
+        <div class="stat"><span class="stat-num">95</span><span class="stat-lab">bài học</span></div>
+        <div class="stat"><span class="stat-num">3</span><span class="stat-lab">lớp (10 · 11 · 12)</span></div>
+        <div class="stat"><span class="stat-num">16</span><span class="stat-lab">chủ đề</span></div>
+      </div>
+    </header>
+
+    <!-- ============ TIN HỌC 10 ============ -->
+    <section class="section">
+      <div class="section-head">
+        <h2>Tin học 10</h2>
+        <span class="section-meta">34 bài · 5 chủ đề</span>
+      </div>
+
+      <div class="topics">
+
+        <div class="topic-card">
+          <div class="topic-head">
+            <span class="topic-bar"></span>
+            <div>
+              <span class="topic-kicker">Chủ đề · Bài 1–7</span>
+              <h3 class="topic-name">Máy tính, dữ liệu và số hoá</h3>
+            </div>
+          </div>
+          <div class="tbl-wrap" style="overflow-x:auto">
+            <table>
+              <thead><tr><th class="c-num">Bài</th><th>Nội dung (theo SGK)</th></tr></thead>
+              <tbody>
+                <tr><td class="c-num">1</td><td>Thông tin và xử lí thông tin</td></tr>
+                <tr><td class="c-num">2</td><td>Vai trò của thiết bị thông minh và tin học đối với xã hội</td></tr>
+                <tr><td class="c-num">3</td><td>Một số kiểu dữ liệu và dữ liệu văn bản</td></tr>
+                <tr><td class="c-num">4</td><td>Hệ nhị phân và dữ liệu số nguyên</td></tr>
+                <tr><td class="c-num">5</td><td>Dữ liệu lôgic</td></tr>
+                <tr><td class="c-num">6</td><td>Dữ liệu âm thanh và hình ảnh</td></tr>
+                <tr><td class="c-num">7</td><td>Thực hành sử dụng thiết bị số thông dụng</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="topic-card">
+          <div class="topic-head">
+            <span class="topic-bar"></span>
+            <div>
+              <span class="topic-kicker">Chủ đề · Bài 8–11</span>
+              <h3 class="topic-name">Mạng, Internet và an toàn</h3>
+            </div>
+          </div>
+          <div class="tbl-wrap" style="overflow-x:auto">
+            <table>
+              <thead><tr><th class="c-num">Bài</th><th>Nội dung (theo SGK)</th></tr></thead>
+              <tbody>
+                <tr><td class="c-num">8</td><td>Mạng máy tính trong cuộc sống hiện đại</td></tr>
+                <tr><td class="c-num">9</td><td>An toàn trên không gian mạng</td></tr>
+                <tr><td class="c-num">10</td><td>Thực hành khai thác tài nguyên trên Internet</td></tr>
+                <tr><td class="c-num">11</td><td>Ứng xử trên môi trường số. Nghĩa vụ tôn trọng bản quyền</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="topic-card">
+          <div class="topic-head">
+            <span class="topic-bar"></span>
+            <div>
+              <span class="topic-kicker">Chủ đề · Bài 12–15</span>
+              <h3 class="topic-name">Thiết kế đồ hoạ</h3>
+            </div>
+          </div>
+          <div class="tbl-wrap" style="overflow-x:auto">
+            <table>
+              <thead><tr><th class="c-num">Bài</th><th>Nội dung (theo SGK)</th></tr></thead>
+              <tbody>
+                <tr><td class="c-num">12</td><td>Phần mềm thiết kế đồ hoạ</td></tr>
+                <tr><td class="c-num">13</td><td>Bổ sung các đối tượng đồ hoạ</td></tr>
+                <tr><td class="c-num">14</td><td>Làm việc với đối tượng đường và văn bản</td></tr>
+                <tr><td class="c-num">15</td><td>Hoàn thiện hình ảnh đồ hoạ</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="topic-card">
+          <div class="topic-head">
+            <span class="topic-bar"></span>
+            <div>
+              <span class="topic-kicker">Chủ đề · Bài 16–32</span>
+              <h3 class="topic-name">Lập trình Python</h3>
+            </div>
+          </div>
+          <div class="tbl-wrap" style="overflow-x:auto">
+            <table>
+              <thead><tr><th class="c-num">Bài</th><th>Nội dung (theo SGK)</th></tr></thead>
+              <tbody>
+                <tr><td class="c-num">16</td><td>Ngôn ngữ lập trình bậc cao và Python</td></tr>
+                <tr><td class="c-num">17</td><td>Biến và lệnh gán</td></tr>
+                <tr><td class="c-num">18</td><td>Các lệnh vào ra đơn giản</td></tr>
+                <tr><td class="c-num">19</td><td>Câu lệnh rẽ nhánh If</td></tr>
+                <tr><td class="c-num">20</td><td>Câu lệnh lặp for</td></tr>
+                <tr><td class="c-num">21</td><td>Câu lệnh lặp While</td></tr>
+                <tr><td class="c-num">22</td><td>Kiểu dữ liệu danh sách</td></tr>
+                <tr><td class="c-num">23</td><td>Một số lệnh làm việc với dữ liệu danh sách</td></tr>
+                <tr><td class="c-num">24</td><td>Xâu kí tự</td></tr>
+                <tr><td class="c-num">25</td><td>Một số lệnh làm việc với xâu kí tự</td></tr>
+                <tr><td class="c-num">26</td><td>Hàm trong Python</td></tr>
+                <tr><td class="c-num">27</td><td>Tham số của hàm</td></tr>
+                <tr><td class="c-num">28</td><td>Phạm vi của biến</td></tr>
+                <tr><td class="c-num">29</td><td>Nhận biết lỗi chương trình</td></tr>
+                <tr><td class="c-num">30</td><td>Kiểm thử và gỡ lỗi chương trình</td></tr>
+                <tr><td class="c-num">31</td><td>Thực hành viết chương trình đơn giản</td></tr>
+                <tr><td class="c-num">32</td><td>Ôn tập lập trình Python</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="topic-card">
+          <div class="topic-head">
+            <span class="topic-bar"></span>
+            <div>
+              <span class="topic-kicker">Chủ đề · Bài 33–34</span>
+              <h3 class="topic-name">Hướng nghiệp tin học</h3>
+            </div>
+          </div>
+          <div class="tbl-wrap" style="overflow-x:auto">
+            <table>
+              <thead><tr><th class="c-num">Bài</th><th>Nội dung (theo SGK)</th></tr></thead>
+              <tbody>
+                <tr><td class="c-num">33</td><td>Nghề thiết kế đồ hoạ máy tính</td></tr>
+                <tr><td class="c-num">34</td><td>Nghề phát triển phần mềm</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ============ TIN HỌC 11 ============ -->
+    <section class="section">
+      <div class="section-head">
+        <h2>Tin học 11</h2>
+        <span class="section-meta">31 bài · 4 chủ đề</span>
+      </div>
+
+      <div class="topics">
+
+        <div class="topic-card">
+          <div class="topic-head">
+            <span class="topic-bar"></span>
+            <div>
+              <span class="topic-kicker">Chủ đề · Bài 1–5</span>
+              <h3 class="topic-name">Máy tính và hệ điều hành</h3>
+            </div>
+          </div>
+          <div class="tbl-wrap" style="overflow-x:auto">
+            <table>
+              <thead><tr><th class="c-num">Bài</th><th>Nội dung (theo SGK)</th></tr></thead>
+              <tbody>
+                <tr><td class="c-num">1</td><td>Hệ điều hành</td></tr>
+                <tr><td class="c-num">2</td><td>Thực hành sử dụng hệ điều hành</td></tr>
+                <tr><td class="c-num">3</td><td>Phần mềm nguồn mở và phần mềm chạy trên Internet</td></tr>
+                <tr><td class="c-num">4</td><td>Bên trong máy tính</td></tr>
+                <tr><td class="c-num">5</td><td>Kết nối máy tính với các thiết bị số</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="topic-card">
+          <div class="topic-head">
+            <span class="topic-bar"></span>
+            <div>
+              <span class="topic-kicker">Chủ đề · Bài 6–9</span>
+              <h3 class="topic-name">Internet: lưu trữ, tìm kiếm, an toàn</h3>
+            </div>
+          </div>
+          <div class="tbl-wrap" style="overflow-x:auto">
+            <table>
+              <thead><tr><th class="c-num">Bài</th><th>Nội dung (theo SGK)</th></tr></thead>
+              <tbody>
+                <tr><td class="c-num">6</td><td>Lưu trữ và chia sẻ tệp tin trên Internet</td></tr>
+                <tr><td class="c-num">7</td><td>Thực hành tìm kiếm thông tin trên Internet</td></tr>
+                <tr><td class="c-num">8</td><td>Thực hành nâng cao sử dụng thư điện tử và mạng xã hội</td></tr>
+                <tr><td class="c-num">9</td><td>Giao tiếp an toàn trên Internet</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="topic-card">
+          <div class="topic-head">
+            <span class="topic-bar"></span>
+            <div>
+              <span class="topic-kicker">Chủ đề · Bài 10–16</span>
+              <h3 class="topic-name">Cơ sở dữ liệu và SQL</h3>
+            </div>
+          </div>
+          <div class="tbl-wrap" style="overflow-x:auto">
+            <table>
+              <thead><tr><th class="c-num">Bài</th><th>Nội dung (theo SGK)</th></tr></thead>
+              <tbody>
+                <tr><td class="c-num">10</td><td>Lưu trữ dữ liệu và khai thác thông tin phục vụ quản lí</td></tr>
+                <tr><td class="c-num">11</td><td>Cơ sở dữ liệu</td></tr>
+                <tr><td class="c-num">12</td><td>Hệ quản trị cơ sở dữ liệu và hệ cơ sở dữ liệu</td></tr>
+                <tr><td class="c-num">13</td><td>Cơ sở dữ liệu quan hệ</td></tr>
+                <tr><td class="c-num">14</td><td>SQL - ngôn ngữ truy vấn có cấu trúc</td></tr>
+                <tr><td class="c-num">15</td><td>Bảo mật và an toàn hệ cơ sở dữ liệu</td></tr>
+                <tr><td class="c-num">16</td><td>Công việc quản trị cơ sở dữ liệu</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="topic-card">
+          <div class="topic-head">
+            <span class="topic-bar"></span>
+            <div>
+              <span class="topic-kicker">Chủ đề · Bài 17–31</span>
+              <h3 class="topic-name">Kĩ thuật lập trình và thuật toán</h3>
+            </div>
+          </div>
+          <div class="tbl-wrap" style="overflow-x:auto">
+            <table>
+              <thead><tr><th class="c-num">Bài</th><th>Nội dung (theo SGK)</th></tr></thead>
+              <tbody>
+                <tr><td class="c-num">17</td><td>Dữ liệu mảng một chiều và hai chiều</td></tr>
+                <tr><td class="c-num">18</td><td>Thực hành dữ liệu mảng một chiều và hai chiều</td></tr>
+                <tr><td class="c-num">19</td><td>Bài toán tìm kiếm</td></tr>
+                <tr><td class="c-num">20</td><td>Thực hành bài toán tìm kiếm</td></tr>
+                <tr><td class="c-num">21</td><td>Các thuật toán sắp xếp đơn giản</td></tr>
+                <tr><td class="c-num">22</td><td>Thực hành bài toán sắp xếp</td></tr>
+                <tr><td class="c-num">23</td><td>Kiểm thử và đánh giá chương trình</td></tr>
+                <tr><td class="c-num">24</td><td>Đánh giá độ phức tạp thời gian thuật toán</td></tr>
+                <tr><td class="c-num">25</td><td>Thực hành xác định độ phức tạp thời gian thuật toán</td></tr>
+                <tr><td class="c-num">26</td><td>Phương pháp làm mịn dần trong thiết kế chương trình</td></tr>
+                <tr><td class="c-num">27</td><td>Thực hành thiết kế chương trình theo phương pháp làm mịn dần</td></tr>
+                <tr><td class="c-num">28</td><td>Thiết kế chương trình theo mô đun</td></tr>
+                <tr><td class="c-num">29</td><td>Thực hành thiết kế chương trình theo mô đun</td></tr>
+                <tr><td class="c-num">30</td><td>Thiết lập thư viện cho chương trình</td></tr>
+                <tr><td class="c-num">31</td><td>Thực hành thiết lập thư viện chương trình</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ============ TIN HỌC 12 ============ -->
+    <section class="section">
+      <div class="section-head">
+        <h2>Tin học 12</h2>
+        <span class="section-meta">30 bài · 7 chủ đề</span>
+      </div>
+
+      <div class="topics">
+
+        <div class="topic-card">
+          <div class="topic-head">
+            <span class="topic-bar"></span>
+            <div>
+              <span class="topic-kicker">Chủ đề · Bài 1–2</span>
+              <h3 class="topic-name">Trí tuệ nhân tạo</h3>
+            </div>
+          </div>
+          <div class="tbl-wrap" style="overflow-x:auto">
+            <table>
+              <thead><tr><th class="c-num">Bài</th><th>Nội dung (theo SGK)</th></tr></thead>
+              <tbody>
+                <tr><td class="c-num">1</td><td>Làm quen với Trí tuệ nhân tạo</td></tr>
+                <tr><td class="c-num">2</td><td>Trí tuệ nhân tạo trong khoa học và đời sống</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="topic-card">
+          <div class="topic-head">
+            <span class="topic-bar"></span>
+            <div>
+              <span class="topic-kicker">Chủ đề · Bài 3–5</span>
+              <h3 class="topic-name">Mạng máy tính</h3>
+            </div>
+          </div>
+          <div class="tbl-wrap" style="overflow-x:auto">
+            <table>
+              <thead><tr><th class="c-num">Bài</th><th>Nội dung (theo SGK)</th></tr></thead>
+              <tbody>
+                <tr><td class="c-num">3</td><td>Một số thiết bị mạng thông dụng</td></tr>
+                <tr><td class="c-num">4</td><td>Giao thức mạng</td></tr>
+                <tr><td class="c-num">5</td><td>Thực hành chia sẻ tài nguyên trên mạng</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="topic-card">
+          <div class="topic-head">
+            <span class="topic-bar"></span>
+            <div>
+              <span class="topic-kicker">Chủ đề · Bài 6</span>
+              <h3 class="topic-name">Đạo đức và ứng xử mạng</h3>
+            </div>
+          </div>
+          <div class="tbl-wrap" style="overflow-x:auto">
+            <table>
+              <thead><tr><th class="c-num">Bài</th><th>Nội dung (theo SGK)</th></tr></thead>
+              <tbody>
+                <tr><td class="c-num">6</td><td>Giao tiếp và ứng xử trong không gian mạng</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="topic-card">
+          <div class="topic-head">
+            <span class="topic-bar"></span>
+            <div>
+              <span class="topic-kicker">Chủ đề · Bài 7–18</span>
+              <h3 class="topic-name">Thiết kế web (HTML và CSS)</h3>
+            </div>
+          </div>
+          <div class="tbl-wrap" style="overflow-x:auto">
+            <table>
+              <thead><tr><th class="c-num">Bài</th><th>Nội dung (theo SGK)</th></tr></thead>
+              <tbody>
+                <tr><td class="c-num">7</td><td>HTML và cấu trúc trang web</td></tr>
+                <tr><td class="c-num">8</td><td>Định dạng văn bản</td></tr>
+                <tr><td class="c-num">9</td><td>Tạo danh sách, bảng</td></tr>
+                <tr><td class="c-num">10</td><td>Tạo liên kết</td></tr>
+                <tr><td class="c-num">11</td><td>Chèn tệp tin đa phương tiện và khung nội tuyến vào trang web</td></tr>
+                <tr><td class="c-num">12</td><td>Tạo biểu mẫu</td></tr>
+                <tr><td class="c-num">13</td><td>Khái niệm, vai trò của CSS</td></tr>
+                <tr><td class="c-num">14</td><td>Định dạng văn bản bằng CSS</td></tr>
+                <tr><td class="c-num">15</td><td>Tạo màu cho chữ và nền</td></tr>
+                <tr><td class="c-num">16</td><td>Định dạng khung</td></tr>
+                <tr><td class="c-num">17</td><td>Các mức ưu tiên của bộ chọn</td></tr>
+                <tr><td class="c-num">18</td><td>Thực hành tổng hợp thiết kế trang web</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="topic-card">
+          <div class="topic-head">
+            <span class="topic-bar"></span>
+            <div>
+              <span class="topic-kicker">Chủ đề · Bài 19–21</span>
+              <h3 class="topic-name">Hướng nghiệp công nghệ thông tin</h3>
+            </div>
+          </div>
+          <div class="tbl-wrap" style="overflow-x:auto">
+            <table>
+              <thead><tr><th class="c-num">Bài</th><th>Nội dung (theo SGK)</th></tr></thead>
+              <tbody>
+                <tr><td class="c-num">19</td><td>Dịch vụ sửa chữa và bảo trì máy tính</td></tr>
+                <tr><td class="c-num">20</td><td>Nhóm nghề quản trị thuộc ngành Công nghệ thông tin</td></tr>
+                <tr><td class="c-num">21</td><td>Hội thảo hướng nghiệp</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="topic-card">
+          <div class="topic-head">
+            <span class="topic-bar"></span>
+            <div>
+              <span class="topic-kicker">Chủ đề · Bài 22–24</span>
+              <h3 class="topic-name">Mạng máy tính nâng cao</h3>
+            </div>
+          </div>
+          <div class="tbl-wrap" style="overflow-x:auto">
+            <table>
+              <thead><tr><th class="c-num">Bài</th><th>Nội dung (theo SGK)</th></tr></thead>
+              <tbody>
+                <tr><td class="c-num">22</td><td>Tìm hiểu thiết bị mạng</td></tr>
+                <tr><td class="c-num">23</td><td>Đường truyền mạng và ứng dụng</td></tr>
+                <tr><td class="c-num">24</td><td>Sơ bộ về thiết kế mạng</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="topic-card">
+          <div class="topic-head">
+            <span class="topic-bar"></span>
+            <div>
+              <span class="topic-kicker">Chủ đề · Bài 25–30</span>
+              <h3 class="topic-name">Học máy, Khoa học dữ liệu, Mô phỏng</h3>
+            </div>
+          </div>
+          <div class="tbl-wrap" style="overflow-x:auto">
+            <table>
+              <thead><tr><th class="c-num">Bài</th><th>Nội dung (theo SGK)</th></tr></thead>
+              <tbody>
+                <tr><td class="c-num">25</td><td>Làm quen với Học máy</td></tr>
+                <tr><td class="c-num">26</td><td>Làm quen với Khoa học dữ liệu</td></tr>
+                <tr><td class="c-num">27</td><td>Máy tính và Khoa học dữ liệu</td></tr>
+                <tr><td class="c-num">28</td><td>Thực hành trải nghiệm trích rút thông tin và tri thức</td></tr>
+                <tr><td class="c-num">29</td><td>Mô phỏng trong giải quyết vấn đề</td></tr>
+                <tr><td class="c-num">30</td><td>Ứng dụng mô phỏng trong giáo dục</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <footer class="foot">
+      Bám khung Chương trình GDPT 2018 và SGK Kết nối tri thức; cấu trúc đề theo công bố của Bộ GD&amp;ĐT. Đây là tài liệu đối chiếu độc lập, không phải ấn phẩm của Bộ/NXB.
+    </footer>
+
+  </div>
+</div>

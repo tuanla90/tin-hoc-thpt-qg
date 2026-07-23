@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ôn thi Tin học tốt nghiệp (KHMT) — Dễ như chơi, chuẩn như đề Bộ</title>
+  
+  <!-- Google Fonts: Outfit & Plus Jakarta Sans & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@600;700&family=Outfit:wght@700;800;850&family=Plus+Jakarta+Sans:wght@500;650;750;800&display=swap" rel="stylesheet" />
+  
+  <!-- Modern Gamified Landing Stylesheet -->
+  <link rel="stylesheet" href="css/landing.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='25' fill='%234f46e5'/><path d='M30 40h40M30 60h40M30 50h25' stroke='%23fff' stroke-width='8' stroke-linecap='round'/></svg>" />
+</head>
+<body class="lp">
+
+  <!-- HEADER NAVBAR -->
+  <header class="lp-head">
+    <div class="wrap">
+      <a class="brand" href="#top">
+        <span class="brand-mark" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 18l6-6-6-6"/><path d="M8 6l-6 6 6 6"/></svg>
+        </span>
+        Tin Học KHMT
+      </a>
+      
+      <nav class="nav-links">
+        <a href="#tinh-nang">Tính năng</a>
+        <a href="#cach-hoc">Cách học</a>
+        <a href="#lo-trinh">Lộ trình</a>
+        <a href="#chuong-trinh">Chương trình</a>
+        <a href="#hoc-phi">Học phí</a>
+        <a href="#cam-nhan">Cảm nhận</a>
+        <a href="#tac-gia">Tác giả</a>
+        <a href="#faq">Câu hỏi</a>
+      </nav>
+      
+      <div style="display:flex; align-items:center; gap:12px;">
+        <button class="btn btn-ghost btn-sm" id="themeToggle" title="Chuyển giao diện Sáng/Tối">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+        <a class="btn btn-primary btn-sm" href="#hoc-phi">Học thử miễn phí</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- HERO SECTION -->
+  <section class="hero" id="top">
+    <div class="hero-glow" aria-hidden="true"></div>
+    <div class="wrap">
+      <div class="hero-grid">
+        <div>
+          <div class="badge-row">
+            <span class="pill" style="color:var(--brand); border-color:color-mix(in srgb, var(--brand) 25%, transparent);">
+              <span class="pill-dot"></span> Ôn thi tốt nghiệp THPT
+            </span>
+            <span class="pill" style="color:var(--accent-teal); border-color:color-mix(in srgb, var(--accent-teal) 25%, transparent);">
+              <span class="pill-dot"></span> Định hướng KHMT
+            </span>
+          </div>
+
+          <h1>Ôn thi Tin học tốt nghiệp <br/><span class="hl">dễ như chơi</span>, chuẩn như đề Bộ</h1>
+          
+          <p class="lead">Học từ số 0, giảng lại thật dễ hiểu, chạy code Python ngay trong bài. Lộ trình mỗi ngày 15 phút, tự tin bước vào phòng thi.</p>
+          
+          <div class="cta-row">
+            <a class="btn btn-primary btn-lg" href="#hoc-phi">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+              Học thử miễn phí
+            </a>
+            <a class="btn btn-ghost btn-lg" href="#lo-trinh">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+              Xem lộ trình học
+            </a>
+          </div>
+
+          <div class="goals">
+            <span class="goal-pill"><span class="pill-dot" style="background:var(--accent-green)"></span>Nhắm 9–10 điểm</span>
+            <span class="goal-pill"><span class="pill-dot" style="background:var(--accent-blue)"></span>Xét tốt nghiệp</span>
+            <span class="goal-pill"><span class="pill-dot" style="background:var(--accent-amber)"></span>Xét tuyển ngành CNTT</span>
+          </div>
+
+          <div class="trust">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-teal)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+            <span>Bám sát Chương trình GDPT 2018 &amp; cấu trúc đề chính thức (24 câu trắc nghiệm + 4 câu Đúng/Sai).</span>
+          </div>
+        </div>
+
+        <!-- HERO MASCOT & GAME HUD STAGE -->
+        <div class="hero-stage">
+          <div class="mascot-hero-wrap">
+            <img src="asset/mascot/poses/happy.png" alt="Linh vật Robot Vui vẻ" class="mascot-hero-img" />
+          </div>
+
+          <div class="game-card-preview">
+            <div class="game-hud-top">
+              <div class="hud-user">
+                <span class="hud-avatar">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                </span>
+                <span>Lộ trình của em</span>
+              </div>
+              <span class="hud-streak">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c.5 3 2.5 4.5 4 6 1.8 1.8 2 4.5 0 6.8-2 2.2-5.5 2.7-7.8.8-1.5-1.2-2.2-3-1.7-4.8.4.8 1.2 1.4 2.2 1.4 1.5 0 2.3-1.6 1.3-2.8C9 8.2 9.5 4.8 12 2z"/></svg>
+                5 ngày
+              </span>
+            </div>
+
+            <div class="quest-path">
+              <div class="quest-node done">
+                <div class="node-icon">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+                <div class="node-info">
+                  <div class="node-title">Máy tính &amp; Dữ liệu</div>
+                  <div class="node-sub">Đã hoàn thành</div>
+                </div>
+              </div>
+
+              <div class="quest-node active">
+                <div class="node-icon">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                </div>
+                <div class="node-info">
+                  <div class="node-title">Câu lệnh lặp Python</div>
+                  <div class="node-sub">Đang bắt đầu</div>
+                </div>
+              </div>
+
+              <div class="quest-node locked">
+                <div class="node-icon">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                </div>
+                <div class="node-info">
+                  <div class="node-title">Cơ sở dữ liệu SQL</div>
+                  <div class="node-sub">Chưa mở khóa</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="codecard">
+              <pre><span class="k">diem</span> = [<span class="n">7</span>, <span class="n">9</span>, <span class="n">5</span>, <span class="n">10</span>, <span class="n">8</span>]
+<span class="k">diem</span>.<span class="f">sort</span>()
+<span class="f">print</span>(diem)</pre>
+              <div class="outrow">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                [5, 7, 8, 9, 10]
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STATS DISPLAY -->
+      <div class="stats-grid">
+        <div class="stat-card" style="--accent: var(--accent-blue)">
+          <div class="stat-val">95</div>
+          <div class="stat-lbl">Bài giảng lại bám sách</div>
+        </div>
+        <div class="stat-card" style="--accent: var(--accent-violet)">
+          <div class="stat-val">320+</div>
+          <div class="stat-lbl">Câu hỏi &amp; thi thử</div>
+        </div>
+        <div class="stat-card" style="--accent: var(--accent-teal)">
+          <div class="stat-val">3</div>
+          <div class="stat-lbl">Lớp: 10 · 11 · 12</div>
+        </div>
+        <div class="stat-card" style="--accent: var(--accent-amber)">
+          <div class="stat-val">15′</div>
+          <div class="stat-lbl">Mỗi ngày là đủ</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROBLEM VS SOLUTION -->
+  <section class="section">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow">Vì sao cần app này</span>
+        <h2 class="sec-title">Môn Tin KHMT khó, mà tài liệu dễ hiểu lại hiếm</h2>
+        <p class="sec-sub">Python, thuật toán, cấu trúc dữ liệu, cơ sở dữ liệu — nhiều khái niệm trừu tượng. Nhất là với bạn tự học ở nhà, không có ai giảng lại từng bước.</p>
+      </div>
+
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:24px;">
+        <div class="feat-card" style="--c: var(--accent-rose)">
+          <div class="feat-icon-badge">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          </div>
+          <h3>Học một mình, dễ nản</h3>
+          <p>Sách giáo khoa viết cô đọng, mỗi câu chữ gói nhiều ý. Bạn mới bắt đầu lập trình đọc xong vẫn thấy mơ hồ, không biết một đoạn code thực sự chạy ra sao.</p>
+          <p style="margin-top:10px;">Ôn tủ thì lo lệch đề, mà đề thi lại thiên về tư duy thuật toán và đọc hiểu code — không thể học thuộc lòng.</p>
+        </div>
+
+        <div class="feat-card" style="--c: var(--accent-teal)">
+          <div class="feat-icon-badge">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z"/><path d="M9 21h6"/></svg>
+          </div>
+          <h3>Giảng lại để ai cũng hiểu</h3>
+          <p>Mỗi bài bám đúng một bài trong sách, nhưng được giảng lại chậm rãi bằng ví dụ đời thường: điểm số, nấu ăn, đong gạo, bóng đèn... rồi cho thực hành code ngay.</p>
+          <p style="margin-top:10px;">Bạn đọc, hiểu, tự tay chạy thử và luyện đúng dạng câu hỏi của đề — nắm chắc kiến thức thay vì học vẹt.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 BƯỚC HỌC -->
+  <section class="section" id="cach-hoc">
+    <div class="wrap">
+      <div class="sec-head center">
+        <span class="eyebrow">Cách học</span>
+        <h2 class="sec-title">Ba bước, lặp lại mỗi ngày 15 phút</h2>
+        <p class="sec-sub">Học hiểu — làm thật — kiểm tra. Vòng lặp đơn giản giúp kiến thức ở lại lâu.</p>
+      </div>
+
+      <div class="steps-grid">
+        <!-- Step 1 -->
+        <div class="step-card">
+          <div class="step-header">
+            <span class="step-num" style="--c: var(--accent-blue)">1</span>
+            <span class="step-title">Học lại dễ hiểu</span>
+          </div>
+          <img src="asset/mascot/poses/reading.png" alt="Linh vật đang học" class="step-mascot-img" />
+          <p style="color:var(--ink-muted); font-size:14.5px;">Mỗi bài bám đúng một bài trong sách, giảng lại chậm rãi bằng ví dụ đời thường.</p>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="step-card">
+          <div class="step-header">
+            <span class="step-num" style="--c: var(--accent-violet)">2</span>
+            <span class="step-title">Chạy code &amp; luyện tập</span>
+          </div>
+          <img src="asset/mascot/poses/coding-focus.png" alt="Linh vật gõ code" class="step-mascot-img" />
+          <p style="color:var(--ink-muted); font-size:14.5px;">Tự tay viết và chạy Python ngay trong bài; máy chấm và gợi ý sửa liền.</p>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="step-card">
+          <div class="step-header">
+            <span class="step-num" style="--c: var(--accent-rose)">3</span>
+            <span class="step-title">Thi thử bám đề</span>
+          </div>
+          <img src="asset/mascot/poses/celebrate-jump.png" alt="Linh vật đạt điểm 9.0" class="step-mascot-img" />
+          <p style="color:var(--ink-muted); font-size:14.5px;">Làm đề đúng cấu trúc, tính giờ, chấm thang 10 — biết ngay mình đang ở đâu.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES (ALL 8 FEATURES PRESERVED) -->
+  <section class="section" id="tinh-nang">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow">Tính năng nổi bật</span>
+        <h2 class="sec-title">Mọi thứ để học và ôn thi, gói gọn trong một app</h2>
+        <p class="sec-sub">Từ bài giảng, luyện tập, thi thử đến từ vựng — đều bám sát chương trình và cấu trúc đề hiện hành.</p>
+      </div>
+
+      <div class="feat-grid">
+        <!-- 1 -->
+        <div class="feat-card" style="--c: var(--accent-blue)">
+          <div class="feat-icon-badge">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          </div>
+          <h3>95 bài giảng lại bám sách</h3>
+          <p>Mỗi bài đối chiếu đúng một bài trong SGK, rồi giảng lại dễ hiểu hơn cho người mới bắt đầu.</p>
+        </div>
+
+        <!-- 2 -->
+        <div class="feat-card" style="--c: var(--accent-violet)">
+          <div class="feat-icon-badge">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/><line x1="14" y1="4" x2="10" y2="20"/></svg>
+          </div>
+          <h3>Chạy code ngay trong bài</h3>
+          <p>Viết và chạy Python hoặc HTML/CSS trực tiếp trên máy, không cần cài đặt bất cứ thứ gì.</p>
+        </div>
+
+        <!-- 3 -->
+        <div class="feat-card" style="--c: var(--accent-teal)">
+          <div class="feat-icon-badge">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 6 9 4 15 6 21 4 21 18 15 20 9 18 3 20"/><line x1="9" y1="4" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="20"/></svg>
+          </div>
+          <h3>Lộ trình học kiểu trò chơi</h3>
+          <p>Đường đi mở khóa dần từng bài, gắn sao thành thạo — học đều mỗi ngày mà không thấy ngán.</p>
+        </div>
+
+        <!-- 4 -->
+        <div class="feat-card" style="--c: var(--accent-amber)">
+          <div class="feat-icon-badge">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="9" y1="6" x2="20" y2="6"/><line x1="9" y1="12" x2="20" y2="12"/><line x1="9" y1="18" x2="20" y2="18"/><polyline points="3 6 4 7 6 5"/><polyline points="3 12 4 13 6 11"/><polyline points="3 18 4 19 6 17"/></svg>
+          </div>
+          <h3>320+ câu hỏi bám đề</h3>
+          <p>Ngân hàng câu hỏi trải đều ba mức: nhận biết, thông hiểu và vận dụng cao.</p>
+        </div>
+
+        <!-- 5 -->
+        <div class="feat-card" style="--c: var(--accent-rose)">
+          <div class="feat-icon-badge">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
+          <h3>Thi thử như thật</h3>
+          <p>Nhiều mã đề, tự tính giờ 50 phút và chấm điểm theo thang 10 giống kỳ thi chính thức.</p>
+        </div>
+
+        <!-- 6 -->
+        <div class="feat-card" style="--c: var(--brand)">
+          <div class="feat-icon-badge">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9 12l2 2 4-4"/></svg>
+          </div>
+          <h3>Luyện riêng phần Đúng/Sai</h3>
+          <p>Rèn dạng câu Đúng/Sai (Phần II) với cách tính điểm 0,1 – 0,25 – 0,5 – 1,0 đúng như đề Bộ.</p>
+        </div>
+
+        <!-- 7 -->
+        <div class="feat-card" style="--c: var(--accent-violet)">
+          <div class="feat-icon-badge">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+          </div>
+          <h3>Từ vựng có phát âm</h3>
+          <p>Học thuật ngữ tiếng Anh qua thẻ lật, nghe đọc to ngay trên máy để nhớ mặt chữ và cách đọc.</p>
+        </div>
+
+        <!-- 8 -->
+        <div class="feat-card" style="--c: var(--accent-green)">
+          <div class="feat-icon-badge">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="1" y1="1" x2="23" y2="23"/><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/><path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/><path d="M10.71 5.05A16 16 0 0 1 22.58 9"/><path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/><circle cx="12" cy="20" r="1"/></svg>
+          </div>
+          <h3>Dùng được khi mất mạng</h3>
+          <p>Mở một lần là học mọi lúc, không cần Internet — hợp với cả nơi sóng yếu hay đi lại.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LỘ TRÌNH SHOWCASE & CHUẨN CHƯƠNG TRÌNH -->
+  <section class="section" id="lo-trinh">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow">Lộ trình &amp; Chuẩn chương trình</span>
+        <h2 class="sec-title">Đi từng chặng, mở khóa dần — không lệch một bài</h2>
+        <p class="sec-sub">Mỗi chủ đề một màu, mỗi bài một chặng. Từng bài học được đối chiếu đúng với sách giáo khoa bộ Kết nối tri thức của cả ba lớp (10, 11, 12), theo đúng Chương trình GDPT 2018 và cấu trúc đề thi hiện hành.</p>
+      </div>
+
+      <div class="curr-inner">
+        <div class="chips">
+          <span class="chip"><span class="chip-dot" style="background:var(--accent-blue)"></span>Máy tính &amp; dữ liệu</span>
+          <span class="chip"><span class="chip-dot" style="background:var(--accent-teal)"></span>Mạng &amp; Internet</span>
+          <span class="chip"><span class="chip-dot" style="background:var(--brand)"></span>Lập trình Python</span>
+          <span class="chip"><span class="chip-dot" style="background:var(--accent-violet)"></span>Cơ sở dữ liệu</span>
+          <span class="chip"><span class="chip-dot" style="background:var(--accent-rose)"></span>Thiết kế web</span>
+          <span class="chip"><span class="chip-dot" style="background:var(--accent-amber)"></span>Trí tuệ nhân tạo</span>
+        </div>
+
+        <div class="chips" style="margin-top:12px; margin-bottom:24px;">
+          <span class="chip"><span class="chip-dot" style="background:var(--accent-blue)"></span>Tin học lớp 10</span>
+          <span class="chip"><span class="chip-dot" style="background:var(--accent-teal)"></span>Tin học lớp 11</span>
+          <span class="chip"><span class="chip-dot" style="background:var(--accent-violet)"></span>Tin học lớp 12</span>
+          <span class="chip"><span class="chip-dot" style="background:var(--accent-amber)"></span>24 trắc nghiệm + 4 Đúng/Sai</span>
+        </div>
+
+        <a class="link-arrow" href="#" target="_blank" rel="noopener">
+          Xem bảng đối chiếu chương trình chi tiết
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+        </a>
+
+        <p class="disclaimer">Đây là tài liệu ôn luyện độc lập, bám sát Chương trình GDPT 2018 và cấu trúc đề của Bộ GD&amp;ĐT. App không phải sản phẩm do Bộ GD&amp;ĐT hoặc đơn vị xuất bản phát hành, và không sử dụng logo của bất kỳ cơ quan, nhà xuất bản hay nhà trường nào.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRICING -->
+  <section class="section" id="hoc-phi">
+    <div class="wrap">
+      <div class="sec-head center">
+        <span class="eyebrow">Học phí</span>
+        <h2 class="sec-title">Học thử miễn phí trước, thấy hợp rồi hãy mở trọn khóa</h2>
+      </div>
+
+      <div class="pricing-grid">
+        <!-- Free Plan -->
+        <div class="price-card">
+          <h3 style="font-family:var(--font-display); font-size:22px; margin:0;">Miễn phí</h3>
+          <p style="color:var(--ink-muted); font-size:14px;">Trải nghiệm cách học trước khi quyết định.</p>
+          <div class="p-amount">0 <span>đ</span></div>
+          <p style="font-family:var(--font-mono); font-size:12px; color:var(--ink-faint); margin:-4px 0 20px;">dùng thử không giới hạn thời gian</p>
+
+          <ul class="p-features">
+            <li><span class="check-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span> Vài chương đầu của mỗi lớp</li>
+            <li><span class="check-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span> Luyện tập cơ bản theo từng bài</li>
+            <li><span class="check-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span> Lộ trình học và gắn sao thành thạo</li>
+            <li><span class="check-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span> Chạy thử code Python trong bài</li>
+          </ul>
+          <a class="btn btn-ghost" href="#">Bắt đầu miễn phí</a>
+        </div>
+
+        <!-- Full Access Plan -->
+        <div class="price-card featured">
+          <span class="price-badge">Phổ biến nhất</span>
+          <h3 style="font-family:var(--font-display); font-size:22px; margin:0;">Trọn khóa</h3>
+          <p style="color:var(--ink-muted); font-size:14px;">Đầy đủ để ôn luyện và bước vào kỳ thi.</p>
+          <div class="p-amount">199.000 <span>đ <span>/ 1 năm truy cập</span></span></div>
+          <p style="font-family:var(--font-mono); font-size:12px; color:var(--ink-faint); margin:-4px 0 20px;">giá mẫu — chủ shop tự chỉnh</p>
+
+          <ul class="p-features">
+            <li><span class="check-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span> Toàn bộ 95 bài giảng lại bám sách</li>
+            <li><span class="check-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span> 320+ câu hỏi &amp; thi thử nhiều mã đề</li>
+            <li><span class="check-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span> Luyện riêng phần Đúng/Sai (Phần II)</li>
+            <li><span class="check-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span> Từ vựng có phát âm &amp; chạy code không giới hạn</li>
+            <li><span class="check-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span> Cập nhật nội dung trong suốt thời gian truy cập</li>
+          </ul>
+          <a class="btn btn-primary" href="#">Mua trọn khóa</a>
+        </div>
+      </div>
+
+      <div class="guarantee">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-teal)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+        <span><b>Cam kết hoàn tiền trong 7 ngày</b> nếu bạn không hài lòng — không hỏi lý do.</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- TESTIMONIALS (PRESERVED) -->
+  <section class="section" id="cam-nhan">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow">Cảm nhận</span>
+        <h2 class="sec-title">Người học nói gì về app</h2>
+        <p class="sec-sub">Khu vực dành cho cảm nhận thật của học sinh và phụ huynh. Các thẻ dưới đây là chỗ trống để chủ shop điền.</p>
+      </div>
+
+      <div class="tcards">
+        <div class="tcard">
+          <span style="font-family:var(--font-mono); font-size:11px; color:var(--ink-faint); border:1px dashed var(--line-strong); padding:2px 8px; border-radius:999px;">chỗ điền</span>
+          <p class="quote">“[Điền cảm nhận thật của học sinh/phụ huynh]”</p>
+          <div class="who">
+            <span class="ava">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </span>
+            <span class="nm">[Tên] — [lớp/trường]</span>
+          </div>
+        </div>
+
+        <div class="tcard">
+          <span style="font-family:var(--font-mono); font-size:11px; color:var(--ink-faint); border:1px dashed var(--line-strong); padding:2px 8px; border-radius:999px;">chỗ điền</span>
+          <p class="quote">“[Điền cảm nhận thật của học sinh/phụ huynh]”</p>
+          <div class="who">
+            <span class="ava">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </span>
+            <span class="nm">[Tên] — [lớp/trường]</span>
+          </div>
+        </div>
+
+        <div class="tcard">
+          <span style="font-family:var(--font-mono); font-size:11px; color:var(--ink-faint); border:1px dashed var(--line-strong); padding:2px 8px; border-radius:999px;">chỗ điền</span>
+          <p class="quote">“[Điền cảm nhận thật của học sinh/phụ huynh]”</p>
+          <div class="who">
+            <span class="ava">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </span>
+            <span class="nm">[Tên] — [lớp/trường]</span>
+          </div>
+        </div>
+      </div>
+
+      <p class="owner-note">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        Ghi chú cho chủ shop: thay bằng cảm nhận thật, có xin phép người chia sẻ. Không dùng lời khen bịa hay số liệu chưa kiểm chứng.
+      </p>
+    </div>
+  </section>
+
+  <!-- AUTHOR SECTION (PRESERVED) -->
+  <section class="section" id="tac-gia">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow">Người thật đứng sau</span>
+        <h2 class="sec-title">Ai biên soạn nội dung này</h2>
+        <p class="sec-sub">Học sinh và phụ huynh xứng đáng biết rõ ai đứng sau bài giảng. Chủ shop điền thông tin thật vào đây.</p>
+      </div>
+
+      <div class="author-card">
+        <div class="author-photo">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          [Ảnh]
+        </div>
+        <div class="author-info">
+          <span style="font-family:var(--font-mono); font-size:11px; color:var(--ink-faint); border:1px dashed var(--line-strong); padding:2px 8px; border-radius:999px;">chỗ điền</span>
+          <p class="nm">[Tên giáo viên / tác giả]</p>
+          <p style="color:var(--ink-muted); font-size:14.5px;">[Giới thiệu ngắn: chuyên môn, số năm kinh nghiệm dạy Tin học, lý do biên soạn app. Ví dụ: giáo viên Tin học, X năm ôn thi tốt nghiệp cho học sinh.]</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ SECTION (ALL 6 FAQS PRESERVED) -->
+  <section class="section" id="faq">
+    <div class="wrap">
+      <div class="sec-head center">
+        <span class="eyebrow">Câu hỏi thường gặp</span>
+        <h2 class="sec-title">Những điều bạn đang băn khoăn</h2>
+      </div>
+
+      <div class="faq-list">
+        <!-- 1 -->
+        <details class="faq">
+          <summary>
+            <span>App dành cho lớp mấy?</span>
+            <span class="ic">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </span>
+          </summary>
+          <div class="faq-a">Cả lớp 10, 11 và 12, trọng tâm là lớp 12 để ôn thi tốt nghiệp. Người mới bắt đầu học lập trình cũng theo được vì mọi bài đều giảng lại từ đầu.</div>
+        </details>
+
+        <!-- 2 -->
+        <details class="faq">
+          <summary>
+            <span>App theo bộ sách nào?</span>
+            <span class="ic">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </span>
+          </summary>
+          <div class="faq-a">App bám sát bộ Kết nối tri thức. Vì cả ba bộ sách đều theo Chương trình GDPT 2018 nên phần lớn nội dung dùng chung, bạn học bộ nào cũng phù hợp để ôn thi.</div>
+        </details>
+
+        <!-- 3 -->
+        <details class="faq">
+          <summary>
+            <span>Học trên điện thoại được không?</span>
+            <span class="ic">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </span>
+          </summary>
+          <div class="faq-a">Được. Giao diện chạy tốt trên điện thoại, máy tính bảng và máy tính. Trên điện thoại nội dung tự xếp thành một cột cho dễ đọc.</div>
+        </details>
+
+        <!-- 4 -->
+        <details class="faq">
+          <summary>
+            <span>Mất mạng có dùng được không?</span>
+            <span class="ic">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </span>
+          </summary>
+          <div class="faq-a">Được. Sau khi mở lần đầu, app học được offline — kể cả chạy thử code Python — nên bạn không cần Internet để ôn bài.</div>
+        </details>
+
+        <!-- 5 -->
+        <details class="faq">
+          <summary>
+            <span>Mua rồi dùng được bao lâu?</span>
+            <span class="ic">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </span>
+          </summary>
+          <div class="faq-a">Gói trọn khóa cho truy cập trong 1 năm, gồm cả những cập nhật nội dung trong thời gian đó. (Chủ shop có thể chỉnh thời hạn cho phù hợp.)</div>
+        </details>
+
+        <!-- 6 -->
+        <details class="faq">
+          <summary>
+            <span>Có hoàn tiền không?</span>
+            <span class="ic">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </span>
+          </summary>
+          <div class="faq-a">Có. Nếu không hài lòng, bạn được hoàn tiền trong vòng 7 ngày kể từ khi mua, không cần nêu lý do.</div>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- FINAL CTA SECTION -->
+  <section class="section">
+    <div class="wrap">
+      <div class="final-cta">
+        <img src="asset/mascot/poses/cheer.png" alt="Linh vật Robot cổ vũ" class="final-mascot-img" />
+        <h2>Bắt đầu ôn thi hôm nay, mỗi ngày chỉ 15 phút</h2>
+        <p style="max-width:560px; margin:0 auto 28px; opacity:0.92; font-size:16px;">Học thử miễn phí trước. Khi thấy hợp, mở trọn khóa để có đủ bài giảng, thi thử và luyện Đúng/Sai.</p>
+        
+        <div style="display:flex; justify-content:center; gap:16px; flex-wrap:wrap;">
+          <a class="btn btn-primary btn-lg" style="background:#fff; color:var(--brand); box-shadow:0 6px 20px rgba(0,0,0,0.15);" href="#hoc-phi">
+            Học thử miễn phí
+          </a>
+          <a class="btn btn-ghost btn-lg" style="background:transparent; color:#fff; border-color:rgba(255,255,255,0.4);" href="#lo-trinh">
+            Xem lộ trình học
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="foot">
+    <div class="wrap">
+      <div class="foot-top">
+        <div>
+          <a class="brand" href="#top">
+            <span class="brand-mark" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 18l6-6-6-6"/><path d="M8 6l-6 6 6 6"/></svg>
+            </span>
+            Tin học KHMT
+          </a>
+          <p class="tagline">Ôn thi Tin học tốt nghiệp, định hướng Khoa học máy tính — dễ hiểu, thực hành thật.</p>
+        </div>
+        <nav class="foot-links">
+          <a href="#">Điều khoản sử dụng</a>
+          <a href="#">Chính sách bảo mật dữ liệu học sinh</a>
+          <a href="#">Liên hệ (Zalo / Fanpage)</a>
+        </nav>
+      </div>
+      <p class="foot-note">Đây là tài liệu ôn luyện độc lập, bám sát Chương trình GDPT 2018 và cấu trúc đề của Bộ GD&amp;ĐT; không phải sản phẩm do Bộ GD&amp;ĐT hoặc đơn vị xuất bản phát hành, và không đại diện cho bất kỳ cơ quan, nhà xuất bản hay nhà trường nào.</p>
+      <p class="copy">© 2026 [Tên thương hiệu] — chủ shop tự điền. Tên, logo và thông tin liên hệ ở trên là chỗ trống để bạn thay bằng thương hiệu của mình.</p>
+    </div>
+  </footer>
+
+  <script>
+    // Theme Toggle Handler
+    const themeBtn = document.getElementById('themeToggle');
+    themeBtn.addEventListener('click', () => {
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      document.documentElement.setAttribute('data-theme', isDark ? 'light' : 'dark');
+      themeBtn.innerHTML = isDark 
+        ? '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>' 
+        : '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>';
+    });
+  </script>
+</body>
+</html>

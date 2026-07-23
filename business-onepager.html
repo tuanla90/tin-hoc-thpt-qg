@@ -1,0 +1,336 @@
+<title>Ôn thi Tin học THPT (KHMT) — Business one-pager</title>
+<style>
+  :root{
+    --paper:#f4f6f3; --surface:#ffffff; --surface-2:#fafbf9;
+    --ink:#17231f; --muted:#586a62; --faint:#7f8d86;
+    --line:#e4e8e3; --line-2:#d4dad3;
+    --accent:#0f766e; --accent-ink:#0b5a54; --accent-soft:#dcefea;
+    --gold:#8f6410; --gold-soft:#f2e7cd;
+    --s:#1a7d3f; --s-soft:#e6f2e8; --w:#bd2626; --w-soft:#f7e5e4;
+    --o:#215fd0; --o-soft:#e3ebfb; --t:#bb5715; --t-soft:#f6e9dc;
+    --shadow:0 1px 2px rgba(20,40,34,.05),0 10px 26px rgba(20,40,34,.05);
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --mono:ui-monospace,"Cascadia Code","Segoe UI Mono","SF Mono",Consolas,monospace;
+    --w-col:940px;
+  }
+  @media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+    --paper:#0e1512; --surface:#141d19; --surface-2:#111815;
+    --ink:#e7ede9; --muted:#9aa9a2; --faint:#7f8d86;
+    --line:#243029; --line-2:#2f3c34;
+    --accent:#2fd4c0; --accent-ink:#7ee8db; --accent-soft:#12302a;
+    --gold:#e0b258; --gold-soft:#2a2414;
+    --s:#4ec77a; --s-soft:#132a1c; --w:#f0716b; --w-soft:#2c1817;
+    --o:#6f9df0; --o-soft:#16223a; --t:#e8975a; --t-soft:#2a1e12;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 12px 32px rgba(0,0,0,.38);
+  }}
+  :root[data-theme="dark"]{
+    --paper:#0e1512; --surface:#141d19; --surface-2:#111815;
+    --ink:#e7ede9; --muted:#9aa9a2; --faint:#7f8d86;
+    --line:#243029; --line-2:#2f3c34;
+    --accent:#2fd4c0; --accent-ink:#7ee8db; --accent-soft:#12302a;
+    --gold:#e0b258; --gold-soft:#2a2414;
+    --s:#4ec77a; --s-soft:#132a1c; --w:#f0716b; --w-soft:#2c1817;
+    --o:#6f9df0; --o-soft:#16223a; --t:#e8975a; --t-soft:#2a1e12;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 12px 32px rgba(0,0,0,.38);
+  }
+
+  *{box-sizing:border-box}
+  body{margin:0}
+  .page{background:var(--paper);color:var(--ink);font-family:var(--sans);line-height:1.6;
+    font-size:16px;-webkit-font-smoothing:antialiased;padding:0 20px}
+  .wrap{max-width:var(--w-col);margin:0 auto;padding:44px 0 60px;animation:rise .5s ease both}
+  @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion:reduce){.wrap{animation:none}}
+
+  .eyebrow{font-family:var(--mono);font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--accent);font-weight:600}
+  h1{font-size:clamp(27px,4.4vw,40px);line-height:1.08;letter-spacing:-.02em;margin:.5rem 0 0;
+    font-weight:800;text-wrap:balance;max-width:20ch}
+  .lede{color:var(--muted);font-size:clamp(15px,2vw,17px);max-width:64ch;margin:14px 0 0}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px}
+  .chip{font-family:var(--mono);font-size:11.5px;color:var(--muted);border:1px solid var(--line-2);
+    background:var(--surface);border-radius:999px;padding:5px 11px;letter-spacing:.02em}
+  .chip b{color:var(--ink);font-weight:600}
+  .rule{height:1px;background:var(--line);border:0;margin:34px 0 0}
+
+  section{margin-top:38px}
+  .sec-head{display:flex;align-items:baseline;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+  .sec-num{font-family:var(--mono);font-size:12px;color:var(--faint);letter-spacing:.1em}
+  .sec-head h2{font-size:20px;margin:0;font-weight:700;letter-spacing:-.01em}
+  .sec-note{color:var(--faint);font-size:13px;margin-left:auto;font-family:var(--mono)}
+
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media (max-width:720px){.grid2{grid-template-columns:1fr}}
+  .quad{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px;
+    box-shadow:var(--shadow)}
+  .quad h3{margin:0 0 4px;font-size:14px;display:flex;align-items:center;gap:9px;letter-spacing:.01em}
+  .quad .tag{font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.1em;
+    color:var(--faint);margin-left:auto;font-weight:400}
+  .sq{width:11px;height:11px;border-radius:3px;flex:none}
+  .quad ul{margin:10px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:7px}
+  .quad li{position:relative;padding-left:16px;font-size:13.5px;color:var(--muted)}
+  .quad li::before{content:"";position:absolute;left:2px;top:8px;width:5px;height:5px;border-radius:1px;
+    background:currentColor;opacity:.5}
+  .quad li b{color:var(--ink);font-weight:600}
+  .q-s{border-top:3px solid var(--s)} .q-s h3{color:var(--s)} .q-s .sq{background:var(--s)}
+  .q-w{border-top:3px solid var(--w)} .q-w h3{color:var(--w)} .q-w .sq{background:var(--w)}
+  .q-o{border-top:3px solid var(--o)} .q-o h3{color:var(--o)} .q-o .sq{background:var(--o)}
+  .q-t{border-top:3px solid var(--t)} .q-t h3{color:var(--t)} .q-t .sq{background:var(--t)}
+
+  .usp{background:var(--accent-soft);border:1px solid var(--accent);border-radius:14px;padding:22px 24px}
+  .usp .pos{font-size:clamp(17px,2.6vw,21px);line-height:1.35;font-weight:600;color:var(--accent-ink);
+    margin:0;max-width:52ch;letter-spacing:-.01em}
+  .usp .core{margin:14px 0 0;color:var(--ink);font-size:14.5px}
+  .usp .core b{color:var(--accent-ink)}
+  .diff{width:100%;border-collapse:collapse;margin-top:16px;font-size:13.5px}
+  .diff th,.diff td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  .diff thead th{font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;
+    color:var(--faint);font-weight:600}
+  .diff td:first-child{font-weight:600;color:var(--ink);white-space:nowrap}
+  .diff td b{color:var(--accent-ink)}
+  .tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+  .tags .t{font-size:13px;background:var(--surface);border:1px dashed var(--line-2);border-radius:8px;
+    padding:7px 12px;color:var(--ink)}
+  .tags .t::before{content:"“";color:var(--accent);font-weight:700} .tags .t::after{content:"”";color:var(--accent);font-weight:700}
+
+  .tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--surface);box-shadow:var(--shadow)}
+  table.cost{width:100%;border-collapse:collapse;font-size:13.5px;min-width:560px}
+  table.cost th,table.cost td{padding:11px 14px;text-align:left;border-bottom:1px solid var(--line)}
+  table.cost thead th{font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;
+    color:var(--faint);font-weight:600;background:var(--surface-2)}
+  table.cost tbody tr:last-child td{border-bottom:0}
+  table.cost td:first-child{font-weight:600;color:var(--ink)}
+  .num{font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--muted)}
+  table.cost tr.total td{background:var(--surface-2);color:var(--ink);font-weight:600}
+  table.cost tr.total .num{color:var(--accent-ink);font-weight:700}
+
+  .callout{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+  @media (max-width:640px){.callout{grid-template-columns:1fr}}
+  .box{border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:0 10px 10px 0;
+    padding:14px 16px;background:var(--surface)}
+  .box h4{margin:0 0 6px;font-size:13px;font-family:var(--mono);letter-spacing:.03em;color:var(--accent-ink);text-transform:uppercase}
+  .box p{margin:0;font-size:13.5px;color:var(--muted)} .box p b{color:var(--ink)}
+
+  .chan-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+  .chan{background:var(--surface);border:1px solid var(--line);border-radius:11px;padding:14px 16px;box-shadow:var(--shadow)}
+  .chan .k{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;color:var(--accent);text-transform:uppercase}
+  .chan h4{margin:5px 0 5px;font-size:14.5px}
+  .chan p{margin:0;font-size:13px;color:var(--muted)}
+  .chan .cost0{display:inline-block;margin-top:9px;font-family:var(--mono);font-size:11px;color:var(--s);
+    background:var(--s-soft);border-radius:6px;padding:3px 8px}
+
+  .weeks{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:16px}
+  @media (max-width:720px){.weeks{grid-template-columns:1fr 1fr}}
+  @media (max-width:420px){.weeks{grid-template-columns:1fr}}
+  .week{border:1px solid var(--line);border-radius:10px;padding:12px 13px;background:var(--surface-2)}
+  .week .wk{font-family:var(--mono);font-size:11px;color:var(--gold);letter-spacing:.06em;font-weight:600}
+  .week p{margin:6px 0 0;font-size:12.5px;color:var(--muted)}
+
+  .kit{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  @media (max-width:820px){.kit{grid-template-columns:1fr}}
+  .kit-col{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px;box-shadow:var(--shadow)}
+  .kit-col h3{margin:0 0 12px;font-size:13px;font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em;
+    color:var(--accent-ink);display:flex;align-items:center;gap:8px}
+  .kit-col h3 .n{background:var(--accent);color:#fff;width:20px;height:20px;border-radius:6px;display:grid;
+    place-items:center;font-size:11px}
+  :root[data-theme="dark"] .kit-col h3 .n{color:#08201d}
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .kit-col h3 .n{color:#08201d}}
+  .checks{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:9px}
+  .checks li{position:relative;padding-left:26px;font-size:13.5px;color:var(--ink)}
+  .checks li::before{content:"";position:absolute;left:0;top:1px;width:15px;height:15px;border-radius:4px;
+    border:1.5px solid var(--line-2)}
+  .checks li small{display:block;color:var(--faint);font-size:12px;margin-top:1px}
+  .checks li.star{font-weight:600}
+  .checks li.star::after{content:"ưu tiên";position:absolute;right:0;top:1px;font-family:var(--mono);font-size:9.5px;
+    color:var(--gold);background:var(--gold-soft);border-radius:5px;padding:2px 6px;letter-spacing:.04em;text-transform:uppercase}
+
+  footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:var(--faint);font-size:12.5px}
+  footer b{color:var(--muted)}
+  footer .warn{color:var(--w);font-weight:600}
+
+  @media print{
+    .page{background:#fff;padding:0}
+    .quad,.chan,.kit-col,.tbl-wrap,.usp,.box,.week{box-shadow:none;break-inside:avoid}
+    section{break-inside:avoid}
+    .wrap{animation:none;padding:12px 0}
+  }
+</style>
+
+<div class="page">
+  <div class="wrap">
+
+    <header>
+      <div class="eyebrow">Business one-pager · Phân tích chiến lược</div>
+      <h1>Ôn thi Tin học THPT — định hướng Khoa học máy tính</h1>
+      <p class="lede">Ứng dụng học từ số 0 và luyện thi tốt nghiệp môn Tin (KHMT): lộ trình bài giảng dễ hiểu, chạy code thật, bám sát cấu trúc đề chính thức. Trang này gom SWOT · USP · chi phí vận hành · kế hoạch marketing ít tiền · bộ sale kit.</p>
+      <div class="chips">
+        <span class="chip"><b>Thị trường:</b> THPT Quốc gia · VN</span>
+        <span class="chip"><b>Vận hành:</b> một người</span>
+        <span class="chip"><b>Bối cảnh:</b> môn thi mới từ 2025</span>
+        <span class="chip"><b>Mô hình:</b> web freemium</span>
+      </div>
+      <hr class="rule" />
+    </header>
+
+    <section>
+      <div class="sec-head"><span class="sec-num">01</span><h2>SWOT</h2><span class="sec-note">bên trong · bên ngoài</span></div>
+      <div class="grid2">
+        <div class="quad q-s">
+          <h3><span class="sq"></span>Điểm mạnh<span class="tag">Strengths</span></h3>
+          <ul>
+            <li><b>Nội dung khó sao chép:</b> 95 bài "giảng lại để lớp 4 hiểu" — moat thật</li>
+            <li>Tập trung <b>KHMT</b> (Python/thuật toán/CSDL) — phần khó, ít tài liệu tốt nhất</li>
+            <li><b>Chạy code ngay trong bài</b> (offline) — hiếm, hợp môn lập trình</li>
+            <li>Lộ trình <b>kiểu Duolingo</b> — giữ chân, khác hẳn PDF/video</li>
+            <li>Bám cấu trúc đề chính thức · phủ đủ lớp 10–11–12 · chạy offline</li>
+          </ul>
+        </div>
+        <div class="quad q-w">
+          <h3><span class="sq"></span>Điểm yếu<span class="tag">Weaknesses</span></h3>
+          <ul>
+            <li><b>Bản quyền</b> (ảnh SGK + độ gốc câu hỏi) — chưa bán được đến khi dọn</li>
+            <li>Chạy client + localStorage → <b>dễ bị copy</b>, chưa có tài khoản/đồng bộ</li>
+            <li>Chưa có <b>thương hiệu · kết quả · review · "người thật"</b></li>
+            <li><b>Một mình</b> → nghẽn ở cập nhật, hỗ trợ, marketing</li>
+            <li>Phải cập nhật nội dung <b>mỗi năm</b> theo đề</li>
+          </ul>
+        </div>
+        <div class="quad q-o">
+          <h3><span class="sq"></span>Cơ hội<span class="tag">Opportunities</span></h3>
+          <ul>
+            <li><b>Môn thi mới (2025)</b> → người đi trước, ít đối thủ mạnh mảng KHMT</li>
+            <li>Ông lớn dồn Toán–Lý–Hóa–Anh → <b>bỏ trống Tin KHMT</b></li>
+            <li>Học sinh <b>mobile-first</b> → cửa cho PWA/app</li>
+            <li><b>B2B</b>: trường/giáo viên cũng thiếu tài liệu môn mới</li>
+            <li>TikTok/YouTube — tiếp cận rẻ ở VN</li>
+          </ul>
+        </div>
+        <div class="quad q-t">
+          <h3><span class="sq"></span>Nguy cơ<span class="tag">Threats</span></h3>
+          <ul>
+            <li><b>Ông lớn nhảy vào</b> (Hocmai, VUIHOC, OLM…) — nguồn lực vượt trội</li>
+            <li>Miễn phí thay thế: <b>YouTube, PDF, học ở trường</b></li>
+            <li><b>Bị chia sẻ lậu</b> (nội dung copy được)</li>
+            <li>Cầu <b>nhỏ + theo mùa</b> (đỉnh ~tháng 6)</li>
+            <li>Đề đổi mỗi năm → phải chạy theo</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="sec-head"><span class="sec-num">02</span><h2>USP — điểm bán độc nhất</h2></div>
+      <div class="usp">
+        <p class="pos">"Ứng dụng duy nhất giúp ôn thi tốt nghiệp môn Tin (KHMT) dễ như chơi Duolingo: giảng lại để ai cũng hiểu, code chạy ngay trong bài, luyện bám sát đề Bộ — mỗi ngày 15 phút."</p>
+        <p class="core"><b>Cốt lõi:</b> biến môn Tin KHMT "khó nhằn" thành lộ trình dễ hiểu, có thực hành code thật, chuẩn cấu trúc đề mới. Chọn <b>một</b> USP này và lặp đi lặp lại — đừng "cái gì cũng nhất".</p>
+        <table class="diff">
+          <thead><tr><th>So với</th><th>Họ thiếu</th><th>Mình hơn ở</th></tr></thead>
+          <tbody>
+            <tr><td>YouTube / PDF miễn phí</td><td>Rời rạc, không lộ trình, không chấm, không thực hành</td><td><b>Lộ trình + luyện + code chạy được</b> + theo dõi tiến độ</td></tr>
+            <tr><td>Nền lớn (Hocmai…)</td><td>Chưa mạnh Tin KHMT, bài giảng dài</td><td><b>Chuyên sâu KHMT</b>, "giảng lại" cực dễ, gamified</td></tr>
+            <tr><td>Sách / đề in</td><td>Tĩnh, không chấm tự động, không code</td><td><b>Tương tác</b>, chấm ngay, chạy Python trong trình duyệt</td></tr>
+          </tbody>
+        </table>
+        <div class="tags">
+          <span class="t">Ôn thi Tin — dễ như chơi, chuẩn như đề Bộ</span>
+          <span class="t">Từ số 0 đến 9–10 môn Tin, mỗi ngày 15 phút</span>
+          <span class="t">Vừa học lý thuyết vừa chạy code thật</span>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="sec-head"><span class="sec-num">03</span><h2>Chi phí vận hành</h2><span class="sec-note">ước tính · VND</span></div>
+      <div class="tbl-wrap">
+        <table class="cost">
+          <thead><tr><th>Khoản</th><th>Khởi động (chưa doanh thu)</th><th>Khi có ~vài trăm–1.000 người</th><th>Ghi chú</th></tr></thead>
+          <tbody>
+            <tr><td>Tên miền</td><td class="num">~250–800k / năm</td><td class="num">như cũ</td><td>.com rẻ; .vn đắt hơn</td></tr>
+            <tr><td>Hosting web</td><td class="num">0đ (free tier)</td><td class="num">0 → ~500k / th</td><td>Vercel/Netlify; app nhẹ nên free lâu</td></tr>
+            <tr><td>Tài khoản + DB</td><td class="num">0đ (free)</td><td class="num">~600k / th</td><td>Supabase — auth + đồng bộ tiến độ</td></tr>
+            <tr><td>TTS + chạy Python</td><td class="num">0đ</td><td class="num">0đ</td><td>Chạy trong trình duyệt — không tốn API</td></tr>
+            <tr><td>Cổng thanh toán</td><td class="num">0 phí tháng</td><td class="num">~1,5–3,3% / đơn</td><td>PayOS/MoMo — xác nhận lại phí</td></tr>
+            <tr class="total"><td>Tổng tiền mặt</td><td class="num">~0–100k / th</td><td class="num">~0,6–1,5tr / th</td><td>Rất nhẹ</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout">
+        <div class="box">
+          <h4>Đơn vị kinh tế</h4>
+          <p>Gói <b>249k</b> một lần − phí ~3% → còn <b>~241k/đơn</b>. Hạ tầng ~0–600k/th → chỉ cần <b>~3 đơn/tháng là hòa hạ tầng</b>. Nhược điểm: LTV ≈ giá bán → cân nhắc gói <b>"1 năm truy cập"</b> để mua lại mỗi mùa.</p>
+        </div>
+        <div class="box">
+          <h4>Kết luận</h4>
+          <p>Rủi ro tiền mặt <b>thấp</b>. Chi phí thật là <b>thời gian</b> (nội dung + marketing + hỗ trợ) và <b>số người mua</b> — tức bài toán marketing, không phải bài toán tiền.</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="sec-head"><span class="sec-num">04</span><h2>Kế hoạch marketing ít tiền</h2><span class="sec-note">organic-first</span></div>
+      <div class="box" style="margin-bottom:16px">
+        <h4>Nguyên tắc</h4>
+        <p><b>Cho trước, bán sau.</b> Không mua sự chú ý — kiếm nó bằng nội dung hữu ích. Ngân sách gần 0; vốn là <b>thời gian + đăng đều đặn</b>. Dồn lực theo mùa (tháng 1 → 6).</p>
+      </div>
+      <div class="chan-grid">
+        <div class="chan"><div class="k">Kênh · kéo người</div><h4>Video ngắn (TikTok/Reels/Shorts)</h4><p>Chữa câu khó 60s · "đọc code Python 30s" · mẹo Đúng/Sai. Demo cách dạy dễ hiểu = bằng chứng chất lượng. 3–5 clip/tuần.</p><span class="cost0">~0đ · chỉ công</span></div>
+        <div class="chan"><div class="k">Kênh · niềm tin</div><h4>Group Facebook ôn thi</h4><p>Vào các nhóm 2k7/2k8, trả lời thật, giúp free, cuối bài để link học thử. Tuyệt đối không spam.</p><span class="cost0">~0đ</span></div>
+        <div class="chan"><div class="k">Kênh · bằng chứng</div><h4>Nhóm hạt giống (seed)</h4><p>Tặng free <b>10–30 học sinh</b> + vài thầy cô → thu cảm nhận + kết quả thật. Nguồn review đầu tiên, phá thế "chưa ai mua".</p><span class="cost0">~0đ</span></div>
+        <div class="chan"><div class="k">Kênh · đòn bẩy</div><h4>Giáo viên = kênh phân phối</h4><p>Tặng bản dùng cho thầy cô, chi <b>hoa hồng</b> khi giới thiệu cho lớp. Đòn bẩy B2B2C mạnh ở VN.</p><span class="cost0">hoa hồng theo đơn</span></div>
+        <div class="chan"><div class="k">Kênh · dài hạn</div><h4>SEO / blog nhẹ</h4><p>Bài "cấu trúc đề Tin 2025", "ôn Python thi tốt nghiệp" → bắt lượt tìm kiếm đều đặn.</p><span class="cost0">~0đ</span></div>
+        <div class="chan"><div class="k">Kênh · lan truyền</div><h4>Referral</h4><p>Học sinh rủ bạn → giảm giá hoặc mở thêm nội dung cho cả hai.</p><span class="cost0">~0đ</span></div>
+      </div>
+      <div class="weeks">
+        <div class="week"><div class="wk">Tuần 1</div><p>Lập fanpage + kênh TikTok · viết 5 clip đầu · dựng link học thử.</p></div>
+        <div class="week"><div class="wk">Tuần 2</div><p>Vào 5–10 group, giúp thật mỗi ngày · mời 10–30 HS vào nhóm hạt giống dùng free.</p></div>
+        <div class="week"><div class="wk">Tuần 3</div><p>Đăng đều 3–5 clip · thu cảm nhận đầu tiên · chỉnh theo phản hồi.</p></div>
+        <div class="week"><div class="wk">Tuần 4</div><p>Ra bảng giá + landing · mở bán sớm cho nhóm hạt giống (giá ưu đãi đổi review).</p></div>
+      </div>
+      <div class="box" style="margin-top:14px">
+        <h4>Đo lường</h4>
+        <p>Mỗi kênh một <b>link riêng (UTM)</b> → xem kênh nào ra người học thử nhiều nhất → dồn lực vào đúng kênh đó, bỏ kênh phí công.</p>
+      </div>
+    </section>
+
+    <section>
+      <div class="sec-head"><span class="sec-num">05</span><h2>Bộ sale kit cần chuẩn bị</h2><span class="sec-note">checklist</span></div>
+      <div class="kit">
+        <div class="kit-col">
+          <h3><span class="n">A</span>Thuyết phục</h3>
+          <ul class="checks">
+            <li class="star">Bản học thử miễn phí<small>vài chương mở — bằng chứng mạnh nhất</small></li>
+            <li class="star">Trang giới thiệu (landing) 1 trang<small>USP · học thử · giá · cam kết</small></li>
+            <li>Bảng "đối chiếu chương trình chuẩn"<small>bài ↔ SGK — chứng minh "chuẩn"</small></li>
+            <li>5–10 cảm nhận / kết quả thật<small>có ảnh, xin phép</small></li>
+            <li>Hồ sơ "người thật"<small>giáo viên / tác giả</small></li>
+            <li>Cam kết hoàn tiền X ngày</li>
+          </ul>
+        </div>
+        <div class="kit-col">
+          <h3><span class="n">B</span>Truyền thông</h3>
+          <ul class="checks">
+            <li>Video giới thiệu 1–2 phút<small>app làm được gì, cách dùng</small></li>
+            <li>8–12 ảnh/screenshot đẹp<small>lộ trình · bài học · chấm điểm</small></li>
+            <li>2–3 GIF thao tác<small>chạy code · làm bài · lên sao</small></li>
+            <li>15–20 post mẫu + hashtag<small>kèm lịch đăng</small></li>
+          </ul>
+        </div>
+        <div class="kit-col">
+          <h3><span class="n">C</span>Chốt &amp; hỗ trợ</h3>
+          <ul class="checks">
+            <li class="star">Bảng giá + gói rõ ràng<small>Free vs Premium</small></li>
+            <li>FAQ<small>lớp mấy? bộ sách nào? điện thoại/offline? dùng bao lâu?</small></li>
+            <li>Kịch bản inbox / Zalo<small>xử lý "để con thử đã" · "đắt" · "sợ không hiệu quả"</small></li>
+            <li>Kênh hỗ trợ Zalo/Fanpage<small>ghi rõ thời gian phản hồi</small></li>
+            <li>Chính sách<small>điều khoản · bảo mật dữ liệu học sinh · hoàn tiền</small></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <p><b>Lưu ý.</b> Số liệu chi phí là <b>ước tính</b>, thay đổi theo nhà cung cấp và quy mô — xác nhận phí thanh toán &amp; nghĩa vụ thuế với đơn vị liên quan. <span class="warn">Trước khi bán:</span> dọn bản quyền (bỏ ảnh SGK, tự viết câu hỏi gốc) và <b>không mạo nhận "được Bộ GD&amp;ĐT công nhận"</b> — chỉ nói "bám sát chương trình &amp; cấu trúc đề của Bộ".</p>
+    </footer>
+
+  </div>
+</div>

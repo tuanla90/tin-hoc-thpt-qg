@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ôn thi Tin học THPT Quốc gia</title>
+  
+  <!-- Google Fonts: Outfit, Plus Jakarta Sans, JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@600;700&family=Outfit:wght@700;800;850&family=Plus+Jakarta+Sans:wght@500;650;750;800&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💻</text></svg>" />
+</head>
+<body>
+  <!-- ===================== THANH TIÊU ĐỀ ===================== -->
+  <header class="topbar">
+    <div class="brand" id="homeLink" role="button" tabindex="0" title="Về trang chủ">
+      <span class="brand-logo" data-ic="monitor" data-ic-size="26"></span>
+      <div class="brand-text">
+        <strong>Ôn thi Tin học</strong>
+        <small>THPT Quốc gia 2025</small>
+      </div>
+    </div>
+    <nav class="topnav">
+      <button class="nav-btn" data-nav="home" title="Trang chủ"><span class="nav-ic" data-ic="home"></span><span class="nav-label">Trang chủ</span></button>
+      <button class="nav-btn" data-nav="vocab" title="Từ vựng"><span class="nav-ic" data-ic="book"></span><span class="nav-label">Từ vựng</span></button>
+      <button class="nav-btn" data-nav="history" title="Kết quả"><span class="nav-ic" data-ic="chart"></span><span class="nav-label">Kết quả</span></button>
+      <button class="nav-btn" data-nav="achievements" title="Thành tựu"><span class="nav-ic" data-ic="trophy"></span><span class="nav-label">Thành tựu</span></button>
+      <button class="nav-btn icon-only" id="themeToggle" title="Chế độ sáng/tối">🌙</button>
+    </nav>
+  </header>
+
+  <!-- ===================== NỘI DUNG CHÍNH ===================== -->
+  <main id="app" class="app-main">
+    <!-- Nội dung được render bằng JavaScript -->
+  </main>
+
+  <!-- ===================== CHÂN TRANG ===================== -->
+  <footer class="footer">
+    <span>Phần mềm ôn thi Tin học • Chương trình GDPT 2018 • Cấu trúc đề 2025</span>
+  </footer>
+
+  <!-- ===================== HỘP THOẠI XÁC NHẬN ===================== -->
+  <div class="modal-overlay" id="modal" hidden>
+    <div class="modal-box">
+      <h3 id="modalTitle">Xác nhận</h3>
+      <p id="modalBody"></p>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="modalCancel">Hủy</button>
+        <button class="btn btn-primary" id="modalOk">Đồng ý</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Trình chạy Python offline (Skulpt) -->
+  <script src="js/vendor/skulpt.min.js"></script>
+  <script src="js/vendor/skulpt-stdlib.js"></script>
+  <!-- Nạp dữ liệu TRƯỚC, sau đó nạp ứng dụng -->
+  <script src="js/questions.js"></script>
+  <script src="js/questions-extra.js"></script>
+  <script src="js/lessons.js"></script>
+  <script src="js/exercises.js"></script>
+  <script src="js/sgk-lessons.js"></script>
+  <script src="js/sgk-tin10-cd1.js"></script>
+  <script src="js/sgk-tin10-cd2.js"></script>
+  <script src="js/sgk-tin10-cd3.js"></script>
+  <script src="js/sgk-tin10-cd5a.js"></script>
+  <script src="js/sgk-tin10-cd5b.js"></script>
+  <script src="js/sgk-tin10-cd5c.js"></script>
+  <script src="js/sgk-tin11-cd1.js"></script>
+  <script src="js/sgk-tin11-cd2.js"></script>
+  <script src="js/sgk-tin11-cd4.js"></script>
+  <script src="js/sgk-tin11-cd56a.js"></script>
+  <script src="js/sgk-tin11-cd6b.js"></script>
+  <script src="js/sgk-tin12-cd1.js"></script>
+  <script src="js/sgk-tin12-cd4a.js"></script>
+  <script src="js/sgk-tin12-cd4b.js"></script>
+  <script src="js/sgk-tin12-cd56.js"></script>
+  <script src="js/sgk-tin12-cd7.js"></script>
+  <script src="js/cleanup-old.js"></script>
+  <script src="js/clean-tin10.js"></script>
+  <script src="js/vocab.js"></script>
+  <script src="js/vocab-terms.js"></script>
+  <script src="js/vocab-data.js"></script>
+  <script src="js/vocab-tin12.js"></script>
+  <script src="js/gamify.js"></script>
+  <script src="js/questions-vandung.js"></script>
+  <script src="js/icons.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/exam-modes.js"></script>
+</body>
+</html>

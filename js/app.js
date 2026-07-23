@@ -1,0 +1,1696 @@
+/* ============================================================================
+ *  ỨNG DỤNG ÔN THI TIN HỌC THPT QUỐC GIA
+ *  Vanilla JavaScript - không cần cài đặt, chạy trực tiếp trên trình duyệt.
+ * ==========================================================================*/
+
+/* ---------------------------------------------------------------------------
+ *  CẤU HÌNH ĐỀ THI THỬ (đúng cấu trúc CHÍNH THỨC đề THPT 2025 môn Tin học)
+ *  - Phần I : 24 câu trắc nghiệm nhiều lựa chọn × 0,25đ = 6,0đ
+ *  - Phần II: 4 câu đúng/sai (mỗi câu 4 ý)               = 4,0đ
+ *  => Tổng 28 câu, 10 điểm, 50 phút.
+ *  LƯU Ý: Môn Tin học KHÔNG có phần trả lời ngắn (khác Toán, Lí, Hóa, Sinh).
+ *  Các câu trả lời ngắn trong ngân hàng vẫn được dùng cho chế độ Luyện tập.
+ * ------------------------------------------------------------------------- */
+const EXAM_CONFIG = {
+  mc: 24,          // số câu Phần I  (trắc nghiệm nhiều lựa chọn)
+  tf: 4,           // số câu Phần II (đúng/sai)
+  sa: 0,           // Tin học không có phần trả lời ngắn
+  minutes: 50,     // thời gian làm bài (phút)
+};
+
+/* Ma trận phân bổ đề thi thử theo CHỦ ĐỀ (bám trọng tâm lớp 12, định hướng KHMT).
+   Tổng MC = 24, tổng Đ/S = 4. Chủ đề F (lập trình/thuật toán) chiếm tỉ trọng lớn.
+   Nếu một chủ đề thiếu câu, hệ thống tự bù từ ngân hàng còn lại. */
+const EXAM_MATRIX = {
+  mc: { A: 3, B: 3, C: 1, D: 3, E: 3, F: 9, G: 2 }, // = 24 câu
+  tf: { E: 1, F: 3 },                                // = 4 câu
+};
+
+/* Thang điểm Phần II (đúng/sai) theo số ý đúng trong 1 câu 4 ý */
+const TF_POINTS = { 0: 0, 1: 0.1, 2: 0.25, 3: 0.5, 4: 1.0 };
+const MC_POINT = 0.25;   // điểm mỗi câu Phần I
+const SA_POINT = 0.25;   // điểm mỗi câu Phần III
+
+const STORE_KEY = "tinhoc_thpt_v1";
+
+/* ---------------------------------------------------------------------------
+ *  TRẠNG THÁI ỨNG DỤNG
+ * ------------------------------------------------------------------------- */
+const State = {
+  view: "home",
+  quiz: null,        // bài đang làm
+  settings: load("settings", { theme: "light" }),
+  history: load("history", []),
+  learned: load("learned", []),   // danh sách id bài học đã hoàn thành
+};
+
+const app = document.getElementById("app");
+
+/* ---------------------------------------------------------------------------
+ *  TIỆN ÍCH LƯU TRỮ (localStorage)
+ * ------------------------------------------------------------------------- */
+function loadAll() { try { return JSON.parse(localStorage.getItem(STORE_KEY)) || {}; } catch { return {}; } }
+function load(key, def) { const all = loadAll(); return key in all ? all[key] : def; }
+function save(key, val) { const all = loadAll(); all[key] = val; localStorage.setItem(STORE_KEY, JSON.stringify(all)); }
+
+/* ---------------------------------------------------------------------------
+ *  TIỆN ÍCH CHUNG
+ * ------------------------------------------------------------------------- */
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+function aIco(n, c, s) { return (typeof ICON === "function") ? ICON(n, s || 16, c) : ""; }
+function stageColor(s) { return s == 10 ? "#16a34a" : s == 11 ? "#3b82f6" : s == 12 ? "#d97706" : "#4f46e5"; }
+const TYPE_LABEL = { mc: "Trắc nghiệm", tf: "Đúng/Sai", sa: "Trả lời ngắn" };
+const LEVEL_LABEL = { easy: "Nhận biết", medium: "Thông hiểu", hard: "Vận dụng" };
+
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+function pick(arr, n) { return shuffle(arr).slice(0, n); }
+
+function toast(msg) {
+  const t = document.createElement("div");
+  t.className = "toast"; t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2200);
+}
+
+/* Hộp thoại xác nhận trả về Promise<boolean> */
+function confirmBox(title, body, okText = "Đồng ý") {
+  return new Promise((resolve) => {
+    const modal = document.getElementById("modal");
+    document.getElementById("modalTitle").textContent = title;
+    document.getElementById("modalBody").textContent = body;
+    const ok = document.getElementById("modalOk");
+    const cancel = document.getElementById("modalCancel");
+    ok.textContent = okText;
+    modal.hidden = false;
+    const close = (val) => { modal.hidden = true; ok.onclick = cancel.onclick = null; resolve(val); };
+    ok.onclick = () => close(true);
+    cancel.onclick = () => close(false);
+  });
+}
+
+/* Chuẩn hóa đáp án trả lời ngắn để so sánh */
+function normSA(s) {
+  return String(s).trim().toLowerCase().replace(/\s+/g, "").replace(",", ".");
+}
+
+/* Đếm số câu theo dạng */
+function countByType(t) { return QUESTION_BANK.filter((q) => q.type === t).length; }
+
+/* ---------------------------------------------------------------------------
+ *  ĐIỀU HƯỚNG
+ * ------------------------------------------------------------------------- */
+/* Bảng ánh xạ view -> hàm render (dựng lại mỗi lần để bắt được window.* nạp sau) */
+function viewRenderer(view) {
+  const map = { home: renderHome, lessons: renderLessons, lesson: renderLesson, playground: renderPlayground, practiceSetup: renderPracticeSetup, quiz: renderQuiz, result: renderResult, history: renderHistory, vocab: window.renderVocabPage, achievements: (window.Gam && window.Gam.renderAchievements), examCodes: window.renderExamCodes, tfDrill: window.renderTFDrill };
+  return map[view] || renderHome;
+}
+
+/* view + tham số  ->  chuỗi hash (nguồn sự thật của URL) */
+function viewToHash(view, data) {
+  switch (view) {
+    case "lessons": return "#/lessons";
+    case "lesson": return "#/lesson/" + encodeURIComponent((data && data.id) || "");
+    case "playground": return "#/playground";
+    case "practiceSetup": return "#/practice" + (data && data.topic ? "?topic=" + encodeURIComponent(data.topic) : "");
+    case "history": return "#/history";
+    case "vocab": return "#/vocab";
+    case "achievements": return "#/achievements";
+    case "examCodes": return "#/exam";
+    case "tfDrill": return "#/tf-drill";
+    case "quiz": return "#/quiz";
+    case "result": return "#/result";
+    case "home":
+    default: return "#/";
+  }
+}
+
+/* hash hiện tại  ->  { view, data } (chịu được hash rỗng / lạ -> home) */
+function parseHash() {
+  let h = location.hash || "";
+  if (h.charAt(0) === "#") h = h.slice(1);
+  if (h.charAt(0) === "/") h = h.slice(1);
+  let query = "";
+  const qi = h.indexOf("?");
+  if (qi >= 0) { query = h.slice(qi + 1); h = h.slice(0, qi); }
+  const parts = h.split("/").filter((x) => x !== "");
+  const seg = parts[0] || "";
+  switch (seg) {
+    case "lessons": return { view: "lessons", data: undefined };
+    case "lesson": return { view: "lesson", data: parts[1] ? { id: decodeURIComponent(parts[1]) } : undefined };
+    case "playground": return { view: "playground", data: undefined };
+    case "practice": {
+      const m = /(?:^|&)topic=([^&]*)/.exec(query);
+      return { view: "practiceSetup", data: m ? { topic: decodeURIComponent(m[1]) } : undefined };
+    }
+    case "history": return { view: "history", data: undefined };
+    case "vocab": return { view: "vocab", data: undefined };
+    case "achievements": return { view: "achievements", data: undefined };
+    case "exam": return { view: "examCodes", data: undefined };
+    case "tf-drill": return { view: "tfDrill", data: undefined };
+    case "quiz": return { view: "quiz", data: undefined };
+    case "result": return { view: "result", data: undefined };
+    case "": return { view: "home", data: undefined };
+    default: return { view: "home", data: undefined };
+  }
+}
+
+/* Điều hướng: đặt hash tương ứng; hashchange -> renderFromHash sẽ render.
+   Giữ nguyên chữ ký go(view, data) cho toàn bộ lời gọi sẵn có. */
+let pendingNav = null;
+function go(view, data) {
+  pendingNav = { view, data };
+  const h = viewToHash(view, data);
+  if (location.hash === h) renderFromHash();   // cùng hash -> không tạo mục lịch sử mới -> render tay
+  else location.hash = h;                       // khác hash -> hashchange -> renderFromHash
+}
+
+/* Đọc hash rồi render. Cả nút trong app lẫn Back/Forward đều đi qua đây. */
+function renderFromHash() {
+  const parsed = parseHash();
+  const view = parsed.view;
+  const d = (pendingNav && pendingNav.view === view) ? pendingNav.data : parsed.data;
+  pendingNav = null;
+  // fallback cho màn tạm (dữ liệu chỉ có trong bộ nhớ) khi tải lại / mở link trực tiếp:
+  if (view === "quiz" && !(typeof State !== "undefined" && State.quiz)) { go("home"); return; }
+  if (view === "result" && !d) { go("history"); return; }
+  State.view = view;
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  (viewRenderer(view))(d);
+}
+
+window.addEventListener("hashchange", renderFromHash);
+
+/* ===========================================================================
+ *  TRANG CHỦ
+ * ========================================================================= */
+function renderHome() {
+  const totalQ = QUESTION_BANK.length;
+  const attempts = State.history.length;
+  const best = attempts ? Math.max(...State.history.map((h) => h.score)).toFixed(2) : "—";
+  const learnedCount = State.learned.filter((id) => LESSONS.some((l) => l.id === id)).length;
+  const ic = (n, e) => (typeof ICON === "function" ? ICON(n, 30) : e);
+
+  // Bài đang học (theo khóa cứng): bài chưa học đầu tiên có bài liền trước đã học
+  const sortedL = LESSONS.slice().sort((a, b) => a.stage - b.stage || a.order - b.order);
+  const learnedL = sortedL.map((l) => isLearned(l.id));
+  const curIdx = learnedL.findIndex((v, i) => (i === 0 || learnedL[i - 1]) && !v);
+  const curL = curIdx >= 0 ? sortedL[curIdx] : null;
+  const contTitle = curL ? esc((curL.title || "").replace(/^Bài\s*\d+[.\s]*/, "")) : "";
+  const continueHtml = curL
+    ? `<div class="continue-card" id="continueCard" data-id="${curL.id}" role="button" tabindex="0" style="display:flex;align-items:center;gap:14px;background:var(--primary-soft);border:1px solid var(--primary);border-radius:var(--radius);padding:13px 16px;margin:2px 0 18px;cursor:pointer">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:700;color:var(--primary);letter-spacing:.02em">${learnedCount ? "TIẾP TỤC HỌC" : "BẮT ĐẦU HỌC"}</div>
+          <b style="display:block;font-size:16px;color:var(--text);margin:2px 0 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Bài ${curL.order}: ${contTitle}</b>
+          <small style="color:var(--text-soft)">${STAGES[curL.stage] ? aIco("book", stageColor(curL.stage), 13) + " " : ""}${esc(STAGES[curL.stage] || "")}</small>
+        </div>
+        <span class="btn btn-primary" style="white-space:nowrap;display:inline-flex;align-items:center;gap:6px">${typeof ICON === "function" ? ICON("play", 18) : "▶"} Vào học</span>
+      </div>`
+    : `<div style="display:flex;align-items:center;justify-content:center;gap:8px;background:var(--success-soft);border:1px solid var(--success);border-radius:var(--radius);padding:14px 16px;margin:2px 0 18px;color:var(--success);font-weight:600;text-align:center">${typeof ICON === "function" ? ICON("trophy", 18) : "🎉"} Bạn đã hoàn thành cả lộ trình! Ôn lại bài hoặc thi thử nhé.</div>`;
+
+  app.innerHTML = `
+    <section class="hero">
+      <div class="hero-ic">${ic("cap", "🎓")}</div>
+      <h1>Học & Ôn thi Tin học THPT</h1>
+      <p>Tự học từ đầu theo lộ trình bài giảng, rồi luyện tập và thi thử bám sát cấu trúc đề chính thức. Phù hợp cho người tự ôn, không cần đến trường.</p>
+      <div class="hero-stats">
+        <div class="hero-stat"><b>${learnedCount}/${LESSONS.length}</b><span>bài học đã xong</span></div>
+        <div class="hero-stat"><b>${totalQ}</b><span>câu hỏi luyện tập</span></div>
+        <div class="hero-stat"><b>${best}</b><span>điểm thi thử cao nhất</span></div>
+      </div>
+    </section>
+
+    ${continueHtml}
+
+    <div id="gamDash"></div>
+
+    <div class="section-title">${aIco("cap", "#4f46e5", 18)} Bắt đầu học</div>
+    <div class="mode-grid">
+      <div class="mode-card" data-mode="lessons" style="border-color:var(--primary)">
+        <div class="m-badge">${learnedCount}/${LESSONS.length} bài</div>
+        <div class="m-icon">${ic("cap", "📖")}</div>
+        <h3>Học lý thuyết</h3>
+        <p>Lộ trình bài giảng từ số 0: lý thuyết, ví dụ code, tóm tắt điểm cần nhớ. Học đến đâu luyện tập đến đó.</p>
+      </div>
+      <div class="mode-card" data-mode="playground">
+        <div class="m-badge">Mới</div>
+        <div class="m-icon">${ic("code", "💻")}</div>
+        <h3>Thực hành code</h3>
+        <p>Viết & chạy <b>Python</b> hoặc xem trước <b>HTML/CSS</b> ngay trên trình duyệt — không cần cài đặt.</p>
+      </div>
+      <div class="mode-card" data-mode="practice">
+        <div class="m-icon">${ic("target", "🎯")}</div>
+        <h3>Luyện tập theo chủ đề</h3>
+        <p>Chọn chủ đề, lớp, dạng câu, mức độ. Xem đáp án và lời giải ngay sau mỗi câu.</p>
+      </div>
+      <div class="mode-card" data-mode="quick">
+        <div class="m-icon">${ic("zap", "⚡")}</div>
+        <h3>Luyện nhanh 10 câu</h3>
+        <p>Bộ 10 câu ngẫu nhiên từ mọi chủ đề để khởi động, có lời giải tức thì.</p>
+      </div>
+      <div class="mode-card" data-mode="tfdrill">
+        <div class="m-badge">Phần II</div>
+        <div class="m-icon">${ic("check", "✅")}</div>
+        <h3>Luyện Đúng/Sai</h3>
+        <p>Chuyên luyện dạng câu Đúng/Sai 4 ý (Phần II của đề thi), có cách tính điểm và lời giải chi tiết.</p>
+      </div>
+      <div class="mode-card" data-mode="exam">
+        <div class="m-badge">${EXAM_CONFIG.minutes} phút</div>
+        <div class="m-icon">${ic("exam", "📝")}</div>
+        <h3>Thi thử</h3>
+        <p>Nhiều <b>mã đề cố định</b> ${EXAM_CONFIG.mc + EXAM_CONFIG.tf} câu, tính giờ, chấm thang 10 — làm lại để so tiến bộ.</p>
+      </div>
+    </div>
+
+    <div class="section-title">${aIco("layers", "#4f46e5", 18)} Ôn theo từng chủ đề</div>
+    <div class="topic-list">
+      ${Object.entries(TOPICS).map(([code, name]) => {
+        const n = QUESTION_BANK.filter((q) => q.topic === code).length;
+        return `
+        <div class="topic-row" data-topic="${code}">
+          <div class="topic-badge">${code}</div>
+          <div class="topic-info"><b>${esc(name)}</b><small>${n} câu hỏi</small></div>
+          <div class="topic-count">Luyện ${aIco("aright", null, 14)}</div>
+        </div>`;
+      }).join("")}
+    </div>
+  `;
+
+  app.querySelectorAll(".mode-card").forEach((c) => c.onclick = () => {
+    const mode = c.dataset.mode;
+    if (mode === "exam") go("examCodes");
+    else if (mode === "tfdrill") go("tfDrill");
+    else if (mode === "quick") startQuick();
+    else if (mode === "lessons") go("lessons");
+    else if (mode === "playground") go("playground");
+    else go("practiceSetup");
+  });
+  app.querySelectorAll(".topic-row").forEach((r) => r.onclick = () => go("practiceSetup", { topic: r.dataset.topic }));
+  const cc = document.getElementById("continueCard");
+  if (cc) { const goCur = () => go("lesson", { id: cc.dataset.id }); cc.onclick = goCur; cc.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); goCur(); } }; }
+  if (typeof Gam !== "undefined") Gam.renderDashboard(document.getElementById("gamDash"));
+}
+
+/* ===========================================================================
+ *  HỌC LÝ THUYẾT - danh sách bài & trình xem bài
+ * ========================================================================= */
+function isLearned(id) { return State.learned.includes(id); }
+function markLearned(id, val) {
+  const has = isLearned(id);
+  if (val && !has) State.learned.push(id);
+  if (!val && has) State.learned = State.learned.filter((x) => x !== id);
+  save("learned", State.learned);
+  if (val && !has && typeof Gam !== "undefined") Gam.onLessonDone(id);
+}
+
+function renderLessons() {
+  injectPathCss();
+  const sorted = LESSONS.slice().sort((a, b) => a.stage - b.stage || a.order - b.order);
+  const learned = sorted.map((l) => isLearned(l.id));
+  // KHÓA CỨNG: bài i chỉ mở khi bài liền trước đã học (bài đầu luôn mở)
+  // NGOẠI LỆ: nhóm "Bản sạch (thử)" stage>=20 luôn mở để nghiệm thu tự do
+  const unlocked = sorted.map((l, i) => (l.stage >= 20 ? true : i === 0 ? true : learned[i - 1]));
+  const currentIdx = sorted.findIndex((l, i) => unlocked[i] && !learned[i]);
+  const doneCount = learned.filter(Boolean).length;
+  const pct = Math.round((doneCount / sorted.length) * 100);
+
+  // Chương (chủ đề) của từng sách — chia nhỏ lộ trình cho dễ theo dõi
+  const CHAPTERS = {
+    10: [
+      { name: "Máy tính, dữ liệu và số hoá", from: 1, to: 7, color: "#2563eb" },
+      { name: "Mạng, Internet và an toàn", from: 8, to: 11, color: "#0d9488" },
+      { name: "Thiết kế đồ hoạ", from: 12, to: 15, color: "#e11d48" },
+      { name: "Lập trình Python", from: 16, to: 32, color: "#4f46e5" },
+      { name: "Hướng nghiệp tin học", from: 33, to: 34, color: "#ea580c" },
+    ],
+    11: [
+      { name: "Máy tính và hệ điều hành", from: 1, to: 5, color: "#2563eb" },
+      { name: "Internet: lưu trữ, tìm kiếm, an toàn", from: 6, to: 9, color: "#0d9488" },
+      { name: "Cơ sở dữ liệu và SQL", from: 10, to: 16, color: "#7c3aed" },
+      { name: "Kĩ thuật lập trình và thuật toán", from: 17, to: 31, color: "#4f46e5" },
+    ],
+    12: [
+      { name: "Trí tuệ nhân tạo", from: 1, to: 2, color: "#9333ea" },
+      { name: "Mạng máy tính", from: 3, to: 5, color: "#0d9488" },
+      { name: "Đạo đức và ứng xử mạng", from: 6, to: 6, color: "#d97706" },
+      { name: "Thiết kế web (HTML và CSS)", from: 7, to: 18, color: "#e11d48" },
+      { name: "Hướng nghiệp công nghệ thông tin", from: 19, to: 21, color: "#ea580c" },
+      { name: "Mạng máy tính nâng cao", from: 22, to: 24, color: "#0d9488" },
+      { name: "Học máy, Khoa học dữ liệu, Mô phỏng", from: 25, to: 30, color: "#9333ea" },
+    ],
+    20: [
+      { name: "Máy tính, dữ liệu và số hoá", from: 1, to: 3, color: "#2563eb" },
+      { name: "Mạng máy tính và Internet", from: 4, to: 6, color: "#0d9488" },
+      { name: "An toàn và đạo đức số", from: 7, to: 8, color: "#d97706" },
+      { name: "Thiết kế đồ hoạ", from: 9, to: 10, color: "#e11d48" },
+      { name: "Lập trình Python", from: 11, to: 20, color: "#4f46e5" },
+      { name: "Hướng nghiệp tin học", from: 21, to: 21, color: "#ea580c" },
+    ],
+  };
+  const chapterOf = (l) => {
+    const list = CHAPTERS[l.stage] || [];
+    return list.find((c) => l.order >= c.from && l.order <= c.to) || { name: "", color: "var(--primary)" };
+  };
+
+  // Điểm luyện tập tốt nhất theo từng bài (để tính sao mastery)
+  const scoreByLesson = {};
+  State.history.forEach((h) => {
+    if (h && h.lessonId && h.total) {
+      const s = h.correctCount / h.total;
+      if (!(h.lessonId in scoreByLesson) || s > scoreByLesson[h.lessonId]) scoreByLesson[h.lessonId] = s;
+    }
+  });
+  const starsFor = (s) => (s == null ? 0 : s >= 0.9 ? 3 : s >= 0.6 ? 2 : s > 0 ? 1 : 0);
+  const starSvg = (on) => `<svg viewBox="0 0 24 24" class="pn-star${on ? " on" : ""}" aria-hidden="true"><path d="M12 3l2.6 5.6 6.1.8-4.5 4.2 1.2 6-5.4-3-5.4 3 1.2-6L3.3 9.4l6.1-.8z"/></svg>`;
+
+  // Gom: sách -> chương -> bài (giữ nguyên thứ tự)
+  const books = [];
+  sorted.forEach((l, i) => {
+    let b = books[books.length - 1];
+    if (!b || b.stage !== l.stage) { b = { stage: l.stage, chaps: [] }; books.push(b); }
+    const cd = chapterOf(l);
+    let c = b.chaps[b.chaps.length - 1];
+    if (!c || c.name !== cd.name) { c = { name: cd.name, color: cd.color, items: [] }; b.chaps.push(c); }
+    c.items.push({ l, gi: i });
+  });
+
+  const IW = 300, CX = 150, A = 74, R = 28, STEP = 120, PADTOP = 56, PADBOT = 56;
+  const pat = [0, 0.55, 0.9, 0.55, 0, -0.55, -0.9, -0.55]; // độ lệch trái/phải tạo đường uốn lượn
+  const ic = (name) => (typeof ICON === "function" ? ICON(name) : "");
+
+  const chapHtml = (c, chapIdx) => {
+    const n = c.items.length;
+    const C = c.color || "var(--primary)";
+    const H = PADTOP + (n - 1) * STEP + R + PADBOT;
+    const pts = c.items.map((it, k) => ({ x: CX + pat[k % pat.length] * A, y: PADTOP + k * STEP, it }));
+    let segs = "";
+    for (let k = 0; k < pts.length - 1; k++) {
+      const p0 = pts[k], p1 = pts[k + 1], on = learned[p0.it.gi];
+      segs += `<line x1="${p0.x.toFixed(1)}" y1="${p0.y}" x2="${p1.x.toFixed(1)}" y2="${p1.y}" stroke="${on ? C : "var(--border)"}" stroke-width="6" stroke-linecap="round"${on ? "" : ' stroke-dasharray="3 14"'} />`;
+    }
+    const nodes = pts.map((p) => {
+      const gi = p.it.gi, l = p.it.l, done = learned[gi], open = unlocked[gi], cur = gi === currentIdx;
+      const cls = done ? "done" : open ? "open" : "locked";
+      const glyph = done ? ic("check") : open ? ic("play") : ic("lock");
+      const name = esc((l.title || "").replace(/^Bài\s*\d+[.\s]*/, ""));
+      const stTxt = done ? "đã học" : open ? "đang học" : "chưa mở khóa";
+      const hasQuiz = l.quiz && l.quiz.length;
+      const stars = done && hasQuiz ? starsFor(scoreByLesson[l.id]) : -1;
+      const starsHtml = stars >= 0 ? `<span class="pn-stars" title="Mastery: ${stars}/3 sao">${[0, 1, 2].map((i) => starSvg(i < stars)).join("")}</span>` : "";
+      return `<button class="pnode ${cls}${cur ? " cur" : ""}" data-id="${l.id}" data-lock="${open ? 0 : 1}" style="left:${(p.x - R).toFixed(1)}px;top:${p.y - R}px;--cc:${C}" title="${esc(l.title)}" aria-label="Bài ${l.order}: ${name} — ${stTxt}">${cur ? '<span class="pn-bubble">BẮT ĐẦU 🔥</span>' : ""}${glyph}</button>` +
+        `<div class="pn-cap" style="left:${(p.x - 74).toFixed(1)}px;top:${p.y + R + 6}px"><span class="pn-top"><span class="pn-num">Bài ${l.order}</span>${starsHtml}</span><span class="pn-name">${name}</span></div>`;
+    }).join("");
+    const cDone = c.items.filter((it) => learned[it.gi]).length, cAll = c.items.length, cOk = cDone === cAll;
+    return `<div class="pchap-w"><span class="pchap${cOk ? " done" : ""}" style="--cc:${C}">${cOk && typeof ICON === "function" ? ICON("check", 15) : ""}${esc(c.name)} <b class="pchap-ct">${cDone}/${cAll}</b></span></div>
+      <div class="pwrap" style="height:${H}px"><svg class="pconn" width="${IW}" height="${H}" viewBox="0 0 ${IW} ${H}">${segs}</svg>${nodes}</div>`;
+  };
+
+  const booksHtml = books.map((b) =>
+    `<div class="pbookh">${aIco("book", "#ffffff", 16)} <span>${esc(STAGES[b.stage] || "Lớp " + b.stage)}</span></div>` + b.chaps.map(chapHtml).join("")
+  ).join("");
+
+  app.innerHTML = `
+    <button class="back-link" id="back">${aIco("aleft", null, 15)} Về trang chủ</button>
+
+    <!-- HERO PATH BANNER GAMING -->
+    <div class="path-hero-card">
+      <div class="path-hero-content">
+        <div class="path-hero-badge">PHIÊU LƯU HỌC TẬP</div>
+        <h2>Hành Trình Chinh Phục Tin Học</h2>
+        <p>Vượt qua từng cửa ải bài học để nâng cấp Level và mở khóa các kỹ năng lập trình đỉnh cao!</p>
+        
+        <div class="path-progress-box">
+          <div class="progress-track-wrapper">
+            <div class="progress-fill" style="width:${pct}%"></div>
+          </div>
+          <div class="path-progress-stats">
+            <span><b>${doneCount}</b> / ${sorted.length} bài hoàn thành</span>
+            <span class="path-xp-badge">⭐ ${doneCount * 50} XP</span>
+          </div>
+        </div>
+      </div>
+      <div class="path-hero-mascot">
+        <img src="asset/mascot/scenes/checklist.png" alt="Robot Quest" />
+      </div>
+    </div>
+
+    <div class="pathroot">${booksHtml}</div>`;
+
+  document.getElementById("back").onclick = () => go("home");
+  app.querySelectorAll(".pnode").forEach((btn) => {
+    btn.onclick = () => {
+      if (btn.dataset.lock === "1") { toast("🔒 Hãy hoàn thành bài trước để mở khóa bài này"); return; }
+      go("lesson", { id: btn.dataset.id });
+    };
+  });
+
+  // Tự cuộn tới bài đang học (chỉ khi đã có tiến độ) để khỏi kéo qua các bài đã xong
+  const curEl = app.querySelector(".pnode.cur");
+  if (curEl && doneCount > 0) requestAnimationFrame(() => curEl.scrollIntoView({ block: "center" }));
+}
+
+/* Chèn CSS cho lộ trình kiểu Duolingo 3D Gaming */
+function injectPathCss() {
+  if (document.getElementById("pl-css")) return;
+  const s = document.createElement("style");
+  s.id = "pl-css";
+  s.textContent =
+    ".path-hero-card { display: flex; align-items: center; justify-content: space-between; gap: 20px; background: linear-gradient(135deg, var(--primary) 0%, #7c3aed 100%); color: #fff; padding: 28px 32px; border-radius: var(--radius); box-shadow: var(--shadow-lg); margin-bottom: 30px; position: relative; overflow: hidden; }" +
+    ".path-hero-content { flex: 1; z-index: 2; }" +
+    ".path-hero-badge { font-family: var(--font-mono); font-size: 11px; font-weight: 800; background: rgba(255,255,255,0.2); padding: 4px 12px; border-radius: 20px; display: inline-block; margin-bottom: 8px; letter-spacing: 0.05em; }" +
+    ".path-hero-content h2 { font-family: var(--font-display); font-size: 26px; font-weight: 850; margin-bottom: 6px; }" +
+    ".path-hero-content p { font-size: 14px; opacity: 0.9; margin-bottom: 16px; }" +
+    ".path-progress-box { background: rgba(0,0,0,0.2); padding: 12px 16px; border-radius: 12px; backdrop-filter: blur(4px); }" +
+    ".path-progress-stats { display: flex; align-items: center; justify-content: space-between; margin-top: 6px; font-size: 12.5px; font-weight: 700; }" +
+    ".path-xp-badge { font-family: var(--font-mono); color: var(--warning); background: rgba(0,0,0,0.3); padding: 2px 8px; border-radius: 8px; }" +
+    ".path-hero-mascot img { width: 110px; height: 110px; object-fit: contain; filter: drop-shadow(0 6px 12px rgba(0,0,0,0.25)); }" +
+
+    ".pathroot { max-width: 400px; margin: 0 auto; padding-bottom: 36px; }" +
+    ".pbookh { text-align: center; font-family: var(--font-display); font-weight: 850; font-size: 17px; background: linear-gradient(135deg, var(--primary), var(--primary-d)); color: #fff; margin: 36px 0 16px; padding: 12px 20px; border-radius: var(--radius-sm); box-shadow: var(--shadow); display: flex; align-items: center; justify-content: center; gap: 10px; }" +
+    ".pchap-w { text-align: center; margin: 20px 0 6px; }" +
+    ".pchap { display: inline-block; background: var(--bg-card); border: 2px solid var(--cc, var(--border)); color: var(--cc, var(--text)); font-weight: 800; font-size: 13.5px; padding: 8px 20px; border-radius: 20px; max-width: 320px; box-shadow: var(--shadow); }" +
+    ".pchap.done { background: var(--cc, var(--success)); border-color: var(--cc, var(--success)); color: #fff; }" +
+    ".pchap svg { width: 16px; height: 16px; vertical-align: -3px; margin-right: 6px; }" +
+    ".pchap-ct { font-weight: 800; opacity: .85; margin-left: 4px; font-family: var(--font-mono); }" +
+    
+    ".pwrap { position: relative; width: 300px; margin: 0 auto; }" +
+    ".pconn { position: absolute; left: 0; top: 0; overflow: visible; z-index: 0; }" +
+    
+    ".pnode { position: absolute; width: 56px; height: 56px; border-radius: 50%; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 1; padding: 0; transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1); outline: none; }" +
+    ".pnode svg { width: 28px; height: 28px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15)); }" +
+    ".pnode.done { background: linear-gradient(135deg, #10b981, #059669); color: #fff; box-shadow: 0 6px 0 #047857, 0 10px 16px rgba(16, 185, 129, 0.3); }" +
+    ".pnode.open { background: linear-gradient(135deg, #6366f1, #4f46e5); color: #fff; box-shadow: 0 6px 0 #3730a3, 0 10px 16px rgba(79, 70, 229, 0.35); }" +
+    ".pnode.locked { background: var(--bg-soft); color: var(--text-soft); border: 2px solid var(--border); box-shadow: 0 4px 0 var(--border); }" +
+    ".pnode.done:hover, .pnode.open:hover { transform: translateY(-2px); }" +
+    ".pnode.done:active, .pnode.open:active { transform: translateY(4px); box-shadow: 0 2px 0 rgba(0,0,0,.2); }" +
+    
+    ".pnode.cur::after { content: ''; position: absolute; inset: -9px; border-radius: 50%; border: 3px solid var(--primary); animation: plpulse 1.6s ease-in-out infinite; pointer-events: none; }" +
+    "@keyframes plpulse { 0%,100% { transform: scale(1); opacity: .6; } 50% { transform: scale(1.18); opacity: .15; } }" +
+    
+    ".pn-bubble { position: absolute; top: -30px; left: 50%; transform: translateX(-50%); background: var(--primary); color: #fff; font-family: var(--font-mono); font-size: 10.5px; font-weight: 850; padding: 3px 10px; border-radius: 12px; white-space: nowrap; z-index: 3; box-shadow: 0 4px 10px rgba(79, 70, 229, 0.4); border: 1.5px solid #fff; }" +
+    ".pn-cap { position: absolute; width: 148px; text-align: center; pointer-events: none; z-index: 1; line-height: 1.25; }" +
+    ".pn-num { display: block; font-size: 11px; font-weight: 800; color: var(--primary); font-family: var(--font-mono); }" +
+    ".pn-name { font-size: 11.5px; font-weight: 650; color: var(--text-soft); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }" +
+    ".pn-top { display: flex; align-items: center; justify-content: center; gap: 4px; line-height: 1; margin-bottom: 2px; }" +
+    ".pn-stars { display: inline-flex; gap: 1px; }" +
+    ".pn-star { width: 12px; height: 12px; fill: var(--border); }" +
+    ".pn-star.on { fill: #f59e0b; filter: drop-shadow(0 1px 2px rgba(245, 158, 11, 0.4)); }" +
+    "@media (max-width: 560px) { .path-hero-mascot { display: none; } }";
+  document.head.appendChild(s);
+}
+
+/* Định dạng nội dung nội tuyến: **đậm** -> <strong>, `mã` -> <code> */
+function fmtInline(s) {
+  return esc(s)
+    .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+    .replace(/`([^`]+)`/g, '<code class="ic">$1</code>');
+}
+
+function renderBlocks(sections) {
+  const fi = (s) => fmtInline(s).replace(/\n/g, "<br>");   // giữ xuống dòng trong đoạn văn
+  return sections.map((b) => {
+    if (b.t === "story") return `<div class="ls-story"><span class="ls-story-icon">${aIco("bulb", "#f59e0b", 18)}</span><div><b>Hình dung nhé:</b> ${fi(b.text)}</div></div>`;
+    if (b.t === "text") return `<p class="ls-p">${fi(b.text)}</p>`;
+    if (b.t === "h") return `<h3 class="ls-h">${esc(b.text)}</h3>`;
+    if (b.t === "code") return `<pre class="q-code">${esc(b.code)}</pre>`;
+    if (b.t === "list") return `${b.text ? `<p class="ls-p">${fi(b.text)}</p>` : ""}<ul class="ls-list">${b.items.map((i) => `<li>${fi(i)}</li>`).join("")}</ul>`;
+    if (b.t === "note") return `<div class="ls-note"><b>${aIco("bulb", "#d97706", 15)} Lưu ý:</b> ${fi(b.text)}</div>`;
+    if (b.t === "example") return `<div class="ls-ex"><div class="ls-ex-tag">Ví dụ</div>${b.text ? `<p class="ls-p">${fi(b.text)}</p>` : ""}${b.code ? `<pre class="q-code">${esc(b.code)}</pre>` : ""}${b.output != null ? `<div class="ls-out">${aIco("play", "#16a34a", 13)} Kết quả: <b>${esc(b.output)}</b></div>` : ""}</div>`;
+    return "";
+  }).join("");
+}
+
+function renderLesson(data) {
+  const sorted = LESSONS.slice().sort((a, b) => a.stage - b.stage || a.order - b.order);
+  const idx = sorted.findIndex((l) => l.id === data.id);
+  const l = sorted[idx];
+  if (!l) { go("lessons"); return; }
+  const done = isLearned(l.id);
+  const prev = sorted[idx - 1], next = sorted[idx + 1];
+  const runCode = firstRunnableCode(l);
+  const webCode = (!runCode && lessonHasWeb(l)) ? WEB_STARTER : null;
+
+  app.innerHTML = `
+    <button class="back-link" id="back">${aIco("aleft", null, 15)} Danh sách bài học</button>
+    <div class="quiz-meta" style="margin-bottom:10px">
+      <span class="pill type-mc">Bài ${idx + 1}/${sorted.length}</span>
+      <span class="pill">Lớp ${l.grade}</span>
+      <span class="pill">~${l.minutes} phút</span>
+    </div>
+    <h2 style="margin-bottom:8px">${esc(l.title)}</h2>
+    <p style="color:var(--text-soft);font-size:15px;margin-bottom:18px">${fmtInline(l.intro)}</p>
+
+    ${l.sgk ? `
+    <div class="sgk-box">
+      <div class="sgk-head" id="sgkToggle"><span>${aIco("book", "#3b82f6", 16)} Trang sách giáo khoa</span><small>${esc(l.sgk.ref || "")}</small><span class="sgk-chev">${aIco("chevdown", null, 14)}</span></div>
+      <div class="sgk-pages" id="sgkPages">${(l.sgk.images || []).map((s) => `<img class="sgk-img" src="${esc(s)}" alt="Trang sách giáo khoa" onerror="this.style.display='none';this.insertAdjacentHTML('afterend','<div class=&quot;sgk-missing&quot;>⚠ Chưa có ảnh trang sách (${esc(s)}). Đây là tệp cục bộ bạn tự tạo.</div>')">`).join("")}</div>
+    </div>
+    <div class="section-title" style="margin-top:8px">${aIco("bulb", "#d97706", 16)} Giảng lại cho dễ hiểu</div>` : ""}
+
+    <div class="lesson-body">${renderBlocks(l.sections)}</div>
+
+    <div class="ls-keypoints">
+      <b>${aIco("bookmark", "#dc2626", 16)} Cần nhớ</b>
+      <ul>${l.keypoints.map((k) => `<li>${fmtInline(k)}</li>`).join("")}</ul>
+    </div>
+
+    ${runCode ? `
+    <div class="section-title" style="margin-top:22px">${aIco("monitor", "#0891b2", 17)} Thực hành ngay</div>
+    <p style="color:var(--text-soft);font-size:13.5px;margin-bottom:10px">Đây là ví dụ của bài — sửa lại tùy ý rồi bấm ${aIco("play", "#16a34a", 13)} Chạy để xem kết quả thay đổi thế nào.</p>
+    <div id="lessonPg"></div>` : webCode ? `
+    <div class="section-title" style="margin-top:22px">${aIco("globe", "#0891b2", 17)} Thử làm trang web</div>
+    <p style="color:var(--text-soft);font-size:13.5px;margin-bottom:10px">Sửa HTML/CSS bên dưới rồi bấm ${aIco("play", "#16a34a", 13)} Xem kết quả — trang web sẽ hiện ra ngay.</p>
+    <div id="lessonPg"></div>` : ""}
+
+    <div class="ls-actions">
+      <button class="btn ${done ? "btn-ghost" : "btn-success"}" id="doneBtn">${aIco("check2", null, 15)} ${done ? "Đã học (bấm để bỏ)" : "Đánh dấu đã học"}</button>
+      <button class="btn btn-primary" id="practiceBtn">${aIco("target", null, 16)} Luyện tập bài này</button>
+    </div>
+
+    <div class="quiz-nav" style="margin-top:20px">
+      <button class="btn btn-ghost" id="prevBtn" ${prev ? "" : "disabled"}>${aIco("aleft", null, 14)} Bài trước</button>
+      <button class="btn btn-ghost" id="nextBtn" ${next ? "" : "disabled"}>${next ? `Bài tiếp theo ${aIco("aright", null, 14)}` : `Hết lộ trình ${aIco("flag", "#16a34a", 15)}`}</button>
+    </div>
+  `;
+  document.getElementById("back").onclick = () => go("lessons");
+  document.getElementById("doneBtn").onclick = () => { markLearned(l.id, !isLearned(l.id)); go("lesson", { id: l.id }); };
+  document.getElementById("practiceBtn").onclick = () => practiceLesson(l);
+  document.getElementById("prevBtn").onclick = () => prev && go("lesson", { id: prev.id });
+  document.getElementById("nextBtn").onclick = () => next && go("lesson", { id: next.id });
+  attachRunButtons(app.querySelector(".lesson-body"));
+  if (runCode) buildEditor(document.getElementById("lessonPg"), runCode);
+  else if (webCode) buildWebEditor(document.getElementById("lessonPg"), webCode);
+  if (typeof injectExercises === "function") injectExercises(l);
+  if (typeof injectVocab === "function") injectVocab(l);
+  const sgkT = document.getElementById("sgkToggle");
+  if (sgkT) sgkT.onclick = () => {
+    const p = document.getElementById("sgkPages");
+    p.hidden = !p.hidden;
+    sgkT.querySelector(".sgk-chev").innerHTML = aIco(p.hidden ? "play" : "chevdown", null, 14);
+  };
+}
+
+function practiceLesson(l) {
+  // Chỉ lấy đúng những câu hỏi gắn với bài này (khớp lý thuyết đã học)
+  const ids = l.quiz || [];
+  const pool = QUESTION_BANK.filter((q) => ids.includes(q.id));
+  if (!pool.length) { toast("Bài này chưa có câu luyện tập"); return; }
+  const qs = shuffle(pool).slice(0, Math.min(10, pool.length));
+  State.quiz = newQuiz(qs, "practice", { title: "Luyện tập: " + l.title, lessonId: l.id });
+  go("quiz");
+}
+
+/* ===========================================================================
+ *  THỰC HÀNH CODE - chạy Python ngay trên trình duyệt (Skulpt, offline)
+ * ========================================================================= */
+const DEFAULT_SNIPPET =
+  "# Viết code Python rồi bấm ▶ Chạy\nten = \"bạn\"\nprint(\"Xin chào\", ten)\n\ntong = 0\nfor i in range(1, 6):\n    tong = tong + i\nprint(\"Tổng 1..5 =\", tong)";
+
+const PG_SAMPLES = [
+  { label: "Chào hỏi", code: "ten = input(\"Tên bạn là gì? \")\nprint(\"Xin chào,\", ten)" },
+  { label: "Tính tổng 1..n", code: "n = 10\ntong = 0\nfor i in range(1, n + 1):\n    tong = tong + i\nprint(\"Tổng 1 đến\", n, \"là\", tong)" },
+  { label: "Kiểm tra chẵn/lẻ", code: "so = 7\nif so % 2 == 0:\n    print(so, \"là số chẵn\")\nelse:\n    print(so, \"là số lẻ\")" },
+  { label: "Giai thừa (đệ quy)", code: "def gt(n):\n    if n == 0:\n        return 1\n    return n * gt(n - 1)\n\nprint(\"5! =\", gt(5))" },
+  { label: "Tìm số lớn nhất", code: "a = [3, 9, 1, 7, 4]\nmax_val = a[0]\nfor x in a:\n    if x > max_val:\n        max_val = x\nprint(\"Lớn nhất:\", max_val)" },
+];
+
+const WEB_STARTER =
+  "<!-- Viết HTML rồi bấm ▶ Xem kết quả -->\n<h1>Trang web đầu tiên của em</h1>\n<p class=\"gioithieu\">Xin chào! Đây là trang web do em tự làm.</p>\n<a href=\"#\">Một liên kết</a>\n\n<style>\n  h1 { color: #4f46e5; }\n  .gioithieu { font-size: 18px; color: green; }\n</style>";
+
+const WEB_SAMPLES = [
+  { label: "Trang cơ bản", code: WEB_STARTER },
+  { label: "Danh sách", code: "<h2>Việc cần làm hôm nay</h2>\n<ul>\n  <li>Học bài</li>\n  <li>Làm bài tập</li>\n  <li>Ôn thi Tin học</li>\n</ul>" },
+  { label: "Màu & cỡ chữ (CSS)", code: "<p id=\"tieude\">Chữ to màu tím</p>\n<p class=\"phu\">Chữ nhỏ màu xám</p>\n\n<style>\n  #tieude { color: purple; font-size: 24px; }\n  .phu { color: gray; font-size: 13px; }\n</style>" },
+  { label: "Liên kết & ảnh", code: "<h3>Trang giới thiệu</h3>\n<p>Xem thêm tại <a href=\"https://vi.wikipedia.org\">Wikipedia</a>.</p>\n<p>Một ô màu:</p>\n<div style=\"width:80px;height:80px;background:#4f46e5;border-radius:12px\"></div>" },
+];
+
+/* Đoạn mã có chạy được bằng Skulpt không? (loại trừ HTML, thao tác tệp, mã minh họa) */
+function isRunnable(code) {
+  if (!code || !code.trim()) return false;
+  if (/[×→²³⁰¹₂₃…]/.test(code)) return false;      // ký hiệu minh họa, không phải Python
+  if (/^\s*</m.test(code)) return false;             // HTML (bài thiết kế web)
+  if (code.includes("{") && code.includes(";")) return false; // CSS (dict Python không có ';')
+  if (/\bopen\s*\(/.test(code)) return false;         // đọc/ghi tệp (Skulpt không hỗ trợ)
+  return true;
+}
+function firstRunnableCode(lesson) {
+  for (const b of lesson.sections) {
+    if (b.t === "code" && isRunnable(b.code)) return b.code;
+    if (b.t === "example" && b.code && isRunnable(b.code)) return b.code;
+  }
+  return null;
+}
+
+/* Đoạn mã là HTML hoặc CSS (để xem trước trực tiếp bằng iframe) */
+function isWebCode(code) {
+  if (!code || !code.trim()) return false;
+  if (/^\s*<[a-zA-Z!]/m.test(code)) return true;                 // thẻ HTML
+  if (code.includes("{") && code.includes(";") && /[a-z-]+\s*:/.test(code)) return true; // luật CSS
+  return false;
+}
+function lessonHasWeb(lesson) {
+  return lesson.sections.some((b) => b.t === "code" && isWebCode(b.code));
+}
+
+/* Bọc đoạn HTML/CSS thành một trang hoàn chỉnh để hiển thị trong iframe */
+function previewDoc(code) {
+  const isCssOnly = !/^\s*</m.test(code) && code.includes("{");
+  const body = isCssOnly
+    ? `<style>${code}</style>\n<h1>Tiêu đề mẫu</h1>\n<p>Đoạn văn mẫu để xem CSS áp dụng.</p>\n<a href="#">Một liên kết</a>`
+    : code;
+  return `<!doctype html><html lang="vi"><head><meta charset="utf-8">` +
+    `<style>body{font-family:'Segoe UI',system-ui,sans-serif;padding:14px;margin:0;color:#111;background:#fff;line-height:1.5}</style>` +
+    `</head><body>${body}</body></html>`;
+}
+
+/* Chạy một đoạn Python, đưa kết quả vào phần tử outEl */
+function runPython(code, outEl, runBtn) {
+  if (typeof Sk === "undefined") {
+    outEl.textContent = "⚠ Trình chạy Python chưa tải được. Hãy mở lại trang khi có mạng lần đầu, hoặc kiểm tra thư mục js/vendor.";
+    outEl.classList.add("has-error");
+    return;
+  }
+  outEl.hidden = false;
+  outEl.textContent = "Đang chạy...";
+  outEl.classList.remove("has-error");
+  let buffer = "";
+  Sk.configure({
+    output: (t) => { buffer += t; outEl.textContent = buffer; },
+    read: (name) => {
+      if (Sk.builtinFiles === undefined || Sk.builtinFiles["files"][name] === undefined)
+        throw "Không tìm thấy mô-đun '" + name + "'";
+      return Sk.builtinFiles["files"][name];
+    },
+    inputfun: (p) => window.prompt(p || "Nhập dữ liệu:") || "",
+    inputfunTakesPrompt: true,
+    __future__: Sk.python3,
+  });
+  if (runBtn) runBtn.disabled = true;
+  const finish = () => { if (runBtn) runBtn.disabled = false; };
+  Sk.misceval.asyncToPromise(() => Sk.importMainWithBody("<code>", false, code, true))
+    .then(
+      () => { if (!buffer) outEl.textContent = "✓ Chạy xong (không có kết quả in ra)."; finish(); },
+      (err) => { outEl.textContent = "❌ Lỗi: " + String(err && err.toString ? err.toString() : err); outEl.classList.add("has-error"); finish(); }
+    );
+}
+
+/* Tạo một khu soạn thảo + chạy code (có thể chỉnh sửa) */
+function buildEditor(host, initialCode) {
+  host.innerHTML = `
+    <div class="pg">
+      <div class="pg-bar">
+        <span class="pg-title">${aIco("code", "#0891b2", 16)} Python — sửa thoải mái rồi chạy thử</span>
+        <span class="pg-actions">
+          <button class="btn btn-ghost pg-reset">${aIco("refresh", null, 14)} Đặt lại</button>
+          <button class="btn btn-primary pg-run">${aIco("play", null, 14)} Chạy</button>
+        </span>
+      </div>
+      <textarea class="pg-editor" spellcheck="false" rows="8"></textarea>
+      <div class="pg-out-label">Kết quả</div>
+      <pre class="pg-out"></pre>
+    </div>`;
+  const ta = host.querySelector(".pg-editor");
+  const out = host.querySelector(".pg-out");
+  ta.value = initialCode;
+  host.querySelector(".pg-run").onclick = (e) => runPython(ta.value, out, e.target);
+  host.querySelector(".pg-reset").onclick = () => { ta.value = initialCode; out.textContent = ""; out.classList.remove("has-error"); };
+  ta.onkeydown = (e) => {
+    if (e.key === "Tab") {
+      e.preventDefault();
+      const s = ta.selectionStart, en = ta.selectionEnd;
+      ta.value = ta.value.slice(0, s) + "    " + ta.value.slice(en);
+      ta.selectionStart = ta.selectionEnd = s + 4;
+    }
+  };
+}
+
+/* Khu soạn thảo HTML/CSS + xem trước trực tiếp (iframe, không chạy script) */
+function buildWebEditor(host, initialCode) {
+  host.innerHTML = `
+    <div class="pg">
+      <div class="pg-bar">
+        <span class="pg-title">${aIco("globe", "#0891b2", 16)} HTML/CSS — sửa rồi bấm Xem kết quả</span>
+        <span class="pg-actions">
+          <button class="btn btn-ghost pg-reset">${aIco("refresh", null, 14)} Đặt lại</button>
+          <button class="btn btn-primary pg-run">${aIco("play", null, 14)} Xem kết quả</button>
+        </span>
+      </div>
+      <textarea class="pg-editor" spellcheck="false" rows="9"></textarea>
+      <div class="pg-out-label">Kết quả hiển thị</div>
+      <iframe class="pg-preview" sandbox="" title="Xem trước"></iframe>
+    </div>`;
+  const ta = host.querySelector(".pg-editor");
+  const frame = host.querySelector(".pg-preview");
+  ta.value = initialCode;
+  const render = () => { frame.srcdoc = previewDoc(ta.value); };
+  host.querySelector(".pg-run").onclick = render;
+  host.querySelector(".pg-reset").onclick = () => { ta.value = initialCode; render(); };
+  ta.onkeydown = (e) => {
+    if (e.key === "Tab") {
+      e.preventDefault();
+      const s = ta.selectionStart, en = ta.selectionEnd;
+      ta.value = ta.value.slice(0, s) + "  " + ta.value.slice(en);
+      ta.selectionStart = ta.selectionEnd = s + 2;
+    }
+  };
+  render(); // hiển thị ngay lần đầu
+}
+
+/* Trang Thực hành code độc lập (Python hoặc HTML/CSS) */
+let pgLang = "python";
+function renderPlayground(data) {
+  if (data && data.lang) pgLang = data.lang;
+  const isPy = pgLang === "python";
+  const noSk = typeof Sk === "undefined";
+  const samples = isPy ? PG_SAMPLES : WEB_SAMPLES;
+  const desc = isPy
+    ? "Viết Python và chạy ngay tại đây — hỗ trợ biến, vòng lặp, hàm, danh sách, đệ quy..."
+    : "Viết HTML/CSS và xem trang web hiện ra ngay lập tức — không chạy JavaScript (an toàn).";
+  app.innerHTML = `
+    <button class="back-link" id="back">${aIco("aleft", null, 15)} Về trang chủ</button>
+    <h2 style="margin-bottom:6px">${aIco("monitor", "#0891b2", 22)} Thực hành code</h2>
+    <div class="chip-group" id="langToggle" style="margin-bottom:12px">
+      <button class="chip ${isPy ? "active" : ""}" data-lang="python">${aIco("code", null, 14)} Python</button>
+      <button class="chip ${!isPy ? "active" : ""}" data-lang="web">${aIco("globe", null, 14)} HTML/CSS</button>
+    </div>
+    <p style="color:var(--text-soft);font-size:14px;margin-bottom:14px">${desc}</p>
+    ${isPy && noSk ? `<div class="ls-note" style="background:var(--danger-soft);border-color:var(--danger)">${aIco("warn", "#dc2626", 15)} Trình chạy Python chưa sẵn sàng. Nếu là lần chạy đầu, hãy mở app một lần khi có mạng để tải thư viện, sau đó dùng offline bình thường.</div>` : ""}
+    <div class="chip-group" id="samples" style="margin-bottom:14px">
+      <span style="align-self:center;color:var(--text-soft);font-size:13px;margin-right:4px">Ví dụ mẫu:</span>
+      ${samples.map((s, i) => `<button class="chip" data-i="${i}">${esc(s.label)}</button>`).join("")}
+    </div>
+    <div id="pgHost"></div>
+  `;
+  document.getElementById("back").onclick = () => go("home");
+  const mount = (code) => isPy
+    ? buildEditor(document.getElementById("pgHost"), code)
+    : buildWebEditor(document.getElementById("pgHost"), code);
+  mount(isPy ? ((data && data.code) || DEFAULT_SNIPPET) : WEB_STARTER);
+  app.querySelectorAll("#langToggle .chip").forEach((b) => b.onclick = () => { pgLang = b.dataset.lang; go("playground"); });
+  app.querySelectorAll("#samples .chip").forEach((b) => b.onclick = () => mount(samples[+b.dataset.i].code));
+}
+
+/* Gắn nút chạy/xem thử vào các khối code trong bài học */
+function attachRunButtons(container) {
+  if (!container) return;
+  container.querySelectorAll("pre.q-code").forEach((pre) => {
+    const code = pre.textContent;
+    if (isRunnable(code)) {
+      // Python: nút "Chạy thử" -> chạy bằng Skulpt, hiện kết quả
+      const bar = document.createElement("div");
+      bar.className = "code-run-bar";
+      bar.innerHTML = `<button class="btn btn-ghost run-inline">${aIco("play", null, 14)} Chạy thử</button>`;
+      const out = document.createElement("pre");
+      out.className = "pg-out"; out.hidden = true;
+      pre.after(out); pre.after(bar);
+      bar.querySelector("button").onclick = (e) => runPython(code, out, e.target);
+    } else if (isWebCode(code)) {
+      // HTML/CSS: nút "Xem thử" -> hiển thị trong iframe
+      const bar = document.createElement("div");
+      bar.className = "code-run-bar";
+      bar.innerHTML = `<button class="btn btn-ghost run-inline">${aIco("play", null, 14)} Xem thử</button>`;
+      const frame = document.createElement("iframe");
+      frame.className = "pg-preview"; frame.hidden = true; frame.setAttribute("sandbox", ""); frame.title = "Xem trước";
+      pre.after(frame); pre.after(bar);
+      bar.querySelector("button").onclick = () => { frame.hidden = false; frame.srcdoc = previewDoc(code); };
+    }
+  });
+}
+
+/* ===========================================================================
+ *  THIẾT LẬP LUYỆN TẬP
+ * ========================================================================= */
+const setupCfg = { topic: "all", grade: "all", type: "all", level: "all", count: 10 };
+
+function renderPracticeSetup(data) {
+  if (data && data.topic) setupCfg.topic = data.topic;
+
+  const topicChips = [["all", "Tất cả"]].concat(Object.entries(TOPICS).map(([c, n]) => [c, `${c}. ${n}`]));
+  const gradeChips = [["all", "Tất cả"], ["10", "Lớp 10"], ["11", "Lớp 11"], ["12", "Lớp 12"]];
+  const typeChips = [["all", "Tất cả"], ["mc", "Trắc nghiệm"], ["tf", "Đúng/Sai"], ["sa", "Trả lời ngắn"]];
+  const levelChips = [["all", "Tất cả"], ["easy", "Nhận biết"], ["medium", "Thông hiểu"], ["hard", "Vận dụng"]];
+
+  const chip = (val, label, cur, group) =>
+    `<button class="chip ${val === cur ? "active" : ""}" data-group="${group}" data-val="${val}">${esc(label)}</button>`;
+
+  app.innerHTML = `
+    <button class="back-link" id="back">${aIco("aleft", null, 15)} Về trang chủ</button>
+    <h2 style="margin-bottom:18px">${aIco("target", "#ef4444", 22)} Luyện tập theo chủ đề</h2>
+    <div class="config-card">
+      <div class="config-row">
+        <label>Chủ đề</label>
+        <div class="chip-group">${topicChips.map(([v, l]) => chip(v, l, setupCfg.topic, "topic")).join("")}</div>
+      </div>
+      <div class="config-row">
+        <label>Lớp</label>
+        <div class="chip-group">${gradeChips.map(([v, l]) => chip(v, l, setupCfg.grade, "grade")).join("")}</div>
+      </div>
+      <div class="config-row">
+        <label>Dạng câu hỏi</label>
+        <div class="chip-group">${typeChips.map(([v, l]) => chip(v, l, setupCfg.type, "type")).join("")}</div>
+      </div>
+      <div class="config-row">
+        <label>Mức độ</label>
+        <div class="chip-group">${levelChips.map(([v, l]) => chip(v, l, setupCfg.level, "level")).join("")}</div>
+      </div>
+      <div class="config-row">
+        <label>Số câu tối đa</label>
+        <div class="chip-group">
+          <select id="countSel">
+            ${[5, 10, 15, 20, 30, 50].map((n) => `<option value="${n}" ${n === setupCfg.count ? "selected" : ""}>${n} câu</option>`).join("")}
+          </select>
+        </div>
+      </div>
+      <div class="config-row" style="justify-content:space-between">
+        <span id="availMsg" style="color:var(--text-soft);font-size:13.5px"></span>
+        <button class="btn btn-primary btn-lg" id="startPractice">Bắt đầu luyện ${aIco("aright", null, 15)}</button>
+      </div>
+    </div>
+    <p style="color:var(--text-soft);font-size:13.5px">${aIco("bulb", "#d97706", 14)} Ở chế độ luyện tập, bạn sẽ thấy ngay đáp án đúng và lời giải sau khi trả lời mỗi câu.</p>
+  `;
+
+  const updateAvail = () => {
+    const pool = filterPool();
+    document.getElementById("availMsg").textContent = `Có ${pool.length} câu phù hợp với lựa chọn của bạn.`;
+    document.getElementById("startPractice").disabled = pool.length === 0;
+  };
+
+  app.querySelectorAll(".chip").forEach((b) => b.onclick = () => {
+    setupCfg[b.dataset.group] = b.dataset.val;
+    app.querySelectorAll(`.chip[data-group="${b.dataset.group}"]`).forEach((x) => x.classList.remove("active"));
+    b.classList.add("active");
+    updateAvail();
+  });
+  document.getElementById("countSel").onchange = (e) => { setupCfg.count = +e.target.value; updateAvail(); };
+  document.getElementById("back").onclick = () => go("home");
+  document.getElementById("startPractice").onclick = startPractice;
+  updateAvail();
+}
+
+function filterPool() {
+  return QUESTION_BANK.filter((q) =>
+    (setupCfg.topic === "all" || q.topic === setupCfg.topic) &&
+    (setupCfg.grade === "all" || String(q.grade) === setupCfg.grade) &&
+    (setupCfg.type === "all" || q.type === setupCfg.type) &&
+    (setupCfg.level === "all" || q.level === setupCfg.level)
+  );
+}
+
+/* ===========================================================================
+ *  TẠO & BẮT ĐẦU BÀI LÀM
+ * ========================================================================= */
+function newQuiz(questions, mode, opts = {}) {
+  return {
+    mode,                                  // "exam" | "practice"
+    questions,
+    answers: new Array(questions.length).fill(null),
+    flags: new Array(questions.length).fill(false),
+    revealed: new Array(questions.length).fill(false), // dùng cho practice
+    index: 0,
+    streak: 0,                              // chuỗi đúng liên tiếp
+    startTs: Date.now(),
+    minutes: opts.minutes || null,
+    title: opts.title || "Bài luyện tập",
+    code: opts.code || null,        // mã đề (nếu thi thử theo mã đề cố định)
+    lessonId: opts.lessonId || null, // bài học nguồn (để tính sao mastery theo bài)
+    timerId: null,
+    submitted: false,
+    reactions: {},                          // lưu phản ứng linh vật theo từng câu
+  };
+}
+
+function startPractice() {
+  const pool = filterPool();
+  if (!pool.length) return;
+  const qs = pick(pool, Math.min(setupCfg.count, pool.length));
+  const tName = setupCfg.topic === "all" ? "Tổng hợp" : TOPICS[setupCfg.topic];
+  State.quiz = newQuiz(qs, "practice", { title: `Luyện tập: ${tName}` });
+  go("quiz");
+}
+
+function startQuick() {
+  const qs = pick(QUESTION_BANK, Math.min(10, QUESTION_BANK.length));
+  State.quiz = newQuiz(qs, "practice", { title: "Luyện nhanh 10 câu" });
+  go("quiz");
+}
+
+function startExam() {
+  const mc = sampleByMatrix("mc", EXAM_MATRIX.mc, EXAM_CONFIG.mc);
+  const tf = sampleByMatrix("tf", EXAM_MATRIX.tf, EXAM_CONFIG.tf);
+  const qs = [...mc, ...tf]; // giữ thứ tự Phần I → Phần II
+  State.quiz = newQuiz(qs, "exam", { minutes: EXAM_CONFIG.minutes, title: "Đề thi thử THPT Quốc gia" });
+  go("quiz");
+}
+
+/* Lấy câu hỏi theo ma trận chủ đề; nếu một chủ đề thiếu câu thì bù từ ngân hàng cùng dạng */
+function sampleByMatrix(type, dist, target) {
+  const chosen = [], used = new Set();
+  for (const [topic, n] of Object.entries(dist)) {
+    pick(QUESTION_BANK.filter((q) => q.type === type && q.topic === topic), n)
+      .forEach((q) => { chosen.push(q); used.add(q.id); });
+  }
+  if (chosen.length < target) {
+    pick(QUESTION_BANK.filter((q) => q.type === type && !used.has(q.id)), target - chosen.length)
+      .forEach((q) => { chosen.push(q); used.add(q.id); });
+  }
+  return shuffle(chosen).slice(0, target);
+}
+
+/* ---------------------------------------------------------------------------
+ *  MASCOT DYNAMIC REACTION ENGINE (PHẢN ỨNG LINH VẬT SINH ĐỘNG NGẪU NHIÊN)
+ * ------------------------------------------------------------------------- */
+const MASCOT_REACTIONS = {
+  happyPoses: [
+    "asset/mascot/poses/happy.png",
+    "asset/mascot/poses/wink.png",
+    "asset/mascot/poses/confident.png",
+    "asset/mascot/scenes/thumbs-up.png"
+  ],
+  happyMessages: [
+    "Tuyệt vời lắm! Em chọn đáp án hoàn toàn chính xác!",
+    "Chính xác 100%! Tư duy lập trình của em rất tốt!",
+    "Đúng rồi nè! Tiến thêm một bước tới điểm 9+ rồi!",
+    "Giỏi quá! Cứ giữ vững phong độ này nhé!",
+    "Chuẩn không cần chỉnh! Robot thả tim cho em nè!"
+  ],
+  streakPoses: [
+    "asset/mascot/poses/celebrate-jump.png",
+    "asset/mascot/poses/cheer.png",
+    "asset/mascot/scenes/cheer-pompom.png",
+    "asset/mascot/poses/love-heart.png",
+    "asset/mascot/scenes/great-job.png"
+  ],
+  streakMessages: [
+    "🔥 BÙNG NỔ! Đã đúng {N} câu liên tiếp! Phong độ quá bá đạo!",
+    "⚡ STREAK {N} CÂU DỄ DÀNG! Không ai ngăn cản được em lúc này!",
+    "🏆 PHONG ĐỘ THIÊN TÀI! Đúng liên tục {N} câu rồi nè!",
+    "🌟 SIÊU SAO LẬP TRÌNH! {N} câu đúng liên tiếp tuyệt đối!"
+  ],
+  sadPoses: [
+    "asset/mascot/poses/sad.png",
+    "asset/mascot/poses/crying.png",
+    "asset/mascot/poses/worried.png",
+    "asset/mascot/poses/shocked.png"
+  ],
+  sadMessages: [
+    "Đừng nản nhé! Xem giải thích bên dưới để rút kinh nghiệm nào!",
+    "Không sao cả em ơi! Lỗi nhỏ thôi, câu sau làm lại thật tốt nhé!",
+    "Học từ sai lầm là chìa khóa thành công! Cố lên nhé!",
+    "Vấp ở đâu đứng dậy ở đó! Robot tin em làm tốt hơn ở câu tiếp theo!"
+  ],
+  hintPoses: [
+    "asset/mascot/poses/thinking.png",
+    "asset/mascot/poses/reading.png",
+    "asset/mascot/scenes/explaining.png",
+    "asset/mascot/scenes/magnifier.png",
+    "asset/mascot/scenes/did-you-know.png"
+  ],
+  hintMessages: [
+    "Cùng Robot phân tích kỹ bản chất bài toán này nhé:",
+    "Bí kíp ở đây nè, Robot hướng dẫn cho em:",
+    "Mẹo ghi nhớ lý thuyết này cực kỳ đơn giản:",
+    "Để Robot bật mí chi tiết lời giải cho em nhé:"
+  ],
+  defaultPoses: [
+    "asset/mascot/poses/standing.png",
+    "asset/mascot/poses/studying.png",
+    "asset/mascot/scenes/wave.png",
+    "asset/mascot/scenes/gesture.png"
+  ],
+  defaultMessages: [
+    "Đọc kỹ đề bài rồi chọn đáp án ưng ý nhất nhé em!",
+    "Robot đang đồng hành cùng em nè, bình tĩnh tự tin nhé!",
+    "Hãy tập trung tư duy, em làm được mà!",
+    "Thử sức câu này nào, chúc em đạt điểm tối đa!"
+  ]
+};
+
+function getRandomItem(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function getMascotReaction(type, streak = 0) {
+  if (streak >= 2 && (type === "correct" || type === "streak")) {
+    const pose = getRandomItem(MASCOT_REACTIONS.streakPoses);
+    const msg = getRandomItem(MASCOT_REACTIONS.streakMessages).replace("{N}", streak);
+    return { pose, msg, badge: `STREAK 🔥 ${streak}`, typeClass: "streak" };
+  }
+  if (type === "correct") {
+    const pose = getRandomItem(MASCOT_REACTIONS.happyPoses);
+    const msg = getRandomItem(MASCOT_REACTIONS.happyMessages);
+    return { pose, msg, badge: "CHÍNH XÁC ✨", typeClass: "correct" };
+  }
+  if (type === "wrong") {
+    const pose = getRandomItem(MASCOT_REACTIONS.sadPoses);
+    const msg = getRandomItem(MASCOT_REACTIONS.sadMessages);
+    return { pose, msg, badge: "THỬ LẠI 💪", typeClass: "wrong" };
+  }
+  if (type === "hint") {
+    const pose = getRandomItem(MASCOT_REACTIONS.hintPoses);
+    const msg = getRandomItem(MASCOT_REACTIONS.hintMessages);
+    return { pose, msg, badge: "GỢI Ý 💡", typeClass: "hint" };
+  }
+  const pose = getRandomItem(MASCOT_REACTIONS.defaultPoses);
+  const msg = getRandomItem(MASCOT_REACTIONS.defaultMessages);
+  return { pose, msg, badge: "ROBOT ÔN THI 🤖", typeClass: "default" };
+}
+
+/* ===========================================================================
+ *  MÀN HÌNH LÀM BÀI
+ * ========================================================================= */
+function renderQuiz() {
+  const Q = State.quiz;
+  const q = Q.questions[Q.index];
+  const isExam = Q.mode === "exam";
+  const revealed = Q.revealed[Q.index];
+
+  const pct = Math.round(((Q.index + 1) / Q.questions.length) * 100);
+  const curAns = Q.answers[Q.index];
+  const isCorrect = revealed ? isAnswerCorrect(q, curAns) : null;
+
+  // Cập nhật streak nếu đang làm luyện tập
+  if (revealed && !Q.reactions[Q.index]) {
+    if (isCorrect) {
+      Q.streak = (Q.streak || 0) + 1;
+      Q.reactions[Q.index] = getMascotReaction(Q.streak >= 2 ? "streak" : "correct", Q.streak);
+    } else {
+      Q.streak = 0;
+      Q.reactions[Q.index] = getMascotReaction("wrong", 0);
+    }
+  }
+
+  const activeReaction = Q.reactions[Q.index] || getMascotReaction("default", Q.streak || 0);
+
+  app.innerHTML = `
+    <div class="quiz-header">
+      <div class="quiz-meta">
+        <span class="pill">${esc(Q.title)}</span>
+        <span class="pill type-${q.type}">${TYPE_LABEL[q.type]}</span>
+        ${q.grade ? `<span class="pill">Lớp ${q.grade}</span>` : ""}
+        <span class="pill">${LEVEL_LABEL[q.level]}</span>
+      </div>
+      <div class="quiz-meta">
+        ${isExam ? `<span class="timer" id="timer">--:--</span>` : ""}
+        <button class="btn btn-ghost" id="quitBtn">Thoát</button>
+      </div>
+    </div>
+
+    <!-- DYNAMIC GAMIFIED PROGRESS BAR -->
+    <div class="progress-container">
+      <div class="progress-track-wrapper">
+        <div class="progress-fill" style="width:${pct}%"></div>
+      </div>
+      <div class="progress-info-row">
+        <span>Câu ${Q.index + 1} / ${Q.questions.length} (${pct}%)</span>
+        ${Q.streak && Q.streak >= 2 
+          ? `<span class="streak-counter">🔥 Streak ${Q.streak} câu đúng</span>` 
+          : `<span>${isExam ? "Thi thử bấm giờ" : "Luyện tập tự do"}</span>`}
+      </div>
+    </div>
+
+    <div class="palette" id="palette"></div>
+
+    <!-- INTERACTIVE MASCOT REACTION BOX -->
+    <div class="mascot-interactive-widget ${activeReaction.typeClass}">
+      <div class="mascot-avatar-box">
+        <img src="${activeReaction.pose}" alt="Linh vật Robot" class="mascot-avatar-img" />
+      </div>
+      <div class="mascot-speech-bubble">
+        <span class="mascot-badge ${activeReaction.typeClass}">${activeReaction.badge}</span>
+        <div class="mascot-speech-text">${activeReaction.msg}</div>
+      </div>
+    </div>
+
+    <div class="question-card">
+      <div class="q-number">Câu ${Q.index + 1} / ${Q.questions.length}</div>
+      <div class="q-text">${esc(q.question)}</div>
+      ${q.code ? `<pre class="q-code">${esc(q.code)}</pre>` : ""}
+      <div id="answerArea"></div>
+      <div id="explainArea"></div>
+    </div>
+
+    <div class="quiz-nav">
+      <div class="quiz-nav-left">
+        <button class="btn btn-ghost" id="prevBtn" ${Q.index === 0 ? "disabled" : ""}>${aIco("aleft", null, 14)} Câu trước</button>
+        <button class="flag-btn ${Q.flags[Q.index] ? "on" : ""}" id="flagBtn">${aIco("flag", null, 14)} ${Q.flags[Q.index] ? "Bỏ đánh dấu" : "Đánh dấu"}</button>
+      </div>
+      <div class="quiz-nav-left">
+        ${!isExam ? `<button class="btn btn-ghost" id="checkBtn" ${revealed ? "disabled" : ""}>Kiểm tra</button>` : ""}
+        ${Q.index === Q.questions.length - 1
+          ? `<button class="btn btn-success" id="submitBtn">${aIco("check2", null, 15)} Nộp bài</button>`
+          : `<button class="btn btn-primary" id="nextBtn">Câu sau ${aIco("aright", null, 14)}</button>`}
+      </div>
+    </div>
+  `;
+
+  renderAnswerArea(q, revealed);
+  renderPalette();
+  if (revealed) renderExplain(q);
+
+  // sự kiện
+  const byId = (id) => document.getElementById(id);
+  byId("prevBtn") && (byId("prevBtn").onclick = () => { Q.index--; go("quiz"); });
+  byId("nextBtn") && (byId("nextBtn").onclick = () => { Q.index++; go("quiz"); });
+  byId("flagBtn").onclick = () => { Q.flags[Q.index] = !Q.flags[Q.index]; go("quiz"); };
+  byId("checkBtn") && (byId("checkBtn").onclick = () => { 
+    Q.revealed[Q.index] = true;
+    go("quiz"); 
+  });
+  byId("submitBtn") && (byId("submitBtn").onclick = trySubmit);
+  byId("quitBtn").onclick = async () => {
+    const ok = await confirmBox("Thoát bài làm?", "Bài làm hiện tại sẽ không được lưu. Bạn có chắc muốn thoát?", "Thoát");
+    if (ok) { stopTimer(); State.quiz = null; go("home"); }
+  };
+
+  if (isExam) startTimer();
+}
+
+/* --- Vùng nhập đáp án theo từng dạng --- */
+function renderAnswerArea(q, revealed) {
+  const Q = State.quiz;
+  const area = document.getElementById("answerArea");
+  const locked = revealed; // ở practice, sau khi kiểm tra thì khóa
+
+  if (q.type === "mc") {
+    const cur = Q.answers[Q.index];
+    area.innerHTML = `<div class="options">` + q.options.map((opt, i) => {
+      let cls = "option";
+      if (revealed) {
+        cls += " locked";
+        if (i === q.answer) cls += " correct";
+        else if (i === cur) cls += " wrong";
+      } else if (i === cur) cls += " selected";
+      const key = String.fromCharCode(65 + i);
+      return `<div class="${cls}" data-i="${i}"><span class="opt-key">${key}</span><span>${esc(opt)}</span></div>`;
+    }).join("") + `</div>`;
+    if (!locked) area.querySelectorAll(".option").forEach((o) => o.onclick = () => {
+      Q.answers[Q.index] = +o.dataset.i; go("quiz");
+    });
+
+  } else if (q.type === "tf") {
+    if (!Array.isArray(Q.answers[Q.index])) Q.answers[Q.index] = new Array(q.statements.length).fill(null);
+    const cur = Q.answers[Q.index];
+    const letters = ["a", "b", "c", "d", "e", "f"];
+    area.innerHTML = `<div class="tf-table">` + q.statements.map((st, i) => {
+      let rowCls = "tf-row";
+      let mark = "";
+      if (revealed) {
+        const right = cur[i] === st.correct;
+        rowCls += right ? " reveal-correct" : " reveal-wrong";
+        mark = `<span class="tf-mark">${right ? aIco("check2", "#16a34a", 15) : aIco("x", "#dc2626", 15)}</span>`;
+      }
+      return `
+        <div class="${rowCls}">
+          <div class="tf-text"><b>${letters[i]})</b> ${esc(st.text)}</div>
+          <div class="tf-choices" data-i="${i}">
+            <button data-v="true" class="${cur[i] === true ? "sel-true" : ""}">Đúng</button>
+            <button data-v="false" class="${cur[i] === false ? "sel-false" : ""}">Sai</button>
+          </div>
+          ${mark}
+        </div>`;
+    }).join("") + `</div>`;
+    if (!locked) area.querySelectorAll(".tf-choices").forEach((grp) => {
+      const i = +grp.dataset.i;
+      grp.querySelectorAll("button").forEach((b) => b.onclick = () => {
+        Q.answers[Q.index][i] = b.dataset.v === "true"; go("quiz");
+      });
+    });
+
+  } else if (q.type === "sa") {
+    const cur = Q.answers[Q.index];
+    let cls = "sa-input";
+    if (revealed) cls += isSAcorrect(q, cur) ? " correct" : " wrong";
+    area.innerHTML = `
+      <input type="text" class="${cls}" id="saInput" placeholder="Nhập đáp án..."
+             value="${cur != null ? esc(cur) : ""}" ${locked ? "disabled" : ""} autocomplete="off" />`;
+    if (!locked) {
+      const inp = document.getElementById("saInput");
+      inp.oninput = () => { Q.answers[Q.index] = inp.value; };
+      inp.onkeydown = (e) => { if (e.key === "Enter") { e.preventDefault(); document.getElementById("checkBtn")?.click() || document.getElementById("nextBtn")?.click(); } };
+      inp.focus();
+    }
+  }
+}
+
+function renderExplain(q) {
+  const Q = State.quiz;
+  const cur = Q.answers[Q.index];
+  const correct = isAnswerCorrect(q, cur);
+  const area = document.getElementById("explainArea");
+  let correctText = "";
+  if (q.type === "mc") correctText = `Đáp án đúng: <b>${String.fromCharCode(65 + q.answer)}. ${esc(q.options[q.answer])}</b>`;
+  else if (q.type === "sa") correctText = `Đáp án đúng: <b>${esc(q.answer)}</b>`;
+  else if (q.type === "tf") correctText = `Đáp án: ${q.statements.map((s, i) => `${["a", "b", "c", "d"][i]}-${s.correct ? "Đ" : "S"}`).join(", ")}`;
+
+  // Đổi tư thế linh vật khi người dùng xem giải thích
+  const hintReaction = getMascotReaction("hint", 0);
+
+  area.innerHTML = `
+    <div class="explain-box">
+      <div class="result-flag ${correct ? "ok" : "no"}">${correct ? aIco("check2", "#16a34a", 15) + " Chính xác!" : aIco("x", "#dc2626", 15) + " Chưa đúng"}</div>
+      <div style="margin-bottom:8px">${correctText}</div>
+      <div style="display:flex; gap:10px; align-items:flex-start;">
+        <img src="${hintReaction.pose}" alt="Robot Giải thích" style="width:42px; height:42px; object-fit:contain; flex-shrink:0;" />
+        <div>
+          <b>${aIco("bulb", "#d97706", 14)} ${hintReaction.msg}</b>
+          <div style="margin-top:4px;">${esc(q.explain || "")}</div>
+        </div>
+      </div>
+    </div>`;
+}
+
+/* --- Bảng câu hỏi (palette) --- */
+function renderPalette() {
+  const Q = State.quiz;
+  const pal = document.getElementById("palette");
+  pal.innerHTML = Q.questions.map((q, i) => {
+    let cls = "palette-btn";
+    const a = Q.answers[i];
+    const isAnswered = a !== null && a !== undefined && !(Array.isArray(a) && a.every((x) => x === null)) && a !== "";
+    if (Q.revealed[i]) cls += isAnswerCorrect(q, a) ? " correct" : " wrong";
+    else if (isAnswered) cls += " answered";
+    if (i === Q.index) cls += " current";
+    if (Q.flags[i]) cls += " flagged";
+    return `<button class="${cls}" data-i="${i}">${i + 1}</button>`;
+  }).join("");
+  pal.querySelectorAll(".palette-btn").forEach((b) => b.onclick = () => { Q.index = +b.dataset.i; go("quiz"); });
+}
+
+/* ===========================================================================
+ *  BỘ ĐẾM GIỜ
+ * ========================================================================= */
+function startTimer() {
+  const Q = State.quiz;
+  stopTimer();
+  const el = document.getElementById("timer");
+  const total = Q.minutes * 60;
+  const tick = () => {
+    const elapsed = Math.floor((Date.now() - Q.startTs) / 1000);
+    const left = total - elapsed;
+    if (!el) return;
+    if (left <= 0) { el.textContent = "00:00"; stopTimer(); doSubmit(true); return; }
+    const m = String(Math.floor(left / 60)).padStart(2, "0");
+    const s = String(left % 60).padStart(2, "0");
+    el.textContent = `${m}:${s}`;
+    el.classList.toggle("danger", left <= 300);
+  };
+  tick();
+  Q.timerId = setInterval(tick, 1000);
+}
+function stopTimer() { if (State.quiz && State.quiz.timerId) { clearInterval(State.quiz.timerId); State.quiz.timerId = null; } }
+
+/* ===========================================================================
+ *  CHẤM ĐIỂM
+ * ========================================================================= */
+function isSAcorrect(q, ans) {
+  if (ans == null) return false;
+  const set = [q.answer].concat(q.accept || []).map(normSA);
+  return set.includes(normSA(ans));
+}
+function isAnswerCorrect(q, ans) {
+  if (q.type === "mc") return ans === q.answer;
+  if (q.type === "sa") return isSAcorrect(q, ans);
+  if (q.type === "tf") return Array.isArray(ans) && q.statements.every((s, i) => ans[i] === s.correct);
+  return false;
+}
+
+/* Tính điểm theo thang chính thức + thống kê */
+function grade() {
+  const Q = State.quiz;
+  let score = 0, correctCount = 0;
+  const parts = { mc: { got: 0, max: 0, correct: 0, total: 0 }, tf: { got: 0, max: 0, correct: 0, total: 0 }, sa: { got: 0, max: 0, correct: 0, total: 0 } };
+  const details = [];
+
+  Q.questions.forEach((q, i) => {
+    const ans = Q.answers[i];
+    let pts = 0, max = 0, fullyCorrect = false, subCorrect = 0;
+
+    if (q.type === "mc") {
+      max = MC_POINT;
+      fullyCorrect = ans === q.answer;
+      pts = fullyCorrect ? MC_POINT : 0;
+    } else if (q.type === "sa") {
+      max = SA_POINT;
+      fullyCorrect = isSAcorrect(q, ans);
+      pts = fullyCorrect ? SA_POINT : 0;
+    } else if (q.type === "tf") {
+      max = 1.0;
+      subCorrect = q.statements.reduce((n, s, k) => n + ((Array.isArray(ans) && ans[k] === s.correct) ? 1 : 0), 0);
+      pts = TF_POINTS[subCorrect];
+      fullyCorrect = subCorrect === q.statements.length;
+    }
+
+    score += pts;
+    parts[q.type].got += pts;
+    parts[q.type].max += max;
+    parts[q.type].total += 1;
+    if (fullyCorrect) { parts[q.type].correct += 1; correctCount += 1; }
+
+    details.push({ q, ans, pts, max, fullyCorrect, subCorrect });
+  });
+
+  return { score: Math.round(score * 100) / 100, correctCount, total: Q.questions.length, parts, details };
+}
+
+/* ===========================================================================
+ *  NỘP BÀI
+ * ========================================================================= */
+async function trySubmit() {
+  const Q = State.quiz;
+  const unanswered = Q.answers.filter((a, i) => {
+    const t = Q.questions[i].type;
+    if (t === "tf") return !Array.isArray(a) || a.some((x) => x === null);
+    return a === null || a === undefined || a === "";
+  }).length;
+  const msg = unanswered > 0
+    ? `Bạn còn ${unanswered} câu chưa hoàn thành. Nộp bài ngay bây giờ?`
+    : "Bạn đã hoàn thành tất cả các câu. Nộp bài?";
+  const ok = await confirmBox("Nộp bài", msg, "Nộp bài");
+  if (ok) doSubmit(false);
+}
+
+function doSubmit(timeUp) {
+  const Q = State.quiz;
+  if (Q.submitted) return;
+  Q.submitted = true;
+  stopTimer();
+  const result = grade();
+  const durationSec = Math.floor((Date.now() - Q.startTs) / 1000);
+
+  const record = {
+    at: Date.now(),
+    mode: Q.mode,
+    title: Q.title,
+    code: Q.code || null,
+    lessonId: Q.lessonId || null,
+    score: result.score,
+    correctCount: result.correctCount,
+    total: result.total,
+    durationSec,
+    timeUp: !!timeUp,
+  };
+  State.history.unshift(record);
+  State.history = State.history.slice(0, 50);
+  save("history", State.history);
+  if (typeof Gam !== "undefined") Gam.onQuizDone(record);
+
+  go("result", { result, record });
+}
+
+/* ===========================================================================
+ *  MÀN HÌNH KẾT QUẢ
+ * ========================================================================= */
+function renderResult(data) {
+  const { result, record } = data;
+  const Q = State.quiz;
+  const isExam = Q.mode === "exam";
+  const scoreOn10 = isExam ? result.score : Math.round((result.correctCount / result.total) * 1000) / 100;
+  const pctScore = isExam ? (result.score / 10) : (result.correctCount / result.total);
+  const ring = ringSVG(pctScore, isExam ? result.score.toFixed(2) : `${result.correctCount}/${result.total}`, isExam ? "/ 10 điểm" : "câu đúng");
+
+  const msg = pctScore >= 0.9 ? aIco("trophy", "#eab308", 20) + " Xuất sắc!" : pctScore >= 0.7 ? aIco("star", "#f59e0b", 20) + " Tốt lắm!" : pctScore >= 0.5 ? aIco("flame", "#f97316", 20) + " Khá ổn, cố lên!" : aIco("book", "#3b82f6", 20) + " Cần ôn thêm nhé!";
+  const mm = Math.floor(record.durationSec / 60), ss = record.durationSec % 60;
+
+  const partRow = (key, label) => {
+    const p = result.parts[key];
+    if (p.total === 0) return "";
+    return `<div class="config-row">
+      <label>${label} <small style="color:var(--text-soft);font-weight:400">(${p.correct}/${p.total} câu đúng hoàn toàn)</small></label>
+      <b>${p.got.toFixed(2)} / ${p.max.toFixed(2)} đ</b>
+    </div>`;
+  };
+
+  app.innerHTML = `
+    <div class="result-hero">
+      <div class="score-ring">${ring}</div>
+      <div class="result-msg">${msg}</div>
+      ${record.timeUp ? `<p style="color:var(--danger);margin-top:6px;font-weight:600">${aIco("clock", "#dc2626", 15)} Đã hết giờ làm bài</p>` : ""}
+    </div>
+
+    <div class="stat-grid">
+      <div class="stat-box g"><b>${result.correctCount}</b><small>Câu đúng hoàn toàn</small></div>
+      <div class="stat-box r"><b>${result.total - result.correctCount}</b><small>Câu sai / thiếu</small></div>
+      <div class="stat-box"><b>${mm}:${String(ss).padStart(2, "0")}</b><small>Thời gian làm</small></div>
+      <div class="stat-box"><b>${isExam ? result.score.toFixed(2) : scoreOn10.toFixed(2)}</b><small>Điểm (thang 10)</small></div>
+    </div>
+
+    ${isExam ? `
+    <div class="config-card">
+      <div class="section-title" style="margin-top:0">${aIco("clipboard", "#4f46e5", 17)} Chi tiết điểm theo phần</div>
+      ${partRow("mc", "Phần I - Trắc nghiệm 4 lựa chọn")}
+      ${partRow("tf", "Phần II - Đúng/Sai")}
+      ${partRow("sa", "Phần III - Trả lời ngắn")}
+    </div>` : ""}
+
+    <div class="quiz-nav" style="margin-bottom:22px">
+      <button class="btn btn-ghost" id="retryBtn">${aIco("refresh", null, 15)} Làm lại</button>
+      <div class="quiz-nav-left">
+        <button class="btn btn-ghost" id="homeBtn">${aIco("home", null, 15)} Trang chủ</button>
+        <button class="btn btn-primary" id="toggleReview">${aIco("eye", null, 15)} Xem lời giải chi tiết</button>
+      </div>
+    </div>
+
+    <div id="reviewArea" hidden></div>
+  `;
+
+  document.getElementById("homeBtn").onclick = () => { State.quiz = null; go("home"); };
+  document.getElementById("retryBtn").onclick = () => {
+    if (isExam && Q.code && typeof startExamCode === "function") startExamCode(Q.code);
+    else if (isExam) startExam();
+    else { State.quiz = newQuiz(shuffle(Q.questions), Q.mode, { title: Q.title, minutes: Q.minutes }); go("quiz"); }
+  };
+  const rev = document.getElementById("reviewArea");
+  const tglRev = document.getElementById("toggleReview");
+  tglRev.onclick = () => {
+    if (rev.hidden) { rev.hidden = false; renderReviewList(result); tglRev.innerHTML = aIco("eye", null, 15) + " Ẩn lời giải"; rev.scrollIntoView({ behavior: "smooth" }); }
+    else { rev.hidden = true; tglRev.innerHTML = aIco("eye", null, 15) + " Xem lời giải chi tiết"; }
+  };
+}
+
+function renderReviewList(result) {
+  const rev = document.getElementById("reviewArea");
+  rev.innerHTML = `<div class="section-title">${aIco("exam", "#4f46e5", 17)} Xem lại từng câu</div>` + result.details.map((d, i) => {
+    const q = d.q;
+    let userAns = "";
+    if (q.type === "mc") userAns = d.ans != null ? `${String.fromCharCode(65 + d.ans)}. ${esc(q.options[d.ans])}` : "(chưa trả lời)";
+    else if (q.type === "sa") userAns = d.ans ? esc(d.ans) : "(chưa trả lời)";
+    else if (q.type === "tf") userAns = Array.isArray(d.ans) ? q.statements.map((s, k) => `${["a", "b", "c", "d"][k]}-${d.ans[k] == null ? "?" : (d.ans[k] ? "Đ" : "S")}`).join(", ") : "(chưa trả lời)";
+
+    let correctAns = "";
+    if (q.type === "mc") correctAns = `${String.fromCharCode(65 + q.answer)}. ${esc(q.options[q.answer])}`;
+    else if (q.type === "sa") correctAns = esc(q.answer);
+    else if (q.type === "tf") correctAns = q.statements.map((s, k) => `${["a", "b", "c", "d"][k]}-${s.correct ? "Đ" : "S"}`).join(", ");
+
+    return `
+      <div class="review-item ${d.fullyCorrect ? "ok" : "no"}">
+        <div class="review-q">Câu ${i + 1}. ${esc(q.question)}</div>
+        ${q.code ? `<pre class="q-code">${esc(q.code)}</pre>` : ""}
+        <div style="font-size:14px;margin:6px 0">
+          <div>Bạn trả lời: <b style="color:${d.fullyCorrect ? "var(--success)" : "var(--danger)"}">${userAns}</b>
+            ${q.type === "tf" ? ` — <span style="color:var(--text-soft)">${d.subCorrect}/${q.statements.length} ý đúng (${d.pts.toFixed(2)}đ)</span>` : ""}</div>
+          <div>Đáp án đúng: <b style="color:var(--success)">${correctAns}</b></div>
+        </div>
+        <div class="explain-box"><b>${aIco("bulb", "#d97706", 14)} Giải thích:</b> ${esc(q.explain || "")}</div>
+      </div>`;
+  }).join("");
+}
+
+/* Vẽ vòng tròn điểm số bằng SVG */
+function ringSVG(pct, big, small) {
+  const r = 65, c = 2 * Math.PI * r;
+  const off = c * (1 - Math.max(0, Math.min(1, pct)));
+  const color = pct >= 0.7 ? "var(--success)" : pct >= 0.5 ? "var(--warning)" : "var(--danger)";
+  return `
+    <svg width="150" height="150" viewBox="0 0 150 150">
+      <circle cx="75" cy="75" r="${r}" fill="none" stroke="var(--bg-soft)" stroke-width="12"/>
+      <circle cx="75" cy="75" r="${r}" fill="none" stroke="${color}" stroke-width="12"
+        stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${off}"/>
+    </svg>
+    <div class="score-num"><b>${big}</b><span>${small}</span></div>`;
+}
+
+/* ===========================================================================
+ *  LỊCH SỬ / KẾT QUẢ
+ * ========================================================================= */
+function renderHistory() {
+  const h = State.history;
+  if (!h.length) {
+    app.innerHTML = `
+      <button class="back-link" id="back">${aIco("aleft", null, 15)} Về trang chủ</button>
+      <div class="empty-state">
+        <div class="big">${aIco("chart", "#4f46e5", 40)}</div>
+        <h3>Chưa có lịch sử làm bài</h3>
+        <p>Hãy bắt đầu một bài thi thử hoặc luyện tập để xem kết quả tại đây.</p>
+        <button class="btn btn-primary" style="margin-top:16px" id="startNow">Bắt đầu ngay</button>
+      </div>`;
+    document.getElementById("back").onclick = () => go("home");
+    document.getElementById("startNow").onclick = () => go("home");
+    return;
+  }
+
+  const avg = (h.reduce((s, x) => s + x.score, 0) / h.length).toFixed(2);
+  const best = Math.max(...h.map((x) => x.score)).toFixed(2);
+  const exams = h.filter((x) => x.mode === "exam").length;
+
+  app.innerHTML = `
+    <button class="back-link" id="back">${aIco("aleft", null, 15)} Về trang chủ</button>
+    <h2 style="margin-bottom:16px">${aIco("chart", "#4f46e5", 22)} Kết quả & Tiến độ</h2>
+    <div class="stat-grid">
+      <div class="stat-box"><b>${h.length}</b><small>Lượt làm bài</small></div>
+      <div class="stat-box g"><b>${best}</b><small>Điểm cao nhất</small></div>
+      <div class="stat-box"><b>${avg}</b><small>Điểm trung bình</small></div>
+      <div class="stat-box"><b>${exams}</b><small>Lần thi thử</small></div>
+    </div>
+    <div class="section-title">${aIco("clock", "#4f46e5", 17)} Lịch sử gần đây</div>
+    <div>
+      ${h.map((x) => {
+        const d = new Date(x.at);
+        const pct = x.mode === "exam" ? x.score / 10 : x.correctCount / x.total;
+        const color = pct >= 0.7 ? "var(--success)" : pct >= 0.5 ? "var(--warning)" : "var(--danger)";
+        const scoreLabel = x.mode === "exam" ? x.score.toFixed(1) : `${x.correctCount}/${x.total}`;
+        const mm = Math.floor(x.durationSec / 60), ss = x.durationSec % 60;
+        return `
+        <div class="history-item">
+          <div class="history-score" style="background:${color}">${scoreLabel}</div>
+          <div class="history-info">
+            <b>${esc(x.title)}</b>
+            <small>${x.mode === "exam" ? "Thi thử" : "Luyện tập"} • ${x.correctCount}/${x.total} câu đúng • ${mm}:${String(ss).padStart(2, "0")}</small>
+            <small>${d.toLocaleString("vi-VN")}</small>
+          </div>
+        </div>`;
+      }).join("")}
+    </div>
+    <button class="btn btn-ghost" id="clearHist" style="margin-top:18px">${aIco("trash", "#dc2626", 15)} Xóa lịch sử</button>
+  `;
+  document.getElementById("back").onclick = () => go("home");
+  document.getElementById("clearHist").onclick = async () => {
+    const ok = await confirmBox("Xóa lịch sử?", "Toàn bộ kết quả đã lưu sẽ bị xóa vĩnh viễn. Tiếp tục?", "Xóa");
+    if (ok) { State.history = []; save("history", []); toast("Đã xóa lịch sử"); go("history"); }
+  };
+}
+
+/* ===========================================================================
+ *  LINH VẬT TRỢ LÝ CỐ ĐỊNH GÓC DƯỚI BÊN PHẢI (FLOATING FIXED MASCOT ASSISTANT)
+ * ========================================================================= */
+const FLOATING_TIPS = [
+  "Robot luôn ở đây đồng hành cùng em nè! Bấm vào Robot để nghe gợi ý nhé! 🤖",
+  "Học 15 phút mỗi ngày là chìa khóa đạt điểm 9+ Tin học THPT! 💡",
+  "Hoàn thành các bài luyện tập để tích lũy XP và nâng Level nhé! ⭐",
+  "Cần xem lại bài học hay luyện đề? Sử dụng thanh điều hướng phía trên nhé! 🚀",
+  "Cố lên em ơi! Tư duy lập trình tốt sẽ giúp ích rất nhiều cho tương lai! 💻",
+  "Học từ sai lầm là cách nhanh nhất để làm chủ kiến thức! 🔥"
+];
+
+const FLOATING_POSES = [
+  "asset/mascot/poses/standing.png",
+  "asset/mascot/poses/happy.png",
+  "asset/mascot/poses/wink.png",
+  "asset/mascot/poses/reading.png",
+  "asset/mascot/poses/studying.png"
+];
+
+let mascotBubbleOpen = true;
+
+function initFloatingMascot() {
+  if (document.getElementById("floatingMascot")) return;
+
+  const container = document.createElement("div");
+  container.id = "floatingMascot";
+  container.className = "floating-mascot-container";
+
+  const randomTip = FLOATING_TIPS[Math.floor(Math.random() * FLOATING_TIPS.length)];
+  const randomPose = FLOATING_POSES[Math.floor(Math.random() * FLOATING_POSES.length)];
+
+  container.innerHTML = `
+    <div class="floating-mascot-wrapper">
+      <div class="floating-mascot-bubble" id="mascotBubble" ${mascotBubbleOpen ? "" : "hidden"}>
+        <div class="floating-mascot-bubble-header">
+          <span class="floating-mascot-badge">ROBOT TRỢ LÝ</span>
+          <button class="floating-mascot-close" id="closeMascotBubble" title="Đóng bóng thoại">&times;</button>
+        </div>
+        <div class="floating-mascot-text" id="mascotTipText">${randomTip}</div>
+      </div>
+      <button class="floating-mascot-btn" id="mascotBtn" title="Bấm để tương tác với Robot!">
+        <div class="floating-mascot-pulse"></div>
+        <img src="${randomPose}" alt="Linh vật Robot" class="floating-mascot-img" id="mascotImg" />
+      </button>
+    </div>
+  `;
+
+  document.body.appendChild(container);
+
+  const btn = document.getElementById("mascotBtn");
+  const bubble = document.getElementById("mascotBubble");
+  const closeBtn = document.getElementById("closeMascotBubble");
+  const tipText = document.getElementById("mascotTipText");
+  const mascotImg = document.getElementById("mascotImg");
+
+  closeBtn.onclick = (e) => {
+    e.stopPropagation();
+    bubble.hidden = true;
+    mascotBubbleOpen = false;
+  };
+
+  btn.onclick = () => {
+    if (bubble.hidden) {
+      bubble.hidden = false;
+      mascotBubbleOpen = true;
+    }
+    // Đổi tip và tư thế khi bấm
+    const nextTip = FLOATING_TIPS[Math.floor(Math.random() * FLOATING_TIPS.length)];
+    const nextPose = FLOATING_POSES[Math.floor(Math.random() * FLOATING_POSES.length)];
+    tipText.textContent = nextTip;
+    mascotImg.src = nextPose;
+  };
+}
+
+/* ===========================================================================
+ *  CHỦ ĐỀ SÁNG / TỐI + KHỞI ĐỘNG
+ * ========================================================================= */
+function applyTheme() {
+  document.documentElement.setAttribute("data-theme", State.settings.theme);
+  const tb = document.getElementById("themeToggle");
+  const dark = State.settings.theme === "dark";
+  if (typeof ICON === "function") tb.innerHTML = ICON(dark ? "sun" : "moon", 18);
+  else tb.textContent = dark ? "☀️" : "🌙";
+}
+function toggleTheme() {
+  State.settings.theme = State.settings.theme === "dark" ? "light" : "dark";
+  save("settings", State.settings);
+  applyTheme();
+}
+
+function initNav() {
+  if (typeof iconify === "function") iconify(document);
+  document.getElementById("themeToggle").onclick = toggleTheme;
+  document.getElementById("homeLink").onclick = () => guardLeave(() => go("home"));
+  document.getElementById("homeLink").onkeydown = (e) => { if (e.key === "Enter") go("home"); };
+  document.querySelectorAll(".nav-btn[data-nav]").forEach((b) => b.onclick = () => guardLeave(() => go(b.dataset.nav)));
+}
+
+/* Nếu đang làm bài thi (chưa nộp) thì hỏi trước khi rời đi */
+async function guardLeave(fn) {
+  if (State.quiz && !State.quiz.submitted && State.view === "quiz") {
+    const ok = await confirmBox("Rời khỏi bài làm?", "Bài làm hiện tại chưa được lưu. Bạn có chắc muốn rời đi?", "Rời đi");
+    if (!ok) return;
+    stopTimer(); State.quiz = null;
+  }
+  fn();
+}
+
+/* Cảnh báo khi đóng tab lúc đang làm bài */
+window.addEventListener("beforeunload", (e) => {
+  if (State.quiz && !State.quiz.submitted) { e.preventDefault(); e.returnValue = ""; }
+});
+
+/* Khởi động ứng dụng: render theo hash hiện có (hoặc home nếu hash rỗng) */
+applyTheme();
+initNav();
+initFloatingMascot();
+renderFromHash();
