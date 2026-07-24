@@ -77,6 +77,17 @@ function visibleForTrack(l) {
   const lt = lessonTrack(l);
   return !lt || lt === t;
 }
+/* Lộ trình theo BỘ SÁCH chọn trong hồ sơ:
+   - stage 10/11/12 = lộ trình theo sách giáo khoa (option "canhdieu")
+   - stage 20-24     = lộ trình bản tự biên soạn "Bản luyện thi THPT" (option "tuviet")
+   Chưa chọn bộ sách -> hiện cả hai lộ trình (giữ nguyên hành vi cũ). */
+function bookOfLesson(l) { return l.stage >= 20 ? "tuviet" : "canhdieu"; }
+function visibleForBook(l) {
+  const b = (typeof State !== "undefined" && State.profile && State.profile.book) || "";
+  return !b || bookOfLesson(l) === b;
+}
+/* Bài có hiện với hồ sơ hiện tại không (kết hợp định hướng + bộ sách). */
+function visibleForProfile(l) { return visibleForTrack(l) && visibleForBook(l); }
 const TYPE_LABEL = { mc: "Trắc nghiệm", tf: "Đúng/Sai", sa: "Trả lời ngắn" };
 const LEVEL_LABEL = { easy: "Nhận biết", medium: "Thông hiểu", hard: "Vận dụng" };
 
@@ -224,7 +235,7 @@ function renderHome() {
   const ic = (n, e) => (typeof ICON === "function" ? ICON(n, 30) : e);
 
   // Bài đang học (theo khóa cứng): bài chưa học đầu tiên có bài liền trước đã học
-  const allSorted = LESSONS.slice().filter(visibleForTrack).sort((a, b) => a.stage - b.stage || a.order - b.order);
+  const allSorted = LESSONS.slice().filter(visibleForProfile).sort((a, b) => a.stage - b.stage || a.order - b.order);
   // Có lớp trong hồ sơ -> ưu tiên gợi ý bài đúng lớp (nếu lớp đó còn bài chưa học)
   const pgrade = (State.profile && State.profile.grade) || "";
   const gradePool = pgrade ? allSorted.filter((l) => String(l.grade) === pgrade) : [];
@@ -356,7 +367,7 @@ function markLearned(id, val) {
 
 function renderLessons() {
   injectPathCss();
-  const sorted = LESSONS.slice().filter(visibleForTrack).sort((a, b) => a.stage - b.stage || a.order - b.order);
+  const sorted = LESSONS.slice().filter(visibleForProfile).sort((a, b) => a.stage - b.stage || a.order - b.order);
   const learned = sorted.map((l) => isLearned(l.id));
   // KHÓA CỨNG: bài i chỉ mở khi bài liền trước đã học (bài đầu luôn mở)
   // NGOẠI LỆ: nhóm "Bản sạch (thử)" stage>=20 luôn mở để nghiệm thu tự do
