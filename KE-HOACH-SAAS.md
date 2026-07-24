@@ -12,7 +12,7 @@
 - Tiến độ lưu localStorage, đã tập trung qua `load()/save()` trong `js/app.js:53-55` (key `tinhoc_thpt_v1`: `settings`, `history`, `learned`, `profile`). Gamify lưu riêng (`tinhoc_gam_v1`), vocab lưu `vocabPrefs`.
 - Bản ghi lịch sử làm bài (`app.js` ~1580): `{ mode, lessonId, score, correctCount, total, durationSec, timeUp, ... }` — map thẳng sang bảng `attempts`.
 - ID nội dung: bài học đã có ID ổn định (`C12-15`…), câu hỏi có (`A-mc-1`…); **`exercises.js` và `web-exercises-data.js` chưa có ID** → việc Phase 0.
-- Repo: `github.com/tuanla90/tin-hoc-thpt-qg`. ⚠️ Nếu đang **public** thì phải chuyển **private** trước khi bán (nội dung là tài sản).
+- Repo: `github.com/tuanla90/tin-hoc-thpt-qg`. ⚠️ **ĐÃ KIỂM TRA (24/07/2026): repo đang PUBLIC** — toàn bộ ngân hàng câu hỏi/bài giảng tải được tự do → **chuyển private ngay đầu Phase 0** (GitHub → Settings → Danger Zone → Change visibility; Railway vẫn deploy được repo private bình thường).
 
 ## 2. Kiến trúc đích
 
