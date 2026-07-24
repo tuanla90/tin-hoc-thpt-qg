@@ -80,7 +80,7 @@
     app.innerHTML =
       '<button class="back-link" id="pfBack">' + ico("aleft", null, 15) + " Trang chủ</button>" +
       '<h2 style="margin-bottom:6px">' + ico("user", "#4f46e5", 22) + " Hồ sơ của bạn</h2>" +
-      '<p class="pf-note">Thông tin lưu trên máy này để cá nhân hoá trải nghiệm học. Không gửi đi đâu cả.</p>' +
+      '<p class="pf-note">Thông tin lưu trên máy này để cá nhân hoá trải nghiệm học. Nếu bạn đăng nhập ở mục Tài khoản, hồ sơ sẽ được đồng bộ giữa các thiết bị.</p>' +
       '<div class="pf-card">' +
         '<div class="pf-top"><div class="pf-avatar" id="pfAvatar">' + avatarOf(p) + "</div>" +
           '<div class="pf-hello">' + (p.name ? "Xin chào" : "Chưa đặt tên") +

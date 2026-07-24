@@ -1,6 +1,10 @@
 # --- Sách giáo khoa có bản quyền (KHÔNG publish công khai) ---
-# ~640MB gồm PDF SGK và ảnh scan trang sách. Host riêng nếu cần tính năng đọc SGK.
-sach/
+# ~640MB gồm PDF SGK và ảnh scan trang sách. Chỉ dùng local; KHÔNG deploy lên web.
+public/sach/
+
+# --- Backend ---
+node_modules/
+.env
 
 # --- Ảnh nguồn thô của mascot (tuỳ chọn giữ local) ---
 # Các sheet gốc chưa cắt; bản đã cắt nằm trong asset/mascot/ vẫn được đưa lên.

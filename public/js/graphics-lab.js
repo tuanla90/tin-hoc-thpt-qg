@@ -369,5 +369,6 @@
     window.GLAB = GLAB;
     window.injectGraphicsLab = injectGraphicsLab;
     window.renderGfxLab = renderGfxLab;
+    window.renderConceptWidget = renderWidget; // tái dùng renderer (match/order/hotspot) cho bài lí thuyết
   }
 })();

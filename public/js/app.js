@@ -52,7 +52,7 @@ const app = document.getElementById("app");
  * ------------------------------------------------------------------------- */
 function loadAll() { try { return JSON.parse(localStorage.getItem(STORE_KEY)) || {}; } catch { return {}; } }
 function load(key, def) { const all = loadAll(); return key in all ? all[key] : def; }
-function save(key, val) { const all = loadAll(); all[key] = val; localStorage.setItem(STORE_KEY, JSON.stringify(all)); }
+function save(key, val) { const all = loadAll(); all[key] = val; localStorage.setItem(STORE_KEY, JSON.stringify(all)); if (window.Account) Account.onSaved(key, val); }
 
 /* ---------------------------------------------------------------------------
  *  TIỆN ÍCH CHUNG
@@ -126,7 +126,7 @@ function countByType(t) { return QUESTION_BANK.filter((q) => q.type === t).lengt
  * ------------------------------------------------------------------------- */
 /* Bảng ánh xạ view -> hàm render (dựng lại mỗi lần để bắt được window.* nạp sau) */
 function viewRenderer(view) {
-  const map = { home: renderHome, lessons: renderLessons, lesson: renderLesson, playground: renderPlayground, practiceSetup: renderPracticeSetup, quiz: renderQuiz, result: renderResult, history: renderHistory, vocab: window.renderVocabPage, achievements: (window.Gam && window.Gam.renderAchievements), examCodes: window.renderExamCodes, tfDrill: window.renderTFDrill, profile: window.renderProfile, sqlLab: window.renderSqlLab, gfxLab: window.renderGfxLab };
+  const map = { home: renderHome, lessons: renderLessons, lesson: renderLesson, playground: renderPlayground, practiceSetup: renderPracticeSetup, quiz: renderQuiz, result: renderResult, history: renderHistory, vocab: window.renderVocabPage, achievements: (window.Gam && window.Gam.renderAchievements), examCodes: window.renderExamCodes, tfDrill: window.renderTFDrill, profile: window.renderProfile, sqlLab: window.renderSqlLab, gfxLab: window.renderGfxLab, account: window.renderAccount };
   return map[view] || renderHome;
 }
 
@@ -145,6 +145,7 @@ function viewToHash(view, data) {
     case "examCodes": return "#/exam";
     case "tfDrill": return "#/tf-drill";
     case "profile": return "#/profile";
+    case "account": return "#/account";
     case "quiz": return "#/quiz";
     case "result": return "#/result";
     case "home":
@@ -178,6 +179,7 @@ function parseHash() {
     case "exam": return { view: "examCodes", data: undefined };
     case "tf-drill": return { view: "tfDrill", data: undefined };
     case "profile": return { view: "profile", data: undefined };
+    case "account": return { view: "account", data: undefined };
     case "quiz": return { view: "quiz", data: undefined };
     case "result": return { view: "result", data: undefined };
     case "": return { view: "home", data: undefined };

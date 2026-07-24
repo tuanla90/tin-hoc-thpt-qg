@@ -2,9 +2,15 @@
   "version": "0.0.1",
   "configurations": [
     {
+      "name": "web",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["--env-file-if-exists=.env", "server/index.js"],
+      "port": 3000
+    },
+    {
       "name": "tin-hoc",
       "runtimeExecutable": "python",
-      "runtimeArgs": ["-m", "http.server", "8777"],
+      "runtimeArgs": ["-m", "http.server", "8777", "-d", "public"],
       "port": 8777
     }
   ]

@@ -5,6 +5,13 @@
 > Nguyên tắc xuyên suốt: **giữ nguyên frontend vanilla JS**, thêm dần backend,
 > app vẫn dùng được đầy đủ khi CHƯA đăng nhập (offline-first).
 
+> **✅ TRẠNG THÁI (24/07/2026): Phase 0 + 1 + 2 ĐÃ CODE XONG & TEST.**
+> 10/10 test API pass (`npm test`, pg-mem); e2e trình duyệt OK (đăng ký → làm bài
+> → xoá máy → đăng nhập lại → tiến độ kéo về đủ). **Đã chốt:** làm cho học sinh
+> tự học trước; tạm **FREE toàn bộ nội dung** (chưa gate premium); dùng **pg
+> thuần** thay Prisma (đơn giản, không build step). **Còn chờ user:** nối Railway
+> (các bước ở Phase 1 bên dưới) và chuyển repo private.
+
 ## 1. Hiện trạng (đã khảo sát)
 
 - Frontend thuần vanilla JS, không build step: `index.html` + `js/` (~40 module) + `css/` + `asset/`.
@@ -36,7 +43,7 @@
 |---|---|---|
 | Runtime | Node 22 + Express | Cùng ngôn ngữ JS với frontend, Railway auto-detect |
 | DB | PostgreSQL (Railway plugin) | Filesystem Railway không bền → không dùng SQLite; Postgres có backup, `DATABASE_URL` tự inject |
-| ORM | Prisma | Migration rõ ràng, client JS dễ dùng, chạy tốt trên Railway |
+| DB access | `pg` thuần + schema idempotent (đã đổi, bỏ Prisma) | `CREATE TABLE IF NOT EXISTS` chạy lúc khởi động — DB Railway mới tự có đủ bảng, không cần migrate tool/build step; sau này đổi schema thì thêm `ALTER` |
 | Auth | Session cookie (`express-session` + `connect-pg-simple`) | Đơn giản hơn JWT cho web cùng origin, revoke được, session lưu Postgres |
 | Hash mật khẩu | `bcryptjs` | Thuần JS, không cần node-gyp trên Windows |
 
@@ -93,26 +100,31 @@ Quyền premium của 1 user = tồn tại license `activated_by = user.id` (ho�
 
 ## 4. Lộ trình theo phase
 
-### Phase 0 — Chuẩn hoá (1 buổi, chưa đụng server)
-- [ ] Gán ID ổn định cho `exercises.js`, `web-exercises-data.js` (bài SQL/đồ hoạ kiểm tra luôn thể).
-- [ ] Dời frontend vào `public/` (đường dẫn tương đối giữ nguyên → không sửa HTML).
-- [ ] Kiểm tra repo public/private; nếu public → chuyển private (Settings → Danger Zone).
-- **Xong khi**: mở `public/index.html` chạy y như cũ.
+### Phase 0 — Chuẩn hoá ✅ XONG (24/07/2026)
+- [x] Dời frontend vào `public/` (`git mv`; `sach/` cũng dời vào `public/sach/`, vẫn gitignore nên KHÔNG deploy — ảnh SGK có `onerror` ẩn êm trên bản web).
+- [ ] ~~Gán ID cho `exercises.js`, `web-exercises-data.js`~~ → HOÃN sang Phase 3 (chỉ cần khi giao bài tập).
+- [ ] Chuyển repo private — **user tự làm** (cần máy có tài khoản GitHub).
 
-### Phase 1 — Backend skeleton + deploy Railway (1 buổi)
-- [ ] `npm init -y; npm install express` — `server/index.js` serve `public/` + `GET /api/health`.
-- [ ] Railway: New Project → Deploy from GitHub repo → add **PostgreSQL** plugin.
-- [ ] Biến môi trường service web: `SESSION_SECRET` (chuỗi ngẫu nhiên dài), `DATABASE_URL` = `${{Postgres.DATABASE_URL}}` (reference variable), `NODE_ENV=production`.
-- [ ] Bật auto-deploy nhánh `main` (khớp workflow commit+push hiện tại).
-- **Xong khi**: mở `https://<app>.up.railway.app` thấy app y như bản local.
+### Phase 1 — Backend skeleton + deploy Railway ✅ CODE XONG — còn bước nối Railway (user làm)
+- [x] `server/` Express: serve `public/` + `GET /api/health`; `npm start`; test `npm test`.
+- [x] Chạy local không cần Postgres: `.env` với `DATABASE_URL=pgmem` (DB giả lập RAM để thử tài khoản) hoặc bỏ trống (chỉ trang tĩnh, API trả 503).
+- [ ] **Railway (làm 1 lần, ~10 phút):**
+  1. New Project → **Deploy from GitHub repo** → chọn repo này (auto-deploy nhánh `main` bật sẵn).
+  2. Trong project: **+ New → Database → PostgreSQL**.
+  3. Vào service web → tab **Variables** → thêm:
+     - `DATABASE_URL` = `${{Postgres.DATABASE_URL}}` (chọn kiểu *Variable Reference* trỏ sang service Postgres)
+     - `SESSION_SECRET` = chuỗi ngẫu nhiên dài (gõ bừa ~40 ký tự)
+  4. Settings → Networking → **Generate Domain** để lấy URL public.
+- **Xong khi**: mở `https://<app>.up.railway.app` thấy app + đăng ký được tài khoản.
 
-### Phase 2 — Tài khoản + đồng bộ tiến độ (2–3 buổi) ← giá trị lõi
-- [ ] Prisma schema (users, attempts, lesson_progress, gamify) + `prisma migrate deploy` trong lệnh start.
-- [ ] API: `POST /api/auth/register|login|logout`, `GET /api/me`; `POST /api/attempts`; `GET /api/sync` (kéo toàn bộ tiến độ); `PUT /api/learned`.
-- [ ] Frontend: view Đăng nhập/Đăng ký (thêm 1 view trong `app.js`, UI theo style sẵn có).
-- [ ] Sửa **một chỗ** `save()` trong `app.js`: sau khi lưu local, nếu đã đăng nhập → đẩy lên server (fire-and-forget). Khi login trên máy mới: kéo `GET /api/sync` về, merge (learned = hợp 2 tập; history = gộp theo thời gian; attempts là append-only nên không xung đột).
-- [ ] Bỏ giới hạn `history.slice(0, 50)` phía server (server giữ đủ, local vẫn cắt 50).
-- **Xong khi**: làm đề trên máy A, đăng nhập máy B thấy đủ lịch sử + bài đã học.
+### Phase 2 — Tài khoản + đồng bộ tiến độ ✅ XONG (24/07/2026) ← giá trị lõi
+- [x] Schema idempotent trong `server/db.js`: `users`, `attempts` (UNIQUE user+client_ts chống trùng), `learned`, `gamify` (JSONB), bảng `session` (connect-pg-simple tự tạo).
+- [x] API: `POST /api/auth/register|login|logout`, `GET /api/me`, `GET /api/sync`, `POST /api/attempts` (đơn + bulk), `PUT /api/learned|gamify|profile`. Giới hạn 30 lượt auth/10 phút/IP. Thông báo lỗi tiếng Việt.
+- [x] Frontend `public/js/account.js`: view Tài khoản (nav mới, route `#/account`), đăng nhập/đăng ký, chấm xanh trên nav khi đã đăng nhập, nút Đồng bộ ngay/Đăng xuất.
+- [x] Hook **một chỗ** trong `save()` (app.js): đẩy fire-and-forget khi có thay đổi; gamify đẩy định kỳ 60s + debounce.
+- [x] Trộn khi đăng nhập: learned = hợp; history = gộp theo `at`; gamify = bên XP cao thắng; profile = local có tên thì thắng. Server giữ đủ 500 attempts gần nhất, local vẫn cắt 50.
+- [x] Test: 10/10 API test (pg-mem); e2e trình duyệt: đăng ký → hoạt động học → xoá sạch máy → đăng nhập → dữ liệu về đủ, trang Kết quả hiển thị đúng, 0 lỗi console.
+- **Đã đạt tiêu chí**: làm đề trên máy A, đăng nhập máy B thấy đủ lịch sử + bài đã học.
 
 ### Phase 3 — Giáo viên & lớp học (2–3 buổi) ← điểm bán cho kênh GV
 - [ ] GV tạo lớp → app sinh `join_code` 6 ký tự → HS nhập mã vào lớp.

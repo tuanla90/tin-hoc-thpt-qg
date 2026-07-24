@@ -1,0 +1,24 @@
+{
+  "name": "tin-hoc-thpt",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Ôn thi Tin học THPT — web app + API tài khoản/tiến độ",
+  "scripts": {
+    "start": "node --env-file-if-exists=.env server/index.js",
+    "dev": "node --watch --env-file-if-exists=.env server/index.js",
+    "test": "node --test server/test/api.test.js"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "connect-pg-simple": "^10.0.0",
+    "express": "^5.2.1",
+    "express-session": "^1.19.0",
+    "pg": "^8.22.0"
+  },
+  "devDependencies": {
+    "pg-mem": "^3.0.14"
+  }
+}

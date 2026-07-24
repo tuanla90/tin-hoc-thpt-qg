@@ -9,17 +9,29 @@ Chạy trực tiếp trên trình duyệt, **không cần cài đặt, không c�
 
 ## 🚀 Cách chạy
 
-**Cách 1 — Nhanh nhất:** Nhấp đúp vào tệp `index.html` để mở bằng trình duyệt
-(Chrome, Edge, Firefox...).
-
-**Cách 2 — Chạy như một trang web nội bộ (khuyến nghị):** Mở PowerShell tại thư
-mục này và gõ:
+**Cách 1 — Bản đầy đủ (có tài khoản + đồng bộ tiến độ, khuyến nghị):**
 
 ```powershell
-python -m http.server 8000
+npm install; npm start
 ```
 
-Sau đó mở trình duyệt và truy cập: <http://localhost:8000>
+Rồi mở <http://localhost:3000>. Muốn thử tính năng tài khoản ngay trên máy
+(không cần cài Postgres): tạo tệp `.env` với nội dung `DATABASE_URL=pgmem`
+(DB giả lập trong RAM, mất dữ liệu khi tắt server). Nối Postgres thật thì đặt
+`DATABASE_URL` chuẩn (xem `.env.example`).
+
+**Cách 2 — Chỉ trang tĩnh (không tài khoản):** nhấp đúp `public/index.html`,
+hoặc:
+
+```powershell
+python -m http.server 8000 -d public
+```
+
+Sau đó truy cập: <http://localhost:8000>
+
+**Deploy Railway:** nối repo GitHub + thêm service PostgreSQL; đặt biến
+`DATABASE_URL = ${{Postgres.DATABASE_URL}}` và `SESSION_SECRET` trên service
+web. Chi tiết trong `KE-HOACH-SAAS.md`.
 
 ---
 
@@ -135,15 +147,22 @@ Lưu lại và tải lại trang là xong.
 
 ```
 tin_hoc/
-├── index.html          # Trang chính
-├── css/styles.css      # Giao diện
-├── js/
-│   ├── questions.js       # Ngân hàng câu hỏi (157 câu)
-│   ├── lessons.js         # 20 bài học lý thuyết
-│   ├── lessons-extra.js   # 5 bài học bổ sung (mã hóa, xâu, mảng 2D, thiết kế thuật toán, gỡ lỗi)
-│   ├── exercises.js       # Bài thực hành tự viết code (máy tự chấm kết quả)
-│   ├── app.js             # Toàn bộ logic ứng dụng
-│   └── vendor/            # Skulpt (trình chạy Python offline) — không cần sửa
+├── package.json        # Backend Node (npm start)
+├── server/             # Express: trang tĩnh + API /api/* (tài khoản, tiến độ)
+│   ├── index.js           # Điểm khởi động
+│   ├── app.js             # Dựng app (session, static, route)
+│   ├── api.js             # REST API: auth + đồng bộ
+│   ├── db.js              # Postgres + schema (tự tạo bảng khi khởi động)
+│   └── test/api.test.js   # Test tích hợp (npm test, dùng pg-mem)
+├── public/             # TOÀN BỘ frontend (giữ nguyên vanilla JS)
+│   ├── index.html         # Trang chính
+│   ├── css/styles.css     # Giao diện
+│   └── js/
+│       ├── questions.js      # Ngân hàng câu hỏi
+│       ├── app.js            # Logic ứng dụng + router
+│       ├── account.js        # Tài khoản & đồng bộ tiến độ lên máy chủ
+│       └── vendor/           # Skulpt, sql.js — không cần sửa
+├── KE-HOACH-SAAS.md    # Kế hoạch chuyển sang app thương mại
 └── README.md           # Tài liệu này
 ```
 
