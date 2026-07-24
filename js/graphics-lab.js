@@ -39,14 +39,19 @@
   /* Ảnh gốc: một cảnh SVG tự vẽ (không dính bản quyền), đủ màu để thấy rõ filter. */
   function scene() {
     return '<svg viewBox="0 0 200 140" xmlns="http://www.w3.org/2000/svg">' +
-      '<defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5db6f0"/><stop offset="1" stop-color="#bfe6ff"/></linearGradient></defs>' +
-      '<rect width="200" height="140" fill="url(#sky)"/>' +
-      '<circle cx="158" cy="34" r="18" fill="#ffd23f"/>' +
-      '<path d="M0 100 Q60 70 110 100 T200 96 V140 H0 Z" fill="#57b06a"/>' +
-      '<path d="M0 118 Q70 96 140 118 T200 116 V140 H0 Z" fill="#3f9d57"/>' +
-      '<rect x="42" y="86" width="40" height="30" fill="#e6734e"/>' +
-      '<path d="M38 86 L62 66 L86 86 Z" fill="#b5482f"/>' +
-      '<rect x="55" y="98" width="14" height="18" fill="#7a4326"/>' +
+      '<defs>' +
+        '<linearGradient id="gsky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4aa8ee"/><stop offset="1" stop-color="#c7ebff"/></linearGradient>' +
+        '<radialGradient id="gsun" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#fff7c8"/><stop offset="0.65" stop-color="#ffd23f"/><stop offset="1" stop-color="#ffbe2c"/></radialGradient>' +
+      "</defs>" +
+      '<rect width="200" height="140" fill="url(#gsky)"/>' +
+      '<circle cx="156" cy="34" r="17" fill="url(#gsun)"/>' +
+      '<g fill="#ffffff" opacity="0.9"><ellipse cx="48" cy="30" rx="20" ry="9"/><ellipse cx="66" cy="32" rx="14" ry="8"/><ellipse cx="34" cy="34" rx="12" ry="7"/></g>' +
+      '<path d="M0 104 Q55 80 110 100 T200 98 V140 H0 Z" fill="#74c47d"/>' +
+      '<path d="M0 121 Q70 101 140 121 T200 119 V140 H0 Z" fill="#48a45b"/>' +
+      '<rect x="45" y="88" width="42" height="30" rx="2" fill="#f3ddb2"/>' +
+      '<path d="M40 88 L66 65 L92 88 Z" fill="#d1573e"/>' +
+      '<rect x="59" y="100" width="13" height="18" rx="1" fill="#8a5a3b"/>' +
+      '<rect x="49" y="93" width="11" height="10" fill="#bfe3ff" stroke="#7fb2d9" stroke-width="1"/>' +
       "</svg>";
   }
 
@@ -106,15 +111,20 @@
       '<div class="glab-actions"><button class="btn btn-primary" id="gCheck2">' + (typeof ICON === "function" ? ICON("check2", 14) : "") + " Kiểm tra</button></div>" +
       '<div class="glab-verdict" hidden></div>';
     var comp = node.querySelector("#comp"), lyrs = node.querySelector("#lyrs"), verdict = node.querySelector(".glab-verdict");
-    function shape(l) {
-      if (l.shape === "circle") return '<circle cx="' + l.x + '" cy="' + l.y + '" r="26" fill="' + l.color + '"/>';
-      if (l.shape === "tri") return '<path d="M' + l.x + ' ' + (l.y - 28) + ' L' + (l.x + 28) + ' ' + (l.y + 22) + ' L' + (l.x - 28) + ' ' + (l.y + 22) + ' Z" fill="' + l.color + '"/>';
-      return '<rect x="' + (l.x - 30) + '" y="' + (l.y - 24) + '" width="60" height="48" rx="6" fill="' + l.color + '"/>';
+    function drawLayer(k) {
+      if (k === "sky") return '<rect width="200" height="140" fill="url(#gl-sky)"/>';
+      if (k === "sun") return '<circle cx="150" cy="44" r="24" fill="url(#gl-sun)"/>';
+      if (k === "house") return '<g><rect x="72" y="82" width="56" height="40" rx="2" fill="#f3ddb2"/><path d="M66 82 L100 56 L134 82 Z" fill="#d1573e"/><rect x="91" y="100" width="15" height="22" rx="1" fill="#8a5a3b"/><rect x="80" y="90" width="13" height="11" fill="#bfe3ff" stroke="#7fb2d9" stroke-width="1"/></g>';
+      return "";
     }
     function draw() {
       // vẽ từ DƯỚI lên: phần tử cuối danh sách vẽ trước (nằm dưới), đầu danh sách vẽ sau (trên cùng)
-      var svg = '<svg viewBox="0 0 200 140" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="140" fill="#f2f4f7"/>';
-      order.slice().reverse().forEach(function (idx) { svg += shape(w.layers[idx]); });
+      var svg = '<svg viewBox="0 0 200 140" xmlns="http://www.w3.org/2000/svg"><defs>' +
+        '<linearGradient id="gl-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6cb8f2"/><stop offset="1" stop-color="#cfeaff"/></linearGradient>' +
+        '<radialGradient id="gl-sun" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#fff7c8"/><stop offset="1" stop-color="#ffce3c"/></radialGradient>' +
+        '<pattern id="gl-check" width="16" height="16" patternUnits="userSpaceOnUse"><rect width="16" height="16" fill="#ffffff"/><rect width="8" height="8" fill="#e9edf1"/><rect x="8" y="8" width="8" height="8" fill="#e9edf1"/></pattern>' +
+        "</defs><rect width=\"200\" height=\"140\" fill=\"url(#gl-check)\"/>";
+      order.slice().reverse().forEach(function (idx) { svg += drawLayer(w.layers[idx].draw); });
       comp.innerHTML = svg + "</svg>";
       lyrs.innerHTML = order.map(function (idx, pos) {
         var l = w.layers[idx];
@@ -144,9 +154,9 @@
     "U11-09": [
       { type: "layers", prompt: "Trong phần mềm ảnh, **lớp ở trên che lớp ở dưới**. Hãy sắp thứ tự để **Ngôi nhà** nổi trên cùng, rồi tới **Mặt trời**, dưới cùng là **Bầu trời**.",
         layers: [
-          { name: "Bầu trời (nền)", color: "#7cc4f2", shape: "rect", x: 100, y: 70 },
-          { name: "Mặt trời", color: "#ffcf3f", shape: "circle", x: 118, y: 58 },
-          { name: "Ngôi nhà", color: "#e07a52", shape: "tri", x: 84, y: 78 },
+          { name: "Bầu trời (nền)", color: "#7cc4f2", draw: "sky" },
+          { name: "Mặt trời", color: "#ffcf3f", draw: "sun" },
+          { name: "Ngôi nhà", color: "#d1573e", draw: "house" },
         ],
         targetOrder: [2, 1, 0] },
     ],
