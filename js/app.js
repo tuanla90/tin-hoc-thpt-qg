@@ -201,7 +201,11 @@ function renderHome() {
   const ic = (n, e) => (typeof ICON === "function" ? ICON(n, 30) : e);
 
   // Bài đang học (theo khóa cứng): bài chưa học đầu tiên có bài liền trước đã học
-  const sortedL = LESSONS.slice().sort((a, b) => a.stage - b.stage || a.order - b.order);
+  const allSorted = LESSONS.slice().sort((a, b) => a.stage - b.stage || a.order - b.order);
+  // Có lớp trong hồ sơ -> ưu tiên gợi ý bài đúng lớp (nếu lớp đó còn bài chưa học)
+  const pgrade = (State.profile && State.profile.grade) || "";
+  const gradePool = pgrade ? allSorted.filter((l) => String(l.grade) === pgrade) : [];
+  const sortedL = (gradePool.length && gradePool.some((l) => !isLearned(l.id))) ? gradePool : allSorted;
   const learnedL = sortedL.map((l) => isLearned(l.id));
   const curIdx = learnedL.findIndex((v, i) => (i === 0 || learnedL[i - 1]) && !v);
   const curL = curIdx >= 0 ? sortedL[curIdx] : null;
@@ -954,10 +958,16 @@ function attachRunButtons(container) {
 /* ===========================================================================
  *  THIẾT LẬP LUYỆN TẬP
  * ========================================================================= */
-const setupCfg = { topic: "all", grade: "all", type: "all", level: "all", count: 10 };
+const setupCfg = { topic: "all", grade: "all", type: "all", level: "all", count: 10, _gradeSynced: false };
 
 function renderPracticeSetup(data) {
   if (data && data.topic) setupCfg.topic = data.topic;
+  // Lần đầu vào luyện tập trong phiên: mặc định lọc theo lớp trong hồ sơ (nếu có)
+  if (!setupCfg._gradeSynced) {
+    const pg = (State.profile && State.profile.grade) || "";
+    if (pg === "10" || pg === "11" || pg === "12") setupCfg.grade = pg;
+    setupCfg._gradeSynced = true;
+  }
 
   const topicChips = [["all", "Tất cả"]].concat(Object.entries(TOPICS).map(([c, n]) => [c, `${c}. ${n}`]));
   const gradeChips = [["all", "Tất cả"], ["10", "Lớp 10"], ["11", "Lớp 11"], ["12", "Lớp 12"]];
