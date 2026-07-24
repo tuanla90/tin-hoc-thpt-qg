@@ -33,7 +33,8 @@
   var GENDERS = [["nam", "Nam"], ["nu", "Nữ"], ["khac", "Khác"]];
   var GRADES = [["10", "Lớp 10"], ["11", "Lớp 11"], ["12", "Lớp 12"]];
   var TRACKS = [["khmt", "Khoa học máy tính"], ["udung", "Tin học ứng dụng"]];
-  var DEFAULT = { name: "", gender: "", grade: "", track: "" };
+  var BOOKS = [["canhdieu", "Cánh Diều"], ["tuviet", "Bản luyện thi THPT"]];
+  var DEFAULT = { name: "", gender: "", grade: "", track: "", book: "" };
 
   function labelOf(list, val) { for (var i = 0; i < list.length; i++) if (list[i][0] === val) return list[i][1]; return ""; }
   function avatarOf(p) { return p.gender === "nam" ? "👦" : p.gender === "nu" ? "👧" : "🧑‍🎓"; }
@@ -56,6 +57,7 @@
     var tags = [];
     if (p.grade) tags.push('<span class="pf-tag">' + esc(labelOf(GRADES, p.grade)) + "</span>");
     if (p.track) tags.push('<span class="pf-tag">' + esc(labelOf(TRACKS, p.track)) + "</span>");
+    if (p.book) tags.push('<span class="pf-tag">' + esc(labelOf(BOOKS, p.book)) + "</span>");
     return '<div style="display:flex;align-items:center;gap:12px;margin:0 0 14px">' +
       '<div class="pf-avatar" style="width:44px;height:44px;font-size:24px">' + avatarOf(p) + "</div>" +
       '<div><div class="pf-hello">Xin chào 👋<b>' + esc(p.name) + "</b></div>" +
@@ -96,6 +98,9 @@
         '<div class="pf-field"><label>Định hướng Tin học</label>' + chipRow(TRACKS, "track", p.track) +
           '<p class="pf-note" style="margin:8px 0 0">Chọn nhánh môn Tin học em đang theo ở trường (theo Chương trình GDPT 2018).</p></div>' +
 
+        '<div class="pf-field"><label>Bộ sách đang học</label>' + chipRow(BOOKS, "book", p.book) +
+          '<p class="pf-note" style="margin:8px 0 0">Chọn bộ sách em dùng để đối chiếu nội dung. <b>Bản luyện thi THPT</b> là nội dung do nhóm tự biên soạn, bám sát Chương trình GDPT 2018 (không sao chép sách giáo khoa).</p></div>' +
+
         '<button class="btn btn-primary btn-lg pf-save" id="pfSave">' + ico("save", null, 16) + " Lưu hồ sơ</button>" +
       "</div>";
 
@@ -122,7 +127,7 @@
 
     app.querySelector("#pfBack").onclick = function () { if (typeof go === "function") go("home"); };
     app.querySelector("#pfSave").onclick = function () {
-      var data = { name: nameEl.value.trim(), gender: pick("gender"), grade: pick("grade"), track: pick("track") };
+      var data = { name: nameEl.value.trim(), gender: pick("gender"), grade: pick("grade"), track: pick("track"), book: pick("book") };
       setProfile(data);
       if (typeof toast === "function") toast("Đã lưu hồ sơ " + ((typeof ICON === "function") ? ICON("check2", 15) : "✓"));
     };
