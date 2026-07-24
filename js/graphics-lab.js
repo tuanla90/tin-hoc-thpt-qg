@@ -1,8 +1,12 @@
 /* ============================================================================
- *  XƯỞNG ĐỒ HOẠ TƯƠNG TÁC — cho các bài đồ hoạ/ảnh có "bóng dáng thực hành".
- *  Không chạy phần mềm GUI thật, nhưng dùng SVG + CSS filter + kéo/xếp trong
- *  trình duyệt để học sinh THAO TÁC thật rồi máy chấm. Nạp TRƯỚC app.js.
- *   injectGraphicsLab(lesson) gọi trong renderLesson.
+ *  XƯỞNG ĐỒ HOẠ TƯƠNG TÁC — cho các bài đồ hoạ/ảnh/phim có "bóng dáng thực hành".
+ *  Không chạy phần mềm GUI thật, nhưng dùng SVG + CSS filter + kéo/xếp/chọn trong
+ *  trình duyệt để học sinh THAO TÁC thật rồi máy chấm.
+ *  6 dạng widget: filter (chỉnh ảnh), layers (xếp lớp), crop (khung chọn),
+ *  colorpick (pha màu), match (nối cặp), order (sắp thứ tự).
+ *  Nạp TRƯỚC app.js.
+ *    injectGraphicsLab(lesson)  -> chèn widget vào trang bài học
+ *    renderGfxLab()             -> trang "Xưởng đồ hoạ" (route gfxLab)
  * ==========================================================================*/
 (function () {
   var css =
@@ -15,7 +19,7 @@
     ".glab-stage{border:1px solid var(--border);border-radius:10px;overflow:hidden;background:#fff}" +
     ".glab-stage svg{display:block;width:100%;height:auto}" +
     ".glab-sliders{margin-top:12px;display:grid;gap:9px}" +
-    ".glab-row{display:grid;grid-template-columns:96px 1fr 44px;align-items:center;gap:9px;font-size:13.5px}" +
+    ".glab-row{display:grid;grid-template-columns:96px 1fr 46px;align-items:center;gap:9px;font-size:13.5px}" +
     ".glab-row input[type=range]{width:100%}" +
     ".glab-row b{text-align:right;font-family:Consolas,monospace;color:var(--text-soft)}" +
     ".glab-layers{margin-top:10px;display:grid;gap:7px}" +
@@ -25,6 +29,21 @@
     ".glab-lyr .mv{display:flex;gap:4px}" +
     ".glab-lyr .mv button{border:1px solid var(--border);background:var(--bg-card);border-radius:7px;width:30px;height:28px;cursor:pointer;font-size:14px;color:var(--text)}" +
     ".glab-lyr .mv button:disabled{opacity:.35;cursor:default}" +
+    ".glab-cropwrap{position:relative;max-width:340px;margin:0 auto}" +
+    ".glab-crop-ov{position:absolute;inset:0;width:100%;height:100%;cursor:crosshair;touch-action:none}" +
+    ".glab-sw{height:64px;border-radius:10px;border:1px solid var(--border)}" +
+    ".glab-match{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px}" +
+    ".glab-mcol{display:grid;gap:7px}" +
+    ".glab-mi{display:flex;align-items:center;gap:8px;border:1px solid var(--border);border-radius:9px;padding:8px 10px;background:var(--bg-soft);cursor:pointer;font-size:13.5px}" +
+    ".glab-mi.sel{border-color:var(--primary);box-shadow:0 0 0 2px var(--primary-soft)}" +
+    ".glab-mi .bdg{width:20px;height:20px;border-radius:50%;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;background:var(--text-soft);visibility:hidden}" +
+    ".glab-mi.paired .bdg{visibility:visible}" +
+    ".glab-strip{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}" +
+    ".glab-tile{border:1px solid var(--border);border-radius:9px;background:var(--bg-soft);padding:8px 6px;min-width:78px;text-align:center;font-size:12.5px}" +
+    ".glab-tile .tn{font-weight:800;color:var(--primary);font-size:13px}" +
+    ".glab-tile .mv{display:flex;gap:4px;justify-content:center;margin-top:5px}" +
+    ".glab-tile .mv button{border:1px solid var(--border);background:var(--bg-card);border-radius:6px;width:26px;height:24px;cursor:pointer;color:var(--text)}" +
+    ".glab-tile .mv button:disabled{opacity:.35;cursor:default}" +
     ".glab-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}" +
     ".glab-actions .btn{padding:8px 14px;font-size:13.5px}" +
     ".glab-verdict{margin-top:10px;padding:11px 14px;border-radius:8px;font-size:14.5px}" +
@@ -36,7 +55,12 @@
   st.textContent = css;
   (document.head || document.documentElement).appendChild(st);
 
-  /* Ảnh gốc: một cảnh SVG tự vẽ (không dính bản quyền), đủ màu để thấy rõ filter. */
+  var ico = function (n, c, s) { return (typeof ICON === "function") ? ICON(n, s || 15, c) : ""; };
+  function seedShuffle(a, seed) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { seed = (seed * 9301 + 49297) % 233280; var j = Math.floor(seed / 233280 * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+  function okLine(ok, txt) { return "<li>" + ico(ok ? "check2" : "aright", ok ? "#16a34a" : "#d97706", 14) + " " + esc(txt) + "</li>"; }
+  function done(w) { if (typeof Gam !== "undefined" && Gam.onExercisePass) Gam.onExercisePass({ prompt: w.prompt }); }
+
+  /* Ảnh gốc: cảnh SVG tự vẽ (không dính bản quyền) */
   function scene() {
     return '<svg viewBox="0 0 200 140" xmlns="http://www.w3.org/2000/svg">' +
       '<defs>' +
@@ -55,8 +79,8 @@
       "</svg>";
   }
 
-  /* ------------------------- Widget: CHỈNH ẢNH (CSS filter) ------------------------- */
-  function filterStr(v) { return "brightness(" + v.b + ") contrast(" + v.c + ") saturate(" + v.s + ") hue-rotate(" + v.h + "deg)"; }
+  /* ============ 1) CHỈNH ẢNH (CSS filter) ============ */
+  function fstr(v) { return "brightness(" + v.b + ") contrast(" + v.c + ") saturate(" + v.s + ") hue-rotate(" + v.h + "deg)"; }
   var FKEYS = [
     { k: "b", label: "Độ sáng", min: 0.5, max: 1.5, step: 0.05, tol: 0.08 },
     { k: "c", label: "Tương phản", min: 0.5, max: 1.5, step: 0.05, tol: 0.08 },
@@ -65,101 +89,165 @@
   ];
   function renderFilter(node, w) {
     var cur = { b: 1, c: 1, s: 1, h: 0 };
-    node.innerHTML =
-      '<div class="glab-prompt">' + fmtInline(w.prompt) + "</div>" +
-      '<div class="glab-two">' +
-        '<div><div class="glab-cap">Ảnh của bạn</div><div class="glab-stage" id="mine">' + scene() + "</div></div>" +
-        '<div><div class="glab-cap">Ảnh mẫu (cần đạt tới)</div><div class="glab-stage" id="goal">' + scene() + "</div></div>" +
-      "</div>" +
-      '<div class="glab-sliders">' + FKEYS.map(function (f) {
-        return '<div class="glab-row"><label>' + f.label + '</label><input type="range" data-k="' + f.k + '" min="' + f.min + '" max="' + f.max + '" step="' + f.step + '" value="' + cur[f.k] + '"><b data-v="' + f.k + '">' + cur[f.k] + "</b></div>";
-      }).join("") + "</div>" +
-      '<div class="glab-actions"><button class="btn btn-ghost" id="gReset">' + (typeof ICON === "function" ? ICON("refresh", 14) : "") + ' Đặt lại</button><button class="btn btn-primary" id="gCheck">' + (typeof ICON === "function" ? ICON("check2", 14) : "") + " Kiểm tra</button></div>" +
+    node.innerHTML = '<div class="glab-prompt">' + fmtInline(w.prompt) + "</div>" +
+      '<div class="glab-two"><div><div class="glab-cap">Ảnh của bạn</div><div class="glab-stage" data-r="mine">' + scene() + "</div></div>" +
+      '<div><div class="glab-cap">Ảnh mẫu</div><div class="glab-stage" data-r="goal">' + scene() + "</div></div></div>" +
+      '<div class="glab-sliders">' + FKEYS.map(function (f) { return '<div class="glab-row"><label>' + f.label + '</label><input type="range" data-k="' + f.k + '" min="' + f.min + '" max="' + f.max + '" step="' + f.step + '" value="' + cur[f.k] + '"><b data-v="' + f.k + '">' + cur[f.k] + "</b></div>"; }).join("") + "</div>" +
+      '<div class="glab-actions"><button class="btn btn-ghost" data-a="reset">' + ico("refresh", null, 14) + ' Đặt lại</button><button class="btn btn-primary" data-a="check">' + ico("check2", null, 14) + " Kiểm tra</button></div>" +
       '<div class="glab-verdict" hidden></div>';
-    var mine = node.querySelector("#mine"), goal = node.querySelector("#goal"), verdict = node.querySelector(".glab-verdict");
-    goal.style.filter = filterStr(w.target);
-    function apply() { mine.style.filter = filterStr(cur); }
+    var mine = node.querySelector('[data-r="mine"]'), goal = node.querySelector('[data-r="goal"]'), verdict = node.querySelector(".glab-verdict");
+    goal.style.filter = fstr(w.target);
+    function apply() { mine.style.filter = fstr(cur); }
     apply();
-    node.querySelectorAll('input[type=range]').forEach(function (r) {
-      r.oninput = function () { cur[r.dataset.k] = parseFloat(r.value); node.querySelector('[data-v="' + r.dataset.k + '"]').textContent = r.value; apply(); verdict.hidden = true; };
-    });
-    node.querySelector("#gReset").onclick = function () {
-      cur = { b: 1, c: 1, s: 1, h: 0 }; verdict.hidden = true;
-      node.querySelectorAll('input[type=range]').forEach(function (r) { r.value = cur[r.dataset.k]; node.querySelector('[data-v="' + r.dataset.k + '"]').textContent = cur[r.dataset.k]; }); apply();
-    };
-    node.querySelector("#gCheck").onclick = function () {
-      var fb = FKEYS.map(function (f) {
-        var d = cur[f.k] - w.target[f.k], ok = Math.abs(d) <= f.tol;
-        var dir = ok ? "đạt" : (d < 0 ? "cần tăng thêm" : "cần giảm bớt");
-        return { label: f.label, ok: ok, dir: dir };
-      });
-      var all = fb.every(function (x) { return x.ok; });
-      if (all && typeof Gam !== "undefined" && Gam.onExercisePass) Gam.onExercisePass({ prompt: w.prompt });
+    node.querySelectorAll('input[type=range]').forEach(function (r) { r.oninput = function () { cur[r.dataset.k] = parseFloat(r.value); node.querySelector('[data-v="' + r.dataset.k + '"]').textContent = r.value; apply(); verdict.hidden = true; }; });
+    node.querySelector('[data-a="reset"]').onclick = function () { cur = { b: 1, c: 1, s: 1, h: 0 }; verdict.hidden = true; node.querySelectorAll('input[type=range]').forEach(function (r) { r.value = cur[r.dataset.k]; node.querySelector('[data-v="' + r.dataset.k + '"]').textContent = cur[r.dataset.k]; }); apply(); };
+    node.querySelector('[data-a="check"]').onclick = function () {
+      var fb = FKEYS.map(function (f) { var d = cur[f.k] - w.target[f.k]; return { ok: Math.abs(d) <= f.tol, t: f.label + ": " + (Math.abs(d) <= f.tol ? "đạt" : (d < 0 ? "cần tăng thêm" : "cần giảm bớt")) }; });
+      var all = fb.every(function (x) { return x.ok; }); if (all) done(w);
       verdict.hidden = false; verdict.className = "glab-verdict " + (all ? "ok" : "no");
-      verdict.innerHTML = (all ? "<b>Chính xác! Ảnh của bạn đã khớp ảnh mẫu.</b>" : "<b>Gần rồi — chỉnh tiếp mấy thanh sau:</b>") +
-        "<ul>" + fb.map(function (x) { return "<li>" + (typeof ICON === "function" ? ICON(x.ok ? "check2" : "aright", 14, x.ok ? "#16a34a" : "#d97706") : "") + " " + x.label + ": " + x.dir + "</li>"; }).join("") + "</ul>";
+      verdict.innerHTML = (all ? "<b>Chính xác! Ảnh của bạn đã khớp ảnh mẫu.</b>" : "<b>Gần rồi — chỉnh tiếp:</b>") + "<ul>" + fb.map(function (x) { return okLine(x.ok, x.t); }).join("") + "</ul>";
     };
   }
 
-  /* ------------------------- Widget: XẾP LỚP (z-order) ------------------------- */
+  /* ============ 2) XẾP LỚP (z-order) ============ */
   function renderLayers(node, w) {
-    var order = w.layers.map(function (_, i) { return i; }); // thứ tự hiện tại (đầu danh sách = trên cùng)
-    node.innerHTML =
-      '<div class="glab-prompt">' + fmtInline(w.prompt) + "</div>" +
-      '<div class="glab-two"><div><div class="glab-cap">Kết quả ghép lớp</div><div class="glab-stage" id="comp"></div></div>' +
-      '<div><div class="glab-cap">Thứ tự lớp (trên → dưới)</div><div class="glab-layers" id="lyrs"></div></div></div>' +
-      '<div class="glab-actions"><button class="btn btn-primary" id="gCheck2">' + (typeof ICON === "function" ? ICON("check2", 14) : "") + " Kiểm tra</button></div>" +
-      '<div class="glab-verdict" hidden></div>';
-    var comp = node.querySelector("#comp"), lyrs = node.querySelector("#lyrs"), verdict = node.querySelector(".glab-verdict");
-    function drawLayer(k) {
+    var order = w.layers.map(function (_, i) { return i; });
+    node.innerHTML = '<div class="glab-prompt">' + fmtInline(w.prompt) + "</div>" +
+      '<div class="glab-two"><div><div class="glab-cap">Kết quả ghép lớp</div><div class="glab-stage" data-r="comp"></div></div>' +
+      '<div><div class="glab-cap">Thứ tự lớp (trên → dưới)</div><div class="glab-layers" data-r="lyrs"></div></div></div>' +
+      '<div class="glab-actions"><button class="btn btn-primary" data-a="check">' + ico("check2", null, 14) + ' Kiểm tra</button></div><div class="glab-verdict" hidden></div>';
+    var comp = node.querySelector('[data-r="comp"]'), lyrs = node.querySelector('[data-r="lyrs"]'), verdict = node.querySelector(".glab-verdict");
+    function dl(k) {
       if (k === "sky") return '<rect width="200" height="140" fill="url(#gl-sky)"/>';
       if (k === "sun") return '<circle cx="150" cy="44" r="24" fill="url(#gl-sun)"/>';
       if (k === "house") return '<g><rect x="72" y="82" width="56" height="40" rx="2" fill="#f3ddb2"/><path d="M66 82 L100 56 L134 82 Z" fill="#d1573e"/><rect x="91" y="100" width="15" height="22" rx="1" fill="#8a5a3b"/><rect x="80" y="90" width="13" height="11" fill="#bfe3ff" stroke="#7fb2d9" stroke-width="1"/></g>';
       return "";
     }
     function draw() {
-      // vẽ từ DƯỚI lên: phần tử cuối danh sách vẽ trước (nằm dưới), đầu danh sách vẽ sau (trên cùng)
       var svg = '<svg viewBox="0 0 200 140" xmlns="http://www.w3.org/2000/svg"><defs>' +
         '<linearGradient id="gl-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6cb8f2"/><stop offset="1" stop-color="#cfeaff"/></linearGradient>' +
         '<radialGradient id="gl-sun" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#fff7c8"/><stop offset="1" stop-color="#ffce3c"/></radialGradient>' +
         '<pattern id="gl-check" width="16" height="16" patternUnits="userSpaceOnUse"><rect width="16" height="16" fill="#ffffff"/><rect width="8" height="8" fill="#e9edf1"/><rect x="8" y="8" width="8" height="8" fill="#e9edf1"/></pattern>' +
-        "</defs><rect width=\"200\" height=\"140\" fill=\"url(#gl-check)\"/>";
-      order.slice().reverse().forEach(function (idx) { svg += drawLayer(w.layers[idx].draw); });
+        '</defs><rect width="200" height="140" fill="url(#gl-check)"/>';
+      order.slice().reverse().forEach(function (idx) { svg += dl(w.layers[idx].draw); });
       comp.innerHTML = svg + "</svg>";
-      lyrs.innerHTML = order.map(function (idx, pos) {
-        var l = w.layers[idx];
-        return '<div class="glab-lyr"><span class="sw" style="background:' + l.color + '"></span><span class="nm">' + esc(l.name) + '</span><span class="mv">' +
-          '<button data-pos="' + pos + '" data-d="-1"' + (pos === 0 ? " disabled" : "") + ' title="Lên">▲</button>' +
-          '<button data-pos="' + pos + '" data-d="1"' + (pos === order.length - 1 ? " disabled" : "") + ' title="Xuống">▼</button></span></div>';
-      }).join("");
-      lyrs.querySelectorAll(".mv button").forEach(function (b) {
-        b.onclick = function () { var p = +b.dataset.pos, d = +b.dataset.d, t = p + d; var tmp = order[p]; order[p] = order[t]; order[t] = tmp; verdict.hidden = true; draw(); };
-      });
+      lyrs.innerHTML = order.map(function (idx, pos) { var l = w.layers[idx]; return '<div class="glab-lyr"><span class="sw" style="background:' + l.color + '"></span><span class="nm">' + esc(l.name) + '</span><span class="mv"><button data-p="' + pos + '" data-d="-1"' + (pos === 0 ? " disabled" : "") + '>▲</button><button data-p="' + pos + '" data-d="1"' + (pos === order.length - 1 ? " disabled" : "") + ">▼</button></span></div>"; }).join("");
+      lyrs.querySelectorAll(".mv button").forEach(function (b) { b.onclick = function () { var p = +b.dataset.p, t = p + (+b.dataset.d), tmp = order[p]; order[p] = order[t]; order[t] = tmp; verdict.hidden = true; draw(); }; });
     }
     draw();
-    node.querySelector("#gCheck2").onclick = function () {
-      var ok = JSON.stringify(order) === JSON.stringify(w.targetOrder);
-      if (ok && typeof Gam !== "undefined" && Gam.onExercisePass) Gam.onExercisePass({ prompt: w.prompt });
-      verdict.hidden = false; verdict.className = "glab-verdict " + (ok ? "ok" : "no");
-      verdict.innerHTML = ok ? "<b>Chính xác! Thứ tự lớp đã đúng.</b>" : "<b>Chưa đúng.</b> Nhớ: lớp ở TRÊN che lớp ở DƯỚI. Xem lại thứ tự rồi thử tiếp.";
+    node.querySelector('[data-a="check"]').onclick = function () { var ok = JSON.stringify(order) === JSON.stringify(w.targetOrder); if (ok) done(w); verdict.hidden = false; verdict.className = "glab-verdict " + (ok ? "ok" : "no"); verdict.innerHTML = ok ? "<b>Chính xác! Thứ tự lớp đã đúng.</b>" : "<b>Chưa đúng.</b> Nhớ: lớp ở TRÊN che lớp ở DƯỚI."; };
+  }
+
+  /* ============ 3) KHUNG CHỌN (kéo chọn vùng) ============ */
+  function renderCrop(node, w) {
+    var t = w.target, sel = null;
+    node.innerHTML = '<div class="glab-prompt">' + fmtInline(w.prompt) + "</div>" +
+      '<div class="glab-cropwrap"><div class="glab-stage">' + scene() + "</div>" +
+      '<svg class="glab-crop-ov" viewBox="0 0 200 140" preserveAspectRatio="none"><rect x="' + t.x + '" y="' + t.y + '" width="' + t.w + '" height="' + t.h + '" fill="none" stroke="#4f46e5" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.7"/><rect data-sel="1" fill="rgba(79,70,229,0.22)" stroke="#4f46e5" stroke-width="1.5" width="0" height="0"/></svg></div>' +
+      '<p style="color:var(--text-soft);font-size:12.5px;text-align:center;margin:8px 0 0">Kéo chuột trên ảnh để vẽ khung chọn trùng ô nét đứt.</p>' +
+      '<div class="glab-actions"><button class="btn btn-primary" data-a="check">' + ico("check2", null, 14) + ' Kiểm tra</button></div><div class="glab-verdict" hidden></div>';
+    var ov = node.querySelector(".glab-crop-ov"), selEl = node.querySelector('[data-sel="1"]'), verdict = node.querySelector(".glab-verdict");
+    var start = null;
+    function pt(e) { var r = ov.getBoundingClientRect(); var cx = (e.touches ? e.touches[0].clientX : e.clientX), cy = (e.touches ? e.touches[0].clientY : e.clientY); return { x: Math.max(0, Math.min(200, (cx - r.left) / r.width * 200)), y: Math.max(0, Math.min(140, (cy - r.top) / r.height * 140)) }; }
+    function setRect(a, b) { var x = Math.min(a.x, b.x), y = Math.min(a.y, b.y), ww = Math.abs(a.x - b.x), hh = Math.abs(a.y - b.y); selEl.setAttribute("x", x); selEl.setAttribute("y", y); selEl.setAttribute("width", ww); selEl.setAttribute("height", hh); sel = { x: x, y: y, w: ww, h: hh }; }
+    ov.addEventListener("pointerdown", function (e) { e.preventDefault(); start = pt(e); setRect(start, start); verdict.hidden = true; ov.setPointerCapture && ov.setPointerCapture(e.pointerId); });
+    ov.addEventListener("pointermove", function (e) { if (start) setRect(start, pt(e)); });
+    ov.addEventListener("pointerup", function () { start = null; });
+    node.querySelector('[data-a="check"]').onclick = function () {
+      verdict.hidden = false;
+      if (!sel || sel.w < 6 || sel.h < 6) { verdict.className = "glab-verdict no"; verdict.innerHTML = "<b>Hãy kéo để vẽ khung chọn trước nhé.</b>"; return; }
+      var tol = 14, ok = Math.abs(sel.x - t.x) <= tol && Math.abs(sel.y - t.y) <= tol && Math.abs((sel.x + sel.w) - (t.x + t.w)) <= tol && Math.abs((sel.y + sel.h) - (t.y + t.h)) <= tol;
+      if (ok) done(w); verdict.className = "glab-verdict " + (ok ? "ok" : "no");
+      verdict.innerHTML = ok ? "<b>Chính xác! Khung chọn đã trùng vùng cần chọn.</b>" : "<b>Chưa khít.</b> Kéo lại cho khung trùng với ô nét đứt hơn.";
     };
   }
 
-  /* ------------------------- Dữ liệu widget theo bài ------------------------- */
+  /* ============ 4) PHA MÀU (RGB) ============ */
+  var CKEYS = [{ k: "r", label: "Đỏ (R)" }, { k: "g", label: "Lục (G)" }, { k: "b", label: "Lam (B)" }];
+  function rgb(c) { return "rgb(" + c.r + "," + c.g + "," + c.b + ")"; }
+  function renderColorpick(node, w) {
+    var cur = { r: 128, g: 128, b: 128 };
+    node.innerHTML = '<div class="glab-prompt">' + fmtInline(w.prompt) + "</div>" +
+      '<div class="glab-two"><div><div class="glab-cap">Màu của bạn</div><div class="glab-sw" data-r="mine"></div></div><div><div class="glab-cap">Màu mẫu</div><div class="glab-sw" style="background:' + rgb(w.target) + '"></div></div></div>' +
+      '<div class="glab-sliders">' + CKEYS.map(function (f) { return '<div class="glab-row"><label>' + f.label + '</label><input type="range" data-k="' + f.k + '" min="0" max="255" step="1" value="' + cur[f.k] + '"><b data-v="' + f.k + '">' + cur[f.k] + "</b></div>"; }).join("") + "</div>" +
+      '<div class="glab-actions"><button class="btn btn-primary" data-a="check">' + ico("check2", null, 14) + ' Kiểm tra</button></div><div class="glab-verdict" hidden></div>';
+    var mine = node.querySelector('[data-r="mine"]'), verdict = node.querySelector(".glab-verdict");
+    function apply() { mine.style.background = rgb(cur); }
+    apply();
+    node.querySelectorAll('input[type=range]').forEach(function (r) { r.oninput = function () { cur[r.dataset.k] = +r.value; node.querySelector('[data-v="' + r.dataset.k + '"]').textContent = r.value; apply(); verdict.hidden = true; }; });
+    node.querySelector('[data-a="check"]').onclick = function () {
+      var tol = 22, fb = CKEYS.map(function (f) { var d = cur[f.k] - w.target[f.k]; return { ok: Math.abs(d) <= tol, t: f.label + ": " + (Math.abs(d) <= tol ? "đạt" : (d < 0 ? "cần tăng" : "cần giảm")) }; });
+      var all = fb.every(function (x) { return x.ok; }); if (all) done(w);
+      verdict.hidden = false; verdict.className = "glab-verdict " + (all ? "ok" : "no");
+      verdict.innerHTML = (all ? "<b>Chính xác! Đã pha đúng màu mẫu.</b>" : "<b>Chưa khớp — chỉnh tiếp:</b>") + "<ul>" + fb.map(function (x) { return okLine(x.ok, x.t); }).join("") + "</ul>";
+    };
+  }
+
+  /* ============ 5) NỐI CẶP (match) ============ */
+  var PAIR_COLORS = ["#2563eb", "#16a34a", "#d97706", "#9333ea", "#dc2626"];
+  function renderMatch(node, w) {
+    var lefts = w.pairs.map(function (p) { return p.l; });
+    var rights = seedShuffle(w.pairs.map(function (p) { return p.r; }), 7).slice();
+    var assign = lefts.map(function () { return -1; }); // assign[i] = index trong rights
+    var selL = -1;
+    node.innerHTML = '<div class="glab-prompt">' + fmtInline(w.prompt) + "</div>" +
+      '<p style="color:var(--text-soft);font-size:12.5px;margin:0 0 8px">Bấm một ô bên trái rồi bấm ô bên phải tương ứng để nối.</p>' +
+      '<div class="glab-match"><div class="glab-mcol" data-c="L"></div><div class="glab-mcol" data-c="R"></div></div>' +
+      '<div class="glab-actions"><button class="btn btn-primary" data-a="check">' + ico("check2", null, 14) + ' Kiểm tra</button></div><div class="glab-verdict" hidden></div>';
+    var L = node.querySelector('[data-c="L"]'), R = node.querySelector('[data-c="R"]'), verdict = node.querySelector(".glab-verdict");
+    function rightOwner(ri) { for (var i = 0; i < assign.length; i++) if (assign[i] === ri) return i; return -1; }
+    function badge(i) { return '<span class="bdg" style="background:' + PAIR_COLORS[i % 5] + '">' + (i + 1) + "</span>"; }
+    function draw() {
+      L.innerHTML = lefts.map(function (t, i) { return '<div class="glab-mi' + (assign[i] >= 0 ? " paired" : "") + (selL === i ? " sel" : "") + '" data-i="' + i + '">' + badge(i) + "<span>" + esc(t) + "</span></div>"; }).join("");
+      R.innerHTML = rights.map(function (t, ri) { var o = rightOwner(ri); return '<div class="glab-mi' + (o >= 0 ? " paired" : "") + '" data-r="' + ri + '">' + (o >= 0 ? badge(o) : '<span class="bdg"></span>') + "<span>" + esc(t) + "</span></div>"; }).join("");
+      L.querySelectorAll("[data-i]").forEach(function (el) { el.onclick = function () { selL = +el.dataset.i; verdict.hidden = true; draw(); }; });
+      R.querySelectorAll("[data-r]").forEach(function (el) { el.onclick = function () { if (selL < 0) return; var ri = +el.dataset.r, prev = rightOwner(ri); if (prev >= 0) assign[prev] = -1; assign[selL] = ri; selL = -1; verdict.hidden = true; draw(); }; });
+    }
+    draw();
+    node.querySelector('[data-a="check"]').onclick = function () {
+      var fb = lefts.map(function (t, i) { var ok = assign[i] >= 0 && rights[assign[i]] === w.pairs[i].r; return { ok: ok, t: t }; });
+      var all = fb.every(function (x) { return x.ok; }); if (all) done(w);
+      verdict.hidden = false; verdict.className = "glab-verdict " + (all ? "ok" : "no");
+      verdict.innerHTML = (all ? "<b>Chính xác! Nối đúng hết các cặp.</b>" : "<b>Chưa đúng hết:</b>") + "<ul>" + fb.map(function (x) { return okLine(x.ok, x.t); }).join("") + "</ul>";
+    };
+  }
+
+  /* ============ 6) SẮP THỨ TỰ (order) ============ */
+  function renderOrder(node, w) {
+    var order = w.items.map(function (_, i) { return i; });
+    node.innerHTML = '<div class="glab-prompt">' + fmtInline(w.prompt) + "</div>" +
+      '<div class="glab-strip" data-r="strip"></div>' +
+      '<div class="glab-actions"><button class="btn btn-primary" data-a="check">' + ico("check2", null, 14) + ' Kiểm tra</button></div><div class="glab-verdict" hidden></div>';
+    var strip = node.querySelector('[data-r="strip"]'), verdict = node.querySelector(".glab-verdict");
+    function draw() {
+      strip.innerHTML = order.map(function (idx, pos) { return '<div class="glab-tile"><div class="tn">' + (pos + 1) + '</div><div>' + esc(w.items[idx].label) + '</div><div class="mv"><button data-p="' + pos + '" data-d="-1"' + (pos === 0 ? " disabled" : "") + '>◀</button><button data-p="' + pos + '" data-d="1"' + (pos === order.length - 1 ? " disabled" : "") + ">▶</button></div></div>"; }).join("");
+      strip.querySelectorAll(".mv button").forEach(function (b) { b.onclick = function () { var p = +b.dataset.p, t = p + (+b.dataset.d), tmp = order[p]; order[p] = order[t]; order[t] = tmp; verdict.hidden = true; draw(); }; });
+    }
+    draw();
+    node.querySelector('[data-a="check"]').onclick = function () { var ok = JSON.stringify(order) === JSON.stringify(w.targetOrder); if (ok) done(w); verdict.hidden = false; verdict.className = "glab-verdict " + (ok ? "ok" : "no"); verdict.innerHTML = ok ? "<b>Chính xác! Thứ tự đã đúng.</b>" : "<b>Chưa đúng.</b> Dùng ◀ ▶ để sắp lại cho đúng trình tự."; };
+  }
+
+  function renderWidget(node, w) {
+    if (w.type === "filter") return renderFilter(node, w);
+    if (w.type === "layers") return renderLayers(node, w);
+    if (w.type === "crop") return renderCrop(node, w);
+    if (w.type === "colorpick") return renderColorpick(node, w);
+    if (w.type === "match") return renderMatch(node, w);
+    if (w.type === "order") return renderOrder(node, w);
+  }
+
+  /* ---------------- Widget theo bài học ---------------- */
   var GLAB = {
-    "U11-10": [
-      { type: "filter", prompt: "Kéo các thanh **Độ sáng, Tương phản, Bão hoà, Xoay màu** để **ảnh của bạn** trông giống **ảnh mẫu** bên phải, rồi bấm Kiểm tra.",
-        target: { b: 1.25, c: 1.2, s: 1.5, h: 0 } },
-    ],
-    "U11-09": [
-      { type: "layers", prompt: "Trong phần mềm ảnh, **lớp ở trên che lớp ở dưới**. Hãy sắp thứ tự để **Ngôi nhà** nổi trên cùng, rồi tới **Mặt trời**, dưới cùng là **Bầu trời**.",
-        layers: [
-          { name: "Bầu trời (nền)", color: "#7cc4f2", draw: "sky" },
-          { name: "Mặt trời", color: "#ffcf3f", draw: "sun" },
-          { name: "Ngôi nhà", color: "#d1573e", draw: "house" },
-        ],
-        targetOrder: [2, 1, 0] },
-    ],
+    "C10-09": [{ type: "match", prompt: "Nối mỗi **thao tác/khái niệm đồ hoạ** với mô tả đúng.", pairs: [{ l: "Lớp (layer)", r: "Tầng ảnh xếp chồng, sửa riêng không ảnh hưởng lớp khác" }, { l: "Vùng chọn", r: "Giới hạn thao tác vào một phần của ảnh" }, { l: "Ảnh vector", r: "Vẽ bằng đường và hình, phóng to không vỡ" }, { l: "Ảnh điểm (bitmap)", r: "Gồm nhiều điểm ảnh, phóng to sẽ bị vỡ hạt" }] }],
+    "C10-10": [{ type: "colorpick", prompt: "Pha ba kênh **Đỏ, Lục, Lam** để tạo màu **cam** giống ô mẫu (gợi ý: đỏ cao, lục vừa, lam thấp).", target: { r: 240, g: 140, b: 40 } }],
+    "C10-28": [{ type: "order", prompt: "Sắp đúng **trình tự hoàn thiện một bản vẽ vector** rồi xuất file.", items: [{ label: "Vẽ các hình cơ bản" }, { label: "Chỉnh nét & màu" }, { label: "Ghép/nhóm đối tượng" }, { label: "Xuất file ảnh" }], targetOrder: [0, 1, 2, 3] }],
+    "U11-09": [{ type: "layers", prompt: "Trong phần mềm ảnh, **lớp ở trên che lớp ở dưới**. Hãy sắp để **Ngôi nhà** trên cùng, rồi **Mặt trời**, dưới cùng là **Bầu trời**.", layers: [{ name: "Bầu trời (nền)", color: "#7cc4f2", draw: "sky" }, { name: "Mặt trời", color: "#ffcf3f", draw: "sun" }, { name: "Ngôi nhà", color: "#d1573e", draw: "house" }], targetOrder: [2, 1, 0] }],
+    "U11-10": [{ type: "filter", prompt: "Kéo các thanh **Độ sáng, Tương phản, Bão hoà, Xoay màu** cho **ảnh của bạn** giống **ảnh mẫu**.", target: { b: 1.25, c: 1.2, s: 1.5, h: 0 } }],
+    "U11-11": [{ type: "crop", prompt: "Dùng công cụ chọn: **kéo một khung chọn bao quanh ngôi nhà** (trùng ô nét đứt).", target: { x: 36, y: 62, w: 60, h: 58 } }],
+    "U11-12": [{ type: "colorpick", prompt: "Chọn màu để tô: pha ra màu **xanh lá cây** giống ô mẫu (lục cao, đỏ và lam thấp).", target: { r: 60, g: 170, b: 80 } }],
+    "U11-13": [{ type: "order", prompt: "Ảnh động là chuỗi **khung hình** chiếu nối tiếp. Sắp các khung để quả bóng **rơi từ trên xuống rồi nảy lên**.", items: [{ label: "Bóng ở đỉnh" }, { label: "Bóng lưng chừng" }, { label: "Bóng chạm đất" }, { label: "Bóng nảy lên" }], targetOrder: [0, 1, 2, 3] }],
+    "U11-14": [{ type: "match", prompt: "Nối mỗi **thành phần khi dựng phim** với vai trò của nó.", pairs: [{ l: "Dòng thời gian (timeline)", r: "Nơi sắp các clip theo thứ tự thời gian" }, { l: "Rãnh (track)", r: "Hàng chứa riêng hình, hoặc âm thanh" }, { l: "Khung hình/giây (fps)", r: "Số hình chiếu mỗi giây, càng cao càng mượt" }, { l: "Xem trước (preview)", r: "Chạy thử phim trước khi xuất" }] }],
+    "U11-15": [{ type: "order", prompt: "Sắp các cảnh cho đúng **mạch câu chuyện** một chuyến đi rồi mới xuất phim.", items: [{ label: "Lên xe khởi hành" }, { label: "Tới nơi tham quan" }, { label: "Hoạt động trải nghiệm" }, { label: "Chụp ảnh cả nhóm" }], targetOrder: [0, 1, 2, 3] }],
   };
 
   function injectGraphicsLab(lesson) {
@@ -168,21 +256,43 @@
     var anchor = document.querySelector(".ls-actions");
     if (!anchor || !anchor.parentNode) return;
     var wrap = document.createElement("div");
-    wrap.innerHTML =
-      '<div class="section-title" style="margin-top:24px">' + (typeof ICON === "function" ? ICON("sprout", 17, "#0891b2") : "") + " Thử thao tác (mô phỏng)</div>" +
-      '<p style="color:var(--text-soft);font-size:13.5px;margin-bottom:12px">Đây là mô phỏng ngay trên trình duyệt để bạn cảm nhận thao tác — không thay cho phần mềm thật nhưng giúp hiểu khái niệm nhanh hơn.</p>' +
-      '<div class="glab-host"></div>';
+    wrap.innerHTML = '<div class="section-title" style="margin-top:24px">' + ico("sprout", "#0891b2", 17) + " Thử thao tác (mô phỏng)</div>" +
+      '<p style="color:var(--text-soft);font-size:13.5px;margin-bottom:12px">Mô phỏng ngay trên trình duyệt để cảm nhận thao tác — không thay phần mềm thật nhưng giúp hiểu khái niệm nhanh hơn.</p><div class="glab-host"></div>';
     anchor.parentNode.insertBefore(wrap, anchor);
     var host = wrap.querySelector(".glab-host");
-    list.forEach(function (w) {
-      var d = document.createElement("div"); d.className = "glab"; host.appendChild(d);
-      if (w.type === "filter") renderFilter(d, w);
-      else if (w.type === "layers") renderLayers(d, w);
+    list.forEach(function (w) { var d = document.createElement("div"); d.className = "glab"; host.appendChild(d); renderWidget(d, w); });
+  }
+
+  /* ---------------- Trang "Xưởng đồ hoạ" (route gfxLab) ---------------- */
+  var GFX_ITEMS = [
+    { head: "Chỉnh ảnh (độ sáng, màu sắc)", w: { type: "filter", prompt: "Kéo các thanh cho **ảnh của bạn** giống **ảnh mẫu**.", target: { b: 1.2, c: 1.15, s: 1.4, h: 0 } } },
+    { head: "Xếp lớp (lớp trên che lớp dưới)", w: { type: "layers", prompt: "Sắp để **Ngôi nhà** trên cùng, dưới cùng là **Bầu trời**.", layers: [{ name: "Bầu trời (nền)", color: "#7cc4f2", draw: "sky" }, { name: "Mặt trời", color: "#ffcf3f", draw: "sun" }, { name: "Ngôi nhà", color: "#d1573e", draw: "house" }], targetOrder: [2, 1, 0] } },
+    { head: "Khung chọn (chọn một vùng ảnh)", w: { type: "crop", prompt: "**Kéo một khung chọn bao quanh mặt trời** (trùng ô nét đứt).", target: { x: 130, y: 12, w: 52, h: 46 } } },
+    { head: "Pha màu RGB", w: { type: "colorpick", prompt: "Pha ra màu **tím** giống ô mẫu (đỏ vừa, lam cao, lục thấp).", target: { r: 150, g: 60, b: 200 } } },
+    { head: "Nối cặp công cụ ↔ công dụng", w: { type: "match", prompt: "Nối mỗi công cụ ảnh với công dụng đúng.", pairs: [{ l: "Bút vẽ", r: "Tô/vẽ nét lên ảnh" }, { l: "Tẩy", r: "Xoá phần ảnh đã vẽ" }, { l: "Công cụ chọn", r: "Khoanh vùng để thao tác" }, { l: "Đổ màu", r: "Tô đầy một vùng bằng một màu" }] } },
+    { head: "Sắp trình tự làm phim", w: { type: "order", prompt: "Sắp đúng các bước dựng một video ngắn.", items: [{ label: "Nhập tư liệu" }, { label: "Cắt & sắp clip" }, { label: "Thêm nhạc/chữ" }, { label: "Xuất phim" }], targetOrder: [0, 1, 2, 3] } },
+  ];
+  function renderGfxLab() {
+    var app = document.getElementById("app");
+    if (!app) return;
+    app.innerHTML = '<button class="back-link" data-a="back">' + ico("aleft", null, 15) + " Về trang chủ</button>" +
+      '<h2 style="margin-bottom:6px">' + ico("sprout", "#0891b2", 22) + " Xưởng đồ hoạ</h2>" +
+      '<p style="color:var(--text-soft);font-size:14px;margin:0 0 16px">Nơi thử các thao tác đồ hoạ mô phỏng ngay trong trình duyệt: chỉnh ảnh, xếp lớp, chọn vùng, pha màu, nối cặp, sắp trình tự. Không thay phần mềm thật nhưng giúp cảm nhận và hiểu khái niệm nhanh.</p>' +
+      '<div id="gfxHost"></div>';
+    app.querySelector('[data-a="back"]').onclick = function () { if (typeof go === "function") go("home"); };
+    var host = app.querySelector("#gfxHost");
+    GFX_ITEMS.forEach(function (it) {
+      var sec = document.createElement("div");
+      sec.innerHTML = '<div class="section-title" style="margin-top:8px">' + ico("sprout", "#0891b2", 16) + " " + esc(it.head) + "</div>";
+      var d = document.createElement("div"); d.className = "glab"; d.style.marginBottom = "16px";
+      host.appendChild(sec); host.appendChild(d); renderWidget(d, it.w);
     });
+    if (typeof iconify === "function") iconify(app);
   }
 
   if (typeof window !== "undefined") {
     window.GLAB = GLAB;
     window.injectGraphicsLab = injectGraphicsLab;
+    window.renderGfxLab = renderGfxLab;
   }
 })();

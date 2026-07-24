@@ -126,7 +126,7 @@ function countByType(t) { return QUESTION_BANK.filter((q) => q.type === t).lengt
  * ------------------------------------------------------------------------- */
 /* Bảng ánh xạ view -> hàm render (dựng lại mỗi lần để bắt được window.* nạp sau) */
 function viewRenderer(view) {
-  const map = { home: renderHome, lessons: renderLessons, lesson: renderLesson, playground: renderPlayground, practiceSetup: renderPracticeSetup, quiz: renderQuiz, result: renderResult, history: renderHistory, vocab: window.renderVocabPage, achievements: (window.Gam && window.Gam.renderAchievements), examCodes: window.renderExamCodes, tfDrill: window.renderTFDrill, profile: window.renderProfile, sqlLab: window.renderSqlLab };
+  const map = { home: renderHome, lessons: renderLessons, lesson: renderLesson, playground: renderPlayground, practiceSetup: renderPracticeSetup, quiz: renderQuiz, result: renderResult, history: renderHistory, vocab: window.renderVocabPage, achievements: (window.Gam && window.Gam.renderAchievements), examCodes: window.renderExamCodes, tfDrill: window.renderTFDrill, profile: window.renderProfile, sqlLab: window.renderSqlLab, gfxLab: window.renderGfxLab };
   return map[view] || renderHome;
 }
 
@@ -137,6 +137,7 @@ function viewToHash(view, data) {
     case "lesson": return "#/lesson/" + encodeURIComponent((data && data.id) || "");
     case "playground": return "#/playground";
     case "sqlLab": return "#/sql-lab";
+    case "gfxLab": return "#/graphics-lab";
     case "practiceSetup": return "#/practice" + (data && data.topic ? "?topic=" + encodeURIComponent(data.topic) : "");
     case "history": return "#/history";
     case "vocab": return "#/vocab";
@@ -166,6 +167,7 @@ function parseHash() {
     case "lesson": return { view: "lesson", data: parts[1] ? { id: decodeURIComponent(parts[1]) } : undefined };
     case "playground": return { view: "playground", data: undefined };
     case "sql-lab": return { view: "sqlLab", data: undefined };
+    case "graphics-lab": return { view: "gfxLab", data: undefined };
     case "practice": {
       const m = /(?:^|&)topic=([^&]*)/.exec(query);
       return { view: "practiceSetup", data: m ? { topic: decodeURIComponent(m[1]) } : undefined };
@@ -277,6 +279,12 @@ function renderHome() {
         <h3>Sân chơi SQL</h3>
         <p>Viết & chạy <b>SQL</b> trên cơ sở dữ liệu mẫu ngay trong trình duyệt (SQLite) — thử <code>SELECT</code>, <code>JOIN</code>, <code>GROUP BY</code>…</p>
       </div>
+      <div class="mode-card" data-mode="gfxlab">
+        <div class="m-badge">Mới</div>
+        <div class="m-icon">${ic("sprout", "🎨")}</div>
+        <h3>Xưởng đồ hoạ</h3>
+        <p>Thử thao tác đồ hoạ mô phỏng: chỉnh ảnh, <b>xếp lớp</b>, chọn vùng, pha màu, nối cặp, sắp trình tự — máy chấm ngay.</p>
+      </div>
       <div class="mode-card" data-mode="practice">
         <div class="m-icon">${ic("target", "🎯")}</div>
         <h3>Luyện tập theo chủ đề</h3>
@@ -323,6 +331,7 @@ function renderHome() {
     else if (mode === "lessons") go("lessons");
     else if (mode === "playground") go("playground");
     else if (mode === "sqllab") go("sqlLab");
+    else if (mode === "gfxlab") go("gfxLab");
     else go("practiceSetup");
   });
   app.querySelectorAll(".topic-row").forEach((r) => r.onclick = () => go("practiceSetup", { topic: r.dataset.topic }));
