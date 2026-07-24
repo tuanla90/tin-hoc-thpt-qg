@@ -767,6 +767,7 @@ function renderLesson(data) {
   if (typeof injectSqlExercises === "function") injectSqlExercises(l);
   if (typeof injectWebExercises === "function") injectWebExercises(l);
   if (typeof injectGraphicsLab === "function") injectGraphicsLab(l);
+  if (typeof injectConceptLab === "function") injectConceptLab(l);
   if (typeof injectVocab === "function") injectVocab(l);
   const sgkT = document.getElementById("sgkToggle");
   if (sgkT) sgkT.onclick = () => {
