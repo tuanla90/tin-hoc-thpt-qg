@@ -59,7 +59,24 @@ function save(key, val) { const all = loadAll(); all[key] = val; localStorage.se
  * ------------------------------------------------------------------------- */
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 function aIco(n, c, s) { return (typeof ICON === "function") ? ICON(n, s || 16, c) : ""; }
-function stageColor(s) { return s == 10 ? "#16a34a" : s == 11 ? "#3b82f6" : s == 12 ? "#d97706" : "#4f46e5"; }
+function stageColor(s) { return s == 10 ? "#16a34a" : s == 11 ? "#3b82f6" : s == 12 ? "#d97706" : (s == 23 || s == 24) ? "#0891b2" : "#4f46e5"; }
+
+/* Định hướng của bài học: "" = dùng chung cả hai định hướng; "khmt" / "udung" = chỉ riêng định hướng đó.
+   Tính từ stage + topic + id, không cần lưu trường 'track' trên dữ liệu bài. */
+const KHMT12_IDS = new Set(["C12-15", "C12-16", "C12-17", "C12-18", "C12-19", "C12-20", "C12-27", "C12-28", "C12-29", "C12-30"]);
+function lessonTrack(l) {
+  if (l.stage === 23 || l.stage === 24) return "udung";          // bản sạch Tin học ứng dụng
+  if (l.stage === 21 && l.topic === "F") return "khmt";          // lập trình/thuật toán lớp 11 (KHMT)
+  if (l.stage === 22 && KHMT12_IDS.has(l.id)) return "khmt";     // Học máy/KHDL/Mô phỏng lớp 12 (KHMT)
+  return "";
+}
+/* Bài có hiện với định hướng trong hồ sơ không: chưa chọn -> hiện tất cả; bài chung luôn hiện. */
+function visibleForTrack(l) {
+  const t = (typeof State !== "undefined" && State.profile && State.profile.track) || "";
+  if (!t) return true;
+  const lt = lessonTrack(l);
+  return !lt || lt === t;
+}
 const TYPE_LABEL = { mc: "Trắc nghiệm", tf: "Đúng/Sai", sa: "Trả lời ngắn" };
 const LEVEL_LABEL = { easy: "Nhận biết", medium: "Thông hiểu", hard: "Vận dụng" };
 
@@ -201,7 +218,7 @@ function renderHome() {
   const ic = (n, e) => (typeof ICON === "function" ? ICON(n, 30) : e);
 
   // Bài đang học (theo khóa cứng): bài chưa học đầu tiên có bài liền trước đã học
-  const allSorted = LESSONS.slice().sort((a, b) => a.stage - b.stage || a.order - b.order);
+  const allSorted = LESSONS.slice().filter(visibleForTrack).sort((a, b) => a.stage - b.stage || a.order - b.order);
   // Có lớp trong hồ sơ -> ưu tiên gợi ý bài đúng lớp (nếu lớp đó còn bài chưa học)
   const pgrade = (State.profile && State.profile.grade) || "";
   const gradePool = pgrade ? allSorted.filter((l) => String(l.grade) === pgrade) : [];
@@ -319,7 +336,7 @@ function markLearned(id, val) {
 
 function renderLessons() {
   injectPathCss();
-  const sorted = LESSONS.slice().sort((a, b) => a.stage - b.stage || a.order - b.order);
+  const sorted = LESSONS.slice().filter(visibleForTrack).sort((a, b) => a.stage - b.stage || a.order - b.order);
   const learned = sorted.map((l) => isLearned(l.id));
   // KHÓA CỨNG: bài i chỉ mở khi bài liền trước đã học (bài đầu luôn mở)
   // NGOẠI LỆ: nhóm "Bản sạch (thử)" stage>=20 luôn mở để nghiệm thu tự do
@@ -374,6 +391,14 @@ function renderLessons() {
       { name: "Thiết kế web (HTML và CSS)", from: 9, to: 19, color: "#e11d48" },
       { name: "Hướng nghiệp công nghệ thông tin", from: 20, to: 20, color: "#ea580c" },
       { name: "Học máy, Khoa học dữ liệu, Mô phỏng", from: 21, to: 30, color: "#9333ea" },
+    ],
+    23: [
+      { name: "Thực hành cơ sở dữ liệu", from: 1, to: 8, color: "#7c3aed" },
+      { name: "Chỉnh sửa ảnh và làm phim", from: 9, to: 15, color: "#e11d48" },
+    ],
+    24: [
+      { name: "Kết nối thiết bị số", from: 1, to: 1, color: "#0d9488" },
+      { name: "Dự án xây dựng trang web", from: 2, to: 7, color: "#e11d48" },
     ],
   };
   const chapterOf = (l) => {
@@ -765,11 +790,20 @@ const WEB_SAMPLES = [
 /* Đoạn mã có chạy được bằng Skulpt không? (loại trừ HTML, thao tác tệp, mã minh họa) */
 function isRunnable(code) {
   if (!code || !code.trim()) return false;
-  if (/[×→²³⁰¹₂₃…]/.test(code)) return false;      // ký hiệu minh họa, không phải Python
+  if (/[×→²³⁰¹₂₃…│├└┌┐┘┤┬┴┼]/.test(code)) return false; // ký hiệu minh họa / vẽ bảng, không phải Python
   if (/^\s*</m.test(code)) return false;             // HTML (bài thiết kế web)
   if (code.includes("{") && code.includes(";")) return false; // CSS (dict Python không có ';')
   if (/\bopen\s*\(/.test(code)) return false;         // đọc/ghi tệp (Skulpt không hỗ trợ)
-  return true;
+  // Chỉ coi là Python chạy được khi THỰC SỰ có dấu hiệu cú pháp Python (tránh nhận nhầm
+  // bảng/sơ đồ/khung minh họa của các bài Tin học ứng dụng thành mã Python).
+  return /\bprint\s*\(/.test(code)
+    || /\bdef\s+\w+\s*\(/.test(code)
+    || /\bimport\s+\w/.test(code)
+    || /\binput\s*\(/.test(code)
+    || /\brange\s*\(/.test(code)
+    || /\.(append|pop|sort|sorted|split|join|insert|remove|count|index|keys|values|items)\s*\(/.test(code)
+    || /^\s*(for|while|if|elif|else|try|except)\b[^\n]*:\s*$/m.test(code)
+    || /^\s*[A-Za-z_]\w*\s*=\s*[^=]/m.test(code);   // phép gán biến kiểu Python
 }
 function firstRunnableCode(lesson) {
   for (const b of lesson.sections) {
