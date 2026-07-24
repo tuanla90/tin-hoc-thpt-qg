@@ -227,6 +227,77 @@
     node.querySelector('[data-a="check"]').onclick = function () { var ok = JSON.stringify(order) === JSON.stringify(w.targetOrder); if (ok) done(w); verdict.hidden = false; verdict.className = "glab-verdict " + (ok ? "ok" : "no"); verdict.innerHTML = ok ? "<b>Chính xác! Thứ tự đã đúng.</b>" : "<b>Chưa đúng.</b> Dùng ◀ ▶ để sắp lại cho đúng trình tự."; };
   }
 
+  /* ============ 7) HOTSPOT (bấm đúng công cụ/vùng) ============ */
+  function toolbarImg() {
+    var T = [
+      { n: "Bút vẽ", ic: '<path d="M-9 9 L5 -5 L8 -2 L-6 12 Z" fill="#5b7cff"/><path d="M-9 9 L-11 13 L-6 12 Z" fill="#333"/>' },
+      { n: "Tẩy", ic: '<rect x="-9" y="-4" width="17" height="9" rx="2" transform="rotate(-18)" fill="#ff9db0" stroke="#c76"/>' },
+      { n: "Chọn", ic: '<rect x="-9" y="-7" width="18" height="14" rx="1" fill="none" stroke="#333" stroke-dasharray="3 2"/>' },
+      { n: "Đổ màu", ic: '<path d="M-8 -4 L4 -4 L2 6 L-6 6 Z" fill="#7bd3ee" stroke="#39a8c9"/><circle cx="7" cy="5" r="2.6" fill="#39a8c9"/>' },
+      { n: "Chữ", ic: '<path d="M-7 -6 H7 M0 -6 V8" stroke="#333" stroke-width="2.5" fill="none"/>' },
+    ];
+    var svg = '<svg viewBox="0 0 200 54" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="54" rx="6" fill="#eef1f5"/>';
+    T.forEach(function (t, i) { var cx = i * 40 + 20; svg += '<g transform="translate(' + cx + ',20)">' + t.ic + "</g><text x=\"" + cx + "\" y=\"48\" font-size=\"7.5\" text-anchor=\"middle\" fill=\"#444\">" + t.n + "</text>"; });
+    return svg + "</svg>";
+  }
+  var TOOLBAR_REGIONS = ["but", "tay", "chon", "do", "chu"].map(function (id, i) { return { id: id, x: i * 40, y: 0, w: 40, h: 54 }; });
+  function renderHotspot(node, w) {
+    var picked = null;
+    var isBar = w.image === "toolbar";
+    var img = isBar ? toolbarImg() : scene();
+    var regions = isBar ? TOOLBAR_REGIONS : w.regions;
+    node.innerHTML = '<div class="glab-prompt">' + fmtInline(w.prompt) + "</div>" +
+      '<div class="glab-cropwrap" style="max-width:' + (isBar ? "420" : "340") + 'px"><div class="glab-stage">' + img + "</div>" +
+      '<svg class="glab-crop-ov" style="cursor:pointer" viewBox="0 0 200 ' + (isBar ? "54" : "140") + '" preserveAspectRatio="none">' +
+      regions.map(function (r) { return '<rect data-id="' + r.id + '" x="' + r.x + '" y="' + r.y + '" width="' + r.w + '" height="' + r.h + '" fill="rgba(0,0,0,0.001)" stroke="transparent" stroke-width="2"/>'; }).join("") +
+      '</svg></div><div class="glab-actions"><button class="btn btn-primary" data-a="check">' + ico("check2", null, 14) + ' Kiểm tra</button></div><div class="glab-verdict" hidden></div>';
+    var ov = node.querySelector(".glab-crop-ov"), verdict = node.querySelector(".glab-verdict");
+    ov.querySelectorAll("[data-id]").forEach(function (el) { el.onclick = function () { picked = el.dataset.id; ov.querySelectorAll("[data-id]").forEach(function (x) { x.setAttribute("stroke", "transparent"); }); el.setAttribute("stroke", "#4f46e5"); verdict.hidden = true; }; });
+    node.querySelector('[data-a="check"]').onclick = function () {
+      verdict.hidden = false;
+      if (!picked) { verdict.className = "glab-verdict no"; verdict.innerHTML = "<b>Hãy bấm vào một chỗ trước nhé.</b>"; return; }
+      var ok = picked === w.answer; if (ok) done(w);
+      verdict.className = "glab-verdict " + (ok ? "ok" : "no");
+      verdict.innerHTML = ok ? "<b>Chính xác! Bạn bấm đúng rồi.</b>" : "<b>Chưa đúng.</b> " + (w.miss || "Thử lại nhé.");
+    };
+  }
+
+  /* ============ 8) ĐẶT HÌNH (kéo-thả đúng vị trí) ============ */
+  var PIECE = {
+    sun: '<circle r="14" fill="#ffce3c" stroke="#f0a92e"/>',
+    house: '<g><rect x="-16" y="-4" width="32" height="22" rx="2" fill="#f3ddb2"/><path d="M-19 -4 L0 -18 L19 -4 Z" fill="#d1573e"/><rect x="-5" y="4" width="10" height="14" fill="#8a5a3b"/></g>',
+    tree: '<g><rect x="-2.5" y="4" width="5" height="12" fill="#8a5a3b"/><circle cx="0" cy="-4" r="12" fill="#4ca35a"/></g>',
+    cloud: '<g fill="#ffffff" stroke="#cdd8e0"><ellipse cx="-6" cy="0" rx="12" ry="7"/><ellipse cx="6" cy="1" rx="10" ry="6"/></g>',
+  };
+  function renderPlace(node, w) {
+    var pos = w.pieces.map(function (p) { return { x: p.x0, y: p.y0 }; });
+    var drag = null;
+    node.innerHTML = '<div class="glab-prompt">' + fmtInline(w.prompt) + "</div>" +
+      '<div class="glab-cropwrap" style="max-width:340px"><svg class="glab-place" viewBox="0 0 200 140" preserveAspectRatio="none" style="width:100%;display:block;border:1px solid var(--border);border-radius:10px;background:#eef6ff;touch-action:none"></svg></div>' +
+      '<p style="color:var(--text-soft);font-size:12.5px;text-align:center;margin:8px 0 0">Kéo mỗi hình vào đúng ô nét đứt.</p>' +
+      '<div class="glab-actions"><button class="btn btn-primary" data-a="check">' + ico("check2", null, 14) + ' Kiểm tra</button></div><div class="glab-verdict" hidden></div>';
+    var svg = node.querySelector(".glab-place"), verdict = node.querySelector(".glab-verdict");
+    function toVb(e) { var r = svg.getBoundingClientRect(); return { x: (e.clientX - r.left) / r.width * 200, y: (e.clientY - r.top) / r.height * 140 }; }
+    function build() {
+      var s = "";
+      w.pieces.forEach(function (p) { var t = tgtOf(p.id); s += '<circle cx="' + t.x + '" cy="' + t.y + '" r="17" fill="none" stroke="#9aa7b4" stroke-width="1.3" stroke-dasharray="4 3"/>'; });
+      w.pieces.forEach(function (p, i) { s += '<g data-pi="' + i + '" transform="translate(' + pos[i].x + "," + pos[i].y + ')" style="cursor:grab">' + PIECE[p.id] + "</g>"; });
+      svg.innerHTML = s;
+      svg.querySelectorAll("[data-pi]").forEach(function (g) { g.addEventListener("pointerdown", function (e) { e.preventDefault(); var i = +g.dataset.pi; var pt = toVb(e); drag = { i: i, ox: pt.x - pos[i].x, oy: pt.y - pos[i].y }; svg.setPointerCapture && svg.setPointerCapture(e.pointerId); }); });
+    }
+    function tgtOf(id) { for (var i = 0; i < w.targets.length; i++) if (w.targets[i].id === id) return w.targets[i]; return { x: 0, y: 0 }; }
+    svg.addEventListener("pointermove", function (e) { if (!drag) return; var pt = toVb(e); pos[drag.i] = { x: Math.max(6, Math.min(194, pt.x - drag.ox)), y: Math.max(6, Math.min(134, pt.y - drag.oy)) }; svg.querySelector('[data-pi="' + drag.i + '"]').setAttribute("transform", "translate(" + pos[drag.i].x + "," + pos[drag.i].y + ")"); verdict.hidden = true; });
+    svg.addEventListener("pointerup", function () { drag = null; });
+    svg.addEventListener("pointerleave", function () { drag = null; });
+    build();
+    node.querySelector('[data-a="check"]').onclick = function () {
+      var tol = 20, fb = w.pieces.map(function (p, i) { var t = tgtOf(p.id); var d = Math.hypot(pos[i].x - t.x, pos[i].y - t.y); return { ok: d <= tol, t: p.label }; });
+      var all = fb.every(function (x) { return x.ok; }); if (all) done(w);
+      verdict.hidden = false; verdict.className = "glab-verdict " + (all ? "ok" : "no");
+      verdict.innerHTML = (all ? "<b>Chính xác! Các hình đã vào đúng chỗ.</b>" : "<b>Chưa đúng hết — kéo cho khít hơn:</b>") + "<ul>" + fb.map(function (x) { return okLine(x.ok, x.t); }).join("") + "</ul>";
+    };
+  }
+
   function renderWidget(node, w) {
     if (w.type === "filter") return renderFilter(node, w);
     if (w.type === "layers") return renderLayers(node, w);
@@ -234,16 +305,18 @@
     if (w.type === "colorpick") return renderColorpick(node, w);
     if (w.type === "match") return renderMatch(node, w);
     if (w.type === "order") return renderOrder(node, w);
+    if (w.type === "hotspot") return renderHotspot(node, w);
+    if (w.type === "place") return renderPlace(node, w);
   }
 
   /* ---------------- Widget theo bài học ---------------- */
   var GLAB = {
-    "C10-09": [{ type: "match", prompt: "Nối mỗi **thao tác/khái niệm đồ hoạ** với mô tả đúng.", pairs: [{ l: "Lớp (layer)", r: "Tầng ảnh xếp chồng, sửa riêng không ảnh hưởng lớp khác" }, { l: "Vùng chọn", r: "Giới hạn thao tác vào một phần của ảnh" }, { l: "Ảnh vector", r: "Vẽ bằng đường và hình, phóng to không vỡ" }, { l: "Ảnh điểm (bitmap)", r: "Gồm nhiều điểm ảnh, phóng to sẽ bị vỡ hạt" }] }],
-    "C10-10": [{ type: "colorpick", prompt: "Pha ba kênh **Đỏ, Lục, Lam** để tạo màu **cam** giống ô mẫu (gợi ý: đỏ cao, lục vừa, lam thấp).", target: { r: 240, g: 140, b: 40 } }],
+    "C10-09": [{ type: "match", prompt: "Nối mỗi **thao tác/khái niệm đồ hoạ** với mô tả đúng.", pairs: [{ l: "Lớp (layer)", r: "Tầng ảnh xếp chồng, sửa riêng không ảnh hưởng lớp khác" }, { l: "Vùng chọn", r: "Giới hạn thao tác vào một phần của ảnh" }, { l: "Ảnh vector", r: "Vẽ bằng đường và hình, phóng to không vỡ" }, { l: "Ảnh điểm (bitmap)", r: "Gồm nhiều điểm ảnh, phóng to sẽ bị vỡ hạt" }] }, { type: "hotspot", image: "toolbar", prompt: "Trên thanh công cụ, **bấm vào công cụ dùng để khoanh vùng (chọn) một phần ảnh**.", answer: "chon", miss: "Công cụ chọn thường là hình chữ nhật nét đứt." }],
+    "C10-10": [{ type: "colorpick", prompt: "Pha ba kênh **Đỏ, Lục, Lam** để tạo màu **cam** giống ô mẫu (gợi ý: đỏ cao, lục vừa, lam thấp).", target: { r: 240, g: 140, b: 40 } }, { type: "place", prompt: "Vẽ tranh bằng cách **kéo mỗi hình về đúng ô nét đứt**: mặt trời góc trên phải, ngôi nhà giữa dưới, cái cây bên trái.", pieces: [{ id: "sun", label: "Mặt trời", x0: 28, y0: 120 }, { id: "house", label: "Ngôi nhà", x0: 100, y0: 122 }, { id: "tree", label: "Cái cây", x0: 172, y0: 120 }], targets: [{ id: "sun", x: 158, y: 30 }, { id: "house", x: 100, y: 96 }, { id: "tree", x: 34, y: 92 }] }],
     "C10-28": [{ type: "order", prompt: "Sắp đúng **trình tự hoàn thiện một bản vẽ vector** rồi xuất file.", items: [{ label: "Vẽ các hình cơ bản" }, { label: "Chỉnh nét & màu" }, { label: "Ghép/nhóm đối tượng" }, { label: "Xuất file ảnh" }], targetOrder: [0, 1, 2, 3] }],
     "U11-09": [{ type: "layers", prompt: "Trong phần mềm ảnh, **lớp ở trên che lớp ở dưới**. Hãy sắp để **Ngôi nhà** trên cùng, rồi **Mặt trời**, dưới cùng là **Bầu trời**.", layers: [{ name: "Bầu trời (nền)", color: "#7cc4f2", draw: "sky" }, { name: "Mặt trời", color: "#ffcf3f", draw: "sun" }, { name: "Ngôi nhà", color: "#d1573e", draw: "house" }], targetOrder: [2, 1, 0] }],
     "U11-10": [{ type: "filter", prompt: "Kéo các thanh **Độ sáng, Tương phản, Bão hoà, Xoay màu** cho **ảnh của bạn** giống **ảnh mẫu**.", target: { b: 1.25, c: 1.2, s: 1.5, h: 0 } }],
-    "U11-11": [{ type: "crop", prompt: "Dùng công cụ chọn: **kéo một khung chọn bao quanh ngôi nhà** (trùng ô nét đứt).", target: { x: 36, y: 62, w: 60, h: 58 } }],
+    "U11-11": [{ type: "crop", prompt: "Dùng công cụ chọn: **kéo một khung chọn bao quanh ngôi nhà** (trùng ô nét đứt).", target: { x: 36, y: 62, w: 60, h: 58 } }, { type: "hotspot", prompt: "Luyện mắt chọn vùng: **bấm vào vùng có ngôi nhà** trong ảnh.", regions: [{ id: "sky", x: 0, y: 0, w: 200, h: 62 }, { id: "sun", x: 138, y: 16, w: 40, h: 40 }, { id: "house", x: 36, y: 56, w: 62, h: 64 }], answer: "house", miss: "Ngôi nhà nằm ở phía dưới bên trái." }],
     "U11-12": [{ type: "colorpick", prompt: "Chọn màu để tô: pha ra màu **xanh lá cây** giống ô mẫu (lục cao, đỏ và lam thấp).", target: { r: 60, g: 170, b: 80 } }],
     "U11-13": [{ type: "order", prompt: "Ảnh động là chuỗi **khung hình** chiếu nối tiếp. Sắp các khung để quả bóng **rơi từ trên xuống rồi nảy lên**.", items: [{ label: "Bóng ở đỉnh" }, { label: "Bóng lưng chừng" }, { label: "Bóng chạm đất" }, { label: "Bóng nảy lên" }], targetOrder: [0, 1, 2, 3] }],
     "U11-14": [{ type: "match", prompt: "Nối mỗi **thành phần khi dựng phim** với vai trò của nó.", pairs: [{ l: "Dòng thời gian (timeline)", r: "Nơi sắp các clip theo thứ tự thời gian" }, { l: "Rãnh (track)", r: "Hàng chứa riêng hình, hoặc âm thanh" }, { l: "Khung hình/giây (fps)", r: "Số hình chiếu mỗi giây, càng cao càng mượt" }, { l: "Xem trước (preview)", r: "Chạy thử phim trước khi xuất" }] }],
@@ -271,6 +344,8 @@
     { head: "Pha màu RGB", w: { type: "colorpick", prompt: "Pha ra màu **tím** giống ô mẫu (đỏ vừa, lam cao, lục thấp).", target: { r: 150, g: 60, b: 200 } } },
     { head: "Nối cặp công cụ ↔ công dụng", w: { type: "match", prompt: "Nối mỗi công cụ ảnh với công dụng đúng.", pairs: [{ l: "Bút vẽ", r: "Tô/vẽ nét lên ảnh" }, { l: "Tẩy", r: "Xoá phần ảnh đã vẽ" }, { l: "Công cụ chọn", r: "Khoanh vùng để thao tác" }, { l: "Đổ màu", r: "Tô đầy một vùng bằng một màu" }] } },
     { head: "Sắp trình tự làm phim", w: { type: "order", prompt: "Sắp đúng các bước dựng một video ngắn.", items: [{ label: "Nhập tư liệu" }, { label: "Cắt & sắp clip" }, { label: "Thêm nhạc/chữ" }, { label: "Xuất phim" }], targetOrder: [0, 1, 2, 3] } },
+    { head: "Bấm đúng công cụ (trắc nghiệm GUI)", w: { type: "hotspot", image: "toolbar", prompt: "Trên thanh công cụ, **bấm vào công cụ dùng để tô/vẽ nét** lên ảnh.", answer: "but", miss: "Đó là công cụ Bút vẽ (biểu tượng cây bút)." } },
+    { head: "Kéo-thả đặt hình đúng vị trí", w: { type: "place", prompt: "**Kéo mặt trời** lên góc trên phải và **ngôi nhà** xuống giữa dưới cho khớp ô nét đứt.", pieces: [{ id: "sun", label: "Mặt trời", x0: 30, y0: 118 }, { id: "house", label: "Ngôi nhà", x0: 150, y0: 118 }], targets: [{ id: "sun", x: 160, y: 28 }, { id: "house", x: 96, y: 98 }] } },
   ];
   function renderGfxLab() {
     var app = document.getElementById("app");
