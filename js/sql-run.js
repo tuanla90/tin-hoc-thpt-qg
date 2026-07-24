@@ -169,6 +169,83 @@
         solution: "SELECT HOCSINH.HoTen, MONHOC.TenMon FROM KETQUA JOIN HOCSINH ON KETQUA.MaHS=HOCSINH.MaHS JOIN MONHOC ON KETQUA.MaMon=MONHOC.MaMon WHERE KETQUA.Diem>=9;",
         hint: "Nối ba bảng rồi WHERE KETQUA.Diem>=9." },
     ],
+    // ---- KHMT: mô hình quan hệ (bản ghi/trường) & DBMS — truy vấn cơ bản ----
+    "C11-07": [
+      { prompt: "Lấy **tất cả các trường** của bản ghi học sinh có mã `H4`.", schema: S,
+        starter: "SELECT * FROM HOCSINH WHERE ...;", solution: "SELECT * FROM HOCSINH WHERE MaHS='H4';",
+        hint: "Dấu * lấy mọi cột; thêm WHERE MaHS='H4'." },
+      { prompt: "Chỉ lấy hai trường **HoTen và MaLop** của mọi bản ghi trong bảng HOCSINH.", schema: S,
+        starter: "SELECT ... FROM HOCSINH;", solution: "SELECT HoTen, MaLop FROM HOCSINH;",
+        hint: "Liệt kê hai cột cần lấy, ngăn nhau bởi dấu phẩy." },
+    ],
+    "C11-08": [
+      { prompt: "Dùng một câu truy vấn, liệt kê **tên tất cả các lớp** trong bảng LOP.", schema: S,
+        starter: "SELECT ... FROM LOP;", solution: "SELECT TenLop FROM LOP;",
+        hint: "Chọn cột TenLop từ bảng LOP." },
+      { prompt: "**Đếm** tổng số môn học trong bảng MONHOC.", schema: S,
+        starter: "SELECT COUNT(*) FROM ...;", solution: "SELECT COUNT(*) FROM MONHOC;",
+        hint: "Dùng hàm gộp COUNT(*) trên bảng MONHOC." },
+    ],
+    // ---- ICT: làm quen hệ QTCSDL (khám phá dữ liệu bằng truy vấn) ----
+    "U11-01": [
+      { prompt: "Xem **toàn bộ dữ liệu** bảng MONHOC (tất cả các cột).", schema: S,
+        starter: "SELECT * FROM ...;", solution: "SELECT * FROM MONHOC;",
+        hint: "Dấu * nghĩa là lấy mọi cột." },
+      { prompt: "Liệt kê **tên các môn học** (chỉ cột TenMon).", schema: S,
+        starter: "SELECT TenMon FROM ...;", solution: "SELECT TenMon FROM MONHOC;",
+        hint: "Chọn cột TenMon từ bảng MONHOC." },
+    ],
+    // ---- ICT: thiết kế & tạo bảng (CREATE TABLE, chấm cấu trúc bảng) ----
+    "U11-02": [
+      { prompt: "**Tạo bảng** `GIAOVIEN` gồm ba cột: `MaGV` kiểu chữ `TEXT` là **khoá chính**, `HoTen` kiểu `TEXT`, `NamSinh` kiểu số nguyên `INTEGER`.", schema: S,
+        check: "SELECT name, upper(type) AS t, pk FROM pragma_table_info('GIAOVIEN') ORDER BY cid;",
+        starter: "CREATE TABLE GIAOVIEN(\n  ...\n);", solution: "CREATE TABLE GIAOVIEN(MaGV TEXT PRIMARY KEY, HoTen TEXT, NamSinh INTEGER);",
+        hint: "CREATE TABLE GIAOVIEN(MaGV TEXT PRIMARY KEY, HoTen TEXT, NamSinh INTEGER);" },
+      { prompt: "**Tạo bảng** `SACH` gồm: `MaSach` `TEXT` khoá chính, `TenSach` `TEXT`, `SoTrang` `INTEGER`, `GiaTien` số thực `REAL`.", schema: S,
+        check: "SELECT name, upper(type) AS t, pk FROM pragma_table_info('SACH') ORDER BY cid;",
+        starter: "CREATE TABLE SACH(\n  ...\n);", solution: "CREATE TABLE SACH(MaSach TEXT PRIMARY KEY, TenSach TEXT, SoTrang INTEGER, GiaTien REAL);",
+        hint: "Bốn cột đúng kiểu; MaSach TEXT PRIMARY KEY, GiaTien REAL." },
+    ],
+    // ---- ICT: tạo lập CSDL & nhập dữ liệu (CREATE + INSERT) ----
+    "U11-03": [
+      { prompt: "Tạo bảng `CAULACBO(Ma TEXT, Ten TEXT)` rồi **thêm 2 câu lạc bộ**: (`CB1`, `Cờ vua`) và (`CB2`, `Bóng rổ`).", schema: S,
+        check: "SELECT * FROM CAULACBO ORDER BY Ma;",
+        starter: "CREATE TABLE CAULACBO(Ma TEXT, Ten TEXT);\nINSERT INTO CAULACBO VALUES ...;",
+        solution: "CREATE TABLE CAULACBO(Ma TEXT, Ten TEXT); INSERT INTO CAULACBO VALUES ('CB1','Cờ vua'),('CB2','Bóng rổ');",
+        hint: "Tạo bảng xong dùng INSERT INTO ... VALUES (...),(...); cho 2 dòng." },
+      { prompt: "Tạo bảng `PHONGHOC(MaPhong TEXT, SucChua INTEGER)` rồi thêm hai phòng: (`P1`, 40) và (`P2`, 35).", schema: S,
+        check: "SELECT * FROM PHONGHOC ORDER BY MaPhong;",
+        starter: "CREATE TABLE PHONGHOC(MaPhong TEXT, SucChua INTEGER);\nINSERT INTO PHONGHOC VALUES ...;",
+        solution: "CREATE TABLE PHONGHOC(MaPhong TEXT, SucChua INTEGER); INSERT INTO PHONGHOC VALUES ('P1',40),('P2',35);",
+        hint: "SucChua là số nên viết trực tiếp, không cần nháy." },
+    ],
+    // ---- ICT: cập nhật dữ liệu (INSERT / UPDATE / DELETE) ----
+    "U11-05": [
+      { prompt: "**Thêm** một môn học mới vào bảng MONHOC: mã `M5`, tên `Lịch sử`.", schema: S,
+        check: "SELECT TenMon FROM MONHOC WHERE MaMon='M5';",
+        starter: "INSERT INTO MONHOC VALUES (...);", solution: "INSERT INTO MONHOC VALUES ('M5','Lịch sử');",
+        hint: "INSERT INTO MONHOC VALUES ('M5','Lịch sử');" },
+      { prompt: "**Sửa** tên môn có mã `M3` thành `Tin học ứng dụng`.", schema: S,
+        check: "SELECT TenMon FROM MONHOC WHERE MaMon='M3';",
+        starter: "UPDATE MONHOC SET ... WHERE ...;", solution: "UPDATE MONHOC SET TenMon='Tin học ứng dụng' WHERE MaMon='M3';",
+        hint: "UPDATE MONHOC SET TenMon='...' WHERE MaMon='M3'." },
+      { prompt: "**Xoá** khỏi bảng KETQUA mọi kết quả có **điểm dưới 5**.", schema: S,
+        check: "SELECT COUNT(*) FROM KETQUA;",
+        starter: "DELETE FROM KETQUA WHERE ...;", solution: "DELETE FROM KETQUA WHERE Diem<5;",
+        hint: "DELETE FROM KETQUA WHERE Diem<5;" },
+    ],
+    // ---- ICT: ràng buộc toàn vẹn (khoá chính, NOT NULL, khoá ngoài) ----
+    "U11-06": [
+      { prompt: "Tạo bảng `THANHVIEN` có `Ma` `TEXT` là **khoá chính** và `Ten` `TEXT` **không được để trống** (`NOT NULL`).", schema: S,
+        check: "SELECT name, \"notnull\", pk FROM pragma_table_info('THANHVIEN') ORDER BY cid;",
+        starter: "CREATE TABLE THANHVIEN(\n  ...\n);", solution: "CREATE TABLE THANHVIEN(Ma TEXT PRIMARY KEY, Ten TEXT NOT NULL);",
+        hint: "Ma TEXT PRIMARY KEY, Ten TEXT NOT NULL." },
+      { prompt: "Tạo bảng `MUONSACH` có `MaHS` `TEXT` là **khoá ngoài** tham chiếu `HOCSINH(MaHS)`, và `MaSach` `TEXT`. Dùng từ khoá `REFERENCES`.", schema: S,
+        check: "PRAGMA foreign_key_list(MUONSACH);",
+        starter: "CREATE TABLE MUONSACH(\n  MaHS TEXT REFERENCES ...,\n  MaSach TEXT\n);",
+        solution: "CREATE TABLE MUONSACH(MaHS TEXT REFERENCES HOCSINH(MaHS), MaSach TEXT);",
+        hint: "MaHS TEXT REFERENCES HOCSINH(MaHS) — khai báo khoá ngoài ngay tại cột." },
+    ],
   };
 
   /* ---------------- Nạp sql.js lười ---------------- */
