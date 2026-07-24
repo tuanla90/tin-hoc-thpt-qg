@@ -345,27 +345,27 @@ function renderLessons() {
       { name: "Học máy, Khoa học dữ liệu, Mô phỏng", from: 25, to: 30, color: "#9333ea" },
     ],
     20: [
-      { name: "Máy tính, dữ liệu và số hoá", from: 1, to: 3, color: "#2563eb" },
-      { name: "Mạng máy tính và Internet", from: 4, to: 6, color: "#0d9488" },
-      { name: "An toàn và đạo đức số", from: 7, to: 8, color: "#d97706" },
-      { name: "Thiết kế đồ hoạ", from: 9, to: 10, color: "#e11d48" },
-      { name: "Lập trình Python", from: 11, to: 20, color: "#4f46e5" },
-      { name: "Hướng nghiệp tin học", from: 21, to: 21, color: "#ea580c" },
+      { name: "Máy tính, dữ liệu và số hoá", from: 1, to: 7, color: "#2563eb" },
+      { name: "Mạng máy tính và Internet", from: 8, to: 10, color: "#0d9488" },
+      { name: "An toàn và đạo đức số", from: 11, to: 14, color: "#d97706" },
+      { name: "Thiết kế đồ hoạ", from: 15, to: 17, color: "#e11d48" },
+      { name: "Lập trình Python", from: 18, to: 33, color: "#4f46e5" },
+      { name: "Hướng nghiệp tin học", from: 34, to: 34, color: "#ea580c" },
     ],
     21: [
-      { name: "Hệ điều hành và phần mềm", from: 1, to: 3, color: "#2563eb" },
-      { name: "Tổ chức và khai thác dữ liệu", from: 4, to: 5, color: "#0d9488" },
-      { name: "Cơ sở dữ liệu và SQL", from: 6, to: 11, color: "#7c3aed" },
-      { name: "Kĩ thuật lập trình và thuật toán", from: 12, to: 19, color: "#4f46e5" },
-      { name: "Hướng nghiệp tin học", from: 20, to: 20, color: "#ea580c" },
+      { name: "Máy tính và hệ điều hành", from: 1, to: 5, color: "#2563eb" },
+      { name: "Internet, lưu trữ và an toàn số", from: 6, to: 10, color: "#0d9488" },
+      { name: "Cơ sở dữ liệu và SQL", from: 11, to: 18, color: "#7c3aed" },
+      { name: "Kĩ thuật lập trình và thuật toán", from: 19, to: 30, color: "#4f46e5" },
+      { name: "Hướng nghiệp tin học", from: 31, to: 31, color: "#ea580c" },
     ],
     22: [
       { name: "Trí tuệ nhân tạo", from: 1, to: 2, color: "#9333ea" },
-      { name: "Mạng máy tính", from: 3, to: 5, color: "#0d9488" },
-      { name: "Đạo đức và pháp luật số", from: 6, to: 6, color: "#d97706" },
-      { name: "Thiết kế web (HTML và CSS)", from: 7, to: 13, color: "#e11d48" },
-      { name: "Hướng nghiệp công nghệ thông tin", from: 14, to: 14, color: "#ea580c" },
-      { name: "Học máy, Khoa học dữ liệu, Mô phỏng", from: 15, to: 20, color: "#9333ea" },
+      { name: "Mạng máy tính", from: 3, to: 7, color: "#0d9488" },
+      { name: "Đạo đức và pháp luật số", from: 8, to: 8, color: "#d97706" },
+      { name: "Thiết kế web (HTML và CSS)", from: 9, to: 19, color: "#e11d48" },
+      { name: "Hướng nghiệp công nghệ thông tin", from: 20, to: 20, color: "#ea580c" },
+      { name: "Học máy, Khoa học dữ liệu, Mô phỏng", from: 21, to: 30, color: "#9333ea" },
     ],
   };
   const chapterOf = (l) => {
@@ -395,21 +395,35 @@ function renderLessons() {
     c.items.push({ l, gi: i });
   });
 
-  const IW = 300, CX = 150, A = 74, R = 28, STEP = 120, PADTOP = 56, PADBOT = 56;
-  const pat = [0, 0.55, 0.9, 0.55, 0, -0.55, -0.9, -0.55]; // độ lệch trái/phải tạo đường uốn lượn
+  const IW = 340, CX = 170, A = 95, R = 32, STEP = 110, PADTOP = 50, PADBOT = 50;
+  // Mẫu tọa độ zigzag sinh động phong cách Candy Crush (độ lệch ngẫu nhiên nhưng mượt mà)
+  const pat = [0, 0.75, 0.35, -0.65, -0.95, -0.3, 0.6, 0.9, 0.1, -0.8]; 
   const ic = (name) => (typeof ICON === "function" ? ICON(name) : "");
 
-  const chapHtml = (c, chapIdx) => {
+  const chapHtml = (c, chapIdx, bookIdx) => {
     const n = c.items.length;
     const C = c.color || "var(--primary)";
     const H = PADTOP + (n - 1) * STEP + R + PADBOT;
     const pts = c.items.map((it, k) => ({ x: CX + pat[k % pat.length] * A, y: PADTOP + k * STEP, it }));
-    let segs = "";
-    for (let k = 0; k < pts.length - 1; k++) {
-      const p0 = pts[k], p1 = pts[k + 1], on = learned[p0.it.gi];
-      segs += `<line x1="${p0.x.toFixed(1)}" y1="${p0.y}" x2="${p1.x.toFixed(1)}" y2="${p1.y}" stroke="${on ? C : "var(--border)"}" stroke-width="6" stroke-linecap="round"${on ? "" : ' stroke-dasharray="3 14"'} />`;
+    
+    // Đường nối SVG Candy Crush uốn lượn hạt đậu siêu mượt
+    let pathD = "";
+    for (let k = 0; k < pts.length; k++) {
+      if (k === 0) {
+        pathD += `M ${pts[k].x.toFixed(1)} ${pts[k].y}`;
+      } else {
+        const prev = pts[k - 1];
+        const curr = pts[k];
+        const cy1 = prev.y + (curr.y - prev.y) * 0.55;
+        const cy2 = prev.y + (curr.y - prev.y) * 0.45;
+        pathD += ` C ${prev.x.toFixed(1)} ${cy1}, ${curr.x.toFixed(1)} ${cy2}, ${curr.x.toFixed(1)} ${curr.y}`;
+      }
     }
-    const nodes = pts.map((p) => {
+
+    const segs = `<path d="${pathD}" fill="none" stroke="var(--border)" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" />` +
+      `<path d="${pathD}" fill="none" stroke="${C}" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" opacity="0.85" />`;
+
+    const nodes = pts.map((p, k) => {
       const gi = p.it.gi, l = p.it.l, done = learned[gi], open = unlocked[gi], cur = gi === currentIdx;
       const cls = done ? "done" : open ? "open" : "locked";
       const glyph = done ? ic("check") : open ? ic("play") : ic("lock");
@@ -418,112 +432,199 @@ function renderLessons() {
       const hasQuiz = l.quiz && l.quiz.length;
       const stars = done && hasQuiz ? starsFor(scoreByLesson[l.id]) : -1;
       const starsHtml = stars >= 0 ? `<span class="pn-stars" title="Mastery: ${stars}/3 sao">${[0, 1, 2].map((i) => starSvg(i < stars)).join("")}</span>` : "";
-      return `<button class="pnode ${cls}${cur ? " cur" : ""}" data-id="${l.id}" data-lock="${open ? 0 : 1}" style="left:${(p.x - R).toFixed(1)}px;top:${p.y - R}px;--cc:${C}" title="${esc(l.title)}" aria-label="Bài ${l.order}: ${name} — ${stTxt}">${cur ? '<span class="pn-bubble">BẮT ĐẦU 🔥</span>' : ""}${glyph}</button>` +
-        `<div class="pn-cap" style="left:${(p.x - 74).toFixed(1)}px;top:${p.y + R + 6}px"><span class="pn-top"><span class="pn-num">Bài ${l.order}</span>${starsHtml}</span><span class="pn-name">${name}</span></div>`;
+
+      // Cứ 4 bài lại có 1 Rương Kho Báu / Boss Stage Candy Crush
+      const isChestNode = (k + 1) % 4 === 0;
+      const chestIcon = done ? "🏆" : "🎁";
+
+      if (isChestNode) {
+        return `<button class="pnode chest ${cls}${cur ? " cur" : ""}" data-id="${l.id}" data-lock="${open ? 0 : 1}" style="left:${(p.x - R - 6).toFixed(1)}px;top:${p.y - R - 6}px;--cc:${C}" title="${esc(l.title)}">
+            ${cur ? '<span class="pn-bubble">RƯƠNG THƯỞNG 🎁</span>' : ""}
+            <span class="chest-emoji">${chestIcon}</span>
+          </button>
+          <div class="pn-cap" style="left:${(p.x - 85).toFixed(1)}px;top:${p.y + R + 10}px">
+            <span class="pn-top"><span class="pn-num" style="color:#eab308">Cửa ải kho báu</span>${starsHtml}</span>
+            <span class="pn-name">${name}</span>
+          </div>`;
+      }
+
+      return `<button class="pnode ${cls}${cur ? " cur" : ""}" data-id="${l.id}" data-lock="${open ? 0 : 1}" style="left:${(p.x - R).toFixed(1)}px;top:${p.y - R}px;--cc:${C}" title="${esc(l.title)}" aria-label="Bài ${l.order}: ${name} — ${stTxt}">
+          ${cur ? '<span class="pn-bubble">BẮT ĐẦU 🔥</span>' : ""}
+          <span class="pnode-inner-icon">${glyph}</span>
+        </button>
+        <div class="pn-cap" style="left:${(p.x - 85).toFixed(1)}px;top:${p.y + R + 10}px">
+          <span class="pn-top"><span class="pn-num">Bài ${l.order}</span>${starsHtml}</span>
+          <span class="pn-name">${name}</span>
+        </div>`;
     }).join("");
+
     const cDone = c.items.filter((it) => learned[it.gi]).length, cAll = c.items.length, cOk = cDone === cAll;
-    return `<div class="pchap-w"><span class="pchap${cOk ? " done" : ""}" style="--cc:${C}">${cOk && typeof ICON === "function" ? ICON("check", 15) : ""}${esc(c.name)} <b class="pchap-ct">${cDone}/${cAll}</b></span></div>
-      <div class="pwrap" style="height:${H}px"><svg class="pconn" width="${IW}" height="${H}" viewBox="0 0 ${IW} ${H}">${segs}</svg>${nodes}</div>`;
+    const hasCurrentItem = c.items.some((it) => it.gi === currentIdx);
+    // Tự động mở chặng nếu chặng đó chứa bài đang học hoặc nếu bài đầu tiên của chặng đã mở
+    const defaultOpen = hasCurrentItem || (chapIdx === 0 && bookIdx === 0) || cDone > 0;
+    const accordId = `chap-acc-${bookIdx}-${chapIdx}`;
+
+    return `<div class="pchap-accordion-card ${defaultOpen ? "is-open" : ""}" style="--cc:${C}">
+        <div class="pchap-acc-header" data-target="${accordId}">
+          <div class="pchap-head-left">
+            <span class="pchap-acc-icon">${cOk && typeof ICON === "function" ? ICON("check", 18) : "⚔️"}</span>
+            <div>
+              <div class="pchap-title">${esc(c.name)}</div>
+              <div class="pchap-sub">${cDone}/${cAll} Bài đã hoàn thành</div>
+            </div>
+          </div>
+          <div class="pchap-head-right">
+            <span class="pchap-badge-pct">${Math.round((cDone / cAll) * 100)}%</span>
+            <span class="pchap-chev">${aIco(defaultOpen ? "chevup" : "chevdown", null, 18)}</span>
+          </div>
+        </div>
+
+        <div class="pchap-acc-body" id="${accordId}" ${defaultOpen ? "" : "hidden"}>
+          <div class="pwrap" style="height:${H}px"><svg class="pconn" width="${IW}" height="${H}" viewBox="0 0 ${IW} ${H}">${segs}</svg>${nodes}</div>
+        </div>
+      </div>`;
   };
 
-  const booksHtml = books.map((b) =>
-    `<div class="pbookh">${aIco("book", "#ffffff", 16)} <span>${esc(STAGES[b.stage] || "Lớp " + b.stage)}</span></div>` + b.chaps.map(chapHtml).join("")
+  const booksHtml = books.map((b, bookIdx) =>
+    `<div class="pbookh">
+      <span class="pbookh-icon">${aIco("book", "#ffffff", 20)}</span>
+      <span>${esc(STAGES[b.stage] || "Lớp " + b.stage)}</span>
+    </div>` + b.chaps.map((c, cIdx) => chapHtml(c, cIdx, bookIdx)).join("")
   ).join("");
 
   app.innerHTML = `
     <button class="back-link" id="back">${aIco("aleft", null, 15)} Về trang chủ</button>
 
-    <!-- HERO PATH BANNER GAMING NEON -->
+    <!-- DUOLINGO & CANDY CRUSH STAGE MAP HEADER -->
     <div class="path-hero-card">
       <div class="path-hero-glow"></div>
       <div class="path-hero-content">
-        <div class="path-hero-badge">🔥 BẢN ĐỒ PHIÊU LƯU 3D</div>
+        <div class="path-hero-badge">🍬 THỬ THÁCH CANDY MAP 3D</div>
         <h2>Hành Trình Chinh Phục Tin Học</h2>
-        <p>Vượt qua từng cửa ải bài học để tích lũy XP, săn 3 sao Mastery và mở khóa kỹ năng lập trình đỉnh cao!</p>
+        <p>Chọn từng chặng ngang để mở rộng bản đồ, chinh phục từng cửa ải bài học và săn rương kho báu XP!</p>
         
         <div class="path-progress-box">
           <div class="progress-track-wrapper">
             <div class="progress-fill" style="width:${pct}%"></div>
           </div>
           <div class="path-progress-stats">
-            <span><b>${doneCount}</b> / ${sorted.length} bài hoàn thành (${pct}%)</span>
-            <span class="path-xp-badge">⭐ ${doneCount * 50} XP</span>
+            <span><b>${doneCount}</b> / ${sorted.length} bài đã chinh phục (${pct}%)</span>
+            <span class="path-xp-badge">⚡ ${doneCount * 50} XP</span>
           </div>
         </div>
       </div>
       <div class="path-hero-mascot">
-        <div class="path-mascot-speech">Sẵn sàng vượt ải chưa em? ⚔️</div>
-        <img src="asset/mascot/scenes/checklist.png" alt="Robot Quest" />
+        <div class="path-mascot-speech">Mở chặng để chiến thôi em! ⚔️</div>
+        <img src="asset/mascot/poses/celebrate-jump.png" alt="Robot Duolingo Quest" />
       </div>
     </div>
 
     <div class="pathroot">${booksHtml}</div>`;
 
   document.getElementById("back").onclick = () => go("home");
+  
+  // Xử lý sự kiện Mở Ra / Thu Vào (Accordion Expand/Collapse) của từng Chặng
+  app.querySelectorAll(".pchap-acc-header").forEach((hdr) => {
+    hdr.onclick = () => {
+      const card = hdr.closest(".pchap-accordion-card");
+      const targetId = hdr.dataset.target;
+      const body = document.getElementById(targetId);
+      const isOpen = card.classList.contains("is-open");
+
+      if (isOpen) {
+        card.classList.remove("is-open");
+        body.hidden = true;
+        hdr.querySelector(".pchap-chev").innerHTML = aIco("chevdown", null, 18);
+      } else {
+        card.classList.add("is-open");
+        body.hidden = false;
+        hdr.querySelector(".pchap-chev").innerHTML = aIco("chevup", null, 18);
+      }
+    };
+  });
+
   app.querySelectorAll(".pnode").forEach((btn) => {
-    btn.onclick = () => {
-      if (btn.dataset.lock === "1") { toast("🔒 Hãy hoàn thành bài trước để mở khóa bài này"); return; }
+    btn.onclick = (e) => {
+      e.stopPropagation();
+      if (btn.dataset.lock === "1") { toast("🔒 Hãy hoàn thành bài trước để mở khóa cửa ải này"); return; }
       go("lesson", { id: btn.dataset.id });
     };
   });
 
-  // Tự cuộn tới bài đang học (chỉ khi đã có tiến độ) để khỏi kéo qua các bài đã xong
+  // Tự cuộn tới bài đang học
   const curEl = app.querySelector(".pnode.cur");
   if (curEl && doneCount > 0) requestAnimationFrame(() => curEl.scrollIntoView({ block: "center" }));
 }
 
-/* Chèn CSS cho lộ trình kiểu Duolingo 3D Gaming Neon */
+/* Chèn CSS chuẩn phong cách Duolingo & Candy Crush Accordion Map */
 function injectPathCss() {
   if (document.getElementById("pl-css")) return;
   const s = document.createElement("style");
   s.id = "pl-css";
   s.textContent =
-    ".path-hero-card { display: flex; align-items: center; justify-content: space-between; gap: 24px; background: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%); color: #fff; padding: 32px 36px; border-radius: 24px; box-shadow: 0 20px 50px -10px rgba(168, 85, 247, 0.45); margin-bottom: 36px; position: relative; overflow: hidden; }" +
-    ".path-hero-glow { position: absolute; inset: 0; background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%); pointer-events: none; }" +
+    ".path-hero-card { display: flex; align-items: center; justify-content: space-between; gap: 24px; background: linear-gradient(135deg, #ff007f 0%, #7928ca 50%, #4338ca 100%); color: #fff; padding: 32px 36px; border-radius: 28px; box-shadow: 0 14px 0 #4f107b, 0 25px 40px rgba(121, 40, 202, 0.4); margin-bottom: 36px; position: relative; overflow: hidden; border: 2px solid #ff66c4; }" +
+    "[data-theme='dark'] .path-hero-card { background: linear-gradient(135deg, #6366f1 0%, #7c3aed 50%, #4338ca 100%); border-color: #a855f7; box-shadow: 0 14px 0 #3730a3, 0 25px 40px rgba(124, 58, 237, 0.45); }" +
+    ".path-hero-glow { position: absolute; inset: 0; background: radial-gradient(circle, rgba(255,255,255,0.25) 0%, transparent 70%); pointer-events: none; }" +
     ".path-hero-content { flex: 1; z-index: 2; }" +
-    ".path-hero-badge { font-family: var(--font-mono); font-size: 11.5px; font-weight: 800; background: rgba(0, 0, 0, 0.25); padding: 5px 14px; border-radius: 20px; display: inline-block; margin-bottom: 10px; letter-spacing: 0.05em; backdrop-filter: blur(6px); border: 1px solid rgba(255,255,255,0.2); }" +
-    ".path-hero-content h2 { font-family: var(--font-display); font-size: clamp(24px, 4vw, 30px); font-weight: 900; margin-bottom: 8px; letter-spacing: -0.02em; }" +
-    ".path-hero-content p { font-size: 14.5px; opacity: 0.95; margin-bottom: 18px; line-height: 1.55; }" +
-    ".path-progress-box { background: rgba(0, 0, 0, 0.28); padding: 14px 18px; border-radius: 16px; backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.15); }" +
-    ".path-progress-stats { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; font-size: 13px; font-weight: 750; }" +
-    ".path-xp-badge { font-family: var(--font-mono); color: #fef08a; background: rgba(0, 0, 0, 0.4); padding: 3px 10px; border-radius: 10px; border: 1px solid rgba(254, 240, 138, 0.3); font-weight: 800; }" +
+    ".path-hero-badge { font-family: var(--font-mono); font-size: 12px; font-weight: 900; background: rgba(0, 0, 0, 0.28); padding: 6px 16px; border-radius: 20px; display: inline-block; margin-bottom: 12px; letter-spacing: 0.05em; backdrop-filter: blur(6px); border: 1px solid rgba(255,255,255,0.25); }" +
+    ".path-hero-content h2 { font-family: var(--font-display); font-size: clamp(26px, 4.5vw, 34px); font-weight: 900; margin-bottom: 8px; letter-spacing: -0.02em; text-shadow: 0 2px 4px rgba(0,0,0,0.2); }" +
+    ".path-hero-content p { font-size: 15px; opacity: 0.95; margin-bottom: 20px; line-height: 1.55; text-shadow: 0 1px 2px rgba(0,0,0,0.15); }" +
+    ".path-progress-box { background: rgba(0, 0, 0, 0.32); padding: 16px 20px; border-radius: 20px; backdrop-filter: blur(10px); border: 1.5px solid rgba(255,255,255,0.2); }" +
+    ".path-progress-stats { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; font-size: 13.5px; font-weight: 800; }" +
+    ".path-xp-badge { font-family: var(--font-mono); color: #ffeb3b; background: rgba(0, 0, 0, 0.45); padding: 4px 12px; border-radius: 12px; border: 1.5px solid #ffee58; font-weight: 900; font-size: 13px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }" +
     ".path-hero-mascot { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; }" +
-    ".path-mascot-speech { background: #fff; color: #0f172a; font-weight: 800; font-size: 12px; padding: 6px 12px; border-radius: 14px; white-space: nowrap; margin-bottom: 6px; box-shadow: 0 6px 16px rgba(0,0,0,0.2); animation: floatSpeech 3s ease-in-out infinite; border: 2px solid #a855f7; }" +
-    "@keyframes floatSpeech { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }" +
-    ".path-hero-mascot img { width: 120px; height: 120px; object-fit: contain; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.35)); animation: mascotHover 4s ease-in-out infinite; }" +
-    "@keyframes mascotHover { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }" +
+    ".path-mascot-speech { background: #fff; color: #0f172a; font-weight: 900; font-size: 13px; padding: 8px 16px; border-radius: 18px; white-space: nowrap; margin-bottom: 8px; box-shadow: 0 8px 20px rgba(0,0,0,0.25); animation: floatSpeech 3s ease-in-out infinite; border: 2.5px solid #ff007f; font-family: var(--font-display); }" +
+    "@keyframes floatSpeech { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }" +
+    ".path-hero-mascot img { width: 135px; height: 135px; object-fit: contain; filter: drop-shadow(0 12px 24px rgba(0,0,0,0.4)); animation: mascotHover 4s ease-in-out infinite; }" +
+    "@keyframes mascotHover { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }" +
 
-    ".pathroot { max-width: 440px; margin: 0 auto; padding-bottom: 44px; }" +
-    ".pbookh { text-align: center; font-family: var(--font-display); font-weight: 900; font-size: 18px; background: linear-gradient(135deg, #6366f1, #4338ca); color: #fff; margin: 40px 0 20px; padding: 14px 24px; border-radius: 18px; box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.4); display: flex; align-items: center; justify-content: center; gap: 12px; border: 1px solid rgba(255,255,255,0.2); }" +
-    ".pchap-w { text-align: center; margin: 24px 0 8px; }" +
-    ".pchap { display: inline-block; background: var(--bg-card); border: 2.5px solid var(--cc, var(--border)); color: var(--cc, var(--text)); font-weight: 850; font-size: 14px; padding: 9px 22px; border-radius: 24px; max-width: 340px; box-shadow: 0 6px 16px rgba(0,0,0,0.06); transition: transform 0.2s; }" +
-    ".pchap.done { background: var(--cc, #10b981); border-color: var(--cc, #10b981); color: #fff; box-shadow: 0 6px 18px color-mix(in srgb, var(--cc) 40%, transparent); }" +
-    ".pchap svg { width: 17px; height: 17px; vertical-align: -3px; margin-right: 6px; }" +
-    ".pchap-ct { font-weight: 850; opacity: .9; margin-left: 6px; font-family: var(--font-mono); }" +
+    ".pathroot { max-width: 520px; margin: 0 auto; padding-bottom: 60px; }" +
+    ".pbookh { text-align: center; font-family: var(--font-display); font-weight: 900; font-size: 19px; background: linear-gradient(135deg, #1cb0f6, #0082c4); color: #fff; margin: 36px 0 20px; padding: 16px 28px; border-radius: 22px; box-shadow: 0 8px 0 #006097, 0 16px 30px rgba(28, 176, 246, 0.4); display: flex; align-items: center; justify-content: center; gap: 12px; border: 2px solid #64d2ff; }" +
+    "[data-theme='dark'] .pbookh { background: linear-gradient(135deg, #6366f1, #4338ca); border-color: #818cf8; box-shadow: 0 8px 0 #3730a3, 0 16px 30px rgba(99, 102, 241, 0.4); }" +
     
-    ".pwrap { position: relative; width: 300px; margin: 0 auto; }" +
+    /* Thẻ Chặng Ngang Accordion Mở Ra / Thu Vào */
+    ".pchap-accordion-card { background: var(--surface-card); border: 2.5px solid var(--border); border-radius: 24px; margin-bottom: 18px; overflow: hidden; box-shadow: 0 8px 0 var(--border), 0 12px 24px rgba(0,0,0,0.05); transition: all 0.25s ease; }" +
+    ".pchap-accordion-card.is-open { border-color: var(--cc, var(--brand)); box-shadow: 0 10px 0 color-mix(in srgb, var(--cc) 70%, #000), 0 16px 32px rgba(0,0,0,0.08); }" +
+    ".pchap-acc-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 24px; cursor: pointer; user-select: none; background: var(--surface-card); transition: background 0.15s; }" +
+    ".pchap-acc-header:hover { background: var(--bg-soft); }" +
+    ".pchap-head-left { display: flex; align-items: center; gap: 14px; }" +
+    ".pchap-acc-icon { width: 42px; height: 42px; border-radius: 14px; background: color-mix(in srgb, var(--cc) 15%, transparent); color: var(--cc); display: grid; place-items: center; font-size: 20px; font-weight: 850; flex-shrink: 0; }" +
+    ".pchap-title { font-family: var(--font-display); font-weight: 850; font-size: 16px; color: var(--text); line-height: 1.3; }" +
+    ".pchap-sub { font-size: 12.5px; color: var(--text-soft); font-weight: 650; margin-top: 2px; }" +
+    ".pchap-head-right { display: flex; align-items: center; gap: 12px; }" +
+    ".pchap-badge-pct { font-family: var(--font-mono); font-weight: 900; font-size: 13px; background: color-mix(in srgb, var(--cc) 15%, transparent); color: var(--cc); padding: 5px 12px; border-radius: 14px; border: 1px solid color-mix(in srgb, var(--cc) 30%, transparent); }" +
+    ".pchap-chev { color: var(--text-soft); transition: transform 0.2s; display: grid; place-items: center; }" +
+    ".pchap-acc-body { padding: 10px 0 30px; border-top: 2px dashed var(--border); background: color-mix(in srgb, var(--cc) 3%, var(--bg-card)); animation: fadeInAcc 0.3s ease; }" +
+    "@keyframes fadeInAcc { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }" +
+
+    ".pwrap { position: relative; width: 340px; margin: 0 auto; }" +
     ".pconn { position: absolute; left: 0; top: 0; overflow: visible; z-index: 0; }" +
     
-    ".pnode { position: absolute; width: 62px; height: 62px; border-radius: 50%; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 1; padding: 0; transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1); outline: none; }" +
-    ".pnode svg { width: 30px; height: 30px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }" +
-    ".pnode.done { background: linear-gradient(135deg, #10b981, #059669); color: #fff; box-shadow: 0 8px 0 #047857, 0 12px 20px rgba(16, 185, 129, 0.4); }" +
-    ".pnode.open { background: linear-gradient(135deg, #8b5cf6, #6366f1); color: #fff; box-shadow: 0 8px 0 #4c1d95, 0 12px 20px rgba(139, 92, 246, 0.45); }" +
-    ".pnode.locked { background: var(--bg-soft); color: var(--text-soft); border: 2px solid var(--border); box-shadow: 0 5px 0 var(--border); opacity: 0.75; }" +
-    ".pnode.done:hover, .pnode.open:hover { transform: translateY(-3px) scale(1.05); }" +
-    ".pnode.done:active, .pnode.open:active { transform: translateY(4px); box-shadow: 0 2px 0 rgba(0,0,0,.3); }" +
+    /* 3D Duolingo Candy Button Nodes */
+    ".pnode { position: absolute; width: 68px; height: 68px; border-radius: 50%; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 1; padding: 0; transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1); outline: none; }" +
+    ".pnode-inner-icon svg { width: 32px; height: 32px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.25)); }" +
+    ".pnode.done { background: linear-gradient(180deg, #58cc02 0%, #46a302 100%); color: #fff; box-shadow: 0 9px 0 #3b8a02, 0 15px 25px rgba(88, 204, 2, 0.45); border: 3px solid #79e622; }" +
+    ".pnode.open { background: linear-gradient(180deg, #ff007f 0%, #d8006c 100%); color: #fff; box-shadow: 0 9px 0 #9e004f, 0 15px 25px rgba(255, 0, 127, 0.45); border: 3px solid #ff66c4; }" +
+    ".pnode.locked { background: linear-gradient(180deg, #e5e7eb 0%, #d1d5db 100%); color: #9ca3af; box-shadow: 0 9px 0 #9ca3af; border: 3px solid #f3f4f6; opacity: 0.85; }" +
+    "[data-theme='dark'] .pnode.locked { background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%); color: #475569; box-shadow: 0 9px 0 #020617; border-color: #334155; }" +
+    ".pnode.chest { width: 76px; height: 76px; border-radius: 24px; background: linear-gradient(180deg, #ffc107 0%, #ff9800 100%); box-shadow: 0 10px 0 #c77700, 0 16px 30px rgba(255, 193, 7, 0.5); border: 3.5px solid #ffe082; }" +
+    ".chest-emoji { font-size: 34px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.25)); }" +
+    ".pnode:hover { transform: translateY(-4px) scale(1.06); }" +
+    ".pnode:active { transform: translateY(6px); box-shadow: 0 3px 0 rgba(0,0,0,.4) !important; }" +
     
-    ".pnode.cur::after { content: ''; position: absolute; inset: -11px; border-radius: 50%; border: 3.5px solid #a855f7; animation: plpulse 1.6s ease-in-out infinite; pointer-events: none; }" +
-    "@keyframes plpulse { 0%,100% { transform: scale(1); opacity: .7; } 50% { transform: scale(1.22); opacity: .15; } }" +
+    ".pnode.cur::after { content: ''; position: absolute; inset: -14px; border-radius: 50%; border: 4px solid #ffc107; animation: plpulse 1.6s ease-in-out infinite; pointer-events: none; box-shadow: 0 0 20px rgba(255, 193, 7, 0.6); }" +
+    ".pnode.chest.cur::after { border-radius: 28px; }" +
+    "@keyframes plpulse { 0%,100% { transform: scale(1); opacity: .8; } 50% { transform: scale(1.24); opacity: .2; } }" +
     
-    ".pn-bubble { position: absolute; top: -34px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #ec4899, #a855f7); color: #fff; font-family: var(--font-mono); font-size: 11px; font-weight: 900; padding: 4px 12px; border-radius: 14px; white-space: nowrap; z-index: 3; box-shadow: 0 6px 16px rgba(236, 72, 153, 0.5); border: 2px solid #fff; animation: bounceNav 2s infinite; }" +
-    "@keyframes bounceNav { 0%,100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(-4px); } }" +
-    ".pn-cap { position: absolute; width: 160px; text-align: center; pointer-events: none; z-index: 1; line-height: 1.25; }" +
-    ".pn-num { display: block; font-size: 11.5px; font-weight: 850; color: var(--primary); font-family: var(--font-mono); }" +
-    ".pn-name { font-size: 12px; font-weight: 750; color: var(--text); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; margin-top: 2px; }" +
-    ".pn-top { display: flex; align-items: center; justify-content: center; gap: 5px; line-height: 1; margin-bottom: 2px; }" +
-    ".pn-stars { display: inline-flex; gap: 2px; }" +
-    ".pn-star { width: 13px; height: 13px; fill: var(--border); }" +
-    ".pn-star.on { fill: #f59e0b; filter: drop-shadow(0 1px 3px rgba(245, 158, 11, 0.6)); }" +
+    ".pn-bubble { position: absolute; top: -38px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #ff9800, #ff5722); color: #fff; font-family: var(--font-display); font-size: 11.5px; font-weight: 900; padding: 5px 14px; border-radius: 16px; white-space: nowrap; z-index: 3; box-shadow: 0 6px 18px rgba(255, 87, 34, 0.5); border: 2px solid #fff; animation: bounceNav 2s infinite; letter-spacing: 0.03em; }" +
+    "@keyframes bounceNav { 0%,100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(-5px); } }" +
+    ".pn-cap { position: absolute; width: 170px; text-align: center; pointer-events: none; z-index: 1; line-height: 1.25; }" +
+    ".pn-num { display: block; font-size: 12px; font-weight: 900; color: var(--primary); font-family: var(--font-mono); }" +
+    ".pn-name { font-size: 12.5px; font-weight: 800; color: var(--text); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; margin-top: 3px; font-family: var(--font-sans); }" +
+    ".pn-top { display: flex; align-items: center; justify-content: center; gap: 6px; line-height: 1; margin-bottom: 2px; }" +
+    ".pn-stars { display: inline-flex; gap: 3px; }" +
+    ".pn-star { width: 14px; height: 14px; fill: var(--border); }" +
+    ".pn-star.on { fill: #ffc107; filter: drop-shadow(0 2px 4px rgba(255, 193, 7, 0.6)); }" +
     "@media (max-width: 560px) { .path-hero-mascot { display: none; } }";
   document.head.appendChild(s);
 }
