@@ -744,6 +744,7 @@ function renderLesson(data) {
   if (runCode) buildEditor(document.getElementById("lessonPg"), runCode);
   else if (webCode) buildWebEditor(document.getElementById("lessonPg"), webCode);
   if (typeof injectExercises === "function") injectExercises(l);
+  if (typeof injectSqlExercises === "function") injectSqlExercises(l);
   if (typeof injectVocab === "function") injectVocab(l);
   const sgkT = document.getElementById("sgkToggle");
   if (sgkT) sgkT.onclick = () => {
