@@ -42,6 +42,7 @@ const State = {
   settings: load("settings", { theme: "light" }),
   history: load("history", []),
   learned: load("learned", []),   // danh sách id bài học đã hoàn thành
+  profile: load("profile", {}),   // hồ sơ: tên, giới tính, lớp, định hướng
 };
 
 const app = document.getElementById("app");
@@ -108,7 +109,7 @@ function countByType(t) { return QUESTION_BANK.filter((q) => q.type === t).lengt
  * ------------------------------------------------------------------------- */
 /* Bảng ánh xạ view -> hàm render (dựng lại mỗi lần để bắt được window.* nạp sau) */
 function viewRenderer(view) {
-  const map = { home: renderHome, lessons: renderLessons, lesson: renderLesson, playground: renderPlayground, practiceSetup: renderPracticeSetup, quiz: renderQuiz, result: renderResult, history: renderHistory, vocab: window.renderVocabPage, achievements: (window.Gam && window.Gam.renderAchievements), examCodes: window.renderExamCodes, tfDrill: window.renderTFDrill };
+  const map = { home: renderHome, lessons: renderLessons, lesson: renderLesson, playground: renderPlayground, practiceSetup: renderPracticeSetup, quiz: renderQuiz, result: renderResult, history: renderHistory, vocab: window.renderVocabPage, achievements: (window.Gam && window.Gam.renderAchievements), examCodes: window.renderExamCodes, tfDrill: window.renderTFDrill, profile: window.renderProfile };
   return map[view] || renderHome;
 }
 
@@ -124,6 +125,7 @@ function viewToHash(view, data) {
     case "achievements": return "#/achievements";
     case "examCodes": return "#/exam";
     case "tfDrill": return "#/tf-drill";
+    case "profile": return "#/profile";
     case "quiz": return "#/quiz";
     case "result": return "#/result";
     case "home":
@@ -154,6 +156,7 @@ function parseHash() {
     case "achievements": return { view: "achievements", data: undefined };
     case "exam": return { view: "examCodes", data: undefined };
     case "tf-drill": return { view: "tfDrill", data: undefined };
+    case "profile": return { view: "profile", data: undefined };
     case "quiz": return { view: "quiz", data: undefined };
     case "result": return { view: "result", data: undefined };
     case "": return { view: "home", data: undefined };
@@ -215,6 +218,7 @@ function renderHome() {
     : `<div style="display:flex;align-items:center;justify-content:center;gap:8px;background:var(--success-soft);border:1px solid var(--success);border-radius:var(--radius);padding:14px 16px;margin:2px 0 18px;color:var(--success);font-weight:600;text-align:center">${typeof ICON === "function" ? ICON("trophy", 18) : "🎉"} Bạn đã hoàn thành cả lộ trình! Ôn lại bài hoặc thi thử nhé.</div>`;
 
   app.innerHTML = `
+    ${typeof profileGreeting === "function" ? profileGreeting() : ""}
     <section class="hero">
       <div class="hero-ic">${ic("cap", "🎓")}</div>
       <h1>Học & Ôn thi Tin học THPT</h1>
