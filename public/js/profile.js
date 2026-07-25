@@ -34,7 +34,8 @@
   var GRADES = [["10", "Lớp 10"], ["11", "Lớp 11"], ["12", "Lớp 12"]];
   var TRACKS = [["khmt", "Khoa học máy tính"], ["udung", "Tin học ứng dụng"]];
   var BOOKS = [["canhdieu", "Cánh Diều"], ["tuviet", "Bản luyện thi THPT"]];
-  var DEFAULT = { name: "", gender: "", grade: "", track: "", book: "" };
+  var MODES = [["tudo", "Mở tự do"], ["tuantu", "Khoá tuần tự"]];
+  var DEFAULT = { name: "", gender: "", grade: "", track: "", book: "", mode: "" };
 
   function labelOf(list, val) { for (var i = 0; i < list.length; i++) if (list[i][0] === val) return list[i][1]; return ""; }
   function avatarOf(p) { return p.gender === "nam" ? "👦" : p.gender === "nu" ? "👧" : "🧑‍🎓"; }
@@ -101,6 +102,9 @@
         '<div class="pf-field"><label>Bộ sách đang học</label>' + chipRow(BOOKS, "book", p.book) +
           '<p class="pf-note" style="margin:8px 0 0">Chọn bộ sách em dùng để đối chiếu nội dung. <b>Bản luyện thi THPT</b> là nội dung do nhóm tự biên soạn, bám sát Chương trình GDPT 2018 (không sao chép sách giáo khoa).</p></div>' +
 
+        '<div class="pf-field"><label>Cách mở bài học</label>' + chipRow(MODES, "mode", p.mode) +
+          '<p class="pf-note" style="margin:8px 0 0"><b>Mở tự do</b>: học bài nào tuỳ ý. <b>Khoá tuần tự</b>: học xong bài trước mới mở bài sau. Chưa chọn: bản luyện thi mở tự do, bản theo SGK khoá tuần tự.</p></div>' +
+
         '<button class="btn btn-primary btn-lg pf-save" id="pfSave">' + ico("save", null, 16) + " Lưu hồ sơ</button>" +
       "</div>";
 
@@ -127,7 +131,7 @@
 
     app.querySelector("#pfBack").onclick = function () { if (typeof go === "function") go("home"); };
     app.querySelector("#pfSave").onclick = function () {
-      var data = { name: nameEl.value.trim(), gender: pick("gender"), grade: pick("grade"), track: pick("track"), book: pick("book") };
+      var data = { name: nameEl.value.trim(), gender: pick("gender"), grade: pick("grade"), track: pick("track"), book: pick("book"), mode: pick("mode") };
       setProfile(data);
       if (typeof toast === "function") toast("Đã lưu hồ sơ " + ((typeof ICON === "function") ? ICON("check2", 15) : "✓"));
     };

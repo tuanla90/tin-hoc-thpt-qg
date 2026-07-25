@@ -369,9 +369,15 @@ function renderLessons() {
   injectPathCss();
   const sorted = LESSONS.slice().filter(visibleForProfile).sort((a, b) => a.stage - b.stage || a.order - b.order);
   const learned = sorted.map((l) => isLearned(l.id));
-  // KHÓA CỨNG: bài i chỉ mở khi bài liền trước đã học (bài đầu luôn mở)
-  // NGOẠI LỆ: nhóm "Bản sạch (thử)" stage>=20 luôn mở để nghiệm thu tự do
-  const unlocked = sorted.map((l, i) => (l.stage >= 20 ? true : i === 0 ? true : learned[i - 1]));
+  // Cách mở bài theo hồ sơ:
+  //  - "tudo": mở tự do toàn bộ;  "tuantu": khoá tuần tự toàn bộ (bài i mở khi bài trước đã học)
+  //  - chưa chọn (mặc định): bản sạch stage>=20 mở tự do, bản theo SGK stage<20 khoá tuần tự
+  const openMode = (typeof State !== "undefined" && State.profile && State.profile.mode) || "";
+  const unlocked = sorted.map((l, i) => {
+    if (openMode === "tudo") return true;
+    if (openMode === "tuantu") return i === 0 ? true : learned[i - 1];
+    return l.stage >= 20 ? true : i === 0 ? true : learned[i - 1];
+  });
   const currentIdx = sorted.findIndex((l, i) => unlocked[i] && !learned[i]);
   const doneCount = learned.filter(Boolean).length;
   const pct = Math.round((doneCount / sorted.length) * 100);
