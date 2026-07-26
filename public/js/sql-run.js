@@ -412,9 +412,54 @@
     };
   }
 
+  function renderSqlLabInner(host) {
+    if (!host) return;
+    var ico = function (n, c, s) { return (typeof ICON === "function") ? ICON(n, s || 16, c) : ""; };
+    host.innerHTML =
+      dataPreview(true) +
+      '<div style="margin:6px 0 4px;font-weight:650;font-size:13px;color:var(--text-soft)">Ví dụ nhanh (bấm để chèn):</div>' +
+      '<div id="labChips">' + LAB_SAMPLES.map(function (s, i) { return '<span class="sqx-chip" data-i="' + i + '">' + esc(s.length > 46 ? s.slice(0, 44) + "…" : s) + "</span>"; }).join("") + "</div>" +
+      '<textarea class="sqx-editor" id="labEditor" style="min-height:110px;margin-top:6px" spellcheck="false">SELECT * FROM HOCSINH;</textarea>' +
+      '<div class="sqx-actions">' +
+        '<button class="btn btn-ghost" id="labResetDb">' + ico("refresh", null, 14) + " Đặt lại CSDL</button>" +
+        '<button class="btn btn-primary" id="labRun">' + ico("play", null, 14) + " Chạy</button>" +
+      "</div>" +
+      '<div class="sqx-res" id="labRes"></div><div class="sqx-verdict" id="labMsg" hidden></div>';
+
+    if (typeof iconify === "function") iconify(host);
+    var ta = host.querySelector("#labEditor"), resEl = host.querySelector("#labRes"), msg = host.querySelector("#labMsg");
+    host.querySelectorAll("#labChips .sqx-chip").forEach(function (c) { c.onclick = function () { ta.value = LAB_SAMPLES[+c.dataset.i]; }; });
+
+    host.querySelector("#labRun").onclick = function () {
+      resEl.innerHTML = ""; msg.hidden = false; msg.className = "sqx-verdict"; msg.textContent = "Đang khởi động SQLite…";
+      sqlReady().then(function (SQLmod) {
+        var db;
+        try { db = labGetDb(SQLmod); } catch (e) { msg.className = "sqx-verdict err"; msg.textContent = "❌ " + e.message; return; }
+        try {
+          var out = db.exec(ta.value);
+          if (!out.length) {
+            var n = db.getRowsModified();
+            msg.className = "sqx-verdict ok"; msg.innerHTML = (typeof ICON === "function" ? ICON("check2", 15, "#16a34a") : "") + " Đã chạy xong. Số dòng bị thay đổi: <b>" + n + "</b>.";
+          } else {
+            msg.hidden = true;
+            resEl.innerHTML = out.map(function (r, k) {
+              return (out.length > 1 ? '<div class="sqx-cap">Kết quả ' + (k + 1) + "</div>" : '<div class="sqx-cap">Kết quả (' + r.values.length + " dòng)</div>") + tableHTML(r.columns, r.values);
+            }).join("");
+          }
+        } catch (e) { msg.className = "sqx-verdict err"; msg.textContent = "❌ Lỗi SQL: " + (e && e.message ? e.message : e); }
+      }, function (e) { msg.className = "sqx-verdict err"; msg.textContent = "❌ Không nạp được SQLite: " + (e && e.message ? e.message : e); });
+    };
+
+    host.querySelector("#labResetDb").onclick = function () {
+      labReset(); resEl.innerHTML = ""; msg.hidden = false; msg.className = "sqx-verdict ok";
+      msg.innerHTML = (typeof ICON === "function" ? ICON("refresh", 15, "#16a34a") : "") + " Đã đặt lại cơ sở dữ liệu về ban đầu.";
+    };
+  }
+
   if (typeof window !== "undefined") {
     window.SQL_EXERCISES = SQL_EXERCISES;
     window.injectSqlExercises = injectSqlExercises;
     window.renderSqlLab = renderSqlLab;
+    window.renderSqlLabInner = renderSqlLabInner;
   }
 })();

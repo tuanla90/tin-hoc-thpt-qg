@@ -178,8 +178,8 @@ function parseHash() {
     case "lessons": return { view: "lessons", data: undefined };
     case "lesson": return { view: "lesson", data: parts[1] ? { id: decodeURIComponent(parts[1]) } : undefined };
     case "playground": return { view: "playground", data: undefined };
-    case "sql-lab": return { view: "sqlLab", data: undefined };
-    case "graphics-lab": return { view: "gfxLab", data: undefined };
+    case "sql-lab": return { view: "playground", data: { lang: "sql" } };
+    case "graphics-lab": return { view: "playground", data: { lang: "gfx" } };
     case "practice": {
       const m = /(?:^|&)topic=([^&]*)/.exec(query);
       return { view: "practiceSetup", data: m ? { topic: decodeURIComponent(m[1]) } : undefined };
@@ -283,20 +283,8 @@ function renderHome() {
       <div class="mode-card" data-mode="playground">
         <div class="m-badge">Mới</div>
         <div class="m-icon">${ic("code", "💻")}</div>
-        <h3>Thực hành code</h3>
-        <p>Viết & chạy <b>Python</b> hoặc xem trước <b>HTML/CSS</b> ngay trên trình duyệt — không cần cài đặt.</p>
-      </div>
-      <div class="mode-card" data-mode="sqllab">
-        <div class="m-badge">Mới</div>
-        <div class="m-icon">${ic("layers", "🗄️")}</div>
-        <h3>Sân chơi SQL</h3>
-        <p>Viết & chạy <b>SQL</b> trên cơ sở dữ liệu mẫu ngay trong trình duyệt (SQLite) — thử <code>SELECT</code>, <code>JOIN</code>, <code>GROUP BY</code>…</p>
-      </div>
-      <div class="mode-card" data-mode="gfxlab">
-        <div class="m-badge">Mới</div>
-        <div class="m-icon">${ic("sprout", "🎨")}</div>
-        <h3>Xưởng đồ hoạ</h3>
-        <p>Thử thao tác đồ hoạ mô phỏng: chỉnh ảnh, <b>xếp lớp</b>, chọn vùng, pha màu, nối cặp, sắp trình tự — máy chấm ngay.</p>
+        <h3>Thực hành</h3>
+        <p>Viết & chạy <b>Python</b>, xem trước <b>HTML/CSS</b>, thực hành <b>SQL</b> và <b>đồ hoạ</b> ngay trên trình duyệt — không cần cài đặt.</p>
       </div>
       <div class="mode-card" data-mode="practice">
         <div class="m-icon">${ic("target", "🎯")}</div>
@@ -343,8 +331,6 @@ function renderHome() {
     else if (mode === "quick") startQuick();
     else if (mode === "lessons") go("lessons");
     else if (mode === "playground") go("playground");
-    else if (mode === "sqllab") go("sqlLab");
-    else if (mode === "gfxlab") go("gfxLab");
     else go("practiceSetup");
   });
   app.querySelectorAll(".topic-row").forEach((r) => r.onclick = () => go("practiceSetup", { topic: r.dataset.topic }));
@@ -969,38 +955,55 @@ function buildWebEditor(host, initialCode) {
   render(); // hiển thị ngay lần đầu
 }
 
-/* Trang Thực hành code độc lập (Python hoặc HTML/CSS) */
+/* Trang Thực hành độc lập (Python / HTML/CSS / SQL / Đồ hoạ) */
 let pgLang = "python";
 function renderPlayground(data) {
   if (data && data.lang) pgLang = data.lang;
   const isPy = pgLang === "python";
+  const isWeb = pgLang === "web";
+  const isSql = pgLang === "sql";
+  const isGfx = pgLang === "gfx";
   const noSk = typeof Sk === "undefined";
-  const samples = isPy ? PG_SAMPLES : WEB_SAMPLES;
-  const desc = isPy
-    ? "Viết Python và chạy ngay tại đây — hỗ trợ biến, vòng lặp, hàm, danh sách, đệ quy..."
-    : "Viết HTML/CSS và xem trang web hiện ra ngay lập tức — không chạy JavaScript (an toàn).";
-  app.innerHTML = `
-    <button class="back-link" id="back">${aIco("aleft", null, 15)} Về trang chủ</button>
-    <h2 style="margin-bottom:6px">${aIco("monitor", "#0891b2", 22)} Thực hành code</h2>
-    <div class="chip-group" id="langToggle" style="margin-bottom:12px">
-      <button class="chip ${isPy ? "active" : ""}" data-lang="python">${aIco("code", null, 14)} Python</button>
-      <button class="chip ${!isPy ? "active" : ""}" data-lang="web">${aIco("globe", null, 14)} HTML/CSS</button>
-    </div>
-    <p style="color:var(--text-soft);font-size:14px;margin-bottom:14px">${desc}</p>
-    ${isPy && noSk ? `<div class="ls-note" style="background:var(--danger-soft);border-color:var(--danger)">${aIco("warn", "#dc2626", 15)} Trình chạy Python chưa sẵn sàng. Nếu là lần chạy đầu, hãy mở app một lần khi có mạng để tải thư viện, sau đó dùng offline bình thường.</div>` : ""}
+  const samples = isPy ? PG_SAMPLES : isWeb ? WEB_SAMPLES : [];
+  const descMap = {
+    python: "Viết Python và chạy ngay tại đây — hỗ trợ biến, vòng lặp, hàm, danh sách, đệ quy...",
+    web: "Viết HTML/CSS và xem trang web hiện ra ngay lập tức — không chạy JavaScript (an toàn).",
+    sql: 'Viết SQL tuỳ ý và chạy ngay trên cơ sở dữ liệu mẫu (SQLite trong trình duyệt). Thử <code>SELECT</code>, <code>JOIN</code>, <code>GROUP BY</code>…',
+    gfx: "Thử các thao tác đồ hoạ mô phỏng: chỉnh ảnh, xếp lớp, chọn vùng, pha màu, nối cặp, sắp trình tự.",
+  };
+  const desc = descMap[pgLang] || descMap.python;
+  const samplesHtml = (isPy || isWeb) ? `
     <div class="chip-group" id="samples" style="margin-bottom:14px">
       <span style="align-self:center;color:var(--text-soft);font-size:13px;margin-right:4px">Ví dụ mẫu:</span>
       ${samples.map((s, i) => `<button class="chip" data-i="${i}">${esc(s.label)}</button>`).join("")}
+    </div>` : "";
+  app.innerHTML = `
+    <button class="back-link" id="back">${aIco("aleft", null, 15)} Về trang chủ</button>
+    <h2 style="margin-bottom:6px">${aIco("monitor", "#0891b2", 22)} Thực hành</h2>
+    <div class="chip-group" id="langToggle" style="margin-bottom:12px">
+      <button class="chip ${isPy ? "active" : ""}" data-lang="python">${aIco("code", null, 14)} Python</button>
+      <button class="chip ${isWeb ? "active" : ""}" data-lang="web">${aIco("globe", null, 14)} HTML/CSS</button>
+      <button class="chip ${isSql ? "active" : ""}" data-lang="sql">${aIco("layers", null, 14)} SQL</button>
+      <button class="chip ${isGfx ? "active" : ""}" data-lang="gfx">${aIco("sprout", null, 14)} Đồ hoạ</button>
     </div>
+    <p style="color:var(--text-soft);font-size:14px;margin-bottom:14px">${desc}</p>
+    ${isPy && noSk ? `<div class="ls-note" style="background:var(--danger-soft);border-color:var(--danger)">${aIco("warn", "#dc2626", 15)} Trình chạy Python chưa sẵn sàng. Nếu là lần chạy đầu, hãy mở app một lần khi có mạng để tải thư viện, sau đó dùng offline bình thường.</div>` : ""}
+    ${samplesHtml}
     <div id="pgHost"></div>
   `;
   document.getElementById("back").onclick = () => go("home");
-  const mount = (code) => isPy
-    ? buildEditor(document.getElementById("pgHost"), code)
-    : buildWebEditor(document.getElementById("pgHost"), code);
-  mount(isPy ? ((data && data.code) || DEFAULT_SNIPPET) : WEB_STARTER);
+  if (isPy || isWeb) {
+    const mount = (code) => isPy
+      ? buildEditor(document.getElementById("pgHost"), code)
+      : buildWebEditor(document.getElementById("pgHost"), code);
+    mount(isPy ? ((data && data.code) || DEFAULT_SNIPPET) : WEB_STARTER);
+    app.querySelectorAll("#samples .chip").forEach((b) => b.onclick = () => mount(samples[+b.dataset.i].code));
+  } else if (isSql) {
+    if (typeof window.renderSqlLabInner === "function") window.renderSqlLabInner(document.getElementById("pgHost"));
+  } else if (isGfx) {
+    if (typeof window.renderGfxLabInner === "function") window.renderGfxLabInner(document.getElementById("pgHost"));
+  }
   app.querySelectorAll("#langToggle .chip").forEach((b) => b.onclick = () => { pgLang = b.dataset.lang; go("playground"); });
-  app.querySelectorAll("#samples .chip").forEach((b) => b.onclick = () => mount(samples[+b.dataset.i].code));
 }
 
 /* Gắn nút chạy/xem thử vào các khối code trong bài học */

@@ -365,10 +365,24 @@
     if (typeof iconify === "function") iconify(app);
   }
 
+  function renderGfxLabInner(host) {
+    if (!host) return;
+    host.innerHTML = '<div id="gfxInnerHost"></div>';
+    var gfxHost = host.querySelector("#gfxInnerHost");
+    GFX_ITEMS.forEach(function (it) {
+      var sec = document.createElement("div");
+      sec.innerHTML = '<div class="section-title" style="margin-top:8px">' + ico("sprout", "#0891b2", 16) + " " + esc(it.head) + "</div>";
+      var d = document.createElement("div"); d.className = "glab"; d.style.marginBottom = "16px";
+      gfxHost.appendChild(sec); gfxHost.appendChild(d); renderWidget(d, it.w);
+    });
+    if (typeof iconify === "function") iconify(host);
+  }
+
   if (typeof window !== "undefined") {
     window.GLAB = GLAB;
     window.injectGraphicsLab = injectGraphicsLab;
     window.renderGfxLab = renderGfxLab;
+    window.renderGfxLabInner = renderGfxLabInner;
     window.renderConceptWidget = renderWidget; // tái dùng renderer (match/order/hotspot) cho bài lí thuyết
   }
 })();
