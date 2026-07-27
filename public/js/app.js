@@ -18,12 +18,36 @@ const EXAM_CONFIG = {
   minutes: 50,     // thời gian làm bài (phút)
 };
 
-/* Ma trận phân bổ đề thi thử theo CHỦ ĐỀ (bám trọng tâm lớp 12, định hướng KHMT).
-   Tổng MC = 24, tổng Đ/S = 4. Chủ đề F (lập trình/thuật toán) chiếm tỉ trọng lớn.
-   Nếu một chủ đề thiếu câu, hệ thống tự bù từ ngân hàng còn lại. */
+/* Ma trận phân bổ đề thi thử (định hướng KHMT). Tổng MC = 24, tổng Đ/S = 4.
+   Chủ đề F (lập trình/thuật toán) chiếm tỉ trọng lớn nhất, đúng như đề thật.
+
+   NGOÀI chủ đề còn phân bổ theo LỚP: chỉ ràng buộc chủ đề thì đề bị lệch hẳn về
+   lớp 10 (đo được: chỉ 23% câu là lớp 12) vì hai chủ đề nặng nhất — F (lập trình)
+   và A (máy tính, dữ liệu) — trong chương trình này được dạy ở lớp 10-11.
+   Nên với các chủ đề CÓ nội dung lớp 12 (B mạng nâng cao, D pháp luật số,
+   E thiết kế web, G học máy) thì ưu tiên lấy câu lớp 12.
+
+   Trần thực tế của tỉ lệ lớp 12 là ~39% (11/28 câu): F chiếm 9/24 câu trắc
+   nghiệm mà chương trình không dạy lập trình ở lớp 12, nên không thể cao hơn. */
 const EXAM_MATRIX = {
   mc: { A: 3, B: 3, C: 1, D: 3, E: 3, F: 9, G: 2 }, // = 24 câu
   tf: { E: 1, F: 3 },                                // = 4 câu
+  /* Phân bổ lớp trong từng chủ đề; thiếu câu thì tự bù từ lớp khác cùng chủ đề */
+  grade: {
+    mc: {
+      A: { 10: 2, 11: 1 },
+      B: { 12: 2, 10: 1 },
+      C: { 11: 1 },
+      D: { 12: 2, 10: 1 },
+      E: { 12: 2, 11: 1 },
+      F: { 11: 5, 10: 4 },
+      G: { 12: 2 },
+    },
+    tf: {
+      E: { 12: 1 },
+      F: { 11: 2, 10: 1 },
+    },
+  },
 };
 
 /* Thang điểm Phần II (đúng/sai) theo số ý đúng trong 1 câu 4 ý */
@@ -1327,17 +1351,51 @@ function startExam() {
 }
 
 /* Lấy câu hỏi theo ma trận chủ đề; nếu một chủ đề thiếu câu thì bù từ ngân hàng cùng dạng */
-function sampleByMatrix(type, dist, target) {
+/* Bốc n câu trong một ô (dạng câu · chủ đề · lớp), RẢI ĐỀU 3 mức độ để không có
+   đề nào toàn câu dễ hoặc toàn câu khó. `boc` là hàm xáo trộn — truyền vào để
+   dùng chung cho cả đề ngẫu nhiên lẫn đề cố định theo mã (xáo có seed). */
+function pickExamCell(type, topic, grade, n, boc, used, xoay) {
+  const pool = boc(QUESTION_BANK.filter((q) =>
+    q.type === type && q.topic === topic && !used.has(q.id) &&
+    (grade == null || q.grade === grade)));
+  const theoMuc = { easy: [], medium: [], hard: [] };
+  pool.forEach((q) => (theoMuc[q.level] || theoMuc.medium).push(q));
+  /* Phần lớn ô chỉ có 1-2 câu, nếu ô nào cũng bắt đầu từ cùng một mức thì cả đề
+     lệch hẳn (đo được: 2 dễ / 17 vừa / 9 khó). Xoay điểm bắt đầu theo từng ô để
+     cả đề rải đều nhận biết - thông hiểu - vận dụng. */
+  const MUC = ["easy", "medium", "hard"];
+  const bd = xoay ? (xoay.i++) : 0;
+  const out = [];
+  for (let i = 0; out.length < n && i < n * 3 + 9; i++) {
+    const ds = theoMuc[MUC[(bd + i) % 3]];
+    if (ds.length) { const q = ds.pop(); out.push(q); used.add(q.id); }
+  }
+  return out;
+}
+
+/* Lắp một phần của đề theo ma trận: đúng chủ đề, đúng phân bổ lớp, rải mức độ.
+   Thiếu câu ở một ô thì bù trong cùng chủ đề, cùng đường thì bù toàn ngân hàng. */
+function sampleByMatrix(type, dist, target, boc) {
+  boc = boc || shuffle;
   const chosen = [], used = new Set();
+  const xoay = { i: 0 };   // xoay mức độ giữa các ô để cả đề không lệch độ khó
+  const gradeDist = (EXAM_MATRIX.grade && EXAM_MATRIX.grade[type]) || {};
   for (const [topic, n] of Object.entries(dist)) {
-    pick(QUESTION_BANK.filter((q) => q.type === type && q.topic === topic), n)
-      .forEach((q) => { chosen.push(q); used.add(q.id); });
+    let got = 0;
+    const gd = gradeDist[topic];
+    if (gd) {
+      for (const [g, cnt] of Object.entries(gd)) {
+        pickExamCell(type, topic, Number(g), cnt, boc, used, xoay).forEach((q) => { chosen.push(q); got++; });
+      }
+    }
+    if (got < n) pickExamCell(type, topic, null, n - got, boc, used, xoay).forEach((q) => chosen.push(q));
   }
   if (chosen.length < target) {
-    pick(QUESTION_BANK.filter((q) => q.type === type && !used.has(q.id)), target - chosen.length)
+    boc(QUESTION_BANK.filter((q) => q.type === type && !used.has(q.id)))
+      .slice(0, target - chosen.length)
       .forEach((q) => { chosen.push(q); used.add(q.id); });
   }
-  return shuffle(chosen).slice(0, target);
+  return boc(chosen).slice(0, target);
 }
 
 /* ---------------------------------------------------------------------------

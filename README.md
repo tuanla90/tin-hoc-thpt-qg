@@ -82,7 +82,10 @@ chủ đề như sau — có thể chỉnh trong `EXAM_MATRIX` (tệp `js/app.js
 | **Tổng** | **24** | **4** |
 
 - **Mức độ** (nhãn trong phần mềm): **Nhận biết – Thông hiểu – Vận dụng**.
-- **Phạm vi lớp:** phủ 10–11–12, **trọng tâm lớp 12** (~45% số câu). Có thể lọc
+- **Phạm vi lớp trong mỗi đề thi thử:** khoảng **lớp 10: 9 câu · lớp 11: 10 câu ·
+  lớp 12: 9 câu** (lớp 12 chiếm ~32%). Không thể cao hơn nhiều vì chủ đề F
+  (lập trình) chiếm 9/24 câu trắc nghiệm mà chương trình dạy lập trình ở lớp
+  10–11. Mức độ mỗi đề: ~9 nhận biết · 11 thông hiểu · 8 vận dụng. Có thể lọc
   riêng theo lớp trong chế độ Luyện tập.
 
 ---

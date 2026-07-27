@@ -18,16 +18,15 @@
     ".exam-start>span:nth-child(2){flex:1}" +
     ".exam-start-go{display:flex;align-items:center;opacity:.85}" +
     /* Lưới bộ đề cố định */
-    ".exam-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:12px}" +
-    ".exam-card{display:flex;flex-direction:column;align-items:flex-start;gap:3px;text-align:left;cursor:pointer;font-family:inherit;" +
-      "background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:14px 16px;transition:border-color .15s,transform .1s}" +
+    /* 10 đề xếp 5 thẻ mỗi hàng -> vừa 2 hàng */
+    ".exam-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}" +
+    "@media(max-width:820px){.exam-grid{grid-template-columns:repeat(3,1fr)}}" +
+    "@media(max-width:520px){.exam-grid{grid-template-columns:repeat(2,1fr)}}" +
+    ".exam-card{display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;font-family:inherit;text-align:center;" +
+      "background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:16px 12px;transition:border-color .15s,transform .1s}" +
     ".exam-card:hover{border-color:var(--primary);transform:translateY(-2px)}" +
-    ".exam-card-tag{font-size:11px;font-weight:750;letter-spacing:.03em;text-transform:uppercase;color:var(--text-soft);" +
-      "background:var(--bg-soft);border:1px solid var(--border);border-radius:999px;padding:2px 9px}" +
-    ".exam-card-tag.tuyenchon{color:var(--primary);background:var(--primary-soft);border-color:var(--primary)}" +
-    ".exam-card-name{font-size:15.5px;font-weight:800;color:var(--text);margin-top:5px}" +
-    ".exam-card-note{font-size:12.5px;color:var(--text-soft)}" +
-    ".exam-card-best{font-size:12.5px;color:var(--text-soft);display:flex;align-items:center;gap:5px;margin-top:7px}" +
+    ".exam-card-num{font-size:19px;font-weight:850;color:var(--primary-d)}" +
+    ".exam-card-best{font-size:12.5px;color:var(--text-soft);display:flex;align-items:center;gap:5px}" +
     ".exam-card-best b{color:var(--success)}" +
     ".tf-scorebox{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 4px}" +
     ".tf-scorebox span{background:var(--bg-soft);border:1px solid var(--border);border-radius:8px;padding:5px 10px;font-size:12.5px;color:var(--text-soft)}";
@@ -58,21 +57,13 @@ function examShuffle(arr, rnd) {
 }
 function examPick(arr, n, rnd) { return examShuffle(arr, rnd).slice(0, n); }
 
-/* Lấy câu theo ma trận chủ đề bằng RNG có seed (bản seeded của sampleByMatrix) */
+/* Lấy câu theo ma trận bằng RNG có seed — dùng chung sampleByMatrix của app.js,
+   chỉ thay hàm xáo trộn bằng bản có seed để mỗi mã đề luôn ra đúng bộ câu đó. */
 function examSampleByMatrix(type, dist, target, rnd) {
-  var chosen = [], used = {};
-  Object.keys(dist).forEach(function (topic) {
-    examPick(QUESTION_BANK.filter(function (q) { return q.type === type && q.topic === topic; }), dist[topic], rnd)
-      .forEach(function (q) { chosen.push(q); used[q.id] = 1; });
-  });
-  if (chosen.length < target) {
-    examPick(QUESTION_BANK.filter(function (q) { return q.type === type && !used[q.id]; }), target - chosen.length, rnd)
-      .forEach(function (q) { chosen.push(q); used[q.id] = 1; });
-  }
-  return examShuffle(chosen, rnd).slice(0, target);
+  return sampleByMatrix(type, dist, target, function (arr) { return examShuffle(arr, rnd); });
 }
 
-var EXAM_CODES = [101, 102, 103, 104, 105, 106];
+var EXAM_CODES = [101, 102, 103, 104, 105, 106, 107, 108, 109, 110];
 
 function startExamCode(code) {
   /* Mã "TC1..TC3" = đề tuyển chọn tay (định nghĩa trong questions-vandung.js).
@@ -102,23 +93,15 @@ function renderExamCodes() {
   var cauHinh = EXAM_CONFIG.mc + " câu trắc nghiệm + " + EXAM_CONFIG.tf + " câu Đúng/Sai · " +
     EXAM_CONFIG.minutes + " phút · chấm thang 10 như thi thật";
 
-  /* Một thẻ đề: nhãn loại + tên + điểm cao nhất đã đạt */
-  function the(code, loai, ten, mota) {
+  /* Một thẻ đề: số thứ tự + điểm cao nhất đã đạt */
+  var deCoDinh = EXAM_CODES.map(function (code, i) {
     var best = examBestForCode(code);
+    var so = String(i + 1).padStart(2, "0");
     return '<button class="exam-card" data-code="' + code + '">' +
-      '<span class="exam-card-tag' + (loai === "Tuyển chọn" ? " tuyenchon" : "") + '">' + loai + "</span>" +
-      '<b class="exam-card-name">' + ten + "</b>" +
-      '<span class="exam-card-note">' + mota + "</span>" +
+      '<span class="exam-card-num">Đề ' + so + "</span>" +
       '<span class="exam-card-best">' +
         (best != null ? (eIco("trophy", "#f59e0b", 14) + " Cao nhất <b>" + best.toFixed(2) + "</b>") : "Chưa làm lần nào") +
       "</span></button>";
-  }
-
-  var deTuyenChon = (window.MOCK_EXAMS || []).map(function (e, i) {
-    return the("TC" + (i + 1), "Tuyển chọn", e.name, "Câu do người soạn chọn tay");
-  }).join("");
-  var deMayLap = EXAM_CODES.map(function (code) {
-    return the(code, "Máy lắp", "Mã đề " + code, "Máy tự lắp theo ma trận đề");
   }).join("");
 
   app.innerHTML =
@@ -133,9 +116,9 @@ function renderExamCodes() {
       '<span class="exam-start-go">' + eIco("aright", null, 20) + "</span>" +
     "</button>" +
 
-    '<div class="section-title" style="margin-top:26px">' + eIco("bookmark", "#0891b2", 18) + " Bộ đề cố định</div>" +
-    '<p style="color:var(--text-soft);font-size:13.5px;margin:-4px 0 12px">Mỗi đề dưới đây <b>luôn giữ nguyên câu hỏi</b>, nên làm lại là so được điểm với lần trước. Chọn một đề rồi quay lại sau vài tuần để đo tiến bộ.</p>' +
-    '<div class="exam-grid" id="examFixedGrid">' + deTuyenChon + deMayLap + "</div>";
+    '<div class="section-title" style="margin-top:26px">' + eIco("bookmark", "#0891b2", 18) + " 10 đề tuyển chọn</div>" +
+    '<p style="color:var(--text-soft);font-size:13.5px;margin:-4px 0 12px">Mười đề lắp theo đúng ma trận đề thật, <b>luôn giữ nguyên câu hỏi</b> — làm lại là so được điểm với lần trước. Chọn một đề rồi quay lại sau vài tuần để đo tiến bộ.</p>' +
+    '<div class="exam-grid" id="examFixedGrid">' + deCoDinh + "</div>";
 
   document.getElementById("ecBack").onclick = function () { go("home"); };
   document.getElementById("ecRand").onclick = function () { if (typeof startExam === "function") startExam(); };
