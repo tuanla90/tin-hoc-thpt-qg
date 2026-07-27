@@ -116,7 +116,7 @@
           '<p class="pf-note" style="margin:8px 0 0"><b>Mở tự do</b>: học bài nào tuỳ ý. <b>Khoá tuần tự</b>: học xong bài trước mới mở bài sau — chỉ áp dụng từ lớp bạn đang học trở lên, bài của lớp dưới vẫn mở sẵn để tra cứu. Chưa chọn thì mặc định mở tự do.</p></div>' +
 
         '<div class="pf-field"><label>Lịch học trong tuần</label>' + chipRowMulti(DAYS, "days", p.days) +
-          '<p class="pf-note" style="margin:8px 0 0">Chọn những thứ bạn định học. <b>Chuỗi 🔥 chỉ tính trên các buổi này</b>: học đúng buổi thì chuỗi tăng, bỏ buổi thì chuỗi đứt, còn ngày không có lịch thì nghỉ thoải mái mà chuỗi vẫn giữ (học thêm vẫn được cộng XP). Không chọn ngày nào thì tính chuỗi theo mọi ngày như cũ.</p></div>' +
+          '<p class="pf-note" style="margin:8px 0 0">Chọn những thứ bạn định học. <b>Chuỗi 🔥 chỉ tính trên các buổi này</b>: học đúng buổi thì chuỗi tăng; lỡ một buổi vẫn <b>học bù được trong ngày hôm sau</b> để giữ chuỗi; quá hạn bù mới đứt. Ngày không có lịch thì nghỉ thoải mái, học thêm vẫn được cộng XP. Không chọn ngày nào thì tính chuỗi theo mọi ngày như cũ.</p></div>' +
 
         '<button class="btn btn-primary btn-lg pf-save" id="pfSave">' + ico("save", null, 16) + " Lưu hồ sơ</button>" +
       "</div>";

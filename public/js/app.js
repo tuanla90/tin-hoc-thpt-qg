@@ -1049,7 +1049,7 @@ function attachRunButtons(container) {
 /* ===========================================================================
  *  THIẾT LẬP LUYỆN TẬP
  * ========================================================================= */
-const setupCfg = { topic: "all", grade: "all", type: "all", level: "all", count: 10, _gradeSynced: false };
+const setupCfg = { topic: "all", grade: "all", type: "all", level: "all", lesson: "all", count: 10, _gradeSynced: false };
 
 function renderPracticeSetup(data) {
   if (data && data.topic) setupCfg.topic = data.topic;
@@ -1068,15 +1068,34 @@ function renderPracticeSetup(data) {
   const chip = (val, label, cur, group) =>
     `<button class="chip ${val === cur ? "active" : ""}" data-group="${group}" data-val="${val}">${esc(label)}</button>`;
 
+  /* Danh sách bài để "ôn đúng một bài", gom nhóm theo lớp; chỉ hiện bài hợp hồ sơ */
+  const theoBai = setupCfg.lesson !== "all";
+  const nhomBai = {};
+  LESSONS.filter(visibleForProfile).sort((a, b) => a.stage - b.stage || a.order - b.order)
+    .forEach((l) => { (nhomBai[l.stage] = nhomBai[l.stage] || []).push(l); });
+  const lessonOpts = Object.keys(nhomBai).map((st) =>
+    `<optgroup label="${esc(STAGES[st] || "Lớp " + st)}">` +
+    nhomBai[st].map((l) => `<option value="${esc(l.id)}" ${l.id === setupCfg.lesson ? "selected" : ""}>Bài ${l.order}. ${esc(l.title)} (${(l.quiz || []).length} câu)</option>`).join("") +
+    "</optgroup>").join("");
+
   app.innerHTML = `
     <button class="back-link" id="back">${aIco("aleft", null, 15)} Về trang chủ</button>
     <h2 style="margin-bottom:18px">${aIco("target", "#ef4444", 22)} Luyện tập theo chủ đề</h2>
     <div class="config-card">
       <div class="config-row">
+        <label>Ôn theo bài</label>
+        <div class="chip-group">
+          <select id="lessonSel" style="max-width:100%">
+            <option value="all">— Không chọn bài (lọc theo chủ đề bên dưới) —</option>
+            ${lessonOpts}
+          </select>
+        </div>
+      </div>
+      <div class="config-row" id="rowTopic" ${theoBai ? 'style="opacity:.45;pointer-events:none"' : ""}>
         <label>Chủ đề</label>
         <div class="chip-group">${topicChips.map(([v, l]) => chip(v, l, setupCfg.topic, "topic")).join("")}</div>
       </div>
-      <div class="config-row">
+      <div class="config-row" id="rowGrade" ${theoBai ? 'style="opacity:.45;pointer-events:none"' : ""}>
         <label>Lớp</label>
         <div class="chip-group">${gradeChips.map(([v, l]) => chip(v, l, setupCfg.grade, "grade")).join("")}</div>
       </div>
@@ -1106,7 +1125,10 @@ function renderPracticeSetup(data) {
 
   const updateAvail = () => {
     const pool = filterPool();
-    document.getElementById("availMsg").textContent = `Có ${pool.length} câu phù hợp với lựa chọn của bạn.`;
+    const bai = theoBai ? LESSONS.find((x) => x.id === setupCfg.lesson) : null;
+    document.getElementById("availMsg").textContent = bai
+      ? `Bài "${bai.title}" có ${pool.length} câu phù hợp.`
+      : `Có ${pool.length} câu phù hợp với lựa chọn của bạn.`;
     document.getElementById("startPractice").disabled = pool.length === 0;
   };
 
@@ -1117,12 +1139,27 @@ function renderPracticeSetup(data) {
     updateAvail();
   });
   document.getElementById("countSel").onchange = (e) => { setupCfg.count = +e.target.value; updateAvail(); };
+  document.getElementById("lessonSel").onchange = (e) => {
+    setupCfg.lesson = e.target.value;
+    renderPracticeSetup();   // vẽ lại để mờ/bật lại hai hàng Chủ đề và Lớp
+  };
   document.getElementById("back").onclick = () => go("home");
   document.getElementById("startPractice").onclick = startPractice;
   updateAvail();
 }
 
 function filterPool() {
+  /* Chọn một bài cụ thể -> chỉ lấy câu hỏi của bài đó (bài đã quy định chủ đề và
+     lớp rồi, nên chỉ áp thêm bộ lọc dạng câu và mức độ). */
+  if (setupCfg.lesson !== "all") {
+    const l = LESSONS.find((x) => x.id === setupCfg.lesson);
+    const ids = new Set((l && l.quiz) || []);
+    return QUESTION_BANK.filter((q) =>
+      ids.has(q.id) &&
+      (setupCfg.type === "all" || q.type === setupCfg.type) &&
+      (setupCfg.level === "all" || q.level === setupCfg.level)
+    );
+  }
   return QUESTION_BANK.filter((q) =>
     (setupCfg.topic === "all" || q.topic === setupCfg.topic) &&
     (setupCfg.grade === "all" || String(q.grade) === setupCfg.grade) &&
@@ -1158,8 +1195,14 @@ function startPractice() {
   const pool = filterPool();
   if (!pool.length) return;
   const qs = pick(pool, Math.min(setupCfg.count, pool.length));
-  const tName = setupCfg.topic === "all" ? "Tổng hợp" : TOPICS[setupCfg.topic];
-  State.quiz = newQuiz(qs, "practice", { title: `Luyện tập: ${tName}` });
+  // Ôn đúng một bài -> ghi lessonId để tính sao thành thạo cho bài đó
+  const bai = setupCfg.lesson !== "all" ? LESSONS.find((x) => x.id === setupCfg.lesson) : null;
+  if (bai) {
+    State.quiz = newQuiz(qs, "practice", { title: `Luyện tập: ${bai.title}`, lessonId: bai.id });
+  } else {
+    const tName = setupCfg.topic === "all" ? "Tổng hợp" : TOPICS[setupCfg.topic];
+    State.quiz = newQuiz(qs, "practice", { title: `Luyện tập: ${tName}` });
+  }
   go("quiz");
 }
 

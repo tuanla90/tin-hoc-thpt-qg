@@ -286,15 +286,22 @@ function gamBuoiTruoc(d) {
   return null;
 }
 
-/* Chuỗi còn hiệu lực: nếu đã bỏ lỡ buổi gần nhất thì coi như đứt (trả 0).
-   Hôm nay dù chưa học vẫn chưa tính là bỏ lỡ — người học còn cả ngày để học. */
+/* Chuỗi còn hiệu lực: đứt khi đã bỏ lỡ một buổi VÀ hết luôn hạn bù.
+   - Hôm nay dù chưa học vẫn chưa tính là bỏ lỡ — còn cả ngày để học.
+   - Buổi của HÔM QUA bị lỡ thì hôm nay học bù vẫn kịp (hạn bù 1 ngày). */
 function gamStreakSong() {
   if (!GAM.streak || !GAM.lastSession) return 0;
   var hnay = new Date();
-  if (GAM.lastSession === gamDayStr(hnay)) return GAM.streak;
   var truoc = gamBuoiTruoc(hnay);
   if (!truoc) return GAM.streak;
-  return GAM.lastSession === gamDayStr(truoc) ? GAM.streak : 0;
+  if (GAM.lastSession === gamDayStr(hnay) || GAM.lastSession === gamDayStr(truoc)) return GAM.streak;
+
+  /* Buổi gần nhất chưa học: chỉ còn cứu được khi buổi đó rơi vào HÔM QUA và
+     mọi buổi TRƯỚC nó đều đã học (hạn bù che đúng một buổi, không che hai). */
+  var homQua = new Date(hnay.getFullYear(), hnay.getMonth(), hnay.getDate() - 1);
+  if (gamDayStr(truoc) !== gamDayStr(homQua)) return 0;
+  var truocNua = gamBuoiTruoc(truoc);
+  return truocNua && GAM.lastSession === gamDayStr(truocNua) ? GAM.streak : 0;
 }
 
 /* Nhãn hiển thị: có đăng kí lịch thì đếm "buổi", chưa đăng kí thì vẫn là "ngày". */
@@ -315,20 +322,35 @@ function gamTouchStreak() {
   if (GAM.lastActive === today) return;      // hôm nay đã ghi nhận rồi
   GAM.lastActive = today;
 
-  if (gamLaBuoiHoc(now)) {
-    var truoc = gamBuoiTruoc(now);
-    var noiTiep = truoc && GAM.lastSession === gamDayStr(truoc);
-    GAM.streak = noiTiep ? (GAM.streak || 0) + 1 : 1;
-    GAM.lastSession = today;
-    if (GAM.streak > (GAM.bestStreak || 0)) GAM.bestStreak = GAM.streak;
-    gamSave();
-    gamAward(10);                            // thưởng cho buổi học theo lịch
-    if (GAM.streak >= 2) gamXpFloat("🔥 Chuỗi " + GAM.streak + " buổi!");
-  } else {
+  /* Hôm nay ghi nhận được những buổi nào?
+     - Buổi của HÔM QUA nếu hôm qua có lịch mà chưa học -> HỌC BÙ (hạn 1 ngày).
+     - Buổi của hôm nay nếu hôm nay có lịch.
+     Học bù xếp trước để chuỗi nối đúng thứ tự thời gian. */
+  var homQua = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+  var ghiNhan = [];
+  if (gamLaBuoiHoc(homQua) && GAM.lastSession !== gamDayStr(homQua)) ghiNhan.push({ ngay: homQua, bu: true });
+  if (gamLaBuoiHoc(now)) ghiNhan.push({ ngay: now, bu: false });
+
+  if (!ghiNhan.length) {                     // ngày không có lịch, cũng không phải bù
     gamSave();
     gamAward(10);                            // học thêm ngoài lịch vẫn được thưởng
     gamXpFloat("💪 Học thêm ngoài lịch!");
+    return;
   }
+
+  var coBu = false;
+  ghiNhan.forEach(function (b) {
+    var truoc = gamBuoiTruoc(b.ngay);
+    var noiTiep = truoc && GAM.lastSession === gamDayStr(truoc);
+    GAM.streak = noiTiep ? (GAM.streak || 0) + 1 : 1;
+    GAM.lastSession = gamDayStr(b.ngay);
+    if (b.bu) coBu = true;
+    if (GAM.streak > (GAM.bestStreak || 0)) GAM.bestStreak = GAM.streak;
+    gamAward(10);                            // thưởng cho từng buổi được ghi nhận
+  });
+  gamSave();
+  if (coBu) gamXpFloat("⏱️ Đã học bù buổi hôm qua!");
+  else if (GAM.streak >= 2) gamXpFloat("🔥 Chuỗi " + GAM.streak + " buổi!");
 }
 
 /* --- Kiểm tra & mở huy hiệu mới --- */
