@@ -372,12 +372,26 @@ function pathState() {
   const sorted = LESSONS.slice().filter(visibleForProfile).sort((a, b) => a.stage - b.stage || a.order - b.order);
   const learned = sorted.map((l) => isLearned(l.id));
   const seq = ((State.profile && State.profile.mode) || "") === "tuantu";
-  const unlocked = sorted.map((l, i) => (seq ? i === 0 || learned[i - 1] : true));
-  // Bài đang học = bài chưa học đầu tiên trong những bài ĐÃ MỞ KHOÁ.
-  // Khi mở tự do và hồ sơ có ghi lớp -> ưu tiên bài chưa học của đúng lớp đó.
   const grade = (State.profile && State.profile.grade) || "";
+
+  /* Khoá tuần tự chỉ áp từ LỚP ĐANG HỌC trở đi: bài của lớp dưới coi như đã học
+     ở trường nên luôn mở (người lớp 11 không phải cày lại toàn bộ Tin 10). */
+  const lopDuoi = (l) => !!grade && Number(l.grade) < Number(grade);
+  const unlocked = sorted.map((l, i) => {
+    if (!seq) return true;
+    if (lopDuoi(l)) return true;                  // bài lớp dưới: mở sẵn
+    if (i === 0) return true;
+    const truoc = sorted[i - 1];
+    if (learned[i - 1] || lopDuoi(truoc)) return true;
+    // Mở bài ĐẦU của mỗi nhánh thuộc lớp đang học (vd nhánh Tin học ứng dụng
+    // lớp 11 xếp sau toàn bộ lớp 12, không nên bắt học hết lớp 12 mới tới).
+    return truoc.stage !== l.stage && !!grade && Number(l.grade) <= Number(grade);
+  });
+
+  // Bài đang học = bài chưa học đầu tiên trong những bài ĐÃ MỞ KHOÁ.
+  // Hồ sơ có ghi lớp -> ưu tiên bài chưa học của đúng lớp đó.
   let curIdx = -1;
-  if (!seq && grade) curIdx = sorted.findIndex((l, i) => !learned[i] && String(l.grade) === grade);
+  if (grade) curIdx = sorted.findIndex((l, i) => unlocked[i] && !learned[i] && String(l.grade) === grade);
   if (curIdx < 0) curIdx = sorted.findIndex((l, i) => unlocked[i] && !learned[i]);
   return { sorted, learned, unlocked, curIdx, cur: curIdx >= 0 ? sorted[curIdx] : null };
 }

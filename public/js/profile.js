@@ -98,7 +98,7 @@
           '<p class="pf-note" style="margin:8px 0 0">Chọn nhánh môn Tin học em đang theo ở trường (theo Chương trình GDPT 2018).</p></div>' +
 
         '<div class="pf-field"><label>Cách mở bài học</label>' + chipRow(MODES, "mode", p.mode) +
-          '<p class="pf-note" style="margin:8px 0 0"><b>Mở tự do</b>: học bài nào tuỳ ý. <b>Khoá tuần tự</b>: học xong bài trước mới mở bài sau. Chưa chọn thì mặc định mở tự do.</p></div>' +
+          '<p class="pf-note" style="margin:8px 0 0"><b>Mở tự do</b>: học bài nào tuỳ ý. <b>Khoá tuần tự</b>: học xong bài trước mới mở bài sau — chỉ áp dụng từ lớp bạn đang học trở lên, bài của lớp dưới vẫn mở sẵn để tra cứu. Chưa chọn thì mặc định mở tự do.</p></div>' +
 
         '<button class="btn btn-primary btn-lg pf-save" id="pfSave">' + ico("save", null, 16) + " Lưu hồ sơ</button>" +
       "</div>";
