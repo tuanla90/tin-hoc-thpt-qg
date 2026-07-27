@@ -77,17 +77,9 @@ function visibleForTrack(l) {
   const lt = lessonTrack(l);
   return !lt || lt === t;
 }
-/* Lộ trình theo BỘ SÁCH chọn trong hồ sơ:
-   - stage 10/11/12 = lộ trình theo sách giáo khoa (option "canhdieu")
-   - stage 20-24     = lộ trình bản tự biên soạn "Bản luyện thi THPT" (option "tuviet")
-   Chưa chọn bộ sách -> hiện cả hai lộ trình (giữ nguyên hành vi cũ). */
-function bookOfLesson(l) { return l.stage >= 20 ? "tuviet" : "canhdieu"; }
-function visibleForBook(l) {
-  const b = (typeof State !== "undefined" && State.profile && State.profile.book) || "";
-  return !b || bookOfLesson(l) === b;
-}
-/* Bài có hiện với hồ sơ hiện tại không (kết hợp định hướng + bộ sách). */
-function visibleForProfile(l) { return visibleForTrack(l) && visibleForBook(l); }
+/* Bài có hiện với hồ sơ hiện tại không (nay chỉ còn lọc theo định hướng —
+   chương trình đã gộp về một bộ nội dung tự biên soạn duy nhất). */
+function visibleForProfile(l) { return visibleForTrack(l); }
 const TYPE_LABEL = { mc: "Trắc nghiệm", tf: "Đúng/Sai", sa: "Trả lời ngắn" };
 const LEVEL_LABEL = { easy: "Nhận biết", medium: "Thông hiểu", hard: "Vận dụng" };
 
@@ -367,14 +359,10 @@ function renderLessons() {
   const sorted = LESSONS.slice().filter(visibleForProfile).sort((a, b) => a.stage - b.stage || a.order - b.order);
   const learned = sorted.map((l) => isLearned(l.id));
   // Cách mở bài theo hồ sơ:
-  //  - "tudo": mở tự do toàn bộ;  "tuantu": khoá tuần tự toàn bộ (bài i mở khi bài trước đã học)
-  //  - chưa chọn (mặc định): bản sạch stage>=20 mở tự do, bản theo SGK stage<20 khoá tuần tự
+  //  - "tuantu": khoá tuần tự (bài i mở khi bài trước đã học)
+  //  - "tudo" hoặc chưa chọn (mặc định): mở tự do toàn bộ
   const openMode = (typeof State !== "undefined" && State.profile && State.profile.mode) || "";
-  const unlocked = sorted.map((l, i) => {
-    if (openMode === "tudo") return true;
-    if (openMode === "tuantu") return i === 0 ? true : learned[i - 1];
-    return l.stage >= 20 ? true : i === 0 ? true : learned[i - 1];
-  });
+  const unlocked = sorted.map((l, i) => (openMode === "tuantu" ? (i === 0 || learned[i - 1]) : true));
   const currentIdx = sorted.findIndex((l, i) => unlocked[i] && !learned[i]);
   const doneCount = learned.filter(Boolean).length;
   const pct = Math.round((doneCount / sorted.length) * 100);
