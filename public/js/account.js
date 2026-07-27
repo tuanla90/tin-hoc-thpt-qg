@@ -230,7 +230,11 @@
   (document.head || document.documentElement).appendChild(st);
 
   function ico(n, c, s) { return (typeof ICON === "function") ? ICON(n, s || 16, c) : ""; }
-  function avatarCua(p) { return p.gender === "nam" ? "👦" : p.gender === "nu" ? "👧" : "🧑‍🎓"; }
+  /* Ảnh đại diện lấy từ profile.js để thống nhất với nhân vật đã chọn */
+  function avatarCua(p) {
+    return (typeof profileAvatar === "function") ? profileAvatar(p)
+      : (p.gender === "nam" ? "👦" : p.gender === "nu" ? "👧" : "🧑‍🎓");
+  }
   function esc2(s) { return (typeof esc === "function") ? esc(s) : String(s == null ? "" : s); }
 
   /* =========================== MÀN ĐĂNG NHẬP =========================== */
@@ -321,16 +325,16 @@
     document.getElementById("hsOut").onclick = function () { dangXuat(); };
   }
 
+  /* Mở màn tạo hồ sơ (form đầy đủ trong profile.js) thay cho hộp prompt của trình duyệt */
   function themHoSo() {
-    var ten = window.prompt("Tên người học mới:", "");
-    if (ten == null) return;
-    ten = String(ten).trim();
-    if (!ten) return;
-    api("/profiles", "POST", { name: ten }).then(function (d) {
+    if (typeof renderProfileNew === "function") renderProfileNew();
+  }
+  /* profile.js gọi lại khi người dùng bấm "Tạo hồ sơ" */
+  function taoHoSo(data) {
+    return api("/profiles", "POST", data).then(function (d) {
       Account.profiles.push(d.profile);
-      chonHoSo(d.profile.id);
-    }).catch(function (e) {
-      if (typeof toast === "function") toast(e.message); else alert(e.message);
+      chonHoSo(d.profile.id);        // vào học bằng hồ sơ vừa tạo
+      return d.profile;
     });
   }
 
@@ -436,6 +440,8 @@
   Account.renderGate = renderGate;
   Account.renderProfilePicker = renderProfilePicker;
   Account.hoSoHienTai = hoSoHienTai;
+  Account.taoHoSo = taoHoSo;
+  Account.themHoSo = themHoSo;
   window.Account = Account;
   window.renderAccount = renderAccount;
 })();

@@ -159,10 +159,16 @@ function createApi(pool) {
       if (dem.rows[0].n >= MAX_PROFILES) {
         return res.status(400).json({ error: `Mỗi tài khoản tối đa ${MAX_PROFILES} hồ sơ.` });
       }
-      const name = String((req.body && req.body.name) || "").trim().slice(0, 40);
+      const b = req.body || {};
+      const name = String(b.name || "").trim().slice(0, 40);
       if (!name) return res.status(400).json({ error: "Hồ sơ cần có tên." });
-      const ins = await q("INSERT INTO profiles (user_id, name) VALUES ($1, $2) RETURNING *",
-        [req.session.uid, name]);
+      const days = Array.isArray(b.days) ? b.days.map(Number).filter((n) => n >= 0 && n <= 6) : [];
+      const ins = await q(
+        `INSERT INTO profiles (user_id, name, gender, grade, track, mode, days)
+         VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`,
+        [req.session.uid, name, String(b.gender || ""), String(b.grade || ""),
+         String(b.track || ""), String(b.mode || ""), JSON.stringify(days)]
+      );
       res.json({ profile: publicProfile(ins.rows[0]) });
     } catch (e) { next(e); }
   });
