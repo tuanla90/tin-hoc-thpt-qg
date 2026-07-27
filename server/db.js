@@ -8,6 +8,11 @@
  * ==========================================================================*/
 const { Pool } = require("pg");
 
+/* Bảng `profiles`: một TÀI KHOẢN có thể có NHIỀU HỒ SƠ học tập (nhà có hai anh
+   em, hoặc một giáo viên kèm vài học sinh). Toàn bộ tiến độ — attempts, learned,
+   gamify — gắn vào HỒ SƠ chứ không gắn vào tài khoản.
+   LƯU Ý: không đặt chú thích dạng khối bên trong chuỗi SQL dưới đây — pg-mem
+   (dùng cho test và chế độ dev) không parse được, tuy Postgres thật chấp nhận. */
 const SCHEMA_SQL = `
 CREATE TABLE IF NOT EXISTS users (
   id            SERIAL PRIMARY KEY,
@@ -20,9 +25,23 @@ CREATE TABLE IF NOT EXISTS users (
   last_seen_at  TIMESTAMPTZ
 );
 
+CREATE TABLE IF NOT EXISTS profiles (
+  id         SERIAL PRIMARY KEY,
+  user_id    INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  name       TEXT NOT NULL,
+  gender     TEXT NOT NULL DEFAULT '',
+  grade      TEXT NOT NULL DEFAULT '',
+  track      TEXT NOT NULL DEFAULT '',
+  mode       TEXT NOT NULL DEFAULT '',
+  days       JSONB NOT NULL DEFAULT '[]',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS profiles_user_idx ON profiles (user_id);
+
 CREATE TABLE IF NOT EXISTS attempts (
   id            SERIAL PRIMARY KEY,
   user_id       INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  profile_id    INT REFERENCES profiles(id) ON DELETE CASCADE,
   client_ts     BIGINT NOT NULL,
   mode          TEXT,
   lesson_id     TEXT,
@@ -38,14 +57,14 @@ CREATE TABLE IF NOT EXISTS attempts (
 CREATE INDEX IF NOT EXISTS attempts_user_idx ON attempts (user_id, client_ts DESC);
 
 CREATE TABLE IF NOT EXISTS learned (
-  user_id    INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  profile_id INT NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
   lesson_id  TEXT NOT NULL,
   learned_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  PRIMARY KEY (user_id, lesson_id)
+  PRIMARY KEY (profile_id, lesson_id)
 );
 
 CREATE TABLE IF NOT EXISTS gamify (
-  user_id    INT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  profile_id INT PRIMARY KEY REFERENCES profiles(id) ON DELETE CASCADE,
   data       JSONB NOT NULL DEFAULT '{}',
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );

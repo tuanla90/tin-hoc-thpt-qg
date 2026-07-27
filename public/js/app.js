@@ -55,7 +55,7 @@ const TF_POINTS = { 0: 0, 1: 0.1, 2: 0.25, 3: 0.5, 4: 1.0 };
 const MC_POINT = 0.25;   // điểm mỗi câu Phần I
 const SA_POINT = 0.25;   // điểm mỗi câu Phần III
 
-const STORE_KEY = "tinhoc_thpt_v1";
+const STORE_KEY = window.STORE_KEY || "tinhoc_thpt_v1";   /* theo hồ sơ đang dùng, xem js/session.js */
 
 /* ---------------------------------------------------------------------------
  *  TRẠNG THÁI ỨNG DỤNG
@@ -2048,6 +2048,7 @@ function renderHistory() {
       <div class="stat-box"><b>${avg}</b><small>Điểm trung bình</small></div>
       <div class="stat-box"><b>${exams}</b><small>Lần thi thử</small></div>
     </div>
+    <div id="skillHere"></div>
     <div class="section-title">${aIco("clock", "#4f46e5", 17)} Lịch sử gần đây</div>
     <div>
       ${h.map((x) => {
@@ -2069,6 +2070,8 @@ function renderHistory() {
     </div>
     <button class="btn btn-ghost" id="clearHist" style="margin-top:18px">${aIco("trash", "#dc2626", 15)} Xóa lịch sử</button>
   `;
+  // Hồ sơ năng lực (radar 7 chủ đề) — đặt ngay trong trang Kết quả, xem js/skills.js
+  if (typeof skillInjectRadar === "function") skillInjectRadar();
   document.getElementById("back").onclick = () => go("home");
   document.getElementById("clearHist").onclick = async () => {
     const ok = await confirmBox("Xóa lịch sử?", "Toàn bộ kết quả đã lưu sẽ bị xóa vĩnh viễn. Tiếp tục?", "Xóa");
@@ -2226,8 +2229,45 @@ window.addEventListener("beforeunload", (e) => {
   if (State.quiz && !State.quiz.submitted) { e.preventDefault(); e.returnValue = ""; }
 });
 
-/* Khởi động ứng dụng: render theo hash hiện có (hoặc home nếu hash rỗng) */
-applyTheme();
-initNav();
-initFloatingMascot();
-renderFromHash();
+/* ---------------------------------------------------------------------------
+ *  KHỞI ĐỘNG — phải ĐĂNG NHẬP và CHỌN HỒ SƠ mới vào được app.
+ *  Thứ tự: hỏi máy chủ xem đã đăng nhập chưa -> chưa thì hiện màn đăng nhập;
+ *  đăng nhập rồi mà chưa chọn hồ sơ -> hiện màn chọn hồ sơ; đủ cả hai mới render
+ *  app và đồng bộ tiến độ. Ẩn thanh điều hướng khi chưa vào được.
+ * ------------------------------------------------------------------------- */
+function moKhoaGiaoDien(mo) {
+  document.querySelectorAll(".topnav .nav-btn[data-nav]").forEach((b) => { b.hidden = !mo; });
+  const brand = document.getElementById("homeLink");
+  if (brand) brand.style.pointerEvents = mo ? "" : "none";
+}
+
+function khoiDong() {
+  applyTheme();
+  initNav();
+
+  if (!window.Account) {           // không có account.js -> chạy như bản cũ
+    moKhoaGiaoDien(true); initFloatingMascot(); renderFromHash(); return;
+  }
+  moKhoaGiaoDien(false);
+  Account.boot().then(function () {
+    if (Account.available === false || Account.dbOff) {
+      app.innerHTML =
+        '<div class="gate"><div class="gate-logo">' + aIco("monitor", "#4f46e5", 30) + "</div>" +
+        "<h1>Cần kết nối máy chủ</h1>" +
+        '<p class="sub">Ứng dụng lưu tiến độ trên máy chủ nên cần mở qua địa chỉ web chính thức. ' +
+        (Account.dbOff ? "Máy chủ đang chạy nhưng chưa nối cơ sở dữ liệu." : "Bản đang mở là bản chạy trực tiếp từ tệp.") +
+        "</p></div>";
+      return;
+    }
+    if (!Account.user) { Account.renderGate("login"); return; }
+    if (!Account.profileId) { Account.renderProfilePicker(); return; }
+
+    moKhoaGiaoDien(true);
+    initFloatingMascot();
+    renderFromHash();
+    Account.fullSync().then(function () {
+      if (State.view === "home" || State.view === "history") renderFromHash();
+    });
+  });
+}
+khoiDong();

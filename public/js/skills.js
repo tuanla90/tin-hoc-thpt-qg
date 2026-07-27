@@ -101,9 +101,9 @@ function skillRadarSvg(st) {
 /* ---------------------------------------------------------------------------
  *  Khối "Hồ sơ năng lực" ở trang Thành tựu
  * ------------------------------------------------------------------------- */
-function skillInjectRadar() {
-  var app = document.getElementById("app");
-  if (!app || document.getElementById("skillBox")) return;
+function skillInjectRadar(oDich) {
+  var dich = oDich || document.getElementById("skillHere");
+  if (!dich || document.getElementById("skillBox")) return;
   var st = skillStats();
   var ico = function (n, c, s) { return (typeof ICON === "function") ? ICON(n, s || 16, c) : ""; };
 
@@ -126,12 +126,12 @@ function skillInjectRadar() {
 
   var box = document.createElement("div");
   box.id = "skillBox";
-  box.innerHTML = '<div class="section-title" style="margin-top:22px">' + ico("chart", "#4f46e5", 18) +
-    " Hồ sơ năng lực</div>" +
+  box.innerHTML = '<div class="section-title" style="margin-top:22px">' + ico("target", "#4f46e5", 18) +
+    " Hồ sơ năng lực theo chủ đề</div>" +
     '<p class="skill-note">Tính trên <b>' + SKILL_GANNHAT + " câu gần nhất</b> của mỗi chủ đề, nên phản ánh trình độ hiện tại chứ không phải lúc mới bắt đầu." +
     (st.tongCau ? " Đã ghi nhận <b>" + st.tongCau + "</b> câu." : "") + "</p>" +
     '<div class="skill-card">' + noiDung + "</div>";
-  app.appendChild(box);
+  dich.appendChild(box);
   if (typeof iconify === "function") iconify(box);
 }
 

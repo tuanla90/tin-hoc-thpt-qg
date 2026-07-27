@@ -1,28 +1,40 @@
 /* ============================================================================
  *  REST API  /api/*
  *  Auth bằng session cookie (express-session). Mọi phản hồi là JSON tiếng Việt.
- *  Nguyên tắc đồng bộ: client là nguồn ghi (offline-first), server là kho lưu:
- *   - attempts  : append-only, chống trùng bằng UNIQUE(user_id, client_ts)
- *   - learned   : hợp (union) — chỉ thêm, không xoá
- *   - gamify    : lưu nguyên khối JSON (client tự quyết bên nào mới hơn)
- *   - profile   : ghi đè cả khối
+ *
+ *  MÔ HÌNH: một TÀI KHOẢN (email + mật khẩu) có nhiều HỒ SƠ học tập.
+ *  Toàn bộ tiến độ (lượt làm bài, bài đã học, XP/huy hiệu) gắn vào HỒ SƠ, nên
+ *  hai anh em dùng chung một tài khoản vẫn có tiến độ riêng.
+ *
+ *  Nguyên tắc đồng bộ: client là nguồn ghi (làm bài ngay cả khi mạng chập
+ *  chờn), server là kho lưu:
+ *   - attempts : append-only, chống trùng bằng UNIQUE(user_id, client_ts)
+ *   - learned  : hợp (union) — chỉ thêm, không xoá
+ *   - gamify   : lưu nguyên khối JSON
  * ==========================================================================*/
 const express = require("express");
 const bcrypt = require("bcryptjs");
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const PUBLIC_USER_SQL = "id, email, name, role, profile, created_at";
+const PUBLIC_USER_SQL = "id, email, name, role, created_at";
+const MAX_PROFILES = 6;
 
-/* pg thật parse JSONB thành object sẵn; pg-mem (chế độ dev) trả chuỗi — chuẩn hoá. */
+/* pg thật trả JSONB thành object; pg-mem (chế độ dev) trả chuỗi — chuẩn hoá. */
 function asObj(v, def) {
   if (v == null) return def;
   if (typeof v === "string") { try { return JSON.parse(v); } catch (e) { return def; } }
   return v;
 }
-
 function publicUser(row) {
   if (!row) return null;
-  return { id: row.id, email: row.email, name: row.name, role: row.role, profile: asObj(row.profile, {}) };
+  return { id: row.id, email: row.email, name: row.name, role: row.role };
+}
+function publicProfile(row) {
+  if (!row) return null;
+  return {
+    id: row.id, name: row.name, gender: row.gender || "", grade: row.grade || "",
+    track: row.track || "", mode: row.mode || "", days: asObj(row.days, []),
+  };
 }
 
 /* Giới hạn thử đăng nhập/đăng ký: 30 lượt / 10 phút / IP (bộ đếm trong RAM). */
@@ -34,7 +46,7 @@ function makeRateLimit(max, windowMs) {
     let h = hits.get(key);
     if (!h || now - h.t0 > windowMs) { h = { t0: now, n: 0 }; hits.set(key, h); }
     h.n++;
-    if (hits.size > 5000) hits.clear(); // chống phình bộ nhớ
+    if (hits.size > 5000) hits.clear();
     if (h.n > max) return res.status(429).json({ error: "Thử quá nhiều lần, vui lòng đợi vài phút." });
     next();
   };
@@ -43,10 +55,8 @@ function makeRateLimit(max, windowMs) {
 function createApi(pool) {
   const r = express.Router();
 
-  /* ---- luôn có, kể cả khi chưa nối DB ---- */
   r.get("/health", (req, res) => res.json({ ok: true, db: !!pool, time: new Date().toISOString() }));
 
-  /* Chưa cấu hình DB -> mọi API còn lại trả 503 rõ ràng. */
   r.use((req, res, next) => {
     if (!pool) return res.status(503).json({ error: "Máy chủ chưa nối cơ sở dữ liệu (thiếu DATABASE_URL)." });
     next();
@@ -57,6 +67,19 @@ function createApi(pool) {
   function requireAuth(req, res, next) {
     if (!req.session || !req.session.uid) return res.status(401).json({ error: "Bạn chưa đăng nhập." });
     next();
+  }
+
+  /* Hồ sơ phải thuộc đúng tài khoản đang đăng nhập — kiểm ở mọi lối vào dữ liệu */
+  async function ownProfile(uid, profileId) {
+    const id = Number(profileId);
+    if (!id) return null;
+    const f = await q("SELECT * FROM profiles WHERE id = $1 AND user_id = $2", [id, uid]);
+    return f.rows[0] || null;
+  }
+  async function needProfile(req, res) {
+    const p = await ownProfile(req.session.uid, req.body && req.body.profileId ? req.body.profileId : req.query.profileId);
+    if (!p) { res.status(400).json({ error: "Thiếu hoặc sai hồ sơ học tập." }); return null; }
+    return p;
   }
 
   /* ========================= ĐĂNG KÝ / ĐĂNG NHẬP ========================= */
@@ -79,8 +102,12 @@ function createApi(pool) {
         `INSERT INTO users (email, password_hash, name) VALUES ($1, $2, $3) RETURNING ${PUBLIC_USER_SQL}`,
         [email, hash, name]
       );
-      req.session.uid = ins.rows[0].id;
-      res.json({ user: publicUser(ins.rows[0]) });
+      const user = ins.rows[0];
+      // Tạo sẵn một hồ sơ để đăng ký xong là học được ngay
+      const p = await q("INSERT INTO profiles (user_id, name) VALUES ($1, $2) RETURNING *",
+        [user.id, name || "Hồ sơ 1"]);
+      req.session.uid = user.id;
+      res.json({ user: publicUser(user), profiles: [publicProfile(p.rows[0])] });
     } catch (e) { next(e); }
   });
 
@@ -95,7 +122,8 @@ function createApi(pool) {
       if (!ok) return res.status(401).json({ error: "Email hoặc mật khẩu chưa đúng." });
       req.session.uid = row.id;
       await q("UPDATE users SET last_seen_at = now() WHERE id = $1", [row.id]);
-      res.json({ user: publicUser(row) });
+      const ps = await q("SELECT * FROM profiles WHERE user_id = $1 ORDER BY id", [row.id]);
+      res.json({ user: publicUser(row), profiles: ps.rows.map(publicProfile) });
     } catch (e) { next(e); }
   });
 
@@ -106,44 +134,95 @@ function createApi(pool) {
 
   r.get("/me", async (req, res, next) => {
     try {
-      if (!req.session || !req.session.uid) return res.json({ user: null });
+      if (!req.session || !req.session.uid) return res.json({ user: null, profiles: [] });
       const found = await q(`SELECT ${PUBLIC_USER_SQL} FROM users WHERE id = $1`, [req.session.uid]);
-      if (!found.rows[0]) { req.session.destroy(() => {}); return res.json({ user: null }); }
-      res.json({ user: publicUser(found.rows[0]) });
+      if (!found.rows[0]) { req.session.destroy(() => {}); return res.json({ user: null, profiles: [] }); }
+      const ps = await q("SELECT * FROM profiles WHERE user_id = $1 ORDER BY id", [req.session.uid]);
+      res.json({ user: publicUser(found.rows[0]), profiles: ps.rows.map(publicProfile) });
     } catch (e) { next(e); }
   });
 
-  /* ============================ ĐỒNG BỘ ============================ */
+  /* ============================ TỪ ĐÂY CẦN ĐĂNG NHẬP ============================ */
   r.use(requireAuth);
 
-  /* Toàn bộ dữ liệu của người dùng — client gọi khi đăng nhập / mở app. */
+  /* ------------------------------ HỒ SƠ ------------------------------ */
+  r.get("/profiles", async (req, res, next) => {
+    try {
+      const ps = await q("SELECT * FROM profiles WHERE user_id = $1 ORDER BY id", [req.session.uid]);
+      res.json({ profiles: ps.rows.map(publicProfile) });
+    } catch (e) { next(e); }
+  });
+
+  r.post("/profiles", async (req, res, next) => {
+    try {
+      const dem = await q("SELECT COUNT(*)::int AS n FROM profiles WHERE user_id = $1", [req.session.uid]);
+      if (dem.rows[0].n >= MAX_PROFILES) {
+        return res.status(400).json({ error: `Mỗi tài khoản tối đa ${MAX_PROFILES} hồ sơ.` });
+      }
+      const name = String((req.body && req.body.name) || "").trim().slice(0, 40);
+      if (!name) return res.status(400).json({ error: "Hồ sơ cần có tên." });
+      const ins = await q("INSERT INTO profiles (user_id, name) VALUES ($1, $2) RETURNING *",
+        [req.session.uid, name]);
+      res.json({ profile: publicProfile(ins.rows[0]) });
+    } catch (e) { next(e); }
+  });
+
+  r.patch("/profiles/:id", async (req, res, next) => {
+    try {
+      const p = await ownProfile(req.session.uid, req.params.id);
+      if (!p) return res.status(404).json({ error: "Không tìm thấy hồ sơ." });
+      const b = req.body || {};
+      const name = b.name != null ? String(b.name).trim().slice(0, 40) : p.name;
+      if (!name) return res.status(400).json({ error: "Hồ sơ cần có tên." });
+      const days = Array.isArray(b.days) ? b.days.map(Number).filter((n) => n >= 0 && n <= 6) : asObj(p.days, []);
+      const upd = await q(
+        `UPDATE profiles SET name=$1, gender=$2, grade=$3, track=$4, mode=$5, days=$6
+         WHERE id=$7 RETURNING *`,
+        [name, String(b.gender ?? p.gender ?? ""), String(b.grade ?? p.grade ?? ""),
+         String(b.track ?? p.track ?? ""), String(b.mode ?? p.mode ?? ""),
+         JSON.stringify(days), p.id]
+      );
+      res.json({ profile: publicProfile(upd.rows[0]) });
+    } catch (e) { next(e); }
+  });
+
+  r.delete("/profiles/:id", async (req, res, next) => {
+    try {
+      const p = await ownProfile(req.session.uid, req.params.id);
+      if (!p) return res.status(404).json({ error: "Không tìm thấy hồ sơ." });
+      const dem = await q("SELECT COUNT(*)::int AS n FROM profiles WHERE user_id = $1", [req.session.uid]);
+      if (dem.rows[0].n <= 1) return res.status(400).json({ error: "Phải còn ít nhất một hồ sơ." });
+      await q("DELETE FROM profiles WHERE id = $1", [p.id]);   // tiến độ xoá theo (ON DELETE CASCADE)
+      res.json({ ok: true });
+    } catch (e) { next(e); }
+  });
+
+  /* ============================ ĐỒNG BỘ TIẾN ĐỘ ============================ */
   r.get("/sync", async (req, res, next) => {
     try {
-      const uid = req.session.uid;
-      const [att, lea, gam, usr] = await Promise.all([
-        q("SELECT detail FROM attempts WHERE user_id = $1 ORDER BY client_ts DESC LIMIT 500", [uid]),
-        q("SELECT lesson_id FROM learned WHERE user_id = $1", [uid]),
-        q("SELECT data FROM gamify WHERE user_id = $1", [uid]),
-        q("SELECT profile, name FROM users WHERE id = $1", [uid]),
+      const p = await needProfile(req, res); if (!p) return;
+      const [att, lea, gam] = await Promise.all([
+        q("SELECT detail FROM attempts WHERE profile_id = $1 ORDER BY client_ts DESC LIMIT 500", [p.id]),
+        q("SELECT lesson_id FROM learned WHERE profile_id = $1", [p.id]),
+        q("SELECT data FROM gamify WHERE profile_id = $1", [p.id]),
       ]);
       res.json({
         attempts: att.rows.map((x) => asObj(x.detail, {})),
         learned: lea.rows.map((x) => x.lesson_id),
         gamify: gam.rows[0] ? asObj(gam.rows[0].data, null) : null,
-        profile: usr.rows[0] ? asObj(usr.rows[0].profile, {}) : {},
+        profile: publicProfile(p),
       });
     } catch (e) { next(e); }
   });
 
-  /* Ghi 1 hoặc nhiều lượt làm bài. Trùng (cùng client_ts) thì bỏ qua êm. */
-  async function insertAttempt(uid, rec) {
+  async function insertAttempt(uid, profileId, rec) {
     if (!rec || typeof rec !== "object") return;
     const ts = Number(rec.at) || Date.now();
     await q(
-      `INSERT INTO attempts (user_id, client_ts, mode, lesson_id, exam_code, score, correct_count, total, duration_sec, detail)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+      `INSERT INTO attempts (user_id, profile_id, client_ts, mode, lesson_id, exam_code, score, correct_count, total, duration_sec, detail)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
        ON CONFLICT (user_id, client_ts) DO NOTHING`,
-      [uid, ts, rec.mode || null, rec.lessonId || null, rec.code != null ? String(rec.code) : null,
+      [uid, profileId, ts, rec.mode || null, rec.lessonId || null, rec.code != null ? String(rec.code) : null,
        Number(rec.score) || 0, Number(rec.correctCount) || 0, Number(rec.total) || 0,
        Number(rec.durationSec) || 0, JSON.stringify(rec)]
     );
@@ -151,47 +230,36 @@ function createApi(pool) {
 
   r.post("/attempts", async (req, res, next) => {
     try {
+      const p = await needProfile(req, res); if (!p) return;
       const b = req.body || {};
       const records = Array.isArray(b.records) ? b.records : [b.record];
       if (records.length > 500) return res.status(400).json({ error: "Quá nhiều bản ghi một lần." });
-      for (const rec of records) await insertAttempt(req.session.uid, rec);
+      for (const rec of records) await insertAttempt(req.session.uid, p.id, rec);
       res.json({ ok: true, saved: records.filter(Boolean).length });
     } catch (e) { next(e); }
   });
 
-  /* Danh sách bài đã học — hợp với dữ liệu sẵn có trên server. */
   r.put("/learned", async (req, res, next) => {
     try {
+      const p = await needProfile(req, res); if (!p) return;
       const ids = (Array.isArray(req.body && req.body.ids) ? req.body.ids : [])
         .map((x) => String(x).slice(0, 40)).slice(0, 2000);
       for (const id of ids) {
-        await q("INSERT INTO learned (user_id, lesson_id) VALUES ($1, $2) ON CONFLICT DO NOTHING",
-          [req.session.uid, id]);
+        await q("INSERT INTO learned (profile_id, lesson_id) VALUES ($1, $2) ON CONFLICT DO NOTHING", [p.id, id]);
       }
-      const all = await q("SELECT lesson_id FROM learned WHERE user_id = $1", [req.session.uid]);
+      const all = await q("SELECT lesson_id FROM learned WHERE profile_id = $1", [p.id]);
       res.json({ ok: true, learned: all.rows.map((x) => x.lesson_id) });
     } catch (e) { next(e); }
   });
 
   r.put("/gamify", async (req, res, next) => {
     try {
+      const p = await needProfile(req, res); if (!p) return;
       const data = (req.body && typeof req.body.data === "object" && req.body.data) || {};
       await q(
-        `INSERT INTO gamify (user_id, data) VALUES ($1, $2)
-         ON CONFLICT (user_id) DO UPDATE SET data = $2, updated_at = now()`,
-        [req.session.uid, JSON.stringify(data)]
-      );
-      res.json({ ok: true });
-    } catch (e) { next(e); }
-  });
-
-  r.put("/profile", async (req, res, next) => {
-    try {
-      const profile = (req.body && typeof req.body.profile === "object" && req.body.profile) || {};
-      const name = String(profile.name || "").trim().slice(0, 60);
-      await q(
-        "UPDATE users SET profile = $1, name = CASE WHEN $2 <> '' THEN $2 ELSE name END WHERE id = $3",
-        [JSON.stringify(profile), name, req.session.uid]
+        `INSERT INTO gamify (profile_id, data) VALUES ($1, $2)
+         ON CONFLICT (profile_id) DO UPDATE SET data = $2, updated_at = now()`,
+        [p.id, JSON.stringify(data)]
       );
       res.json({ ok: true });
     } catch (e) { next(e); }

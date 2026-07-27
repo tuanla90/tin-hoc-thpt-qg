@@ -9,6 +9,7 @@ const { initDb } = require("../db");
 const { createApp } = require("../app");
 
 let srv, base, cookie = "";
+let hoSo1 = null, hoSo2 = null;
 
 function req(path, opts = {}) {
   return fetch(base + path, {
@@ -39,68 +40,94 @@ test("health có db", async () => {
   assert.equal(r.data.db, true);
 });
 
+test("chưa đăng nhập thì không lấy được hồ sơ", async () => {
+  assert.equal((await req("/api/profiles")).status, 401);
+});
+
 test("đăng ký: email sai / mật khẩu ngắn bị chặn", async () => {
   assert.equal((await req("/api/auth/register", { method: "POST", body: { email: "sai", password: "123456" } })).status, 400);
   assert.equal((await req("/api/auth/register", { method: "POST", body: { email: "a@b.vn", password: "123" } })).status, 400);
 });
 
-test("đăng ký thành công + /me trả user", async () => {
+test("đăng ký xong có sẵn 1 hồ sơ", async () => {
   const r = await req("/api/auth/register", { method: "POST", body: { email: "An.Nguyen@Gmail.com", password: "123456", name: "An" } });
   assert.equal(r.status, 200);
   assert.equal(r.data.user.email, "an.nguyen@gmail.com");
-  const me = await req("/api/me");
-  assert.equal(me.data.user.email, "an.nguyen@gmail.com");
+  assert.equal(r.data.profiles.length, 1);
+  assert.equal(r.data.profiles[0].name, "An");
+  hoSo1 = r.data.profiles[0].id;
 });
 
 test("đăng ký trùng email -> 409", async () => {
-  const r = await req("/api/auth/register", { method: "POST", body: { email: "an.nguyen@gmail.com", password: "abcdef" } });
-  assert.equal(r.status, 409);
+  assert.equal((await req("/api/auth/register", { method: "POST", body: { email: "an.nguyen@gmail.com", password: "abcdef" } })).status, 409);
 });
 
-test("ghi attempts (đơn + bulk, trùng client_ts bị bỏ qua)", async () => {
-  const rec = { at: 1000, mode: "exam", code: "101", score: 8.5, correctCount: 24, total: 28, durationSec: 900 };
-  const r1 = await req("/api/attempts", { method: "POST", body: { record: rec } });
-  assert.equal(r1.status, 200);
-  const r2 = await req("/api/attempts", { method: "POST", body: { records: [rec, { at: 2000, mode: "practice", lessonId: "C10-01", score: 0.8, correctCount: 4, total: 5 }] } });
-  assert.equal(r2.status, 200);
-  const sync = await req("/api/sync");
-  assert.equal(sync.data.attempts.length, 2); // rec trùng at=1000 chỉ tính 1
-  assert.equal(sync.data.attempts[0].at, 2000); // mới nhất trước
-  assert.equal(sync.data.attempts[1].code, "101");
-});
-
-test("learned: PUT là phép hợp", async () => {
-  const r1 = await req("/api/learned", { method: "PUT", body: { ids: ["C10-01", "C10-02"] } });
-  assert.deepEqual(r1.data.learned.sort(), ["C10-01", "C10-02"]);
-  const r2 = await req("/api/learned", { method: "PUT", body: { ids: ["C10-02", "C10-03"] } });
-  assert.deepEqual(r2.data.learned.sort(), ["C10-01", "C10-02", "C10-03"]);
-});
-
-test("gamify: upsert và đọc lại", async () => {
-  await req("/api/gamify", { method: "PUT", body: { data: { xp: 120, streak: 3 } } });
-  await req("/api/gamify", { method: "PUT", body: { data: { xp: 150, streak: 4 } } });
-  const sync = await req("/api/sync");
-  assert.equal(sync.data.gamify.xp, 150);
-});
-
-test("profile: cập nhật hồ sơ + tên hiển thị", async () => {
-  const r = await req("/api/profile", { method: "PUT", body: { profile: { name: "Nguyễn Văn An", grade: "12", track: "khmt" } } });
+test("thêm hồ sơ thứ hai và sửa thông tin", async () => {
+  const r = await req("/api/profiles", { method: "POST", body: { name: "Bình" } });
   assert.equal(r.status, 200);
-  const sync = await req("/api/sync");
-  assert.equal(sync.data.profile.track, "khmt");
-  const me = await req("/api/me");
-  assert.equal(me.data.user.name, "Nguyễn Văn An");
+  hoSo2 = r.data.profile.id;
+  const u = await req("/api/profiles/" + hoSo2, { method: "PATCH", body: { name: "Bình", grade: "12", track: "khmt", mode: "tuantu", days: [1, 3, 5] } });
+  assert.equal(u.data.profile.grade, "12");
+  assert.deepEqual(u.data.profile.days, [1, 3, 5]);
+  const ds = await req("/api/profiles");
+  assert.equal(ds.data.profiles.length, 2);
 });
 
-test("logout -> mất phiên; login lại -> dữ liệu còn nguyên", async () => {
+test("thiếu profileId thì API dữ liệu báo lỗi", async () => {
+  assert.equal((await req("/api/sync")).status, 400);
+  assert.equal((await req("/api/attempts", { method: "POST", body: { record: { at: 1 } } })).status, 400);
+});
+
+test("tiến độ tách riêng theo từng hồ sơ", async () => {
+  const rec = (at, lessonId) => ({ at, mode: "practice", lessonId, score: 8, correctCount: 4, total: 5 });
+  await req("/api/attempts", { method: "POST", body: { profileId: hoSo1, record: rec(1000, "C10-01") } });
+  await req("/api/learned", { method: "PUT", body: { profileId: hoSo1, ids: ["C10-01", "C10-02"] } });
+  await req("/api/gamify", { method: "PUT", body: { profileId: hoSo1, data: { xp: 120 } } });
+
+  await req("/api/attempts", { method: "POST", body: { profileId: hoSo2, record: rec(2000, "C12-01") } });
+  await req("/api/learned", { method: "PUT", body: { profileId: hoSo2, ids: ["C12-01"] } });
+
+  const s1 = await req("/api/sync?profileId=" + hoSo1);
+  const s2 = await req("/api/sync?profileId=" + hoSo2);
+  assert.equal(s1.data.attempts.length, 1);
+  assert.equal(s1.data.attempts[0].lessonId, "C10-01");
+  assert.deepEqual(s1.data.learned.sort(), ["C10-01", "C10-02"]);
+  assert.equal(s1.data.gamify.xp, 120);
+
+  assert.equal(s2.data.attempts.length, 1);
+  assert.equal(s2.data.attempts[0].lessonId, "C12-01");
+  assert.deepEqual(s2.data.learned, ["C12-01"]);
+  assert.equal(s2.data.gamify, null);        // hồ sơ 2 chưa có XP riêng
+  assert.equal(s2.data.profile.name, "Bình");
+});
+
+test("không truy cập được hồ sơ của tài khoản khác", async () => {
+  const cu = cookie;
   await req("/api/auth/logout", { method: "POST" });
-  assert.equal((await req("/api/me")).data.user, null);
-  assert.equal((await req("/api/sync")).status, 401);
+  await req("/api/auth/register", { method: "POST", body: { email: "khac@test.vn", password: "123456", name: "Khác" } });
+  const r = await req("/api/sync?profileId=" + hoSo1);
+  assert.equal(r.status, 400);                      // hồ sơ không thuộc tài khoản này
+  const x = await req("/api/profiles/" + hoSo1, { method: "PATCH", body: { name: "Chiếm" } });
+  assert.equal(x.status, 404);
+  await req("/api/auth/logout", { method: "POST" });
+  cookie = cu;
+});
+
+test("đăng nhập lại: còn đủ hồ sơ và tiến độ", async () => {
   const r = await req("/api/auth/login", { method: "POST", body: { email: "an.nguyen@gmail.com", password: "123456" } });
   assert.equal(r.status, 200);
-  const sync = await req("/api/sync");
-  assert.equal(sync.data.attempts.length, 2);
-  assert.equal(sync.data.learned.length, 3);
+  assert.equal(r.data.profiles.length, 2);
+  const s = await req("/api/sync?profileId=" + hoSo1);
+  assert.equal(s.data.attempts.length, 1);
+  assert.equal(s.data.learned.length, 2);
+});
+
+test("xoá hồ sơ: xoá được cái thứ hai, không xoá được cái cuối cùng", async () => {
+  assert.equal((await req("/api/profiles/" + hoSo2, { method: "DELETE" })).status, 200);
+  const ds = await req("/api/profiles");
+  assert.equal(ds.data.profiles.length, 1);
+  const r = await req("/api/profiles/" + hoSo1, { method: "DELETE" });
+  assert.equal(r.status, 400);
 });
 
 test("mật khẩu sai -> 401", async () => {

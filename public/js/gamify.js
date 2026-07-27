@@ -56,7 +56,7 @@
 })();
 
 /* --- Lưu trữ riêng --- */
-var GAM_KEY = "tinhoc_gam_v1";
+var GAM_KEY = window.GAM_KEY || "tinhoc_gam_v1";   /* theo hồ sơ đang dùng, xem js/session.js */
 function gamLoad() {
   /* lastActive = ngày gần nhất có hoạt động (mọi ngày)
      lastSession = ngày gần nhất học ĐÚNG BUỔI theo lịch -> dùng để tính chuỗi */
@@ -475,8 +475,6 @@ var Gam = {
       groups;
     var back = document.getElementById("gamBack");
     if (back) back.onclick = function () { if (typeof go === "function") go("home"); };
-    // Hồ sơ năng lực (radar 7 chủ đề) — xem js/skills.js
-    if (typeof skillInjectRadar === "function") skillInjectRadar();
   },
 };
 
