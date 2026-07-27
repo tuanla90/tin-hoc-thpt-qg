@@ -47,6 +47,29 @@ const State = {
 
 const app = document.getElementById("app");
 
+/* Chuyển tiến độ cũ sang id bài mới sau khi gộp 2 chương trình (chạy đúng 1 lần).
+   Xem js/migrate-progress.js. Không có bảng ánh xạ thì bỏ qua, không lỗi. */
+(function migrateLegacyProgress() {
+  const MAP = window.LEGACY_LESSON_MAP;
+  if (!MAP || load("mergedIds", false)) return;
+  const doi = (id) => MAP[id] || id;
+  const con = (id) => LESSONS.some((l) => l.id === id);   // chỉ giữ bài còn tồn tại
+
+  const learned = [];
+  State.learned.forEach((id) => {
+    const m = doi(id);
+    if (con(m) && learned.indexOf(m) < 0) learned.push(m);
+  });
+  State.learned = learned;
+
+  State.history = State.history.map((h) =>
+    h && h.lessonId && MAP[h.lessonId] ? Object.assign({}, h, { lessonId: MAP[h.lessonId] }) : h);
+
+  save("learned", State.learned);
+  save("history", State.history);
+  save("mergedIds", true);
+})();
+
 /* ---------------------------------------------------------------------------
  *  TIỆN ÍCH LƯU TRỮ (localStorage)
  * ------------------------------------------------------------------------- */
@@ -238,15 +261,8 @@ function renderHome() {
   const learnedCount = State.learned.filter((id) => LESSONS.some((l) => l.id === id)).length;
   const ic = (n, e) => (typeof ICON === "function" ? ICON(n, 30) : e);
 
-  // Bài đang học (theo khóa cứng): bài chưa học đầu tiên có bài liền trước đã học
-  const allSorted = LESSONS.slice().filter(visibleForProfile).sort((a, b) => a.stage - b.stage || a.order - b.order);
-  // Có lớp trong hồ sơ -> ưu tiên gợi ý bài đúng lớp (nếu lớp đó còn bài chưa học)
-  const pgrade = (State.profile && State.profile.grade) || "";
-  const gradePool = pgrade ? allSorted.filter((l) => String(l.grade) === pgrade) : [];
-  const sortedL = (gradePool.length && gradePool.some((l) => !isLearned(l.id))) ? gradePool : allSorted;
-  const learnedL = sortedL.map((l) => isLearned(l.id));
-  const curIdx = learnedL.findIndex((v, i) => (i === 0 || learnedL[i - 1]) && !v);
-  const curL = curIdx >= 0 ? sortedL[curIdx] : null;
+  // Bài đang học: lấy đúng bài mà trang Lộ trình đang mở, để hai nơi không lệch nhau
+  const curL = pathState().cur;
   const contTitle = curL ? esc((curL.title || "").replace(/^Bài\s*\d+[.\s]*/, "")) : "";
   const continueHtml = curL
     ? `<div class="continue-card" id="continueCard" data-id="${curL.id}" role="button" tabindex="0" style="display:flex;align-items:center;gap:14px;background:var(--primary-soft);border:1px solid var(--primary);border-radius:var(--radius);padding:13px 16px;margin:2px 0 18px;cursor:pointer">
@@ -347,6 +363,24 @@ function renderHome() {
  *  HỌC LÝ THUYẾT - danh sách bài & trình xem bài
  * ========================================================================= */
 function isLearned(id) { return State.learned.includes(id); }
+
+/* Trạng thái lộ trình — NGUỒN DUY NHẤT cho cả trang chủ lẫn trang lộ trình.
+   Trước đây hai nơi tự tính riêng nên nói khác nhau: trang chủ gợi ý bài theo
+   lớp trong hồ sơ, còn lộ trình khoá tuần tự từ bài đầu tiên -> học xong bài
+   trang chủ gợi ý mà vào lộ trình vẫn thấy khoá. */
+function pathState() {
+  const sorted = LESSONS.slice().filter(visibleForProfile).sort((a, b) => a.stage - b.stage || a.order - b.order);
+  const learned = sorted.map((l) => isLearned(l.id));
+  const seq = ((State.profile && State.profile.mode) || "") === "tuantu";
+  const unlocked = sorted.map((l, i) => (seq ? i === 0 || learned[i - 1] : true));
+  // Bài đang học = bài chưa học đầu tiên trong những bài ĐÃ MỞ KHOÁ.
+  // Khi mở tự do và hồ sơ có ghi lớp -> ưu tiên bài chưa học của đúng lớp đó.
+  const grade = (State.profile && State.profile.grade) || "";
+  let curIdx = -1;
+  if (!seq && grade) curIdx = sorted.findIndex((l, i) => !learned[i] && String(l.grade) === grade);
+  if (curIdx < 0) curIdx = sorted.findIndex((l, i) => unlocked[i] && !learned[i]);
+  return { sorted, learned, unlocked, curIdx, cur: curIdx >= 0 ? sorted[curIdx] : null };
+}
 function markLearned(id, val) {
   const has = isLearned(id);
   if (val && !has) State.learned.push(id);
@@ -357,14 +391,8 @@ function markLearned(id, val) {
 
 function renderLessons() {
   injectPathCss();
-  const sorted = LESSONS.slice().filter(visibleForProfile).sort((a, b) => a.stage - b.stage || a.order - b.order);
-  const learned = sorted.map((l) => isLearned(l.id));
-  // Cách mở bài theo hồ sơ:
-  //  - "tuantu": khoá tuần tự (bài i mở khi bài trước đã học)
-  //  - "tudo" hoặc chưa chọn (mặc định): mở tự do toàn bộ
-  const openMode = (typeof State !== "undefined" && State.profile && State.profile.mode) || "";
-  const unlocked = sorted.map((l, i) => (openMode === "tuantu" ? (i === 0 || learned[i - 1]) : true));
-  const currentIdx = sorted.findIndex((l, i) => unlocked[i] && !learned[i]);
+  // Dùng chung trạng thái với trang chủ (xem pathState) để không nói khác nhau
+  const { sorted, learned, unlocked, curIdx: currentIdx } = pathState();
   const doneCount = learned.filter(Boolean).length;
   const pct = Math.round((doneCount / sorted.length) * 100);
 
