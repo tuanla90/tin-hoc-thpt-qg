@@ -58,10 +58,18 @@
 /* --- Lưu trữ riêng --- */
 var GAM_KEY = "tinhoc_gam_v1";
 function gamLoad() {
-  var def = { xp: 0, lastActive: null, streak: 0, bestStreak: 0, correct: 0, exDone: [], vocab: [], badges: [], dayDate: null, dayXp: 0, goalDate: null };
+  /* lastActive = ngày gần nhất có hoạt động (mọi ngày)
+     lastSession = ngày gần nhất học ĐÚNG BUỔI theo lịch -> dùng để tính chuỗi */
+  var def = { xp: 0, lastActive: null, lastSession: null, streak: 0, bestStreak: 0, correct: 0, exDone: [], vocab: [], badges: [], dayDate: null, dayXp: 0, goalDate: null };
   try {
     var o = JSON.parse(localStorage.getItem(GAM_KEY));
-    if (o && typeof o === "object") { for (var k in def) if (!(k in o)) o[k] = def[k]; return o; }
+    if (o && typeof o === "object") {
+      for (var k in def) if (!(k in o)) o[k] = def[k];
+      // Bản cũ chỉ có lastActive: coi buổi học gần nhất chính là ngày đó, để
+      // người đang có chuỗi dở không bị mất khi chuyển sang tính theo lịch học.
+      if (!o.lastSession && o.lastActive) o.lastSession = o.lastActive;
+      return o;
+    }
   } catch (e) {}
   return def;
 }
@@ -110,7 +118,7 @@ function gamStats() {
   var gradeDone = function (o) { return o.t > 0 && o.d >= o.t; };
   return {
     xp: GAM.xp, lessons: lessons, totalLessons: totalLessons, correct: GAM.correct,
-    exams: exams, bestExam: bestExam, quizzes: quizzes, streak: GAM.streak, bestStreak: GAM.bestStreak,
+    exams: exams, bestExam: bestExam, quizzes: quizzes, streak: gamStreakSong(), bestStreak: GAM.bestStreak,
     exDone: GAM.exDone.length, vocab: GAM.vocab.length, badges: GAM.badges.length,
     tin10Done: gradeDone(g[10]), tin11Done: gradeDone(g[11]), tin12Done: gradeDone(g[12]),
     lvl: gamLevel(GAM.xp).lvl,
@@ -154,10 +162,10 @@ var GAM_BADGES = [
   { id: "exam_pass9", cat: "exam", ic: "🌟", name: "Xuất sắc", desc: "Thi thử đạt từ 9 điểm", chk: function (s) { return s.bestExam >= 9; } },
   { id: "exam_perfect", cat: "exam", rare: true, ic: "💯", name: "Điểm tuyệt đối", desc: "Thi thử đạt 10 điểm", chk: function (s) { return s.bestExam >= 10; } },
   /* 🔥 Chăm chỉ */
-  { id: "streak_3", cat: "streak", ic: "📅", name: "Đều đặn", desc: "Học 3 ngày liên tiếp", chk: function (s) { return s.bestStreak >= 3; } },
-  { id: "streak_7", cat: "streak", ic: "🔥", name: "Kiên trì", desc: "Học 7 ngày liên tiếp", chk: function (s) { return s.bestStreak >= 7; } },
-  { id: "streak_14", cat: "streak", ic: "🗓️", name: "Hai tuần liền", desc: "Học 14 ngày liên tiếp", chk: function (s) { return s.bestStreak >= 14; } },
-  { id: "streak_30", cat: "streak", rare: true, ic: "🏅", name: "Cả tháng không nghỉ", desc: "Học 30 ngày liên tiếp", chk: function (s) { return s.bestStreak >= 30; } },
+  { id: "streak_3", cat: "streak", ic: "📅", name: "Đều đặn", desc: "3 buổi học liên tiếp theo lịch", chk: function (s) { return s.bestStreak >= 3; } },
+  { id: "streak_7", cat: "streak", ic: "🔥", name: "Kiên trì", desc: "7 buổi học liên tiếp theo lịch", chk: function (s) { return s.bestStreak >= 7; } },
+  { id: "streak_14", cat: "streak", ic: "🗓️", name: "Hai tuần liền", desc: "14 buổi liên tiếp — hai tuần đều đặn", chk: function (s) { return s.bestStreak >= 14; } },
+  { id: "streak_30", cat: "streak", rare: true, ic: "🏅", name: "Cả tháng không nghỉ", desc: "30 buổi liên tiếp — không bỏ buổi nào", chk: function (s) { return s.bestStreak >= 30; } },
   /* ⭐ Cấp độ */
   { id: "level_3", cat: "level", ic: "⚡", name: "Vào guồng", desc: "Đạt cấp độ 3", chk: function (s) { return s.lvl >= 3; } },
   { id: "level_5", cat: "level", ic: "🚀", name: "Lên hạng", desc: "Đạt cấp độ 5", chk: function (s) { return s.lvl >= 5; } },
@@ -249,18 +257,78 @@ function gamAward(xp, silent) {
   gamRefreshDash();
 }
 
-/* --- Chuỗi ngày học --- */
+/* --- Chuỗi buổi học (đếm theo LỊCH HỌC đã đăng kí, giống app tập gym) --------
+   Người học chọn các thứ trong tuần mình định học (hồ sơ -> "Lịch học trong
+   tuần"). Chuỗi chỉ tính trên những buổi đó:
+     - Học đúng buổi theo lịch  -> chuỗi +1.
+     - Bỏ lỡ một buổi theo lịch -> chuỗi đứt.
+     - Ngày KHÔNG có lịch: học thêm được thưởng XP nhưng không tính vào chuỗi,
+       và nghỉ cũng không làm đứt chuỗi.
+   Chưa chọn ngày nào = học mọi ngày (giữ nguyên hành vi cũ). */
 function gamDayStr(d) { return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate(); }
+
+/* Lịch học lấy từ hồ sơ: mảng thứ (0 = Chủ nhật … 6 = Thứ Bảy). */
+function gamLichHoc() {
+  var p = (typeof State !== "undefined" && State.profile) || {};
+  var d = p.days;
+  return (Array.isArray(d) && d.length) ? d.map(Number) : null;   // null = mọi ngày
+}
+function gamLaBuoiHoc(d) {
+  var lich = gamLichHoc();
+  return !lich || lich.indexOf(d.getDay()) >= 0;
+}
+/* Buổi theo lịch gần nhất TRƯỚC ngày d (tìm ngược tối đa 14 ngày). */
+function gamBuoiTruoc(d) {
+  for (var i = 1; i <= 14; i++) {
+    var t = new Date(d.getFullYear(), d.getMonth(), d.getDate() - i);
+    if (gamLaBuoiHoc(t)) return t;
+  }
+  return null;
+}
+
+/* Chuỗi còn hiệu lực: nếu đã bỏ lỡ buổi gần nhất thì coi như đứt (trả 0).
+   Hôm nay dù chưa học vẫn chưa tính là bỏ lỡ — người học còn cả ngày để học. */
+function gamStreakSong() {
+  if (!GAM.streak || !GAM.lastSession) return 0;
+  var hnay = new Date();
+  if (GAM.lastSession === gamDayStr(hnay)) return GAM.streak;
+  var truoc = gamBuoiTruoc(hnay);
+  if (!truoc) return GAM.streak;
+  return GAM.lastSession === gamDayStr(truoc) ? GAM.streak : 0;
+}
+
+/* Nhãn hiển thị: có đăng kí lịch thì đếm "buổi", chưa đăng kí thì vẫn là "ngày". */
+var GAM_TEN_THU = ["Chủ nhật", "Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy"];
+var GAM_THU_NGAN = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
+function gamDonViChuoi() { return gamLichHoc() ? "buổi" : "ngày"; }
+function gamMoTaLich() {
+  var lich = gamLichHoc();
+  if (!lich) return "Chưa đặt lịch — tính chuỗi theo mọi ngày";
+  var ds = lich.slice().sort(function (a, b) { return ((a + 6) % 7) - ((b + 6) % 7); })
+    .map(function (d) { return GAM_THU_NGAN[d]; });
+  return "Lịch học: " + ds.join(", ") + " (" + ds.length + " buổi/tuần)";
+}
+
 function gamTouchStreak() {
-  var today = gamDayStr(new Date());
-  if (GAM.lastActive === today) return;
-  var y = gamDayStr(new Date(Date.now() - 86400000));
-  GAM.streak = (GAM.lastActive === y) ? (GAM.streak || 0) + 1 : 1;
+  var now = new Date();
+  var today = gamDayStr(now);
+  if (GAM.lastActive === today) return;      // hôm nay đã ghi nhận rồi
   GAM.lastActive = today;
-  if (GAM.streak > (GAM.bestStreak || 0)) GAM.bestStreak = GAM.streak;
-  gamSave();
-  gamAward(10); // thưởng học mỗi ngày
-  if (GAM.streak >= 2) gamXpFloat("🔥 Chuỗi " + GAM.streak + " ngày!");
+
+  if (gamLaBuoiHoc(now)) {
+    var truoc = gamBuoiTruoc(now);
+    var noiTiep = truoc && GAM.lastSession === gamDayStr(truoc);
+    GAM.streak = noiTiep ? (GAM.streak || 0) + 1 : 1;
+    GAM.lastSession = today;
+    if (GAM.streak > (GAM.bestStreak || 0)) GAM.bestStreak = GAM.streak;
+    gamSave();
+    gamAward(10);                            // thưởng cho buổi học theo lịch
+    if (GAM.streak >= 2) gamXpFloat("🔥 Chuỗi " + GAM.streak + " buổi!");
+  } else {
+    gamSave();
+    gamAward(10);                            // học thêm ngoài lịch vẫn được thưởng
+    gamXpFloat("💪 Học thêm ngoài lịch!");
+  }
 }
 
 /* --- Kiểm tra & mở huy hiệu mới --- */
@@ -336,7 +404,7 @@ var Gam = {
         "</div>" +
         '<div class="gam-chips">' +
           '<div class="gam-chip' + (gamDailyXp() >= GAM_DAILY_GOAL ? " gam-chip-done" : "") + '">' + gIco("target", "#ef4444", "🎯") + "Hôm nay <b>" + Math.min(gamDailyXp(), GAM_DAILY_GOAL) + "/" + GAM_DAILY_GOAL + "</b> XP" + (gamDailyXp() >= GAM_DAILY_GOAL ? " ✓" : "") + "</div>" +
-          '<div class="gam-chip" id="gamChipStreak">' + gIco("flame", "#f97316", "🔥") + "<b>" + s.streak + "</b> ngày</div>" +
+          '<div class="gam-chip" id="gamChipStreak" title="' + esc(gamMoTaLich()) + '">' + gIco("flame", "#f97316", "🔥") + "<b>" + s.streak + "</b> " + gamDonViChuoi() + (gamLaBuoiHoc(new Date()) && GAM.lastSession !== gamDayStr(new Date()) ? " · hôm nay có lịch" : "") + "</div>" +
           '<div class="gam-chip" id="gamChipBadge">' + gIco("medal", "#f59e0b", "🏅") + "<b>" + s.badges + "/" + GAM_BADGES.length + "</b> huy hiệu</div>" +
         "</div>" +
       "</div>";
@@ -374,8 +442,9 @@ var Gam = {
         '<div class="gam-xp"><div class="gam-xp-bar"><div class="gam-xp-fill" style="width:' + pct + '%"></div></div><div class="gam-xp-txt"><span>Tiến độ cấp</span><span>' + xpTxt + "</span></div></div>" +
       "</div>" +
       '<div class="gam-chips" style="margin-bottom:16px">' +
-        '<div class="gam-chip">' + gIco("flame", "#f97316", "🔥") + "Chuỗi hiện tại: <b>" + s.streak + "</b> ngày</div>" +
-        '<div class="gam-chip">' + gIco("flame", "#d97706", "📈") + "Kỷ lục chuỗi: <b>" + s.bestStreak + "</b> ngày</div>" +
+        '<div class="gam-chip">' + gIco("flame", "#f97316", "🔥") + "Chuỗi hiện tại: <b>" + s.streak + "</b> " + gamDonViChuoi() + "</div>" +
+        '<div class="gam-chip">' + gIco("flame", "#d97706", "📈") + "Kỷ lục chuỗi: <b>" + s.bestStreak + "</b> " + gamDonViChuoi() + "</div>" +
+        '<div class="gam-chip">' + gIco("clock", "#0891b2", "🗓️") + esc(gamMoTaLich()) + "</div>" +
         '<div class="gam-chip">' + gIco("book", "#3b82f6", "📖") + "Bài đã học: <b>" + s.lessons + "/" + s.totalLessons + "</b></div>" +
         '<div class="gam-chip">' + gIco("target", "#ef4444", "🎯") + "Câu đúng: <b>" + s.correct + "</b></div>" +
         '<div class="gam-chip">' + gIco("book", "#ec4899", "📕") + "Từ đã thuộc: <b>" + s.vocab + "</b></div>" +
