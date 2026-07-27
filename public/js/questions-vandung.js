@@ -362,7 +362,8 @@
   function startMockExam(i) {
     var e = EXAMS[i]; if (!e || typeof newQuiz !== "function" || typeof State === "undefined") return;
     var qs = e.mc.concat(e.tf).map(byId).filter(Boolean);
-    State.quiz = newQuiz(qs, "exam", { minutes: mins(), title: e.name });
+    // code "TC1..TC3" để lưu được điểm cao nhất theo đề và bấm "Làm lại đề này"
+    State.quiz = newQuiz(qs, "exam", { minutes: mins(), title: e.name, code: "TC" + (i + 1) });
     if (typeof go === "function") go("quiz");
   }
   window.startMockExam = startMockExam;
@@ -370,6 +371,8 @@
   function injectMockSection() {
     var app = document.getElementById("app"); if (!app) return;
     if (document.getElementById("mockExamBox")) return;
+    // Màn thi thử mới đã hiện sẵn các đề tuyển chọn trong cùng một lưới -> khỏi chèn thêm
+    if (document.getElementById("examFixedGrid")) return;
     var ic = (typeof ICON === "function") ? ICON("exam", 18) : "";
     var cards = EXAMS.map(function (e, i) {
       return '<button class="btn btn-ghost mock-btn" data-i="' + i + '" ' +
