@@ -794,6 +794,7 @@ function renderLesson(data) {
     <div class="ls-actions">
       <button class="btn ${done ? "btn-ghost" : "btn-success"}" id="doneBtn">${aIco("check2", null, 15)} ${done ? "Đã học (bấm để bỏ)" : "Đánh dấu đã học"}</button>
       <button class="btn btn-primary" id="practiceBtn">${aIco("target", null, 16)} Luyện tập bài này</button>
+      <button class="btn btn-ghost" id="tutorBtn" style="display:none">${aIco("bulb", "#d97706", 16)} Hỏi gia sư</button>
     </div>
 
     <div class="quiz-nav" style="margin-top:20px">
@@ -804,6 +805,8 @@ function renderLesson(data) {
   document.getElementById("back").onclick = () => go("lessons");
   document.getElementById("doneBtn").onclick = () => { markLearned(l.id, !isLearned(l.id)); go("lesson", { id: l.id }); };
   document.getElementById("practiceBtn").onclick = () => practiceLesson(l);
+  // Nút gia sư chỉ hiện khi máy chủ đã bật AI (Tutor tự gỡ nút nếu chưa bật)
+  if (typeof Tutor !== "undefined") Tutor.batNut(document.getElementById("tutorBtn"), () => Tutor.moBai(l));
   document.getElementById("prevBtn").onclick = () => prev && go("lesson", { id: prev.id });
   document.getElementById("nextBtn").onclick = () => next && go("lesson", { id: next.id });
   attachRunButtons(app.querySelector(".lesson-body"));
@@ -1777,7 +1780,14 @@ function renderExplain(q) {
           <div style="margin-top:4px;">${esc(q.explain || "")}</div>
         </div>
       </div>
+      <button class="btn btn-ghost" id="whyBtn" style="display:none; margin-top:10px">${aIco("bulb", "#d97706", 15)} Vì sao tôi sai?</button>
     </div>`;
+
+  /* Chỉ mời hỏi gia sư khi làm SAI — làm đúng rồi thì đừng chen ngang, và cũng
+     đỡ tốn lượt hỏi của người học. */
+  if (!correct && typeof Tutor !== "undefined") {
+    Tutor.batNut(document.getElementById("whyBtn"), () => Tutor.moCauSai(q, cur, Q.lessonId || null));
+  }
 }
 
 /* --- Bảng câu hỏi (palette) --- */

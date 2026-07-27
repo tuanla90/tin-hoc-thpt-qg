@@ -68,6 +68,27 @@ CREATE TABLE IF NOT EXISTS gamify (
   data       JSONB NOT NULL DEFAULT '{}',
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+CREATE TABLE IF NOT EXISTS tutor_usage (
+  user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  ngay    DATE NOT NULL,
+  so_luot INT NOT NULL DEFAULT 0,
+  PRIMARY KEY (user_id, ngay)
+);
+
+CREATE TABLE IF NOT EXISTS tutor_log (
+  id          SERIAL PRIMARY KEY,
+  user_id     INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  profile_id  INT REFERENCES profiles(id) ON DELETE CASCADE,
+  kieu        TEXT NOT NULL DEFAULT 'lesson',
+  lesson_id   TEXT,
+  question_id TEXT,
+  cau_hoi     TEXT NOT NULL DEFAULT '',
+  tra_loi     TEXT NOT NULL DEFAULT '',
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS tutor_log_profile_idx ON tutor_log (profile_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS tutor_log_sai_idx ON tutor_log (question_id);
 `;
 
 /* Tạo pool từ DATABASE_URL (hoặc nhận pool ngoài — dùng cho test pg-mem). */

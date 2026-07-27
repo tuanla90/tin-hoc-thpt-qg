@@ -199,28 +199,47 @@ Ba tác dụng, xếp theo giá trị:
 - [x] Thẻ “Chỗ yếu của bạn” ở trang chủ + tab “Chỗ yếu” trong trang Luyện tập.
 - [x] Bộ câu ưu tiên ~60% câu đã từng làm sai.
 
-### Bước 1 — Máy chủ (nửa buổi)
-- [ ] `server/lessons.js`: nạp `LESSONS` từ `public/js/clean-*.js` bằng `vm`, dựng `Map` theo id.
-- [ ] `server/ai/{index,claude,gemini}.js`: lớp bọc nhà cung cấp, trả luồng chữ thống nhất.
-- [ ] `server/tutor.js`: `POST /api/tutor` — kiểm đăng nhập, kiểm hạn mức, dựng prompt, gọi AI, trả **stream**.
-- [ ] Biến môi trường trên Railway (bảng ở mục 3). Thiếu `AI_PROVIDER`/`AI_API_KEY` thì API trả 503 và nút gia sư tự ẩn.
-- [ ] Bảng `tutor_usage` (đếm lượt/ngày) + `tutor_log` (câu hỏi, câu trả lời, bài đang học, câu vừa sai).
+### ✅ Bước 1 — Máy chủ — XONG (29/07)
+- [x] `server/lessons.js`: nạp `LESSONS` + `QUESTION_BANK` bằng `vm` (DOM giả), dựng `Map` theo id. Nạp **lười** ở lần hỏi đầu, ~280 ms, 119 bài / 1851 câu.
+- [x] `server/ai/{index,claude,gemini}.js` + `sse.js` (bộ đọc SSE dùng chung) + `mock.js` (nhà cung cấp giả để chạy thử/test, không cần khoá, không tốn tiền).
+- [x] `server/tutor.js`: `POST /api/tutor` — kiểm đăng nhập → kiểm hạn mức → dựng ngữ cảnh ở máy chủ → gọi AI → trả **luồng NDJSON**; `GET /api/tutor/status` cho giao diện biết có bật AI không và còn mấy lượt.
+- [x] Biến môi trường (bảng ở mục 3), mẫu sẵn trong `.env.example`. Thiếu `AI_PROVIDER`/`AI_API_KEY` ⇒ `status` trả `{on:false}` và **nút gia sư tự gỡ khỏi trang**.
+- [x] Bảng `tutor_usage` (đếm lượt/ngày, khoá theo **tài khoản** chứ không theo hồ sơ) + `tutor_log` (câu hỏi, câu trả lời, bài, câu sai).
+- [x] `server/test/tutor.test.js`: 11 test với `AI_PROVIDER=mock` — rào chắn, hạn mức, cách ly tài khoản, ngữ cảnh dựng ở máy chủ.
 
-### Bước 2 — Giao diện trong bài học (nửa buổi)
-- [ ] `public/js/tutor.js`: bảng chat trượt từ phải, nút "Hỏi gia sư" trong `renderLesson`.
-- [ ] 3 câu hỏi gợi ý sẵn để người học đỡ ngại: "Giải thích lại mục này dễ hơn", "Cho tôi một ví dụ khác", "Phần này hay bị hỏi thế nào trong đề?".
-- [ ] Hiện câu trả lời theo kiểu gõ dần (stream), có nút dừng.
-- [ ] Chưa đăng nhập → mời đăng nhập; hết lượt → mời nâng cấp.
+### ✅ Bước 2 — Giao diện trong bài học — XONG (29/07)
+- [x] `public/js/tutor.js`: bảng chat trượt từ phải (nền mờ, đóng bằng Esc), nút "Hỏi gia sư" trong `renderLesson`.
+- [x] 3 câu hỏi gợi ý sẵn; sau mỗi câu trả lời hiện tiếp "Giải thích kỹ hơn" (dùng `AI_MODEL_DEEP`) và "Cho ví dụ dễ hình dung hơn".
+- [x] Chữ hiện dần theo luồng; nút gửi biến thành nút dừng khi đang chảy.
+- [x] Chưa đăng nhập → mời đăng nhập; hết lượt → báo số lượt và mời quay lại mai + gợi ý sang mục "Chỗ yếu".
+- [x] Bộ hiển thị markdown rút gọn (đậm, mã, gạch đầu dòng, khối code) — escape trước, không bao giờ nhét chữ thô vào `innerHTML`.
 
-### Bước 3 — "Vì sao tôi sai?" (nửa buổi)
-- [ ] Ở màn chấm câu (`renderExplain`), thêm nút mở gia sư với ngữ cảnh câu hỏi + đáp án + lời giải + bài nguồn.
+### ✅ Bước 3 — "Vì sao tôi sai?" — XONG (29/07)
+- [x] `renderExplain` thêm nút **"Vì sao tôi sai?"**, chỉ hiện khi làm SAI (làm đúng thì đừng chen ngang, và đỡ tốn lượt).
+- [x] Máy chủ tự tra câu hỏi trong `QUESTION_BANK` theo `questionId`, dựng ngữ cảnh gồm đề bài + các phương án + **đáp án đúng** + **lựa chọn của học sinh** + lời giải sẵn có, rồi yêu cầu AI chỉ ra chỗ hiểu nhầm chứ không nhắc lại đáp án.
+- [x] Ghi `tutor_log` với `kieu='wrong'` kèm `question_id` — đây chính là dữ liệu để rà câu nào cả trăm người cùng sai.
 
 ### Bước 4 — Gợi ý bài thực hành code (nửa buổi, làm sau)
 - [ ] Trong `clean-exercises.js`/`sql-run.js`, khi chấm sai 2 lần → hiện "Gợi ý từ gia sư" gửi kèm code người học và thông báo lỗi.
 
 ### Bước 5 — Vận hành
-- [ ] Chặn lạm dụng: giới hạn theo IP + theo tài khoản.
+- [x] Hạn mức theo **tài khoản** mỗi ngày (trừ lượt trước khi gọi AI, hoàn lại nếu nhà cung cấp lỗi ngay).
+- [ ] Thêm giới hạn theo IP (hiện mới có ở đăng nhập/đăng ký).
 - [ ] Xem log hằng tuần: câu hỏi nào lặp nhiều → **sửa luôn bài giảng cho rõ hơn**.
+
+### Bật thật trên Railway (khi có khoá)
+
+Đặt trong tab **Variables** của service web rồi Redeploy — không sửa mã:
+
+| Dùng Claude | Dùng Gemini |
+|---|---|
+| `AI_PROVIDER=claude` | `AI_PROVIDER=gemini` |
+| `AI_API_KEY=` khoá Anthropic | `AI_API_KEY=` khoá Google AI Studio |
+| `AI_MODEL=claude-haiku-4-5-20251001` | `AI_MODEL=gemini-2.5-flash` |
+| `AI_MODEL_DEEP=claude-sonnet-5` | `AI_MODEL_DEEP=gemini-2.5-pro` |
+
+Chạy thử ở máy mà không tốn tiền: đặt `AI_PROVIDER=mock` trong `.env` — gia sư
+trả lời sẵn một đoạn mẫu, đủ để xem giao diện, hạn mức và nhật ký chạy đúng.
 
 ## 7. Rủi ro và cách chặn
 
@@ -228,6 +247,7 @@ Ba tác dụng, xếp theo giá trị:
 |---|---|
 | Lộ khoá API | Chỉ gọi từ máy chủ; không bao giờ đưa khoá xuống client |
 | Bị lạm dụng làm chatbot miễn phí | Ngữ cảnh do máy chủ dựng; hạn mức theo tài khoản; bắt đăng nhập |
+| Bịa lịch sử hội thoại để lách luật | Client gửi được `history` nên **có thể bịa lượt "assistant"**. Chấp nhận có kiểm soát: luật hệ thống gửi lại mỗi lượt, lịch sử cắt còn 6 lượt × 2000 ký tự, vẫn trừ hạn mức và vẫn ghi log ⇒ thiệt hại tối đa là vài lượt/ngày và soi ra được ở `tutor_log` |
 | AI trả lời sai kiến thức | Ép chỉ dùng nội dung bài; nói rõ "chưa chắc thì bảo không biết"; ghi log để rà |
 | AI làm hộ bài tập | Prompt cấm; ở bài tập chỉ cho gợi ý, không cho đáp án |
 | Chi phí vượt dự tính | Hạn mức ngày + model rẻ mặc định + cắt độ dài ngữ cảnh |
