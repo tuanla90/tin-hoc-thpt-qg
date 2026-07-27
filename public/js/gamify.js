@@ -42,6 +42,7 @@
     ".gam-badge{background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:14px;text-align:center}" +
     ".gam-badge.locked{opacity:.5;filter:grayscale(1)}" +
     ".gam-badge-ic{font-size:38px;line-height:1;margin-bottom:6px}" +
+    ".gam-badge-img{width:96px;height:96px;object-fit:contain;display:block;margin:0 auto -4px}" +
     ".gam-badge b{display:block;font-size:14px;margin-bottom:3px}" +
     ".gam-badge small{color:var(--text-soft);font-size:12px;line-height:1.4;display:block}" +
     ".gam-badge .gam-badge-got{margin-top:7px;font-size:11.5px;color:var(--success);font-weight:700}" +
@@ -353,6 +354,17 @@ function gamTouchStreak() {
   else if (GAM.streak >= 2) gamXpFloat("🔥 Chuỗi " + GAM.streak + " buổi!");
 }
 
+/* --- Ảnh huy hiệu ---------------------------------------------------------
+   Nhóm "Học tập" đã có tranh linh vật riêng cho từng huy hiệu; các nhóm còn
+   lại vẫn dùng emoji cho tới khi có tranh. Ảnh hỏng thì tự quay về emoji. */
+var GAM_BADGE_ANH = ["first_lesson", "lessons_5", "lessons_10", "lessons_25", "lessons_50",
+  "lessons_75", "lessons_all", "tin10_done", "tin11_done", "tin12_done"];
+function gamBadgeIc(b) {
+  if (GAM_BADGE_ANH.indexOf(b.id) < 0) return b.ic;
+  return '<img class="gam-badge-img" src="asset/mascot/badges/' + b.id + '.png" alt="" ' +
+    "onerror=\"this.outerHTML='" + b.ic + "'\">";
+}
+
 /* --- Kiểm tra & mở huy hiệu mới --- */
 function gamCheckBadges() {
   var s = gamStats();
@@ -448,7 +460,7 @@ var Gam = {
       var cells = list.map(function (b) {
         var g = GAM.badges.indexOf(b.id) >= 0;
         return '<div class="gam-badge' + (g ? "" : " locked") + '">' +
-          '<div class="gam-badge-ic">' + b.ic + "</div>" +
+          '<div class="gam-badge-ic">' + gamBadgeIc(b) + "</div>" +
           "<b>" + esc(b.name) + "</b><small>" + esc(b.desc) + "</small>" +
           (g ? '<div class="gam-badge-got">✓ Đã đạt</div>' : "") +
           "</div>";

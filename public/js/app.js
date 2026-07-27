@@ -621,7 +621,7 @@ function renderLessons() {
       </div>
       <div class="path-hero-mascot">
         <div class="path-mascot-speech">Mở chặng để chiến thôi em! ⚔️</div>
-        <img src="asset/mascot/poses/celebrate-jump.png" alt="Robot Duolingo Quest" />
+        <img src="${mascotSrc("asset/mascot/poses/celebrate-jump.png")}" alt="Linh vật" />
       </div>
     </div>
 
@@ -1427,6 +1427,27 @@ function sampleByMatrix(type, dist, target, boc) {
 }
 
 /* ---------------------------------------------------------------------------
+ *  ẢNH LINH VẬT THEO GIỚI TÍNH CỦA HỒ SƠ
+ *  Bộ ảnh gốc là nhân vật nữ (asset/mascot/poses|scenes). Hồ sơ chọn giới tính
+ *  "nam" thì đổi sang bộ nam (asset/mascot/nam/...) — chỉ đổi những ảnh ĐÃ CÓ
+ *  bản nam, ảnh nào chưa có thì giữ nguyên để không bao giờ hiện ảnh vỡ.
+ * ------------------------------------------------------------------------- */
+const MASCOT_NAM = new Set([
+  "poses/celebrate-jump", "poses/cheer", "poses/confident", "poses/crying",
+  "poses/happy", "poses/love-heart", "poses/reading", "poses/sad",
+  "poses/shocked", "poses/standing", "poses/studying", "poses/thinking",
+  "poses/wink", "poses/worried",
+  "scenes/did-you-know", "scenes/explaining", "scenes/gesture",
+  "scenes/great-job", "scenes/thumbs-up", "scenes/wave",
+]);
+function mascotSrc(p) {
+  const gioi = (typeof State !== "undefined" && State.profile && State.profile.gender) || "";
+  if (gioi !== "nam" || !p) return p;
+  const rel = String(p).replace("asset/mascot/", "").replace(/\.png$/, "");
+  return MASCOT_NAM.has(rel) ? "asset/mascot/nam/" + rel + ".png" : p;
+}
+
+/* ---------------------------------------------------------------------------
  *  MASCOT DYNAMIC REACTION ENGINE (PHẢN ỨNG LINH VẬT SINH ĐỘNG NGẪU NHIÊN)
  * ------------------------------------------------------------------------- */
 const MASCOT_REACTIONS = {
@@ -1501,26 +1522,26 @@ function getRandomItem(arr) {
 
 function getMascotReaction(type, streak = 0) {
   if (streak >= 2 && (type === "correct" || type === "streak")) {
-    const pose = getRandomItem(MASCOT_REACTIONS.streakPoses);
+    const pose = mascotSrc(getRandomItem(MASCOT_REACTIONS.streakPoses));
     const msg = getRandomItem(MASCOT_REACTIONS.streakMessages).replace("{N}", streak);
     return { pose, msg, badge: `STREAK 🔥 ${streak}`, typeClass: "streak" };
   }
   if (type === "correct") {
-    const pose = getRandomItem(MASCOT_REACTIONS.happyPoses);
+    const pose = mascotSrc(getRandomItem(MASCOT_REACTIONS.happyPoses));
     const msg = getRandomItem(MASCOT_REACTIONS.happyMessages);
     return { pose, msg, badge: "CHÍNH XÁC ✨", typeClass: "correct" };
   }
   if (type === "wrong") {
-    const pose = getRandomItem(MASCOT_REACTIONS.sadPoses);
+    const pose = mascotSrc(getRandomItem(MASCOT_REACTIONS.sadPoses));
     const msg = getRandomItem(MASCOT_REACTIONS.sadMessages);
     return { pose, msg, badge: "THỬ LẠI 💪", typeClass: "wrong" };
   }
   if (type === "hint") {
-    const pose = getRandomItem(MASCOT_REACTIONS.hintPoses);
+    const pose = mascotSrc(getRandomItem(MASCOT_REACTIONS.hintPoses));
     const msg = getRandomItem(MASCOT_REACTIONS.hintMessages);
     return { pose, msg, badge: "GỢI Ý 💡", typeClass: "hint" };
   }
-  const pose = getRandomItem(MASCOT_REACTIONS.defaultPoses);
+  const pose = mascotSrc(getRandomItem(MASCOT_REACTIONS.defaultPoses));
   const msg = getRandomItem(MASCOT_REACTIONS.defaultMessages);
   return { pose, msg, badge: "ROBOT ÔN THI 🤖", typeClass: "default" };
 }
@@ -2109,7 +2130,7 @@ function initFloatingMascot() {
   container.className = "floating-mascot-container";
 
   const randomTip = FLOATING_TIPS[Math.floor(Math.random() * FLOATING_TIPS.length)];
-  const randomPose = FLOATING_POSES[Math.floor(Math.random() * FLOATING_POSES.length)];
+  const randomPose = mascotSrc(FLOATING_POSES[Math.floor(Math.random() * FLOATING_POSES.length)]);
 
   container.innerHTML = `
     <div class="floating-mascot-wrapper">
@@ -2185,7 +2206,7 @@ function mascotTip() {
   const badge = document.querySelector(".floating-mascot-badge");
   if (!text) return;
   text.textContent = FLOATING_TIPS[Math.floor(Math.random() * FLOATING_TIPS.length)];
-  if (img) img.src = FLOATING_POSES[Math.floor(Math.random() * FLOATING_POSES.length)];
+  if (img) img.src = mascotSrc(FLOATING_POSES[Math.floor(Math.random() * FLOATING_POSES.length)]);
   if (badge) badge.textContent = "ROBOT TRỢ LÝ";
   if (bubble) bubble.classList.remove("tone-correct", "tone-wrong", "tone-streak");
 }
