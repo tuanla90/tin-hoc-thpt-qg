@@ -4,6 +4,8 @@
  *  lớp, nhưng nhãn topic/grade trên câu vẫn là nhãn cũ. Lệch nhãn làm hỏng bộ
  *  lọc "Luyện tập theo chủ đề / theo lớp" và ma trận đề thi (ví dụ sinh ra ô
  *  "chủ đề C lớp 10" trong khi không có bài học nào như vậy).
+ *  Câu dùng chung nhiều bài thì lấy nhãn của bài SỚM NHẤT trong lộ trình
+ *  (bài đầu tiên người học gặp kiến thức đó).
  *  Vá ở đây thay vì sửa tệp nguồn, vì questions-vandung.js TỰ SINH ID theo
  *  topic + type lúc chạy — đổi topic trong tệp đó sẽ làm lệch toàn bộ ID.
  *  Nạp SAU mọi tệp câu hỏi và mọi tệp bài học.
@@ -397,6 +399,59 @@
  },
  "D-tf-10": {
   "grade": 10
+ },
+ "B-mc-6": {
+  "topic": "A",
+  "grade": 10
+ },
+ "B-mc-7": {
+  "topic": "A",
+  "grade": 10
+ },
+ "F-mc-6": {
+  "topic": "A"
+ },
+ "F-mc-12": {
+  "grade": 10
+ },
+ "F-mc-17": {
+  "grade": 10
+ },
+ "F-mc-18": {
+  "grade": 10
+ },
+ "F-tf-3": {
+  "grade": 10
+ },
+ "F-mc-39": {
+  "grade": 10
+ },
+ "F-mc-40": {
+  "grade": 10
+ },
+ "F-mc-43": {
+  "grade": 10
+ },
+ "F-mc-44": {
+  "grade": 10
+ },
+ "F-mc-59": {
+  "grade": 10
+ },
+ "F-mc-67": {
+  "grade": 10
+ },
+ "F-mc-69": {
+  "grade": 10
+ },
+ "F-tf-13": {
+  "grade": 10
+ },
+ "F-tf-14": {
+  "grade": 10
+ },
+ "C-mc-13": {
+  "topic": "B"
  }
 };
   QUESTION_BANK.forEach(function (q) {
