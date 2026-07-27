@@ -403,6 +403,46 @@ function markLearned(id, val) {
   if (val && !has && typeof Gam !== "undefined") Gam.onLessonDone(id);
 }
 
+/* Chương (nhóm bài) của từng lớp — dùng chung cho lộ trình và trang luyện tập. */
+const LESSON_CHAPTERS = {
+  20: [
+    { name: "Máy tính, dữ liệu và số hoá", from: 1, to: 7, color: "#2563eb" },
+    { name: "Mạng máy tính và Internet", from: 8, to: 10, color: "#0d9488" },
+    { name: "An toàn và đạo đức số", from: 11, to: 14, color: "#d97706" },
+    { name: "Thiết kế đồ hoạ", from: 15, to: 17, color: "#e11d48" },
+    { name: "Lập trình Python", from: 18, to: 33, color: "#4f46e5" },
+    { name: "Hướng nghiệp tin học", from: 34, to: 34, color: "#ea580c" },
+  ],
+  21: [
+    { name: "Máy tính và hệ điều hành", from: 1, to: 5, color: "#2563eb" },
+    { name: "Internet, lưu trữ và an toàn số", from: 6, to: 10, color: "#0d9488" },
+    { name: "Cơ sở dữ liệu và SQL", from: 11, to: 18, color: "#7c3aed" },
+    { name: "Kĩ thuật lập trình và thuật toán", from: 19, to: 32, color: "#4f46e5" },
+    { name: "Hướng nghiệp tin học", from: 33, to: 33, color: "#ea580c" },
+  ],
+  22: [
+    { name: "Trí tuệ nhân tạo", from: 1, to: 2, color: "#9333ea" },
+    { name: "Mạng máy tính", from: 3, to: 7, color: "#0d9488" },
+    { name: "Đạo đức và pháp luật số", from: 8, to: 8, color: "#d97706" },
+    { name: "Thiết kế web (HTML và CSS)", from: 9, to: 19, color: "#e11d48" },
+    { name: "Hướng nghiệp công nghệ thông tin", from: 20, to: 20, color: "#ea580c" },
+    { name: "Học máy, Khoa học dữ liệu, Mô phỏng", from: 21, to: 30, color: "#9333ea" },
+  ],
+  23: [
+    { name: "Thực hành cơ sở dữ liệu", from: 1, to: 8, color: "#7c3aed" },
+    { name: "Chỉnh sửa ảnh và làm phim", from: 9, to: 15, color: "#e11d48" },
+  ],
+  24: [
+    { name: "Kết nối thiết bị số", from: 1, to: 1, color: "#0d9488" },
+    { name: "Dự án xây dựng trang web", from: 2, to: 7, color: "#e11d48" },
+  ],
+};
+function chapterOfLesson(l) {
+  var ds = LESSON_CHAPTERS[l.stage] || [];
+  return ds.find(function (c) { return l.order >= c.from && l.order <= c.to; })
+    || { name: "", color: "var(--primary)" };
+}
+
 function renderLessons() {
   injectPathCss();
   // Dùng chung trạng thái với trang chủ (xem pathState) để không nói khác nhau
@@ -410,44 +450,8 @@ function renderLessons() {
   const doneCount = learned.filter(Boolean).length;
   const pct = Math.round((doneCount / sorted.length) * 100);
 
-  // Chương (chủ đề) của từng lớp — chia nhỏ lộ trình cho dễ theo dõi
-  const CHAPTERS = {
-    20: [
-      { name: "Máy tính, dữ liệu và số hoá", from: 1, to: 7, color: "#2563eb" },
-      { name: "Mạng máy tính và Internet", from: 8, to: 10, color: "#0d9488" },
-      { name: "An toàn và đạo đức số", from: 11, to: 14, color: "#d97706" },
-      { name: "Thiết kế đồ hoạ", from: 15, to: 17, color: "#e11d48" },
-      { name: "Lập trình Python", from: 18, to: 33, color: "#4f46e5" },
-      { name: "Hướng nghiệp tin học", from: 34, to: 34, color: "#ea580c" },
-    ],
-    21: [
-      { name: "Máy tính và hệ điều hành", from: 1, to: 5, color: "#2563eb" },
-      { name: "Internet, lưu trữ và an toàn số", from: 6, to: 10, color: "#0d9488" },
-      { name: "Cơ sở dữ liệu và SQL", from: 11, to: 18, color: "#7c3aed" },
-      { name: "Kĩ thuật lập trình và thuật toán", from: 19, to: 32, color: "#4f46e5" },
-      { name: "Hướng nghiệp tin học", from: 33, to: 33, color: "#ea580c" },
-    ],
-    22: [
-      { name: "Trí tuệ nhân tạo", from: 1, to: 2, color: "#9333ea" },
-      { name: "Mạng máy tính", from: 3, to: 7, color: "#0d9488" },
-      { name: "Đạo đức và pháp luật số", from: 8, to: 8, color: "#d97706" },
-      { name: "Thiết kế web (HTML và CSS)", from: 9, to: 19, color: "#e11d48" },
-      { name: "Hướng nghiệp công nghệ thông tin", from: 20, to: 20, color: "#ea580c" },
-      { name: "Học máy, Khoa học dữ liệu, Mô phỏng", from: 21, to: 30, color: "#9333ea" },
-    ],
-    23: [
-      { name: "Thực hành cơ sở dữ liệu", from: 1, to: 8, color: "#7c3aed" },
-      { name: "Chỉnh sửa ảnh và làm phim", from: 9, to: 15, color: "#e11d48" },
-    ],
-    24: [
-      { name: "Kết nối thiết bị số", from: 1, to: 1, color: "#0d9488" },
-      { name: "Dự án xây dựng trang web", from: 2, to: 7, color: "#e11d48" },
-    ],
-  };
-  const chapterOf = (l) => {
-    const list = CHAPTERS[l.stage] || [];
-    return list.find((c) => l.order >= c.from && l.order <= c.to) || { name: "", color: "var(--primary)" };
-  };
+  const CHAPTERS = LESSON_CHAPTERS;
+  const chapterOf = chapterOfLesson;
 
   // Điểm luyện tập tốt nhất theo từng bài (để tính sao mastery)
   const scoreByLesson = {};
@@ -1049,10 +1053,18 @@ function attachRunButtons(container) {
 /* ===========================================================================
  *  THIẾT LẬP LUYỆN TẬP
  * ========================================================================= */
-const setupCfg = { topic: "all", grade: "all", type: "all", level: "all", lesson: "all", count: 10, _gradeSynced: false };
+/* Luyện tập chia 4 cách chọn, mỗi cách một tab — người học biết ngay mình đang
+   ôn phạm vi nào thay vì phải tự ghép các bộ lọc rời rạc. */
+const PRACTICE_TABS = [
+  { id: "bai", nhan: "Theo bài", ic: "book", mo: "Ôn đúng một bài — hợp khi vừa học xong bài đó." },
+  { id: "chuong", nhan: "Theo chương", ic: "layers", mo: "Ôn trọn một chương — hợp khi kiểm tra 1 tiết." },
+  { id: "chude", nhan: "Theo chủ đề", ic: "target", mo: "Ôn một mạch kiến thức xuyên suốt các lớp — hợp khi luyện thi tốt nghiệp." },
+  { id: "lop", nhan: "Theo lớp", ic: "cap", mo: "Ôn tổng hợp cả một lớp — hợp khi thi học kì." },
+];
+const setupCfg = { tab: "chude", topic: "all", grade: "all", type: "all", level: "all", lesson: "all", chapter: "", chapterStage: 0, count: 10, _gradeSynced: false };
 
 function renderPracticeSetup(data) {
-  if (data && data.topic) setupCfg.topic = data.topic;
+  if (data && data.topic) { setupCfg.tab = "chude"; setupCfg.topic = data.topic; }
   // Lần đầu vào luyện tập trong phiên: mặc định lọc theo lớp trong hồ sơ (nếu có)
   if (!setupCfg._gradeSynced) {
     const pg = (State.profile && State.profile.grade) || "";
@@ -1060,45 +1072,106 @@ function renderPracticeSetup(data) {
     setupCfg._gradeSynced = true;
   }
 
-  const topicChips = [["all", "Tất cả"]].concat(Object.entries(TOPICS).map(([c, n]) => [c, `${c}. ${n}`]));
-  const gradeChips = [["all", "Tất cả"], ["10", "Lớp 10"], ["11", "Lớp 11"], ["12", "Lớp 12"]];
+  const tab = setupCfg.tab;
+  const chip = (val, label, cur, group, extra) =>
+    `<button class="chip ${val === cur ? "active" : ""}" data-group="${group}" data-val="${esc(val)}">${esc(label)}${extra ? ` <small>${esc(extra)}</small>` : ""}</button>`;
+
   const typeChips = [["all", "Tất cả"], ["mc", "Trắc nghiệm"], ["tf", "Đúng/Sai"], ["sa", "Trả lời ngắn"]];
   const levelChips = [["all", "Tất cả"], ["easy", "Nhận biết"], ["medium", "Thông hiểu"], ["hard", "Vận dụng"]];
+  const gradeChips = [["10", "Lớp 10"], ["11", "Lớp 11"], ["12", "Lớp 12"]];
 
-  const chip = (val, label, cur, group) =>
-    `<button class="chip ${val === cur ? "active" : ""}" data-group="${group}" data-val="${val}">${esc(label)}</button>`;
+  /* Đếm nhanh số câu của một tổ hợp, để người học biết trước chỗ nào dày/mỏng */
+  const demTheo = (fn) => QUESTION_BANK.filter(fn).length;
 
-  /* Danh sách bài để "ôn đúng một bài", gom nhóm theo lớp; chỉ hiện bài hợp hồ sơ */
-  const theoBai = setupCfg.lesson !== "all";
-  const nhomBai = {};
-  LESSONS.filter(visibleForProfile).sort((a, b) => a.stage - b.stage || a.order - b.order)
-    .forEach((l) => { (nhomBai[l.stage] = nhomBai[l.stage] || []).push(l); });
-  const lessonOpts = Object.keys(nhomBai).map((st) =>
-    `<optgroup label="${esc(STAGES[st] || "Lớp " + st)}">` +
-    nhomBai[st].map((l) => `<option value="${esc(l.id)}" ${l.id === setupCfg.lesson ? "selected" : ""}>Bài ${l.order}. ${esc(l.title)} (${(l.quiz || []).length} câu)</option>`).join("") +
-    "</optgroup>").join("");
+  /* ---------- thanh tab ---------- */
+  const tabsHtml = PRACTICE_TABS.map((t) =>
+    `<button class="ptab ${t.id === tab ? "active" : ""}" data-tab="${t.id}">${aIco(t.ic, null, 15)} ${esc(t.nhan)}</button>`
+  ).join("");
+  const moTaTab = (PRACTICE_TABS.find((t) => t.id === tab) || {}).mo || "";
+
+  /* ---------- phần chọn chính, tuỳ theo tab ---------- */
+  const baiHienThi = LESSONS.filter(visibleForProfile).sort((a, b) => a.stage - b.stage || a.order - b.order);
+  let phanChinh = "";
+
+  if (tab === "bai") {
+    const nhom = {};
+    baiHienThi.forEach((l) => { (nhom[l.stage] = nhom[l.stage] || []).push(l); });
+    const opts = Object.keys(nhom).map((st) =>
+      `<optgroup label="${esc(STAGES[st] || "Lớp " + st)}">` +
+      nhom[st].map((l) => `<option value="${esc(l.id)}" ${l.id === setupCfg.lesson ? "selected" : ""}>Bài ${l.order}. ${esc(l.title)} (${(l.quiz || []).length} câu)</option>`).join("") +
+      "</optgroup>").join("");
+    phanChinh = `
+      <div class="config-row">
+        <label>Chọn bài</label>
+        <div class="chip-group"><select id="lessonSel" style="max-width:100%">
+          <option value="all">— Chưa chọn bài —</option>${opts}
+        </select></div>
+      </div>`;
+
+  } else if (tab === "chuong") {
+    const stage = setupCfg.chapterStage || (baiHienThi[0] && baiHienThi[0].stage) || 20;
+    const stages = [...new Set(baiHienThi.map((l) => l.stage))];
+    const chuongCua = (st) => (LESSON_CHAPTERS[st] || []).map((c, i) => {
+      const ids = new Set(baiHienThi.filter((l) => l.stage === Number(st) && l.order >= c.from && l.order <= c.to).flatMap((l) => l.quiz || []));
+      return { key: st + "|" + i, name: c.name, so: ids.size };
+    });
+    phanChinh = `
+      <div class="config-row">
+        <label>Lớp</label>
+        <div class="chip-group">${stages.map((st) => chip(String(st), STAGES[st] || ("Lớp " + st), String(stage), "chapterStage")).join("")}</div>
+      </div>
+      <div class="config-row">
+        <label>Chương</label>
+        <div class="chip-group">${chuongCua(stage).map((c) => chip(c.key, c.name, setupCfg.chapter, "chapter", c.so + " câu")).join("")}</div>
+      </div>`;
+
+  } else if (tab === "chude") {
+    const gradeNote = setupCfg.grade === "all" ? "" : ` trong lớp ${setupCfg.grade}`;
+    const tChips = [["all", "Tất cả"]].concat(Object.entries(TOPICS).map(([c, n]) => [c, `${c}. ${n}`]));
+    phanChinh = `
+      <div class="config-row">
+        <label>Lớp</label>
+        <div class="chip-group">${[["all", "Cả ba lớp"]].concat(gradeChips).map(([v, l]) =>
+          chip(v, l, setupCfg.grade, "grade", v === "all" ? "" : demTheo((q) => String(q.grade) === v) + " câu")).join("")}</div>
+      </div>
+      <div class="config-row">
+        <label>Chủ đề${gradeNote}</label>
+        <div class="chip-group">${tChips.map(([v, l]) => {
+          const so = v === "all" ? 0 : demTheo((q) => q.topic === v && (setupCfg.grade === "all" || String(q.grade) === setupCfg.grade));
+          const rong = v !== "all" && so === 0;
+          return `<button class="chip ${v === setupCfg.topic ? "active" : ""}" data-group="topic" data-val="${v}" ${rong ? "disabled title='Lớp này không có câu hỏi thuộc chủ đề đó'" : ""}>${esc(l)}${v === "all" ? "" : ` <small>${so} câu</small>`}</button>`;
+        }).join("")}</div>
+      </div>`;
+
+  } else { /* tab === "lop" */
+    phanChinh = `
+      <div class="config-row">
+        <label>Lớp</label>
+        <div class="chip-group">${gradeChips.map(([v, l]) =>
+          chip(v, l, setupCfg.grade === "all" ? "" : setupCfg.grade, "grade", demTheo((q) => String(q.grade) === v) + " câu")).join("")}</div>
+      </div>
+      <div class="config-row">
+        <label>Bộ đề</label>
+        <div class="chip-group">${[[10, "Kiểm tra 15 phút"], [20, "Kiểm tra 1 tiết"], [40, "Ôn thi học kì"]].map(([n, l]) =>
+          chip(String(n), l, String(setupCfg.count), "count", n + " câu")).join("")}</div>
+      </div>`;
+  }
+
+  const soCauChon = tab === "lop" ? "" : `
+      <div class="config-row">
+        <label>Số câu tối đa</label>
+        <div class="chip-group"><select id="countSel">
+          ${[5, 10, 15, 20, 30, 50].map((n) => `<option value="${n}" ${n === setupCfg.count ? "selected" : ""}>${n} câu</option>`).join("")}
+        </select></div>
+      </div>`;
 
   app.innerHTML = `
     <button class="back-link" id="back">${aIco("aleft", null, 15)} Về trang chủ</button>
-    <h2 style="margin-bottom:18px">${aIco("target", "#ef4444", 22)} Luyện tập theo chủ đề</h2>
+    <h2 style="margin-bottom:6px">${aIco("target", "#ef4444", 22)} Luyện tập</h2>
+    <div class="ptabs">${tabsHtml}</div>
+    <p style="color:var(--text-soft);font-size:13.5px;margin:0 0 14px">${esc(moTaTab)}</p>
     <div class="config-card">
-      <div class="config-row">
-        <label>Ôn theo bài</label>
-        <div class="chip-group">
-          <select id="lessonSel" style="max-width:100%">
-            <option value="all">— Không chọn bài (lọc theo chủ đề bên dưới) —</option>
-            ${lessonOpts}
-          </select>
-        </div>
-      </div>
-      <div class="config-row" id="rowTopic" ${theoBai ? 'style="opacity:.45;pointer-events:none"' : ""}>
-        <label>Chủ đề</label>
-        <div class="chip-group">${topicChips.map(([v, l]) => chip(v, l, setupCfg.topic, "topic")).join("")}</div>
-      </div>
-      <div class="config-row" id="rowGrade" ${theoBai ? 'style="opacity:.45;pointer-events:none"' : ""}>
-        <label>Lớp</label>
-        <div class="chip-group">${gradeChips.map(([v, l]) => chip(v, l, setupCfg.grade, "grade")).join("")}</div>
-      </div>
+      ${phanChinh}
       <div class="config-row">
         <label>Dạng câu hỏi</label>
         <div class="chip-group">${typeChips.map(([v, l]) => chip(v, l, setupCfg.type, "type")).join("")}</div>
@@ -1107,64 +1180,99 @@ function renderPracticeSetup(data) {
         <label>Mức độ</label>
         <div class="chip-group">${levelChips.map(([v, l]) => chip(v, l, setupCfg.level, "level")).join("")}</div>
       </div>
-      <div class="config-row">
-        <label>Số câu tối đa</label>
-        <div class="chip-group">
-          <select id="countSel">
-            ${[5, 10, 15, 20, 30, 50].map((n) => `<option value="${n}" ${n === setupCfg.count ? "selected" : ""}>${n} câu</option>`).join("")}
-          </select>
-        </div>
-      </div>
+      ${soCauChon}
       <div class="config-row" style="justify-content:space-between">
         <span id="availMsg" style="color:var(--text-soft);font-size:13.5px"></span>
         <button class="btn btn-primary btn-lg" id="startPractice">Bắt đầu luyện ${aIco("aright", null, 15)}</button>
       </div>
     </div>
-    <p style="color:var(--text-soft);font-size:13.5px">${aIco("bulb", "#d97706", 14)} Ở chế độ luyện tập, bạn sẽ thấy ngay đáp án đúng và lời giải sau khi trả lời mỗi câu.</p>
+    <p style="color:var(--text-soft);font-size:13.5px">${aIco("bulb", "#d97706", 14)} Ở chế độ luyện tập, bạn thấy ngay đáp án đúng và lời giải sau khi trả lời mỗi câu.</p>
   `;
 
   const updateAvail = () => {
     const pool = filterPool();
-    const bai = theoBai ? LESSONS.find((x) => x.id === setupCfg.lesson) : null;
-    document.getElementById("availMsg").textContent = bai
-      ? `Bài "${bai.title}" có ${pool.length} câu phù hợp.`
-      : `Có ${pool.length} câu phù hợp với lựa chọn của bạn.`;
+    const el = document.getElementById("availMsg");
+    const nguon = practiceNguon();
+    el.textContent = pool.length
+      ? `${nguon}: có ${pool.length} câu phù hợp — sẽ lấy ${Math.min(setupCfg.count, pool.length)} câu.`
+      : `${nguon}: chưa có câu nào khớp, hãy nới bộ lọc bên trên.`;
     document.getElementById("startPractice").disabled = pool.length === 0;
   };
 
-  app.querySelectorAll(".chip").forEach((b) => b.onclick = () => {
-    setupCfg[b.dataset.group] = b.dataset.val;
-    app.querySelectorAll(`.chip[data-group="${b.dataset.group}"]`).forEach((x) => x.classList.remove("active"));
+  app.querySelectorAll(".ptab").forEach((b) => b.onclick = () => {
+    setupCfg.tab = b.dataset.tab;
+    if (setupCfg.tab === "lop" && setupCfg.grade === "all") setupCfg.grade = (State.profile && State.profile.grade) || "12";
+    renderPracticeSetup();
+  });
+  app.querySelectorAll(".chip[data-group]").forEach((b) => b.onclick = () => {
+    const g = b.dataset.group;
+    setupCfg[g] = g === "count" ? Number(b.dataset.val) : b.dataset.val;
+    // đổi lớp/chương thì phải vẽ lại vì danh sách phụ thuộc lẫn nhau
+    if (g === "grade" || g === "chapterStage" || g === "count") return renderPracticeSetup();
+    app.querySelectorAll(`.chip[data-group="${g}"]`).forEach((x) => x.classList.remove("active"));
     b.classList.add("active");
     updateAvail();
   });
-  document.getElementById("countSel").onchange = (e) => { setupCfg.count = +e.target.value; updateAvail(); };
-  document.getElementById("lessonSel").onchange = (e) => {
-    setupCfg.lesson = e.target.value;
-    renderPracticeSetup();   // vẽ lại để mờ/bật lại hai hàng Chủ đề và Lớp
-  };
+  const cs = document.getElementById("countSel");
+  if (cs) cs.onchange = (e) => { setupCfg.count = +e.target.value; updateAvail(); };
+  const ls = document.getElementById("lessonSel");
+  if (ls) ls.onchange = (e) => { setupCfg.lesson = e.target.value; updateAvail(); };
   document.getElementById("back").onclick = () => go("home");
   document.getElementById("startPractice").onclick = startPractice;
   updateAvail();
 }
 
+/* Mô tả nguồn câu hỏi đang chọn — dùng cho dòng thông báo và tên bài luyện */
+function practiceNguon() {
+  if (setupCfg.tab === "bai") {
+    const l = LESSONS.find((x) => x.id === setupCfg.lesson);
+    return l ? `Bài ${l.order}. ${l.title}` : "Chưa chọn bài";
+  }
+  if (setupCfg.tab === "chuong") {
+    const c = chuongDangChon();
+    return c ? c.name : "Chưa chọn chương";
+  }
+  if (setupCfg.tab === "lop") return "Lớp " + (setupCfg.grade === "all" ? "—" : setupCfg.grade);
+  const t = setupCfg.topic === "all" ? "Tất cả chủ đề" : `${setupCfg.topic}. ${TOPICS[setupCfg.topic]}`;
+  return t + (setupCfg.grade === "all" ? "" : " · lớp " + setupCfg.grade);
+}
+
+/* Chương đang chọn ở tab "theo chương" -> { name, ids } */
+function chuongDangChon() {
+  const key = setupCfg.chapter || "";
+  const [st, i] = key.split("|");
+  const ds = LESSON_CHAPTERS[st];
+  const c = ds && ds[Number(i)];
+  if (!c) return null;
+  const ids = new Set(LESSONS.filter((l) => l.stage === Number(st) && l.order >= c.from && l.order <= c.to)
+    .flatMap((l) => l.quiz || []));
+  return { name: c.name, ids };
+}
+
+
 function filterPool() {
-  /* Chọn một bài cụ thể -> chỉ lấy câu hỏi của bài đó (bài đã quy định chủ đề và
-     lớp rồi, nên chỉ áp thêm bộ lọc dạng câu và mức độ). */
-  if (setupCfg.lesson !== "all") {
+  /* Dạng câu và mức độ áp cho mọi cách chọn; phạm vi thì tuỳ tab. */
+  const phu = (q) =>
+    (setupCfg.type === "all" || q.type === setupCfg.type) &&
+    (setupCfg.level === "all" || q.level === setupCfg.level);
+
+  if (setupCfg.tab === "bai") {
+    // Bài đã quy định sẵn chủ đề và lớp nên không lọc thêm hai thứ đó
     const l = LESSONS.find((x) => x.id === setupCfg.lesson);
     const ids = new Set((l && l.quiz) || []);
-    return QUESTION_BANK.filter((q) =>
-      ids.has(q.id) &&
-      (setupCfg.type === "all" || q.type === setupCfg.type) &&
-      (setupCfg.level === "all" || q.level === setupCfg.level)
-    );
+    return ids.size ? QUESTION_BANK.filter((q) => ids.has(q.id) && phu(q)) : [];
+  }
+  if (setupCfg.tab === "chuong") {
+    const c = chuongDangChon();
+    return c ? QUESTION_BANK.filter((q) => c.ids.has(q.id) && phu(q)) : [];
+  }
+  if (setupCfg.tab === "lop") {
+    return setupCfg.grade === "all" ? [] : QUESTION_BANK.filter((q) => String(q.grade) === setupCfg.grade && phu(q));
   }
   return QUESTION_BANK.filter((q) =>
     (setupCfg.topic === "all" || q.topic === setupCfg.topic) &&
     (setupCfg.grade === "all" || String(q.grade) === setupCfg.grade) &&
-    (setupCfg.type === "all" || q.type === setupCfg.type) &&
-    (setupCfg.level === "all" || q.level === setupCfg.level)
+    phu(q)
   );
 }
 
@@ -1196,13 +1304,11 @@ function startPractice() {
   if (!pool.length) return;
   const qs = pick(pool, Math.min(setupCfg.count, pool.length));
   // Ôn đúng một bài -> ghi lessonId để tính sao thành thạo cho bài đó
-  const bai = setupCfg.lesson !== "all" ? LESSONS.find((x) => x.id === setupCfg.lesson) : null;
-  if (bai) {
-    State.quiz = newQuiz(qs, "practice", { title: `Luyện tập: ${bai.title}`, lessonId: bai.id });
-  } else {
-    const tName = setupCfg.topic === "all" ? "Tổng hợp" : TOPICS[setupCfg.topic];
-    State.quiz = newQuiz(qs, "practice", { title: `Luyện tập: ${tName}` });
-  }
+  const bai = setupCfg.tab === "bai" ? LESSONS.find((x) => x.id === setupCfg.lesson) : null;
+  State.quiz = newQuiz(qs, "practice", {
+    title: "Luyện tập: " + practiceNguon(),
+    lessonId: bai ? bai.id : null,
+  });
   go("quiz");
 }
 
