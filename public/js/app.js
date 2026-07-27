@@ -208,6 +208,12 @@ function go(view, data) {
   else location.hash = h;                       // khác hash -> hashchange -> renderFromHash
 }
 
+/* Render lại CÙNG màn hình mà KHÔNG nhảy lên đầu trang.
+   Dùng khi người học đang nhìn giữa trang (bấm "Kiểm tra" ở cuối câu hỏi dài):
+   cuộn lên đầu chỉ đúng khi CHUYỂN màn, còn làm mới tại chỗ thì phải giữ chỗ đọc. */
+let keepScrollOnce = false;
+function goStay(view, data) { keepScrollOnce = true; go(view, data); }
+
 /* Đọc hash rồi render. Cả nút trong app lẫn Back/Forward đều đi qua đây. */
 function renderFromHash() {
   const parsed = parseHash();
@@ -218,8 +224,13 @@ function renderFromHash() {
   if (view === "quiz" && !(typeof State !== "undefined" && State.quiz)) { go("home"); return; }
   if (view === "result" && !d) { go("history"); return; }
   State.view = view;
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  const keepScroll = keepScrollOnce;
+  keepScrollOnce = false;
+  const prevY = window.scrollY;
+  if (!keepScroll) window.scrollTo({ top: 0, behavior: "smooth" });
   (viewRenderer(view))(d);
+  // Đặt lại sau khi DOM mới dựng xong (thay innerHTML có thể làm trang co lại -> tụt cuộn).
+  if (keepScroll) window.scrollTo(0, prevY);
 }
 
 window.addEventListener("hashchange", renderFromHash);
@@ -1373,10 +1384,17 @@ function renderQuiz() {
   const byId = (id) => document.getElementById(id);
   byId("prevBtn") && (byId("prevBtn").onclick = () => { Q.index--; go("quiz"); });
   byId("nextBtn") && (byId("nextBtn").onclick = () => { Q.index++; go("quiz"); });
-  byId("flagBtn").onclick = () => { Q.flags[Q.index] = !Q.flags[Q.index]; go("quiz"); };
-  byId("checkBtn") && (byId("checkBtn").onclick = () => { 
+  byId("flagBtn").onclick = () => {
+    // Cập nhật tại chỗ: đổi đánh dấu không cần dựng lại cả màn (tránh nhảy trang).
+    Q.flags[Q.index] = !Q.flags[Q.index];
+    const fb = byId("flagBtn");
+    fb.classList.toggle("on", Q.flags[Q.index]);
+    fb.innerHTML = `${aIco("flag", null, 14)} ${Q.flags[Q.index] ? "Bỏ đánh dấu" : "Đánh dấu"}`;
+    renderPalette();
+  };
+  byId("checkBtn") && (byId("checkBtn").onclick = () => {
     Q.revealed[Q.index] = true;
-    go("quiz"); 
+    goStay("quiz");   // hiện lời giải ngay dưới câu hỏi, giữ nguyên chỗ đang đọc
   });
   byId("submitBtn") && (byId("submitBtn").onclick = trySubmit);
   byId("quitBtn").onclick = async () => {
@@ -1405,8 +1423,12 @@ function renderAnswerArea(q, revealed) {
       const key = String.fromCharCode(65 + i);
       return `<div class="${cls}" data-i="${i}"><span class="opt-key">${key}</span><span>${esc(opt)}</span></div>`;
     }).join("") + `</div>`;
+    /* Chọn đáp án chỉ đổi trạng thái 1 ô -> tô lại tại chỗ thay vì dựng lại cả
+       màn hình (dựng lại sẽ kéo trang về đầu, mất chỗ đang đọc). */
     if (!locked) area.querySelectorAll(".option").forEach((o) => o.onclick = () => {
-      Q.answers[Q.index] = +o.dataset.i; go("quiz");
+      Q.answers[Q.index] = +o.dataset.i;
+      area.querySelectorAll(".option").forEach((x) => x.classList.toggle("selected", x === o));
+      renderPalette();
     });
 
   } else if (q.type === "tf") {
@@ -1434,7 +1456,11 @@ function renderAnswerArea(q, revealed) {
     if (!locked) area.querySelectorAll(".tf-choices").forEach((grp) => {
       const i = +grp.dataset.i;
       grp.querySelectorAll("button").forEach((b) => b.onclick = () => {
-        Q.answers[Q.index][i] = b.dataset.v === "true"; go("quiz");
+        const v = b.dataset.v === "true";
+        Q.answers[Q.index][i] = v;
+        grp.querySelector('[data-v="true"]').classList.toggle("sel-true", v);
+        grp.querySelector('[data-v="false"]').classList.toggle("sel-false", !v);
+        renderPalette();
       });
     });
 
