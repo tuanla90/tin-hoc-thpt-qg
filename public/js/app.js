@@ -424,8 +424,8 @@ function renderLessons() {
       { name: "Máy tính và hệ điều hành", from: 1, to: 5, color: "#2563eb" },
       { name: "Internet, lưu trữ và an toàn số", from: 6, to: 10, color: "#0d9488" },
       { name: "Cơ sở dữ liệu và SQL", from: 11, to: 18, color: "#7c3aed" },
-      { name: "Kĩ thuật lập trình và thuật toán", from: 19, to: 30, color: "#4f46e5" },
-      { name: "Hướng nghiệp tin học", from: 31, to: 31, color: "#ea580c" },
+      { name: "Kĩ thuật lập trình và thuật toán", from: 19, to: 32, color: "#4f46e5" },
+      { name: "Hướng nghiệp tin học", from: 33, to: 33, color: "#ea580c" },
     ],
     22: [
       { name: "Trí tuệ nhân tạo", from: 1, to: 2, color: "#9333ea" },

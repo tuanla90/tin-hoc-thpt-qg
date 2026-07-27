@@ -88,6 +88,8 @@
     "C12-26": ["cssdisplay","csswidth","cssheight","htmldiv"],
     "C12-28": ["datascience","bigdata"],
     "C12-29": ["datascience"],
-    "C12-30": ["simulation"]
+    "C12-30": ["simulation"],
+    "C11-32": ["stack","queue","lifo","fifo","push","pop"],
+    "C11-33": ["bruteforce","divideandconquer","greedy","dynamicprogramming","memoization","mergesort"]
   });
 })();

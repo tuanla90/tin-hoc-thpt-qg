@@ -24,10 +24,13 @@ mà còn đẩy **104 câu hỏi** vào ngân hàng → xoá tệp là mất câ
 `questions-vandung.js` **tự đánh số ID lúc chạy** theo ngân hàng hiện có; đổi
 thứ tự nạp sẽ làm lệch toàn bộ ID và hỏng mọi `quiz` trỏ tới chúng.
 
-**Còn nợ (không gấp):** chương trình chưa có bài nào dạy **ngăn xếp/hàng đợi**
-và **kĩ thuật thiết kế thuật toán** (tham lam, vét cạn, quy hoạch động) — 7 câu
-hỏi thuộc 2 mảng này đang gắn tạm vào bài gần nhất. Cả hai đều thuộc chuyên đề
-nâng cao, không thi tốt nghiệp.
+**✅ Đã lấp 2 lỗ hổng nội dung (27/07/2026):** thêm **C11-32 "Ngăn xếp và hàng
+đợi"** và **C11-33 "Các kĩ thuật thiết kế thuật toán"** (vét cạn, chia để trị,
+tham lam, quy hoạch động) vào chương "Kĩ thuật lập trình và thuật toán" — mỗi
+bài 14 mục, 3 ví dụ code chạy được, 8 câu hỏi mới, 6 từ vựng. 9 câu hỏi vốn
+đứng nhầm chỗ (ngăn xếp/hàng đợi nằm ở bài mảng một chiều; tham lam/vét cạn/quy
+hoạch động rải ở bài tìm kiếm, sắp xếp, độ phức tạp) đã chuyển về đúng bài.
+Nay **119 bài · 1 703 câu · 225 thuật ngữ**.
 
 ---
 

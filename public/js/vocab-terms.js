@@ -1,5 +1,5 @@
 /* ============================================================================
- *  TỪ ĐIỂN THUẬT NGỮ TIẾNG ANH — 215 từ.
+ *  TỪ ĐIỂN THUẬT NGỮ TIẾNG ANH — 225 từ.
  *  Mỗi từ: { en, say (phiên âm kiểu Việt), vi (nghĩa), gloss (giải thích đời thường) }.
  *  Tệp sinh tự động khi gộp 2 chương trình (gộp vocab-terms + vocab-data + vocab-tin12).
  *  Nạp SAU vocab.js, TRƯỚC vocab-lessons.js.
@@ -1320,6 +1320,66 @@ var VOCAB_TERMS = {
   "speak": "hover",
   "vi": "khi rê chuột lên",
   "gloss": "Trạng thái CSS khi con trỏ chuột rê lên một thứ gì đó. Ví dụ nút đổi màu khi ta rê chuột lên nó."
+ },
+ "lifo": {
+  "en": "LIFO (Last In, First Out)",
+  "say": "lai-phâu",
+  "vi": "vào sau ra trước",
+  "gloss": "Luật hoạt động của ngăn xếp: thứ được bỏ vào sau cùng lại là thứ được lấy ra đầu tiên. Nút Hoàn tác trong phần mềm soạn thảo chạy theo luật này."
+ },
+ "fifo": {
+  "en": "FIFO (First In, First Out)",
+  "say": "phai-phâu",
+  "vi": "vào trước ra trước",
+  "gloss": "Luật hoạt động của hàng đợi: thứ vào trước thì ra trước. Hàng chờ in ấn hay hàng mua vé đều xử lí theo luật công bằng này."
+ },
+ "push": {
+  "en": "push",
+  "say": "pút",
+  "vi": "đẩy vào đỉnh",
+  "gloss": "Thao tác thêm một phần tử lên đỉnh ngăn xếp. Trong Python, `append()` của danh sách làm đúng việc này."
+ },
+ "pop": {
+  "en": "pop",
+  "say": "pốp",
+  "vi": "nhấc ra khỏi đỉnh",
+  "gloss": "Thao tác lấy phần tử ở đỉnh ngăn xếp ra và trả về giá trị của nó. Trong Python là `pop()`; nếu viết `pop(0)` thì lại lấy phần tử đầu, dùng cho hàng đợi."
+ },
+ "bruteforce": {
+  "en": "brute force",
+  "say": "brút phoóc",
+  "vi": "vét cạn",
+  "gloss": "Cách giải thử hết mọi khả năng rồi giữ lại cái thoả mãn. Chắc chắn ra đáp án đúng, nhưng rất chậm khi dữ liệu lớn."
+ },
+ "divideandconquer": {
+  "en": "divide and conquer",
+  "say": "đi-vai en con-cơ",
+  "vi": "chia để trị",
+  "gloss": "Bẻ bài toán lớn thành các bài con cùng dạng nhưng nhỏ hơn, giải từng bài con rồi ghép kết quả lại. Tìm kiếm nhị phân là ví dụ quen thuộc nhất."
+ },
+ "greedy": {
+  "en": "greedy",
+  "say": "gri-đi",
+  "vi": "tham lam",
+  "gloss": "Ở mỗi bước cứ chọn phương án trông tốt nhất ngay lúc đó rồi đi tiếp, không quay lại. Rất nhanh nhưng không phải lúc nào cũng cho kết quả tối ưu."
+ },
+ "dynamicprogramming": {
+  "en": "dynamic programming",
+  "say": "đai-na-mích prô-gram-ming",
+  "vi": "quy hoạch động",
+  "gloss": "Kĩ thuật dành cho bài toán mà các bài con bị tính đi tính lại: lưu kết quả từng bài con lại để lần sau lấy ra dùng ngay."
+ },
+ "memoization": {
+  "en": "memoization",
+  "say": "me-mô-ai-dây-sần",
+  "vi": "ghi nhớ kết quả đã tính",
+  "gloss": "Mẹo cất kết quả của một lời gọi hàm vào bộ nhớ đệm để lần sau gọi với cùng dữ liệu thì đọc thẳng ra, khỏi tính lại."
+ },
+ "mergesort": {
+  "en": "merge sort",
+  "say": "mớt-giơ sót",
+  "vi": "sắp xếp trộn",
+  "gloss": "Thuật toán sắp xếp theo lối chia để trị: chia dãy làm đôi, sắp xếp từng nửa rồi trộn hai nửa đã có thứ tự lại với nhau."
  }
 };
 if (typeof window !== "undefined") window.VOCAB_TERMS = VOCAB_TERMS;
