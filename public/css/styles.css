@@ -567,101 +567,19 @@ select:focus, input[type="text"]:focus, input[type="number"]:focus {
   border-radius: 12px;
 }
 
-/* ------------------------- INTERACTIVE MASCOT REACTION BOX ------------------------- */
-.mascot-interactive-widget {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  background: var(--bg-card);
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius);
-  padding: 16px 20px;
-  margin-bottom: 20px;
-  box-shadow: var(--shadow);
-  position: relative;
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-}
+/* Nhãn chế độ làm bài (luyện tập / thi thử) */
+.pill.pill-mode { background: var(--bg-soft); color: var(--text-soft); border: 1px solid var(--border); }
 
-.mascot-interactive-widget.correct {
-  border-color: var(--success);
-  background: var(--success-soft);
-  animation: mascotPop 0.35s ease;
-}
-
-.mascot-interactive-widget.wrong {
-  border-color: var(--danger);
-  background: var(--danger-soft);
-  animation: mascotShake 0.4s ease;
-}
-
-.mascot-interactive-widget.streak {
-  border-color: var(--warning);
-  background: var(--warning-soft);
-  animation: mascotCelebrate 0.5s ease;
-}
-
-@keyframes mascotPop {
-  0% { transform: scale(0.96); }
-  50% { transform: scale(1.03); }
-  100% { transform: scale(1); }
-}
-
-@keyframes mascotShake {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-6px); }
-  75% { transform: translateX(6px); }
-}
-
-@keyframes mascotCelebrate {
-  0%, 100% { transform: translateY(0); }
-  30% { transform: translateY(-8px); }
-  60% { transform: translateY(-3px); }
-}
-
-.mascot-avatar-box {
-  width: 72px;
-  height: 72px;
-  flex-shrink: 0;
-  display: grid;
-  place-items: center;
-  position: relative;
-}
-
-.mascot-avatar-img {
-  width: 72px;
-  height: 72px;
-  object-fit: contain;
-  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.12));
-}
-
-.mascot-speech-bubble {
-  flex: 1;
-  position: relative;
-}
-
-.mascot-speech-text {
-  font-size: 14.5px;
-  font-weight: 700;
-  line-height: 1.5;
-  color: var(--text);
-}
-
-.mascot-badge {
-  display: inline-block;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  padding: 2px 8px;
-  border-radius: 6px;
-  margin-bottom: 4px;
-}
-
-.mascot-badge.happy { background: var(--success); color: #fff; }
-.mascot-badge.streak { background: var(--warning); color: #fff; }
-.mascot-badge.sad { background: var(--danger); color: #fff; }
-.mascot-badge.hint { background: var(--info); color: #fff; }
+/* Sắc thái bóng thoại của Robot trợ lý khi chấm xong một câu */
+.floating-mascot-bubble.tone-correct { border-color: var(--success); }
+.floating-mascot-bubble.tone-correct .floating-mascot-badge { background: var(--success); }
+.floating-mascot-bubble.tone-correct::after { border-top-color: var(--success); }
+.floating-mascot-bubble.tone-wrong { border-color: var(--danger); }
+.floating-mascot-bubble.tone-wrong .floating-mascot-badge { background: var(--danger); }
+.floating-mascot-bubble.tone-wrong::after { border-top-color: var(--danger); }
+.floating-mascot-bubble.tone-streak { border-color: var(--warning); }
+.floating-mascot-bubble.tone-streak .floating-mascot-badge { background: var(--warning); }
+.floating-mascot-bubble.tone-streak::after { border-top-color: var(--warning); }
 
 /* ------------------------- Màn hình làm bài ------------------------- */
 .quiz-header {
@@ -769,7 +687,6 @@ select:focus, input[type="text"]:focus, input[type="number"]:focus {
   .topnav .nav-btn { padding: 8px 10px; }
   .hero { padding: 24px; }
   .hero h1 { font-size: 24px; }
-  .mascot-interactive-widget { flex-direction: column; text-align: center; }
   .floating-mascot-container { bottom: 16px; right: 16px; }
   .floating-mascot-bubble { max-width: 220px; font-size: 12.5px; }
   .floating-mascot-btn { width: 56px; height: 56px; }

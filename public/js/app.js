@@ -1293,17 +1293,40 @@ function getMascotReaction(type, streak = 0) {
 /* ===========================================================================
  *  MÀN HÌNH LÀM BÀI
  * ========================================================================= */
+
+/* QUY TẮC THỐNG NHẤT cho mọi bài làm — chỉ định nghĩa ở đây, các nơi khác đọc lại:
+   - Luyện tập (theo bài, theo chủ đề, luyện nhanh, luyện Đúng/Sai):
+     bấm "Kiểm tra" chấm ngay TỪNG CÂU và xem lời giải liền, không tính giờ.
+   - Thi thử (đề ngẫu nhiên, mã đề, đề biên soạn):
+     KHÔNG chấm lẻ từng câu — làm hết rồi "Nộp bài", có tính giờ, xem lời giải
+     sau khi nộp. */
+function quizRules(Q) {
+  const thi = Q.mode === "exam";
+  return {
+    thi,
+    kiemTraTungCau: !thi,
+    tinhGio: thi && !!Q.minutes,
+    nhan: thi ? "Thi thử" : "Luyện tập",
+    moTa: thi
+      ? "Thi thử: làm hết rồi nộp bài, xem lời giải sau khi nộp"
+      : "Luyện tập: bấm Kiểm tra để chấm ngay từng câu",
+  };
+}
+
 function renderQuiz() {
   const Q = State.quiz;
   const q = Q.questions[Q.index];
-  const isExam = Q.mode === "exam";
   const revealed = Q.revealed[Q.index];
 
   const pct = Math.round(((Q.index + 1) / Q.questions.length) * 100);
   const curAns = Q.answers[Q.index];
   const isCorrect = revealed ? isAnswerCorrect(q, curAns) : null;
 
-  // Cập nhật streak nếu đang làm luyện tập
+  const luat = quizRules(Q);
+
+  // Chấm xong một câu -> khen/động viên. Lời nhắn hiện ở Robot trợ lý (góc dưới
+  // phải), không chiếm chỗ giữa trang nữa.
+  let phanHoiMoi = null;
   if (revealed && !Q.reactions[Q.index]) {
     if (isCorrect) {
       Q.streak = (Q.streak || 0) + 1;
@@ -1312,9 +1335,8 @@ function renderQuiz() {
       Q.streak = 0;
       Q.reactions[Q.index] = getMascotReaction("wrong", 0);
     }
+    phanHoiMoi = Q.reactions[Q.index];
   }
-
-  const activeReaction = Q.reactions[Q.index] || getMascotReaction("default", Q.streak || 0);
 
   app.innerHTML = `
     <div class="quiz-header">
@@ -1323,9 +1345,10 @@ function renderQuiz() {
         <span class="pill type-${q.type}">${TYPE_LABEL[q.type]}</span>
         ${q.grade ? `<span class="pill">Lớp ${q.grade}</span>` : ""}
         <span class="pill">${LEVEL_LABEL[q.level]}</span>
+        <span class="pill pill-mode" title="${esc(luat.moTa)}">${esc(luat.nhan)}</span>
       </div>
       <div class="quiz-meta">
-        ${isExam ? `<span class="timer" id="timer">--:--</span>` : ""}
+        ${luat.tinhGio ? `<span class="timer" id="timer">--:--</span>` : ""}
         <button class="btn btn-ghost" id="quitBtn">Thoát</button>
       </div>
     </div>
@@ -1337,24 +1360,13 @@ function renderQuiz() {
       </div>
       <div class="progress-info-row">
         <span>Câu ${Q.index + 1} / ${Q.questions.length} (${pct}%)</span>
-        ${Q.streak && Q.streak >= 2 
-          ? `<span class="streak-counter">🔥 Streak ${Q.streak} câu đúng</span>` 
-          : `<span>${isExam ? "Thi thử bấm giờ" : "Luyện tập tự do"}</span>`}
+        ${Q.streak && Q.streak >= 2
+          ? `<span class="streak-counter">🔥 Streak ${Q.streak} câu đúng</span>`
+          : `<span>${esc(luat.moTa)}</span>`}
       </div>
     </div>
 
     <div class="palette" id="palette"></div>
-
-    <!-- INTERACTIVE MASCOT REACTION BOX -->
-    <div class="mascot-interactive-widget ${activeReaction.typeClass}">
-      <div class="mascot-avatar-box">
-        <img src="${activeReaction.pose}" alt="Linh vật Robot" class="mascot-avatar-img" />
-      </div>
-      <div class="mascot-speech-bubble">
-        <span class="mascot-badge ${activeReaction.typeClass}">${activeReaction.badge}</span>
-        <div class="mascot-speech-text">${activeReaction.msg}</div>
-      </div>
-    </div>
 
     <div class="question-card">
       <div class="q-number">Câu ${Q.index + 1} / ${Q.questions.length}</div>
@@ -1370,7 +1382,7 @@ function renderQuiz() {
         <button class="flag-btn ${Q.flags[Q.index] ? "on" : ""}" id="flagBtn">${aIco("flag", null, 14)} ${Q.flags[Q.index] ? "Bỏ đánh dấu" : "Đánh dấu"}</button>
       </div>
       <div class="quiz-nav-left">
-        ${!isExam ? `<button class="btn btn-ghost" id="checkBtn" ${revealed ? "disabled" : ""}>Kiểm tra</button>` : ""}
+        ${luat.kiemTraTungCau ? `<button class="btn btn-ghost" id="checkBtn" ${revealed ? "disabled" : ""}>Kiểm tra</button>` : ""}
         ${Q.index === Q.questions.length - 1
           ? `<button class="btn btn-success" id="submitBtn">${aIco("check2", null, 15)} Nộp bài</button>`
           : `<button class="btn btn-primary" id="nextBtn">Câu sau ${aIco("aright", null, 14)}</button>`}
@@ -1404,7 +1416,10 @@ function renderQuiz() {
     if (ok) { stopTimer(); State.quiz = null; go("home"); }
   };
 
-  if (isExam) startTimer();
+  if (luat.tinhGio) startTimer();
+
+  // Phản hồi sau khi chấm một câu -> đẩy xuống Robot trợ lý ở góc dưới phải
+  if (phanHoiMoi) mascotSay(phanHoiMoi.msg, { pose: phanHoiMoi.pose, badge: phanHoiMoi.badge, tone: phanHoiMoi.typeClass });
 }
 
 /* --- Vùng nhập đáp án theo từng dạng --- */
@@ -1886,12 +1901,48 @@ function initFloatingMascot() {
       bubble.hidden = false;
       mascotBubbleOpen = true;
     }
-    // Đổi tip và tư thế khi bấm
-    const nextTip = FLOATING_TIPS[Math.floor(Math.random() * FLOATING_TIPS.length)];
-    const nextPose = FLOATING_POSES[Math.floor(Math.random() * FLOATING_POSES.length)];
-    tipText.textContent = nextTip;
-    mascotImg.src = nextPose;
+    mascotTip();   // bấm Robot -> đổi lời khuyên và tư thế
   };
+}
+
+/* --- Robot trợ lý: nơi DUY NHẤT hiện lời khen / động viên ---------------------
+   Trước đây màn làm bài có thêm một khối linh vật to giữa trang; nay mọi phản
+   hồi (đúng, sai, chuỗi đúng liên tiếp) đều nói qua bóng thoại của Robot ở góc
+   dưới phải, rồi tự quay về lời khuyên chung sau ít giây. */
+let mascotRevertTimer = null;
+
+function mascotSay(msg, opts) {
+  opts = opts || {};
+  initFloatingMascot();
+  const bubble = document.getElementById("mascotBubble");
+  const text = document.getElementById("mascotTipText");
+  const img = document.getElementById("mascotImg");
+  const badge = document.querySelector(".floating-mascot-badge");
+  if (!bubble || !text) return;
+
+  bubble.hidden = false;
+  mascotBubbleOpen = true;
+  text.textContent = msg;
+  if (opts.pose && img) img.src = opts.pose;
+  if (badge) badge.textContent = opts.badge || "ROBOT TRỢ LÝ";
+  bubble.classList.remove("tone-correct", "tone-wrong", "tone-streak");
+  if (opts.tone) bubble.classList.add("tone-" + opts.tone);
+
+  clearTimeout(mascotRevertTimer);
+  if (opts.giuLai !== true) mascotRevertTimer = setTimeout(mascotTip, opts.giay ? opts.giay * 1000 : 7000);
+}
+
+/* Quay về một lời khuyên chung (cũng dùng khi người học bấm vào Robot). */
+function mascotTip() {
+  const text = document.getElementById("mascotTipText");
+  const img = document.getElementById("mascotImg");
+  const bubble = document.getElementById("mascotBubble");
+  const badge = document.querySelector(".floating-mascot-badge");
+  if (!text) return;
+  text.textContent = FLOATING_TIPS[Math.floor(Math.random() * FLOATING_TIPS.length)];
+  if (img) img.src = FLOATING_POSES[Math.floor(Math.random() * FLOATING_POSES.length)];
+  if (badge) badge.textContent = "ROBOT TRỢ LÝ";
+  if (bubble) bubble.classList.remove("tone-correct", "tone-wrong", "tone-streak");
 }
 
 /* ===========================================================================
