@@ -190,13 +190,14 @@ Ba tác dụng, xếp theo giá trị:
 
 ## 6. Các bước làm
 
-### Bước 0 — Ghi chi tiết bài làm (nửa buổi) ← LÀM TRƯỚC TIÊN
-- [ ] `doSubmit` ghi thêm `detail[]` (từng câu: id, chủ đề, lớp, mức độ, đúng/sai).
-- [ ] Dữ liệu chỉ có từ lúc bật ⇒ bật sớm để tích luỹ, kể cả khi chưa làm radar.
+### ✅ Bước 0 — Ghi chi tiết bài làm — XONG (28/07)
+- [x] `doSubmit` ghi thêm `detail[]` (từng câu: id, chủ đề, lớp, mức độ, đúng/sai).
+- [x] Dữ liệu bắt đầu tích luỹ từ nay; bản ghi cũ không có `detail` vẫn chạy bình thường.
 
-### Bước 0b — Radar + chuyên đề chỗ yếu (1 buổi, chưa cần AI)
-- [ ] `public/js/skills.js`: tính chỉ số 7 trục, vẽ radar bằng SVG, gắn vào trang Thành tựu.
-- [ ] Thẻ “Luyện chỗ yếu” ở trang chủ + tab “Chỗ yếu” trong trang Luyện tập.
+### ✅ Bước 0b — Radar + chuyên đề chỗ yếu — XONG (28/07)
+- [x] `public/js/skills.js`: chỉ số 7 trục (40 câu gần nhất, ngưỡng 5 câu), radar SVG ở trang Thành tựu.
+- [x] Thẻ “Chỗ yếu của bạn” ở trang chủ + tab “Chỗ yếu” trong trang Luyện tập.
+- [x] Bộ câu ưu tiên ~60% câu đã từng làm sai.
 
 ### Bước 1 — Máy chủ (nửa buổi)
 - [ ] `server/lessons.js`: nạp `LESSONS` từ `public/js/clean-*.js` bằng `vm`, dựng `Map` theo id.
