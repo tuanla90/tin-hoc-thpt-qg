@@ -1,5 +1,5 @@
 /* ============================================================================
- *  TỪ ĐIỂN THUẬT NGỮ TIẾNG ANH — 225 từ.
+ *  TỪ ĐIỂN THUẬT NGỮ TIẾNG ANH — 325 từ.
  *  Mỗi từ: { en, say (phiên âm kiểu Việt), vi (nghĩa), gloss (giải thích đời thường) }.
  *  Tệp sinh tự động khi gộp 2 chương trình (gộp vocab-terms + vocab-data + vocab-tin12).
  *  Nạp SAU vocab.js, TRƯỚC vocab-lessons.js.
@@ -1140,7 +1140,7 @@ var VOCAB_TERMS = {
   "gloss": "Là ô trống để người dùng gõ thông tin vào, như ô điền tên hoặc mật khẩu. Giống chỗ trống trong bài tập để em điền câu trả lời."
  },
  "htmllabel": {
-  "en": "label",
+  "en": "label (thẻ HTML)",
   "say": "lê-bồ",
   "vi": "nhãn ô nhập",
   "gloss": "Là dòng chữ ghi tên cho một ô nhập, để người dùng biết ô đó cần điền gì. Ví dụ chữ 'Họ tên' đặt cạnh ô để điền tên."
@@ -1380,6 +1380,606 @@ var VOCAB_TERMS = {
   "say": "mớt-giơ sót",
   "vi": "sắp xếp trộn",
   "gloss": "Thuật toán sắp xếp theo lối chia để trị: chia dãy làm đôi, sắp xếp từng nửa rồi trộn hai nửa đã có thứ tự lại với nhau."
+ },
+ "encoding": {
+  "en": "encoding",
+  "say": "in-CÔ-đinh",
+  "vi": "mã hoá",
+  "gloss": "Là quy ước biến chữ viết, hình ảnh hay âm thanh thành dãy số 0 và 1 để máy tính lưu và xử lí được. Mỗi loại dữ liệu có kiểu mã hoá riêng, ví dụ chữ dùng bảng ASCII hoặc Unicode."
+ },
+ "cloudcomputing": {
+  "en": "cloud computing",
+  "say": "CLAO com-PIU-tinh",
+  "vi": "điện toán đám mây",
+  "gloss": "Là cách lưu trữ và xử lí dữ liệu trên các máy chủ đặt ở xa, bạn truy cập qua Internet thay vì giữ mọi thứ trong máy của mình. Nhờ vậy bạn mở được tài liệu ở bất cứ đâu, miễn là có mạng."
+ },
+ "sync": {
+  "en": "sync (synchronize)",
+  "say": "xinh-k",
+  "vi": "đồng bộ",
+  "gloss": "Là việc dữ liệu tự động được cập nhật giống nhau trên mọi thiết bị của bạn. Sửa một tệp trên điện thoại thì bản trên máy tính cũng đổi theo."
+ },
+ "worm": {
+  "en": "worm",
+  "say": "quơm",
+  "vi": "sâu máy tính",
+  "gloss": "Là loại mã độc tự nhân bản và tự lan sang máy khác qua mạng, không cần ai mở tệp hộ nó. Khác với virus vốn phải bám vào một tệp và chờ tệp đó được chạy."
+ },
+ "trojan": {
+  "en": "trojan (Trojan horse)",
+  "say": "TRÔ-jơn",
+  "vi": "phần mềm gián điệp trá hình",
+  "gloss": "Là mã độc giả dạng một phần mềm hữu ích để bạn tự tay cài vào máy, rồi âm thầm mở cửa cho kẻ xấu hoặc đánh cắp dữ liệu. Tên lấy từ tích con ngựa gỗ thành Troy."
+ },
+ "ransomware": {
+  "en": "ransomware",
+  "say": "REN-xâm-que",
+  "vi": "mã độc tống tiền",
+  "gloss": "Là mã độc khoá (mã hoá) toàn bộ tệp trong máy rồi đòi tiền chuộc mới chịu mở. Cách phòng tốt nhất là sao lưu dữ liệu thường xuyên ra nơi khác."
+ },
+ "license": {
+  "en": "license",
+  "say": "LAI-xừn",
+  "vi": "giấy phép sử dụng",
+  "gloss": "Là bộ điều kiện đi kèm một sản phẩm số, nói rõ bạn được làm gì và không được làm gì với nó. Tải phần mềm hay ảnh về mà chưa đọc giấy phép thì rất dễ dùng sai luật."
+ },
+ "freeware": {
+  "en": "freeware",
+  "say": "PHRI-que",
+  "vi": "phần mềm miễn phí",
+  "gloss": "Là phần mềm được dùng không mất tiền, nhưng vẫn có bản quyền và vẫn kèm điều kiện, ví dụ cấm bán lại hay cấm sửa đổi. Miễn phí không có nghĩa là nguồn mở."
+ },
+ "creativecommons": {
+  "en": "Creative Commons",
+  "say": "cri-Ê-típ CA-mơn",
+  "vi": "giấy phép nội dung mở Creative Commons",
+  "gloss": "Là hệ thống giấy phép cho ảnh, nhạc, bài viết, ghi điều kiện bằng vài kí hiệu ngắn: BY là phải ghi tên tác giả, NC là không dùng cho mục đích thương mại. Đọc kí hiệu trước khi tải là đủ biết mình được dùng tới đâu."
+ },
+ "path": {
+  "en": "path",
+  "say": "pát",
+  "vi": "đường dẫn",
+  "gloss": "Là chuỗi ghi lại hành trình từ ổ đĩa, qua từng thư mục con, tới đúng một tệp — ví dụ D:\\HocTap\\Tin\\baitap.py. Có đường dẫn là máy tìm ra tệp ngay, không cần mò từng thư mục."
+ },
+ "extension": {
+  "en": "file extension",
+  "say": "phai ích-STEN-sơn",
+  "vi": "phần mở rộng của tệp",
+  "gloss": "Là phần đứng sau dấu chấm cuối cùng trong tên tệp, như .docx, .png, .py. Nó cho máy tính biết tệp thuộc loại nào để mở bằng đúng phần mềm."
+ },
+ "backup": {
+  "en": "backup",
+  "say": "BÉC-áp",
+  "vi": "sao lưu",
+  "gloss": "Là tạo thêm một bản sao dữ liệu và cất ở nơi khác (ổ ngoài, đám mây) để phòng khi máy hỏng hoặc lỡ tay xoá. Sao lưu định kì là cách rẻ nhất để không mất trắng dữ liệu."
+ },
+ "createtable": {
+  "en": "CREATE TABLE",
+  "say": "cri-ÊT TÂY-bồ",
+  "vi": "lệnh SQL tạo bảng mới",
+  "gloss": "Là lệnh dựng khung cho một bảng: đặt tên bảng rồi khai báo từng cột kèm kiểu dữ liệu (INTEGER, REAL, TEXT, DATE). Khai xong khung thì mới có chỗ để thêm dữ liệu vào."
+ },
+ "constraint": {
+  "en": "constraint",
+  "say": "cơn-STRÂY-nt",
+  "vi": "ràng buộc",
+  "gloss": "Là điều kiện gài sẵn ở từng cột để hệ quản trị tự động từ chối dữ liệu sai ngay khi nhập. Hay gặp nhất là PRIMARY KEY, NOT NULL, UNIQUE và FOREIGN KEY."
+ },
+ "aggregate": {
+  "en": "aggregate function",
+  "say": "É-gri-gợt PHĂNG-sần",
+  "vi": "hàm tổng hợp",
+  "gloss": "Là nhóm hàm rút cả một cột dữ liệu về một con số duy nhất: COUNT đếm, SUM cộng, AVG lấy trung bình, MAX và MIN lấy lớn nhất, nhỏ nhất."
+ },
+ "groupby": {
+  "en": "GROUP BY",
+  "say": "grúp BAI",
+  "vi": "gộp nhóm theo cột",
+  "gloss": "Là mệnh đề gộp các dòng có cùng giá trị ở một cột thành một nhóm, rồi tính hàm tổng hợp cho từng nhóm. Nhớ phân biệt: WHERE lọc dòng trước khi gộp, còn HAVING lọc nhóm sau khi gộp."
+ },
+ "where": {
+  "en": "WHERE",
+  "say": "que",
+  "vi": "mệnh đề điều kiện WHERE",
+  "gloss": "Là phần chỉ rõ lệnh chỉ áp dụng cho những dòng thoả điều kiện nào. Quên WHERE trong UPDATE hay DELETE là lệnh sẽ quét sạch toàn bộ bảng — sai lầm rất khó cứu."
+ },
+ "basecase": {
+  "en": "base case",
+  "say": "BÂY-x KÂY-x",
+  "vi": "điều kiện dừng",
+  "gloss": "Là trường hợp nhỏ nhất mà hàm đệ quy giải được ngay, không cần gọi lại chính nó nữa. Thiếu điều kiện dừng thì hàm tự gọi mãi không thôi và chương trình sẽ lỗi."
+ },
+ "factorial": {
+  "en": "factorial",
+  "say": "phác-TO-ri-ơl",
+  "vi": "giai thừa",
+  "gloss": "Là tích các số từ 1 tới n, viết là n!. Đây là ví dụ kinh điển của đệ quy: giai_thua(n) = n * giai_thua(n - 1), dừng lại khi n = 0."
+ },
+ "cssblock": {
+  "en": "block",
+  "say": "blóc",
+  "vi": "phần tử khối",
+  "gloss": "Là phần tử chiếm trọn cả một dòng và đẩy phần tử phía sau xuống dòng mới, như <div>, <p>, <h1>. Muốn xếp chúng cạnh nhau thì phải nhờ tới CSS."
+ },
+ "cssinline": {
+  "en": "inline",
+  "say": "IN-lain",
+  "vi": "phần tử nội tuyến",
+  "gloss": "Là phần tử chỉ chiếm đúng bề rộng nội dung của nó nên nhiều phần tử nằm chung một dòng được, như <a>, <span>, <strong>."
+ },
+ "cssflex": {
+  "en": "flex (flexbox)",
+  "say": "phlếch",
+  "vi": "hộp linh hoạt",
+  "gloss": "Đặt display: flex cho phần tử cha thì các phần tử con trực tiếp tự xếp thành một hàng ngang. Đây là cách gọn nhất để dựng bố cục nhiều cột."
+ },
+ "cssjustifycontent": {
+  "en": "justify-content",
+  "say": "JÂX-ti-phai CON-ten",
+  "vi": "căn vị trí cả hàng",
+  "gloss": "Là thuộc tính quyết định các phần tử con trong hộp flex dồn về đâu theo chiều ngang: sát trái, vào giữa, sát phải hay dàn đều khoảng cách."
+ },
+ "classification": {
+  "en": "classification",
+  "say": "cla-si-phi-KÊ-sần",
+  "vi": "phân loại",
+  "gloss": "Bài toán yêu cầu máy chọn một nhãn trong danh sách nhãn có sẵn cho mỗi dữ liệu, ví dụ thư này là thư rác hay không rác. Đầu ra luôn là một trong số hữu hạn lựa chọn đã biết trước."
+ },
+ "regression": {
+  "en": "regression",
+  "say": "ri-GRÉT-sần",
+  "vi": "dự đoán số / hồi quy",
+  "gloss": "Bài toán yêu cầu máy ước lượng một con số, ví dụ giá một căn nhà hay nhiệt độ ngày mai. Khác với phân loại, đầu ra là một giá trị bất kì trong một khoảng chứ không phải một nhãn."
+ },
+ "training": {
+  "en": "training",
+  "say": "TRÂY-ning",
+  "vi": "huấn luyện",
+  "gloss": "Giai đoạn máy đọc phần dữ liệu đã chuẩn bị sẵn để tự rút ra quy luật. Phần dữ liệu dùng cho việc này gọi là dữ liệu huấn luyện (training data)."
+ },
+ "overfitting": {
+  "en": "overfitting",
+  "say": "ô-vơ-PHÍT-tinh",
+  "vi": "học vẹt / khớp quá mức",
+  "gloss": "Là khi mô hình thuộc lòng dữ liệu đã học nên làm rất tốt trên dữ liệu cũ nhưng đoán sai trên dữ liệu mới. Đây chính là lí do phải đánh giá mô hình bằng phần dữ liệu kiểm tra mà nó chưa từng thấy."
+ },
+ "label": {
+  "en": "label",
+  "say": "LÂY-bồ",
+  "vi": "nhãn (đáp án đúng của một mẫu)",
+  "gloss": "Là đáp án đúng do con người gán sẵn cho một mẫu dữ liệu, ví dụ ảnh này là \"mèo\". Dữ liệu có nhãn (labeled data) dùng cho học có giám sát, dữ liệu không nhãn thì không đi kèm đáp án nào."
+ },
+ "clustering": {
+  "en": "clustering",
+  "say": "CLÁT-tơ-ring",
+  "vi": "phân cụm",
+  "gloss": "Bài toán tiêu biểu của học không giám sát: máy tự gom các đối tượng giống nhau vào cùng một cụm mà không có nhãn cho trước. Con người phải tự đặt tên và giải thích ý nghĩa từng cụm sau đó."
+ },
+ "reinforcement": {
+  "en": "reinforcement learning",
+  "say": "ri-in-PHO-sờ-mần LƠ-ning",
+  "vi": "học tăng cường",
+  "gloss": "Nhóm phương pháp thứ ba: máy học bằng cách thử hành động rồi nhận thưởng hoặc phạt, dần chọn cách làm cho điểm cao nhất. Thường gặp ở robot và các chương trình chơi cờ, chơi game."
+ },
+ "similarity": {
+  "en": "similarity",
+  "say": "si-mi-LA-ri-ti",
+  "vi": "độ tương tự",
+  "gloss": "Thước đo cho biết hai đối tượng giống nhau đến mức nào, tính từ các đặc điểm của chúng. Phân cụm dựa vào độ tương tự để quyết định gom đối tượng nào vào cùng một cụm."
+ },
+ "datavisualization": {
+  "en": "data visualization",
+  "say": "ĐÂY-ta vi-zu-ơ-lai-ZÊ-sần",
+  "vi": "trực quan hoá dữ liệu",
+  "gloss": "Là biến bảng số liệu thô thành biểu đồ hoặc hình ảnh để mắt người nhận ra ngay xu hướng, sự chênh lệch hay tỉ lệ. Cùng một bộ số, nhìn bằng biểu đồ nhanh hơn nhiều so với đọc từng dòng."
+ },
+ "barchart": {
+  "en": "bar chart",
+  "say": "ba chát",
+  "vi": "biểu đồ cột",
+  "gloss": "Biểu đồ dùng chiều cao các cột để so sánh giá trị giữa các nhóm, ví dụ doanh thu từng chi nhánh. Hợp nhất khi cần trả lời câu hỏi \"nhóm nào nhiều hơn\"."
+ },
+ "linechart": {
+  "en": "line chart",
+  "say": "lai chát",
+  "vi": "biểu đồ đường",
+  "gloss": "Biểu đồ nối các điểm theo thứ tự thời gian để thể hiện xu hướng tăng hay giảm. Hợp khi dữ liệu có mốc thời gian liên tiếp như theo ngày, theo tháng."
+ },
+ "piechart": {
+  "en": "pie chart",
+  "say": "pai chát",
+  "vi": "biểu đồ tròn",
+  "gloss": "Biểu đồ chia một hình tròn thành các phần để cho thấy tỉ lệ mỗi thành phần trong tổng thể. Chỉ dùng khi các phần cộng lại đúng bằng 100%."
+ },
+ "axis": {
+  "en": "axis",
+  "say": "ẮC-xịt",
+  "vi": "trục (của biểu đồ)",
+  "gloss": "Hai đường tham chiếu ngang và dọc kèm đơn vị đo, giúp đọc được giá trị thật của từng cột hay từng điểm. Nếu trục bị cắt bớt hoặc đổi tỉ lệ, biểu đồ có thể khiến người xem hiểu sai."
+ },
+ "form": {
+  "en": "form",
+  "say": "phom",
+  "vi": "biểu mẫu",
+  "gloss": "Đối tượng hiển thị mỗi lần một bản ghi dưới dạng phiếu điền, giúp nhập liệu gọn gàng và đỡ nhầm dòng. Biểu mẫu không chứa dữ liệu riêng: mọi thứ gõ vào đều được ghi xuống bảng."
+ },
+ "report": {
+  "en": "report",
+  "say": "ri-PỌT",
+  "vi": "báo cáo",
+  "gloss": "Đối tượng trình bày dữ liệu theo bố cục đẹp để in ra hoặc xuất file, thường kèm nhóm và tổng cộng. Cũng như biểu mẫu, báo cáo chỉ là một cách nhìn dữ liệu đang nằm trong bảng."
+ },
+ "datatype": {
+  "en": "data type",
+  "say": "ĐÂY-ta tai-pờ",
+  "vi": "kiểu dữ liệu",
+  "gloss": "Quy định mỗi trường được chứa loại giá trị nào: văn bản, số, ngày/giờ hay lôgic. Chọn đúng kiểu giúp dữ liệu sạch, sắp xếp và tính toán được đúng."
+ },
+ "designview": {
+  "en": "design view",
+  "say": "đi-DAI-nờ viu",
+  "vi": "chế độ thiết kế",
+  "gloss": "Cách nhìn cho phép dựng và sửa khung của bảng: khai báo tên trường, chọn kiểu dữ liệu, chỉ định khoá chính. Ở chế độ này bạn làm việc với cấu trúc chứ không gõ dữ liệu."
+ },
+ "datasheetview": {
+  "en": "datasheet view",
+  "say": "ĐÂY-ta-sít viu",
+  "vi": "chế độ nhập dữ liệu (dạng bảng)",
+  "gloss": "Cách nhìn hiển thị bảng như một lưới hàng-cột để gõ và xem bản ghi. Sau khi tạo xong cấu trúc, hãy chuyển sang chế độ này nhập vài bản ghi mẫu để kiểm tra thiết kế."
+ },
+ "relationship": {
+  "en": "relationship",
+  "say": "ri-LÂY-sần-síp",
+  "vi": "liên kết giữa các bảng",
+  "gloss": "Mối nối được khai báo giữa hai bảng, cho phép ghép dữ liệu của chúng lại khi truy vấn. Liên kết được tạo bằng cách nối khoá ngoài của bảng con tới khoá chính của bảng cha."
+ },
+ "onetomany": {
+  "en": "one-to-many",
+  "say": "oăn-tu-MEN-ni",
+  "vi": "liên kết một-nhiều",
+  "gloss": "Dạng liên kết phổ biến nhất: một bản ghi ở bảng cha ứng với nhiều bản ghi ở bảng con, ví dụ một lớp có nhiều học sinh. Phía \"một\" giữ khoá chính, phía \"nhiều\" giữ khoá ngoài trỏ về."
+ },
+ "redundancy": {
+  "en": "redundancy",
+  "say": "ri-ĐĂN-đần-si",
+  "vi": "trùng lặp dữ liệu",
+  "gloss": "Tình trạng cùng một thông tin bị ghi lại ở nhiều nơi, khiến tốn chỗ và dễ sai lệch khi sửa sót một chỗ. Tách dữ liệu ra nhiều bảng rồi nối bằng khoá ngoài là cách tránh trùng lặp."
+ },
+ "filter": {
+  "en": "filter",
+  "say": "PHIN-tơ",
+  "vi": "lọc (dữ liệu)",
+  "gloss": "Thao tác tạm ẩn bớt bản ghi để chỉ hiện những dòng thoả điều kiện bạn đặt ra. Luôn lọc cho đúng dòng cần trước khi bấm sửa hay xoá, để không đụng nhầm dữ liệu khác."
+ },
+ "referentialintegrity": {
+  "en": "referential integrity",
+  "say": "re-phơ-REN-sồ in-TE-gri-ti",
+  "vi": "toàn vẹn tham chiếu",
+  "gloss": "Là yêu cầu mọi khoá ngoài ở bảng con phải trỏ tới một khoá chính có thật ở bảng cha. Bật ràng buộc này thì không thể tạo ra bản ghi mồ côi kiểu 'học sinh thuộc lớp không tồn tại'."
+ },
+ "cascade": {
+  "en": "cascade",
+  "say": "kes-KÂY-đơ",
+  "vi": "lan truyền (xoá/sửa dây chuyền)",
+  "gloss": "Chọn kiểu xử lí cascade nghĩa là khi xoá hoặc sửa bản ghi cha thì mọi bản ghi con đang trỏ tới nó cũng bị xoá hoặc sửa theo. Tiện nhưng dễ mất nhiều dữ liệu cùng lúc, nên cân nhắc trước khi bật."
+ },
+ "join": {
+  "en": "join",
+  "say": "GIOIN",
+  "vi": "phép nối bảng",
+  "gloss": "Là thao tác ghép hai bảng theo cặp khoá chung, ví dụ khoá ngoài MaLop ở bảng Học sinh khớp khoá chính MaLop ở bảng Lớp. Nhờ đó một truy vấn lấy được cả tên học sinh lẫn tên lớp; quên đường nối là kết quả ghép chéo sai bét."
+ },
+ "restore": {
+  "en": "restore",
+  "say": "ri-XTO",
+  "vi": "phục hồi dữ liệu",
+  "gloss": "Là lấy bản sao lưu gần nhất còn tốt để thay cho tệp bị hỏng. Bạn chỉ lấy lại được dữ liệu tính tới thời điểm bản sao đó, phần nhập sau thời điểm ấy coi như mất."
+ },
+ "layer": {
+  "en": "layer",
+  "say": "LÂY-ơ",
+  "vi": "lớp (trong phần mềm ảnh)",
+  "gloss": "Là một tầng nội dung trong suốt xếp chồng lên ảnh: bạn vẽ, ghép hay sửa trên lớp riêng mà ảnh gốc nằm dưới vẫn nguyên vẹn. Có thể ẩn, hiện, đổi thứ tự hoặc xoá từng lớp bất cứ lúc nào."
+ },
+ "selection": {
+  "en": "selection",
+  "say": "si-LẾCH-sơn",
+  "vi": "vùng chọn",
+  "gloss": "Là phần ảnh bạn khoanh lại để mọi thao tác chỉ tác động vào đó, phần còn lại được bảo vệ. Làm xong nhớ bỏ chọn, nếu không các bước sau sẽ không ăn ra ngoài vùng và bạn tưởng phần mềm bị lỗi."
+ },
+ "resolution": {
+  "en": "resolution",
+  "say": "re-zơ-LU-sơn",
+  "vi": "độ phân giải",
+  "gloss": "Là số điểm ảnh của tấm ảnh, thường ghi dạng 1920 × 1080. Càng nhiều điểm ảnh thì ảnh càng nét khi phóng to hay in ra, nhưng tệp cũng càng nặng."
+ },
+ "canvas": {
+  "en": "canvas",
+  "say": "KEN-vớt",
+  "vi": "khung ảnh (vùng làm việc)",
+  "gloss": "Là vùng hình chữ nhật ở giữa cửa sổ, chính là tấm ảnh bạn đang sửa. Một lớp có thể to hơn hoặc nhỏ hơn khung, nhưng chỉ phần nằm trong khung mới xuất ra ảnh cuối."
+ },
+ "brightness": {
+  "en": "brightness",
+  "say": "BRAIT-nợt",
+  "vi": "độ sáng",
+  "gloss": "Kéo thanh này lên thì mọi điểm ảnh sáng đều lên, kéo xuống thì tối đều. Đẩy quá tay sẽ làm vùng sáng mất hết chi tiết, gọi là cháy sáng và không cứu lại được."
+ },
+ "contrast": {
+  "en": "contrast",
+  "say": "KON-trát",
+  "vi": "độ tương phản",
+  "gloss": "Là mức chênh lệch giữa chỗ sáng và chỗ tối trong ảnh. Tăng tương phản làm ảnh rõ khối và đanh hơn, nhưng quá tay thì chi tiết ở cả vùng tối lẫn vùng sáng đều biến mất, ảnh bị bệt."
+ },
+ "saturation": {
+  "en": "saturation",
+  "say": "sát-chơ-RÂY-sơn",
+  "vi": "độ bão hoà màu",
+  "gloss": "Quyết định màu rực rỡ hay nhợt nhạt; kéo về 0 thì ảnh thành trắng đen. Với ảnh có người, tăng nhiều dễ làm màu da đỏ bệt, trông giả."
+ },
+ "histogram": {
+  "en": "histogram",
+  "say": "HÍT-tơ-gram",
+  "vi": "biểu đồ phân bố sáng - tối",
+  "gloss": "Là đồ thị đếm xem ảnh có bao nhiêu điểm tối, trung bình và sáng: bên trái là tối, bên phải là sáng. Cột dồn hẳn một phía nghĩa là ảnh thiếu hoặc thừa sáng, cụm hẹp ở giữa là thiếu tương phản."
+ },
+ "whitebalance": {
+  "en": "white balance",
+  "say": "OAI-tơ BE-lơn-xơ",
+  "vi": "cân bằng trắng (khử ám màu)",
+  "gloss": "Là chỉnh lại tông màu cho ảnh hết bị ám vàng hay ám xanh do ánh sáng đèn. Mẹo: lấy một vật vốn màu trắng hoặc xám trung tính trong ảnh làm mốc rồi chỉnh cho nó trở về trắng/xám thật."
+ },
+ "magicwand": {
+  "en": "magic wand",
+  "say": "ME-gích OÁN-đơ",
+  "vi": "đũa thần (chọn theo màu)",
+  "gloss": "Công cụ tự chọn mọi điểm ảnh có màu gần giống chỗ bạn bấm vào. Rất nhanh khi nền chỉ một màu đồng nhất, ví dụ ảnh món hàng chụp trên phông trắng."
+ },
+ "lasso": {
+  "en": "lasso",
+  "say": "la-SU",
+  "vi": "chọn tự do (dây thòng lọng)",
+  "gloss": "Cho phép rê chuột vẽ tay một đường bao quanh chủ thể có hình dạng bất kỳ. Chậm và cần tay chắc, nhưng là cách khả thi khi chủ thể lẫn màu với nền."
+ },
+ "tolerance": {
+  "en": "tolerance",
+  "say": "TÔ-lơ-rân-xơ",
+  "vi": "dung sai (mức chấp nhận lệch màu)",
+  "gloss": "Là con số nói cho công cụ chọn theo màu biết được phép lấy màu lệch bao nhiêu so với chỗ bấm. Số nhỏ thì chọn thiếu và sót, số lớn thì chọn lan cả sang chủ thể."
+ },
+ "feather": {
+  "en": "feather",
+  "say": "PHE-đơ",
+  "vi": "làm mềm mép vùng chọn",
+  "gloss": "Làm viền vùng chọn mờ dần thay vì cắt ngọt, nhờ đó chủ thể ghép sang nền mới trông tự nhiên. Chỉ cần vài điểm ảnh; đặt lớn quá thì mép bị nhoè."
+ },
+ "background": {
+  "en": "background",
+  "say": "BẮC-grao-n",
+  "vi": "nền (phần phía sau chủ thể)",
+  "gloss": "Là phần ảnh nằm sau chủ thể, đối lại là foreground tức phần chủ thể ở trước. Tách nền nghĩa là giữ chủ thể và bỏ phần nền đi, thường để thay bằng một phông nền sạch khác."
+ },
+ "brush": {
+  "en": "brush",
+  "say": "BRÁ-sờ",
+  "vi": "bút vẽ (cọ)",
+  "gloss": "Công cụ vẽ nét bằng màu vẽ đang chọn; bạn chỉnh được cỡ nét, độ cứng của mép và độ mờ. Nên vẽ trên một lớp mới để lỡ hỏng thì chỉ cần xoá lớp đó, ảnh gốc không sao."
+ },
+ "eraser": {
+  "en": "eraser",
+  "say": "i-RÂY-zơ",
+  "vi": "gôm tẩy",
+  "gloss": "Xoá phần nội dung bạn quét qua, nhưng chỉ trên lớp đang chọn. Trên lớp trong suốt thì chỗ xoá thành trong suốt, còn trên lớp nền thì chỗ xoá bị tô bằng màu nền."
+ },
+ "opacity": {
+  "en": "opacity",
+  "say": "ô-PE-si-ti",
+  "vi": "độ mờ đục",
+  "gloss": "Là mức nhìn xuyên qua được: 100% là đặc kín, 0% là trong suốt hoàn toàn. Chỉnh cho cả một lớp hoặc riêng nét bút để hiệu ứng nhẹ nhàng, ví dụ làm chữ chìm mờ trên ảnh."
+ },
+ "colorpicker": {
+  "en": "color picker",
+  "say": "KA-lơ PÍC-cơ",
+  "vi": "bảng chọn màu / hút màu",
+  "gloss": "Cho phép bấm vào một điểm bất kỳ trên ảnh để lấy đúng màu đó làm màu vẽ. Muốn màu chính xác tuyệt đối thì nhập mã màu dạng #RRGGBB ngay trong bảng chọn màu."
+ },
+ "export": {
+  "en": "export",
+  "say": "ÉC-xpo",
+  "vi": "xuất ra tệp ảnh",
+  "gloss": "Là lưu thành một tệp ảnh phổ thông như PNG hay JPG để chia sẻ, in hoặc đăng. Bản xuất đã gộp phẳng hết lớp, nên phải giữ thêm bản gốc còn lớp nếu sau này muốn sửa tiếp."
+ },
+ "animation": {
+  "en": "animation",
+  "say": "a-ni-MÂY-sơn",
+  "vi": "ảnh động / hoạt hình",
+  "gloss": "Là chuỗi ảnh tĩnh chiếu nối tiếp đủ nhanh khiến mắt tưởng có chuyển động thật. Quả bóng nảy hay dòng chữ nhấp nháy đều được làm theo nguyên tắc này."
+ },
+ "frame": {
+  "en": "frame",
+  "say": "PHRÂYM",
+  "vi": "khung hình",
+  "gloss": "Là một tấm ảnh trong chuỗi ảnh động; trong phần mềm sửa ảnh, mỗi khung hình thường đặt trên một lớp riêng. Thứ tự các khung quyết định chiều chuyển động, đảo thứ tự là chuyển động chạy ngược."
+ },
+ "fps": {
+  "en": "fps (frames per second)",
+  "say": "ép-pi-ét",
+  "vi": "số khung hình mỗi giây",
+  "gloss": "Cho biết mỗi giây chiếu bao nhiêu khung hình: càng cao thì chuyển động càng mượt. Đổi lại nhiều khung thì tệp càng nặng, ảnh động đơn giản 8-12 fps đã đủ tự nhiên."
+ },
+ "gif": {
+  "en": "GIF",
+  "say": "GHÍP",
+  "vi": "định dạng ảnh động GIF",
+  "gloss": "Định dạng ảnh chứa được nhiều khung hình và tự lặp lại, dùng khắp web và mạng xã hội. Đổi lại nó chỉ lưu tối đa 256 màu nên không hợp để lưu ảnh chụp nhiều màu."
+ },
+ "delay": {
+  "en": "delay",
+  "say": "đi-LÂY",
+  "vi": "thời gian hiển thị mỗi khung",
+  "gloss": "Là số mili giây một khung hình đứng yên trước khi chuyển sang khung sau. Đặt khác nhau cho từng khung để cử động lúc nhanh lúc chậm, trông tự nhiên hơn là chạy đều tăm tắp."
+ },
+ "timeline": {
+  "en": "timeline",
+  "say": "TAIM-lain",
+  "vi": "dòng thời gian",
+  "gloss": "Là dải nằm ngang phía dưới cửa sổ dựng phim, chạy từ trái sang phải theo thời gian. Bạn kéo tư liệu lên đó và sắp thứ tự để dần thành một đoạn phim hoàn chỉnh."
+ },
+ "clip": {
+  "en": "clip",
+  "say": "CLÍP",
+  "vi": "đoạn tư liệu trên dòng thời gian",
+  "gloss": "Là một mẩu video, ảnh hoặc âm thanh đã đặt lên dòng thời gian; chiều dài của nó chính là thời lượng. Cắt, kéo ngắn dài hay đổi chỗ clip đều không làm hỏng tệp gốc trên máy."
+ },
+ "track": {
+  "en": "track",
+  "say": "TRẮC",
+  "vi": "rãnh (làn) trên dòng thời gian",
+  "gloss": "Là các làn xếp chồng để chứa clip: thường một rãnh hình, một rãnh nhạc nền, một rãnh chữ. Rãnh nằm trên che rãnh nằm dưới, giống hệt cách các lớp chồng nhau trong phần mềm ảnh."
+ },
+ "import": {
+  "en": "import",
+  "say": "IM-pót",
+  "vi": "nhập tư liệu vào dự án",
+  "gloss": "Là đưa video, ảnh, nhạc từ máy vào thư viện của dự án trước khi kéo lên dòng thời gian. Phần mềm thường chỉ ghi nhớ đường dẫn, nên đừng xoá hay đổi tên tệp gốc giữa chừng."
+ },
+ "preview": {
+  "en": "preview",
+  "say": "PRI-viu",
+  "vi": "xem trước",
+  "gloss": "Là cửa sổ chiếu thử đoạn phim ngay trong lúc dựng để kiểm tra nhịp, tiếng và chữ. Bản xem trước có thể hơi giật; chất lượng thật chỉ thấy được sau khi xuất tệp."
+ },
+ "trim": {
+  "en": "trim",
+  "say": "trím",
+  "vi": "cắt bớt đầu/cuối clip",
+  "gloss": "Cắt bỏ phần thừa ở đầu hoặc cuối một clip cho gọn. Phần cắt chỉ biến mất trên dòng thời gian, tệp quay gốc vẫn nguyên vẹn."
+ },
+ "transition": {
+  "en": "transition",
+  "say": "tren-DI-sần",
+  "vi": "chuyển cảnh",
+  "gloss": "Hiệu ứng nối hai clip, ví dụ mờ dần hay trượt sang, để mối nối không bị giật. Dùng có chừng mực, lạm dụng sẽ rối mắt."
+ },
+ "soundtrack": {
+  "en": "soundtrack",
+  "say": "SAO-nờ-trec",
+  "vi": "nhạc nền",
+  "gloss": "Rãnh nhạc chạy dưới hình suốt phim. Phải hạ âm lượng nhạc nền xuống để không át lời thoại."
+ },
+ "sharing": {
+  "en": "sharing",
+  "say": "SE-rinh",
+  "vi": "chia sẻ",
+  "gloss": "Cho thiết bị khác dùng chung tệp, máy in hay màn hình của mình qua mạng. Nên bật khi cần và tắt ngay khi xong."
+ },
+ "permission": {
+  "en": "permission",
+  "say": "pơ-MI-sần",
+  "vi": "quyền truy cập",
+  "gloss": "Mức quyền chủ máy đặt cho người được chia sẻ: chỉ được xem, hay được sửa và xoá. Đặt sai quyền là mất dữ liệu như chơi."
+ },
+ "wireframe": {
+  "en": "wireframe",
+  "say": "OAI-ơ-frêm",
+  "vi": "bản phác khung trang",
+  "gloss": "Bản vẽ nháp chỉ gồm các ô trống: đầu trang, thân, chân trang, thanh điều hướng. Vẽ wireframe trước giúp khỏi phải đập đi xây lại khi đã gõ mã."
+ },
+ "layout": {
+  "en": "layout",
+  "say": "LÂY-aot",
+  "vi": "bố cục trang",
+  "gloss": "Cách sắp xếp các khối nội dung trên trang. Bố cục tốt giúp người xem biết ngay nên nhìn vào đâu trước."
+ },
+ "sitemap": {
+  "en": "sitemap",
+  "say": "SAI-mép",
+  "vi": "sơ đồ trang",
+  "gloss": "Sơ đồ liệt kê website có những trang nào và trang nào nối tới trang nào. Vẽ trước để biết phải dựng bao nhiêu tệp."
+ },
+ "htmlheader": {
+  "en": "header",
+  "say": "HÉT-đơ",
+  "vi": "phần đầu trang",
+  "gloss": "Dải trên cùng của trang web, thường chứa logo và tiêu đề chính. Trong HTML gói bằng thẻ header và giữ giống nhau ở mọi trang."
+ },
+ "logo": {
+  "en": "logo",
+  "say": "LÔ-gô",
+  "vi": "hình nhận diện",
+  "gloss": "Hình đại diện cho trang hoặc tổ chức, thường đặt bên trái phần đầu trang. Chèn như một ảnh và cố định chiều cao để ảnh không bị méo."
+ },
+ "htmlmain": {
+  "en": "main",
+  "say": "mên",
+  "vi": "phần thân trang",
+  "gloss": "Thẻ bọc nội dung chính của trang, tức phần người xem tìm đến để đọc. Mỗi trang chỉ nên có một thẻ main."
+ },
+ "htmlsection": {
+  "en": "section",
+  "say": "XÉC-sần",
+  "vi": "khu vực nội dung",
+  "gloss": "Thẻ chia thân trang thành từng khu, mỗi khu một chủ đề và mở đầu bằng một tiêu đề. Nhờ vậy trang dài vẫn dễ đọc."
+ },
+ "htmlfooter": {
+  "en": "footer",
+  "say": "PHÚT-tơ",
+  "vi": "chân trang",
+  "gloss": "Dải dưới cùng khép lại trang, chứa thông tin liên hệ, dòng bản quyền và vài liên kết phụ. Không đặt nội dung chính ở đây."
+ },
+ "htmla": {
+  "en": "a (anchor)",
+  "say": "ây, đọc đủ là ANG-cơ",
+  "vi": "thẻ liên kết",
+  "gloss": "Thẻ tạo liên kết: chữ nằm giữa hai thẻ là phần bấm được, còn href ghi tên trang đích."
+ },
+ "htmlnav": {
+  "en": "nav (navigation)",
+  "say": "náp, đọc đủ là na-vi-GÂY-sần",
+  "vi": "thanh điều hướng",
+  "gloss": "Thẻ bọc nhóm liên kết chuyển trang, tức cái menu của website. Đặt nav giống nhau và cùng vị trí trên mọi trang để người xem không bị lạc."
+ },
+ "relativelink": {
+  "en": "relative link",
+  "say": "RE-lơ-típ linh",
+  "vi": "liên kết tương đối",
+  "gloss": "Liên kết chỉ ghi tên tệp trong cùng dự án chứ không ghi địa chỉ đầy đủ. Nhờ vậy chép thư mục đi đâu hay tải lên mạng thì liên kết vẫn chạy."
+ },
+ "attrclass": {
+  "en": "class",
+  "say": "clát",
+  "vi": "tên nhóm để gắn CSS",
+  "gloss": "Thuộc tính đặt tên cho một hay nhiều thẻ để CSS tô riêng nhóm đó. Hay dùng để đánh dấu mục menu đang mở."
+ },
+ "htmlform": {
+  "en": "form (thẻ HTML)",
+  "say": "phom",
+  "vi": "biểu mẫu",
+  "gloss": "Thẻ bọc cả cụm ô nhập và nút gửi. Nó mở luồng ngược để người xem gửi thông tin về cho chủ trang, thay vì chỉ đọc."
+ },
+ "submit": {
+  "en": "submit",
+  "say": "sấp-MÍT",
+  "vi": "gửi biểu mẫu",
+  "gloss": "Nút kết thúc biểu mẫu: gom mọi thứ vừa nhập rồi gửi đi. Thiếu nút submit thì biểu mẫu chỉ để nhìn."
+ },
+ "brokenlink": {
+  "en": "broken link",
+  "say": "BRÔ-cân linh",
+  "vi": "liên kết gãy",
+  "gloss": "Liên kết bấm vào không ra trang nào, thường do href gõ sai tên tệp. Cách tìm là bấm thử lần lượt từng liên kết trong trang."
+ },
+ "responsive": {
+  "en": "responsive",
+  "say": "ri-SPON-xíp",
+  "vi": "co giãn theo màn hình",
+  "gloss": "Trang được làm sao cho vẫn dễ đọc trên điện thoại: ảnh tự co lại, các khối tự xuống hàng, người xem chỉ cuộn dọc chứ không phải kéo ngang."
+ },
+ "hosting": {
+  "en": "hosting",
+  "say": "HÔ-xtinh",
+  "vi": "dịch vụ lưu trữ web",
+  "gloss": "Dịch vụ giữ tệp website trên một máy chủ luôn bật, để trang có địa chỉ ai cũng mở được. Đưa trang lên hosting là bước cuối của dự án."
  }
 };
 if (typeof window !== "undefined") window.VOCAB_TERMS = VOCAB_TERMS;
