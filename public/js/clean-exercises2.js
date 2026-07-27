@@ -373,4 +373,15 @@
  ]
 };
   Object.keys(ADD).forEach(function (k) { EXERCISES[k] = (EXERCISES[k] || []).concat(ADD[k]); });
+
+  /* Chuyển về từ bài SGK cũ khi gộp 2 chương trình: 2 bài tập mảng 1 & 2 chiều
+     vốn gắn ở bài "Mảng một chiều và hai chiều" -> nay thuộc bài C11-12. */
+  EXERCISES["C11-12"] = (EXERCISES["C11-12"] || []).concat([
+    { type: "code", prompt: "Cho mảng `A = [5, 10, 15, 20]`. In ra phần tử ở **chỉ số 2**.",
+      starter: "A = [5, 10, 15, 20]\n# in A[2]\n", expected: "15",
+      hint: "Chỉ số đếm từ 0, nên A[2] là phần tử thứ ba.", solution: "A = [5, 10, 15, 20]\nprint(A[2])" },
+    { type: "code", prompt: "Cho bảng `M = [[1, 2], [3, 4]]`. In ra phần tử ở **hàng 1, cột 0**.",
+      starter: "M = [[1, 2], [3, 4]]\n# in M[1][0]\n", expected: "3",
+      hint: "M[1] là hàng thứ hai [3, 4]; lấy cột 0.", solution: "M = [[1, 2], [3, 4]]\nprint(M[1][0])" },
+  ]);
 })();
