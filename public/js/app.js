@@ -59,7 +59,8 @@ function save(key, val) { const all = loadAll(); all[key] = val; localStorage.se
  * ------------------------------------------------------------------------- */
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 function aIco(n, c, s) { return (typeof ICON === "function") ? ICON(n, s || 16, c) : ""; }
-function stageColor(s) { return s == 10 ? "#16a34a" : s == 11 ? "#3b82f6" : s == 12 ? "#d97706" : (s == 23 || s == 24) ? "#0891b2" : "#4f46e5"; }
+/* Màu theo lớp: 20/21/22 = Tin 10/11/12 (nhánh KHMT), 23/24 = Tin học ứng dụng */
+function stageColor(s) { return s == 20 ? "#16a34a" : s == 21 ? "#3b82f6" : s == 22 ? "#d97706" : (s == 23 || s == 24) ? "#0891b2" : "#4f46e5"; }
 
 /* Định hướng của bài học: "" = dùng chung cả hai định hướng; "khmt" / "udung" = chỉ riêng định hướng đó.
    Tính từ stage + topic + id, không cần lưu trường 'track' trên dữ liệu bài. */
@@ -367,30 +368,8 @@ function renderLessons() {
   const doneCount = learned.filter(Boolean).length;
   const pct = Math.round((doneCount / sorted.length) * 100);
 
-  // Chương (chủ đề) của từng sách — chia nhỏ lộ trình cho dễ theo dõi
+  // Chương (chủ đề) của từng lớp — chia nhỏ lộ trình cho dễ theo dõi
   const CHAPTERS = {
-    10: [
-      { name: "Máy tính, dữ liệu và số hoá", from: 1, to: 7, color: "#2563eb" },
-      { name: "Mạng, Internet và an toàn", from: 8, to: 11, color: "#0d9488" },
-      { name: "Thiết kế đồ hoạ", from: 12, to: 15, color: "#e11d48" },
-      { name: "Lập trình Python", from: 16, to: 32, color: "#4f46e5" },
-      { name: "Hướng nghiệp tin học", from: 33, to: 34, color: "#ea580c" },
-    ],
-    11: [
-      { name: "Máy tính và hệ điều hành", from: 1, to: 5, color: "#2563eb" },
-      { name: "Internet: lưu trữ, tìm kiếm, an toàn", from: 6, to: 9, color: "#0d9488" },
-      { name: "Cơ sở dữ liệu và SQL", from: 10, to: 16, color: "#7c3aed" },
-      { name: "Kĩ thuật lập trình và thuật toán", from: 17, to: 31, color: "#4f46e5" },
-    ],
-    12: [
-      { name: "Trí tuệ nhân tạo", from: 1, to: 2, color: "#9333ea" },
-      { name: "Mạng máy tính", from: 3, to: 5, color: "#0d9488" },
-      { name: "Đạo đức và ứng xử mạng", from: 6, to: 6, color: "#d97706" },
-      { name: "Thiết kế web (HTML và CSS)", from: 7, to: 18, color: "#e11d48" },
-      { name: "Hướng nghiệp công nghệ thông tin", from: 19, to: 21, color: "#ea580c" },
-      { name: "Mạng máy tính nâng cao", from: 22, to: 24, color: "#0d9488" },
-      { name: "Học máy, Khoa học dữ liệu, Mô phỏng", from: 25, to: 30, color: "#9333ea" },
-    ],
     20: [
       { name: "Máy tính, dữ liệu và số hoá", from: 1, to: 7, color: "#2563eb" },
       { name: "Mạng máy tính và Internet", from: 8, to: 10, color: "#0d9488" },
@@ -724,13 +703,6 @@ function renderLesson(data) {
     </div>
     <h2 style="margin-bottom:8px">${esc(l.title)}</h2>
     <p style="color:var(--text-soft);font-size:15px;margin-bottom:18px">${fmtInline(l.intro)}</p>
-
-    ${l.sgk ? `
-    <div class="sgk-box">
-      <div class="sgk-head" id="sgkToggle"><span>${aIco("book", "#3b82f6", 16)} Trang sách giáo khoa</span><small>${esc(l.sgk.ref || "")}</small><span class="sgk-chev">${aIco("chevdown", null, 14)}</span></div>
-      <div class="sgk-pages" id="sgkPages">${(l.sgk.images || []).map((s) => `<img class="sgk-img" src="${esc(s)}" alt="Trang sách giáo khoa" onerror="this.style.display='none';this.insertAdjacentHTML('afterend','<div class=&quot;sgk-missing&quot;>⚠ Chưa có ảnh trang sách (${esc(s)}). Đây là tệp cục bộ bạn tự tạo.</div>')">`).join("")}</div>
-    </div>
-    <div class="section-title" style="margin-top:8px">${aIco("bulb", "#d97706", 16)} Giảng lại cho dễ hiểu</div>` : ""}
 
     <div class="lesson-body">${renderBlocks(l.sections)}</div>
 
