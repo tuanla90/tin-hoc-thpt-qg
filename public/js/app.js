@@ -315,6 +315,7 @@ function renderHome() {
     ${continueHtml}
 
     <div id="gamDash"></div>
+    <div id="skillCard"></div>
 
     <div class="section-title">${aIco("cap", "#4f46e5", 18)} Bắt đầu học</div>
     <div class="mode-grid">
@@ -381,6 +382,7 @@ function renderHome() {
   const cc = document.getElementById("continueCard");
   if (cc) { const goCur = () => go("lesson", { id: cc.dataset.id }); cc.onclick = goCur; cc.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); goCur(); } }; }
   if (typeof Gam !== "undefined") Gam.renderDashboard(document.getElementById("gamDash"));
+  if (typeof skillRenderCard === "function") skillRenderCard();
 }
 
 /* ===========================================================================
@@ -1084,8 +1086,9 @@ const PRACTICE_TABS = [
   { id: "chuong", nhan: "Theo chương", ic: "layers", mo: "Ôn trọn một chương — hợp khi kiểm tra 1 tiết." },
   { id: "chude", nhan: "Theo chủ đề", ic: "target", mo: "Ôn một mạch kiến thức xuyên suốt các lớp — hợp khi luyện thi tốt nghiệp." },
   { id: "lop", nhan: "Theo lớp", ic: "cap", mo: "Ôn tổng hợp cả một lớp — hợp khi thi học kì." },
+  { id: "yeu", nhan: "Chỗ yếu", ic: "flame", mo: "Ôn đúng chủ đề bạn đang yếu, ưu tiên những câu đã từng làm sai." },
 ];
-const setupCfg = { tab: "chude", topic: "all", grade: "all", type: "all", level: "all", lesson: "all", chapter: "", chapterStage: 0, count: 10, _gradeSynced: false };
+const setupCfg = { tab: "chude", topic: "all", grade: "all", type: "all", level: "all", lesson: "all", chapter: "", chapterStage: 0, weakTopic: "", count: 10, _gradeSynced: false };
 
 function renderPracticeSetup(data) {
   if (data && data.topic) { setupCfg.tab = "chude"; setupCfg.topic = data.topic; }
@@ -1167,6 +1170,20 @@ function renderPracticeSetup(data) {
         }).join("")}</div>
       </div>`;
 
+  } else if (tab === "yeu") {
+    const st = (typeof skillStats === "function") ? skillStats() : { bang: [], soChuDeCoDuLieu: 0 };
+    const co = st.bang.filter((x) => x.du).sort((a, b) => a.pct - b.pct);
+    if (!setupCfg.weakTopic && co.length) setupCfg.weakTopic = co[0].topic;
+    phanChinh = co.length
+      ? `<div class="config-row">
+          <label>Chủ đề yếu</label>
+          <div class="chip-group">${co.map((x) =>
+            chip(x.topic, `${x.topic}. ${x.ten}`, setupCfg.weakTopic, "weakTopic", `${x.pct}% đúng`)).join("")}</div>
+        </div>`
+      : `<div class="config-row"><label>Chưa có dữ liệu</label><div class="chip-group">
+          <span style="color:var(--text-soft);font-size:13.5px">Hãy làm vài bài luyện tập trước — mỗi chủ đề cần ít nhất 5 câu thì mới biết bạn yếu chỗ nào.</span>
+        </div></div>`;
+
   } else { /* tab === "lop" */
     phanChinh = `
       <div class="config-row">
@@ -1232,7 +1249,7 @@ function renderPracticeSetup(data) {
     const g = b.dataset.group;
     setupCfg[g] = g === "count" ? Number(b.dataset.val) : b.dataset.val;
     // đổi lớp/chương thì phải vẽ lại vì danh sách phụ thuộc lẫn nhau
-    if (g === "grade" || g === "chapterStage" || g === "count") return renderPracticeSetup();
+    if (g === "grade" || g === "chapterStage" || g === "count" || g === "weakTopic") return renderPracticeSetup();
     app.querySelectorAll(`.chip[data-group="${g}"]`).forEach((x) => x.classList.remove("active"));
     b.classList.add("active");
     updateAvail();
@@ -1257,6 +1274,9 @@ function practiceNguon() {
     return c ? c.name : "Chưa chọn chương";
   }
   if (setupCfg.tab === "lop") return "Lớp " + (setupCfg.grade === "all" ? "—" : setupCfg.grade);
+  if (setupCfg.tab === "yeu") {
+    return setupCfg.weakTopic ? "Chỗ yếu: " + TOPICS[setupCfg.weakTopic] : "Chưa xác định chỗ yếu";
+  }
   const t = setupCfg.topic === "all" ? "Tất cả chủ đề" : `${setupCfg.topic}. ${TOPICS[setupCfg.topic]}`;
   return t + (setupCfg.grade === "all" ? "" : " · lớp " + setupCfg.grade);
 }
@@ -1293,6 +1313,11 @@ function filterPool() {
   if (setupCfg.tab === "lop") {
     return setupCfg.grade === "all" ? [] : QUESTION_BANK.filter((q) => String(q.grade) === setupCfg.grade && phu(q));
   }
+  if (setupCfg.tab === "yeu") {
+    // Chủ đề yếu: chỉ lấy câu của chủ đề đó; thứ tự ưu tiên do skillPickWeak lo
+    if (!setupCfg.weakTopic) return [];
+    return QUESTION_BANK.filter((q) => q.topic === setupCfg.weakTopic && phu(q));
+  }
   return QUESTION_BANK.filter((q) =>
     (setupCfg.topic === "all" || q.topic === setupCfg.topic) &&
     (setupCfg.grade === "all" || String(q.grade) === setupCfg.grade) &&
@@ -1326,7 +1351,10 @@ function newQuiz(questions, mode, opts = {}) {
 function startPractice() {
   const pool = filterPool();
   if (!pool.length) return;
-  const qs = pick(pool, Math.min(setupCfg.count, pool.length));
+  // Ôn chỗ yếu: ưu tiên câu TỪNG SAI rồi mới tới câu chưa làm (xem skills.js)
+  const qs = (setupCfg.tab === "yeu" && setupCfg.weakTopic && typeof skillPickWeak === "function")
+    ? skillPickWeak(setupCfg.weakTopic, Math.min(setupCfg.count, pool.length))
+    : pick(pool, Math.min(setupCfg.count, pool.length));
   // Ôn đúng một bài -> ghi lessonId để tính sao thành thạo cho bài đó
   const bai = setupCfg.tab === "bai" ? LESSONS.find((x) => x.id === setupCfg.lesson) : null;
   State.quiz = newQuiz(qs, "practice", {
@@ -1860,6 +1888,13 @@ function doSubmit(timeUp) {
     total: result.total,
     durationSec,
     timeUp: !!timeUp,
+    /* Chi tiết từng câu — để dựng hồ sơ năng lực (radar 7 chủ đề) và biết người
+       học sai ở đâu mà ôn lại đúng chỗ. Không có phần này thì lịch sử chỉ biết
+       tổng điểm, không biết yếu chủ đề nào. */
+    detail: Q.questions.map((q, i) => ({
+      id: q.id, topic: q.topic, grade: q.grade, level: q.level,
+      dung: isAnswerCorrect(q, Q.answers[i]),
+    })),
   };
   State.history.unshift(record);
   State.history = State.history.slice(0, 50);

@@ -475,6 +475,8 @@ var Gam = {
       groups;
     var back = document.getElementById("gamBack");
     if (back) back.onclick = function () { if (typeof go === "function") go("home"); };
+    // Hồ sơ năng lực (radar 7 chủ đề) — xem js/skills.js
+    if (typeof skillInjectRadar === "function") skillInjectRadar();
   },
 };
 
