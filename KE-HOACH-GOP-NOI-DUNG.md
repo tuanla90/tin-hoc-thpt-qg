@@ -4,6 +4,35 @@
 > phần giá trị của nhánh bám SGK (câu hỏi, từ vựng, thực hành, ý giảng còn
 > thiếu). Bỏ mục "Bộ sách đang học" trong hồ sơ. Bỏ hẳn ảnh trang SGK.
 
+## ✅ ĐÃ XONG (27/07/2026) — Phase A→F
+
+| | Trước | Sau |
+|---|--:|--:|
+| Bài học | 212 (95 SGK + 117 tự soạn) | **117** (chỉ tự soạn) |
+| Câu hỏi có bài dùng tới | 1 399 | **1 687** (0 mồ côi) |
+| Câu / bài (trung bình) | 8,7 | **14,9** |
+| Bài có từ vựng | 0 bài tự soạn | **82** (215 thuật ngữ) |
+| Ảnh SGK có bản quyền | có | **không còn** |
+
+Đã làm: bảng ánh xạ 95→82 bài do 3 sub-agent đối chiếu theo nội dung; hợp câu
+hỏi; chuyển từ vựng + bài tập; gắn 132 câu ICT và 156 câu gốc bị bỏ quên; xoá
+17 tệp `sgk-*.js`; bỏ chọn bộ sách; đổi nhãn "Bản sạch — Tin 10" → "Tin học 10".
+
+**Bẫy đã vấp, ghi lại để đừng lặp:** các tệp `sgk-*.js` không chỉ chứa bài học
+mà còn đẩy **104 câu hỏi** vào ngân hàng → xoá tệp là mất câu. Đã tách sang
+`questions-sgk.js`. Tệp này phải nạp **trước `questions-vandung.js`** vì
+`questions-vandung.js` **tự đánh số ID lúc chạy** theo ngân hàng hiện có; đổi
+thứ tự nạp sẽ làm lệch toàn bộ ID và hỏng mọi `quiz` trỏ tới chúng.
+
+**Còn nợ (không gấp):** chương trình chưa có bài nào dạy **ngăn xếp/hàng đợi**
+và **kĩ thuật thiết kế thuật toán** (tham lam, vét cạn, quy hoạch động) — 7 câu
+hỏi thuộc 2 mảng này đang gắn tạm vào bài gần nhất. Cả hai đều thuộc chuyên đề
+nâng cao, không thi tốt nghiệp.
+
+---
+
+*Phần dưới là kế hoạch gốc, giữ lại để đối chiếu.*
+
 ## 1. Hiện trạng (số liệu đo thật trên app, 27/07/2026)
 
 | Nhánh | Bài | Câu gắn vào bài | Từ vựng | Thực hành |
