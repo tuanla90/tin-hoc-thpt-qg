@@ -17,11 +17,14 @@
  * ==========================================================================*/
 const express = require("express");
 const { aiConfig, aiChat } = require("./ai");
-const { layBai, layCau, noiDungBai, noiDungCau } = require("./lessons");
+const { layBai, layCau, layBaiTap, noiDungBai, noiDungCau, noiDungBaiTap } = require("./lessons");
 
 const TOI_DA_HOI = 500;      // ký tự một câu hỏi
 const TOI_DA_LICH_SU = 6;    // lượt hội thoại gửi kèm
 const TOI_DA_LUU = 4000;     // ký tự câu trả lời lưu vào nhật ký
+const TOI_DA_CODE = 3000;    // ký tự bài làm gửi kèm
+const TOI_DA_KETQUA = 800;   // ký tự kết quả chạy / thông báo lỗi
+const LOAI_BT = ["python", "sql", "web"];
 
 const LUAT = `Quy tắc:
 1. CHỈ trả lời dựa trên nội dung bài ở trên. Hỏi ngoài phạm vi thì nói thẳng là bài này không bàn tới, chỉ tên chủ đề/bài có nội dung đó rồi mời họ mở bài ấy.
@@ -31,11 +34,12 @@ const LUAT = `Quy tắc:
 5. Nếu bài có ví dụ code, ưu tiên giải thích bằng chính ví dụ đó.
 6. Viết bằng tiếng Việt, dùng markdown đơn giản (in đậm, gạch đầu dòng, khối code).`;
 
-/* Ghép prompt hệ thống. `bai` luôn có; `cau` chỉ có ở chế độ "vì sao tôi sai". */
-function dungSystem(bai, cau, daChon) {
+/* Ghép prompt hệ thống từ những mảnh MÁY CHỦ tự tra được.
+   `cau` chỉ có ở chế độ "vì sao tôi sai"; `bt` chỉ có ở chế độ gợi ý bài code. */
+function dungSystem(bai, cau, daChon, bt) {
   const p = ["Bạn là gia sư môn Tin học THPT, đang kèm một người TỰ HỌC ôn thi tốt nghiệp.", ""];
   if (bai) {
-    p.push(noiDungBai(bai));
+    p.push(noiDungBai(bai, bt ? 3500 : 7000)); // có bài tập thì để dành chỗ cho code
   } else {
     p.push("BÀI ĐANG HỌC: (người học đang ôn luyện, không mở bài cụ thể nào)");
   }
@@ -43,7 +47,11 @@ function dungSystem(bai, cau, daChon) {
     p.push("", "─────────", "Người học vừa làm câu hỏi sau và muốn hiểu vì sao mình sai:", noiDungCau(cau, daChon),
       "", "Hãy chỉ ra chỗ hiểu nhầm dẫn tới lựa chọn sai đó, rồi giảng lại ý đúng. Đừng chỉ nhắc lại đáp án.");
   }
+  if (bt) {
+    p.push("", "─────────", noiDungBaiTap(bt.loai, bt.de, bt.code, bt.ketQua, bt.loi));
+  }
   p.push("", "─────────", LUAT);
+  if (bt) p.push("7. Đây là bài thực hành: TUYỆT ĐỐI không đưa đáp án hoàn chỉnh. Mỗi lượt chỉ gỡ MỘT nút thắt rồi mời học sinh chạy lại.");
   return p.join("\n");
 }
 
@@ -69,6 +77,25 @@ function hopLe(hoi) {
 function ngayHomNay() {
   // Theo giờ Việt Nam để "mỗi ngày" đúng cảm nhận người dùng, không lệ thuộc giờ máy chủ.
   return new Date(Date.now() + 7 * 3600 * 1000).toISOString().slice(0, 10);
+}
+
+/* Chặn theo IP: hạn mức mỗi ngày tính theo TÀI KHOẢN, nhưng một người có thể lập
+   hàng loạt tài khoản. Bộ đếm trong RAM (mất khi restart — chấp nhận được, đây là
+   lớp chắn thứ hai chứ không phải lớp chính). */
+function chanTheoIp(max, cuaSoMs) {
+  const dem = new Map();
+  return function (req, res, next) {
+    const now = Date.now();
+    const key = req.ip || "?";
+    let h = dem.get(key);
+    if (!h || now - h.t0 > cuaSoMs) { h = { t0: now, n: 0 }; dem.set(key, h); }
+    h.n++;
+    if (dem.size > 5000) dem.clear();
+    if (h.n > max) {
+      return res.status(429).json({ error: "Bạn hỏi hơi dày rồi, nghỉ vài phút rồi hỏi tiếp nhé." });
+    }
+    next();
+  };
 }
 
 function createTutor(pool) {
@@ -120,7 +147,9 @@ function createTutor(pool) {
     } catch (e) { next(e); }
   });
 
-  r.post("/tutor", requireAuth, async (req, res, next) => {
+  const ipLimit = chanTheoIp(Number(process.env.AI_IP_PER_HOUR || 60), 60 * 60 * 1000);
+
+  r.post("/tutor", ipLimit, requireAuth, async (req, res, next) => {
     try {
       const cfg = aiConfig();
       if (!cfg.ready) return res.status(503).json({ error: "Gia sư AI chưa được bật trên máy chủ." });
@@ -134,6 +163,21 @@ function createTutor(pool) {
       const cau = b.questionId ? layCau(b.questionId) : null;
       if (b.lessonId && !bai) return res.status(400).json({ error: "Không tìm thấy bài học này." });
       if (b.questionId && !cau) return res.status(400).json({ error: "Không tìm thấy câu hỏi này." });
+
+      /* Chế độ gợi ý bài thực hành: đề bài + đáp án mẫu tra từ máy chủ, chỉ có
+         BÀI LÀM là của trình duyệt (không còn nguồn nào khác) nên cắt độ dài. */
+      let bt = null;
+      if (b.exLoai != null || b.exIndex != null) {
+        const loai = LOAI_BT.includes(String(b.exLoai)) ? String(b.exLoai) : null;
+        const de = loai ? layBaiTap(loai, b.lessonId, b.exIndex) : null;
+        if (!de) return res.status(400).json({ error: "Không tìm thấy bài thực hành này." });
+        bt = {
+          loai, de,
+          code: String(b.code || "").slice(0, TOI_DA_CODE),
+          ketQua: String(b.ketQua || "").slice(0, TOI_DA_KETQUA),
+          loi: String(b.loi || "").slice(0, TOI_DA_KETQUA),
+        };
+      }
       if (!bai && !cau) return res.status(400).json({ error: "Thiếu bài học để hỏi." });
 
       /* Hồ sơ (nếu có) chỉ dùng để ghi nhật ký, phải thuộc đúng tài khoản. */
@@ -154,7 +198,7 @@ function createTutor(pool) {
       }
       await themLuot(req.session.uid, 1); // trừ trước để không bị lách bằng cách ngắt giữa chừng
 
-      const system = dungSystem(bai, cau, b.daChon);
+      const system = dungSystem(bai, cau, b.daChon, bt);
       const messages = locLichSu(b.history).concat([{ role: "user", content: hoi }]);
 
       res.setHeader("Content-Type", "application/x-ndjson; charset=utf-8");
@@ -186,7 +230,7 @@ function createTutor(pool) {
           await q(
             `INSERT INTO tutor_log (user_id, profile_id, kieu, lesson_id, question_id, cau_hoi, tra_loi)
              VALUES ($1,$2,$3,$4,$5,$6,$7)`,
-            [req.session.uid, profileId, cau ? "wrong" : "lesson", bai ? bai.id : null,
+            [req.session.uid, profileId, bt ? "exercise" : cau ? "wrong" : "lesson", bai ? bai.id : null,
              cau ? cau.id : null, hoi, traLoi.slice(0, TOI_DA_LUU)]
           );
         } catch (e) { console.error("[tutor] Không ghi được nhật ký:", e.message); }

@@ -214,10 +214,11 @@ function exerciseHTML(ex, i) {
     (ex.hint ? '<div class="ex-hint" hidden>' + xIco("bulb", "#d97706", 14) + " " + esc(ex.hint) + "</div>" : "") +
     '<pre class="pg-out ex-out" hidden></pre>' +
     '<div class="ex-result" hidden></div>' +
+    '<button class="btn btn-ghost ex-ai" hidden style="margin-top:10px">' + xIco("bulb", "#d97706", 14) + " Hỏi gia sư về bài này</button>" +
     '</div>';
 }
 
-function renderExercises(host, exercises) {
+function renderExercises(host, exercises, lessonId) {
   if (!host) return;
   host.innerHTML = '<div class="ex-list">' + exercises.map(exerciseHTML).join("") + '</div>';
   var nodes = host.querySelectorAll(".ex");
@@ -226,17 +227,33 @@ function renderExercises(host, exercises) {
     var ta = node.querySelector(".ex-editor");
     var out = node.querySelector(".ex-out");
     var res = node.querySelector(".ex-result");
+    var aiBtn = node.querySelector(".ex-ai");
+    var hong = 0;   // số lần chạy chưa ra kết quả đúng
+
+    /* Vấp 2 lần mới mời gia sư — lần đầu cứ để tự sửa, đó mới là phần học được. */
+    function moiGiaSu(code, ketQua, loi) {
+      hong++;
+      if (hong < 2 || !aiBtn || typeof Tutor === "undefined") return;
+      Tutor.batNut(aiBtn, function () { Tutor.moBaiTap("python", lessonId, i, code, ketQua, loi); });
+    }
+
     node.querySelector(".ex-run").onclick = function (e) {
       var btn = e.target;
       out.hidden = false; out.textContent = "Đang chạy..."; out.classList.remove("has-error"); res.hidden = true;
       btn.disabled = true;
       execPython(ta.value, function (output, err) {
         btn.disabled = false;
-        if (err) { out.textContent = "❌ Lỗi: " + err; out.classList.add("has-error"); res.hidden = true; return; }
+        if (err) {
+          out.textContent = "❌ Lỗi: " + err; out.classList.add("has-error"); res.hidden = true;
+          moiGiaSu(ta.value, output, err);
+          return;
+        }
         out.classList.remove("has-error");
         out.textContent = output === "" ? "(chương trình không in ra gì)" : output;
         var ok = normOut(output) === normOut(ex.expected);
         if (ok && typeof Gam !== "undefined") Gam.onExercisePass(ex);
+        if (ok) { hong = 0; if (aiBtn) aiBtn.hidden = true; }
+        else moiGiaSu(ta.value, output, null);
         res.hidden = false;
         res.className = "ex-result " + (ok ? "ok" : "no");
         res.innerHTML = ok
@@ -271,7 +288,7 @@ function injectExercises(lesson) {
     '<p style="color:var(--text-soft);font-size:13.5px;margin-bottom:12px">Tự tay viết code rồi bấm "Chạy &amp; Kiểm tra" — máy sẽ chấm kết quả giúp em. Bí quá thì xem Gợi ý hoặc Đáp án mẫu.</p>' +
     '<div class="ex-host"></div>';
   anchor.parentNode.insertBefore(wrap, anchor);
-  renderExercises(wrap.querySelector(".ex-host"), exs);
+  renderExercises(wrap.querySelector(".ex-host"), exs, lesson.id);
 }
 
 if (typeof window !== "undefined") {

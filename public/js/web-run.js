@@ -109,14 +109,17 @@
       "</div>" +
       (ex.hint ? '<div class="wbx-hint" hidden>' + (typeof ICON === "function" ? ICON("bulb", 14, "#d97706") : "") + " " + esc(ex.hint) + "</div>" : "") +
       '<div class="wbx-verdict" hidden></div>' +
+      '<button class="btn btn-ghost wbx-ai" hidden style="margin-top:10px">' + (typeof ICON === "function" ? ICON("bulb", 14, "#d97706") : "") + " Hỏi gia sư về bài này</button>" +
       "</div>";
   }
 
-  function bindEx(node, ex) {
+  function bindEx(node, ex, i, lessonId) {
     var ta = node.querySelector(".wbx-editor");
     var frame = node.querySelector(".wbx-frame");
     var verdict = node.querySelector(".wbx-verdict");
+    var aiBtn = node.querySelector(".wbx-ai");
     var timer = null;
+    var hong = 0;
     function preview() { frame.srcdoc = buildHtml(ex, ta.value); }
     ta.addEventListener("input", function () { clearTimeout(timer); timer = setTimeout(preview, 250); });
     preview();
@@ -135,6 +138,14 @@
         var results = ex.checks.map(function (c, k) { return { desc: c.desc, ok: String(got[k]) === String(want[k]) }; });
         var allOk = results.every(function (x) { return x.ok; });
         if (allOk && typeof Gam !== "undefined" && Gam.onExercisePass) Gam.onExercisePass({ prompt: ex.prompt });
+        /* Vấp 2 lần mới mời gia sư; gửi kèm danh sách yêu cầu chưa đạt. */
+        if (allOk) { hong = 0; if (aiBtn) aiBtn.hidden = true; }
+        else if (++hong >= 2 && aiBtn && typeof Tutor !== "undefined") {
+          var chuaDat = results.filter(function (x) { return !x.ok; }).map(function (x) { return "- " + x.desc; }).join("\n");
+          Tutor.batNut(aiBtn, function () {
+            Tutor.moBaiTap("web", lessonId, i, ta.value, "Yêu cầu chưa đạt:\n" + chuaDat, null);
+          });
+        }
         verdict.hidden = false;
         verdict.className = "wbx-verdict " + (allOk ? "ok" : "no");
         verdict.innerHTML =
@@ -158,7 +169,7 @@
     var host = wrap.querySelector(".wbx-host");
     host.innerHTML = list.map(exHTML).join("");
     var nodes = host.querySelectorAll(".wbx");
-    list.forEach(function (ex, i) { bindEx(nodes[i], ex); });
+    list.forEach(function (ex, i) { bindEx(nodes[i], ex, i, lesson.id); });
   }
 
   if (typeof window !== "undefined") {

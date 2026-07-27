@@ -134,3 +134,16 @@ test("mật khẩu sai -> 401", async () => {
   const r = await req("/api/auth/login", { method: "POST", body: { email: "an.nguyen@gmail.com", password: "saimatkhau" } });
   assert.equal(r.status, 401);
 });
+
+test("xoá tài khoản: sai mật khẩu thì không xoá gì; đúng thì mất sạch", async () => {
+  await req("/api/auth/login", { method: "POST", body: { email: "an.nguyen@gmail.com", password: "123456" } });
+  const sai = await req("/api/auth/account", { method: "DELETE", body: { password: "khong-phai" } });
+  assert.equal(sai.status, 401);
+  assert.equal((await req("/api/profiles")).data.profiles.length, 1); // vẫn còn nguyên
+
+  const ok = await req("/api/auth/account", { method: "DELETE", body: { password: "123456" } });
+  assert.equal(ok.status, 200);
+  assert.equal((await req("/api/profiles")).status, 401);             // phiên đã bị huỷ
+  const lai = await req("/api/auth/login", { method: "POST", body: { email: "an.nguyen@gmail.com", password: "123456" } });
+  assert.equal(lai.status, 401);                                      // tài khoản không còn
+});

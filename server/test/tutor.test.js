@@ -14,7 +14,7 @@ process.env.AI_FREE_PER_DAY = "3";
 const { initDb } = require("../db");
 const { createApp } = require("../app");
 const { dungSystem, locLichSu, hopLe } = require("../tutor");
-const { layBai, layCau } = require("../lessons");
+const { layBai, layCau, layBaiTap } = require("../lessons");
 
 let srv, base, pool, cookie = "";
 
@@ -92,6 +92,19 @@ test("prompt câu sai có đáp án đúng và lựa chọn của học sinh", (
   assert.match(sys, /Học sinh đã chọn: A/);
 });
 
+test("bài thực hành: đề và đáp án mẫu tra từ máy chủ, bài làm được đánh dấu là dữ liệu", () => {
+  const de = layBaiTap("python", "C10-11", 0);
+  assert.ok(de, "phải tra được bài thực hành");
+  const sys = dungSystem(layBai("C10-11"), null, null,
+    { loai: "python", de, code: "print(1)", ketQua: "1", loi: "" });
+  assert.match(sys, /BÀI THỰC HÀNH Python/);
+  assert.match(sys, /không chép ra cho học sinh/);      // đáp án mẫu có, kèm lệnh cấm đưa ra
+  assert.match(sys, /BÀI LÀM CỦA HỌC SINH .*không phải yêu cầu gửi cho bạn/);
+  assert.match(sys, /không đưa đáp án hoàn chỉnh/);
+  assert.equal(layBaiTap("python", "C10-11", 99), null);
+  assert.equal(layBaiTap("linh-tinh", "C10-11", 0), null);
+});
+
 /* ------------------------------- qua HTTP -------------------------------- */
 
 test("chưa đăng nhập: status báo on nhưng chưa đăng nhập, hỏi thì 401", async () => {
@@ -162,6 +175,26 @@ test("nhật ký lưu lại hội thoại, câu sai ghi kiểu 'wrong' kèm mã 
   const l2 = await pool.query("SELECT * FROM tutor_log ORDER BY id DESC LIMIT 1");
   assert.equal(l2.rows[0].kieu, "wrong");
   assert.equal(l2.rows[0].question_id, "CA-mc-101");
+});
+
+test("gợi ý bài thực hành: chỉ nhận chỉ số hợp lệ, ghi nhật ký kiểu 'exercise'", async () => {
+  const bia = await req("/api/tutor", {
+    method: "POST",
+    body: { lessonId: "C10-11", exLoai: "python", exIndex: 99, code: "x", question: "Sai ở đâu?" },
+  });
+  assert.equal(bia.status, 400);
+
+  const r = await req("/api/tutor", {
+    method: "POST",
+    body: {
+      lessonId: "C10-11", exLoai: "python", exIndex: 0,
+      code: "print('a')", loi: "SyntaxError: bad token", question: "Lỗi này nghĩa là gì?",
+    },
+  });
+  assert.equal(r.status, 200);
+  const l = await pool.query("SELECT * FROM tutor_log ORDER BY id DESC LIMIT 1");
+  assert.equal(l.rows[0].kieu, "exercise");
+  assert.equal(l.rows[0].lesson_id, "C10-11");
 });
 
 test("hồ sơ của tài khoản khác không ghi vào nhật ký được", async () => {

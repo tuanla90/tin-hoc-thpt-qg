@@ -298,14 +298,26 @@
       "</div>" +
       (ex.hint ? '<div class="sqx-hint" hidden>' + (typeof ICON === "function" ? ICON("bulb", 14, "#d97706") : "") + " " + esc(ex.hint) + "</div>" : "") +
       '<div class="sqx-res"></div><div class="sqx-verdict" hidden></div>' +
+      '<button class="btn btn-ghost sqx-ai" hidden style="margin-top:10px">' + (typeof ICON === "function" ? ICON("bulb", 14, "#d97706") : "") + " Hỏi gia sư về bài này</button>" +
       "</div>";
   }
 
-  function bindEx(node, ex) {
+  function bindEx(node, ex, i, lessonId) {
     var ta = node.querySelector(".sqx-editor");
     var res = node.querySelector(".sqx-res");
     var verdict = node.querySelector(".sqx-verdict");
     var runBtn = node.querySelector(".sqx-run");
+    var aiBtn = node.querySelector(".sqx-ai");
+    var hong = 0;
+
+    /* Vấp 2 lần mới mời gia sư — lần đầu để người học tự dò lại. */
+    function moiGiaSu(loi) {
+      hong++;
+      if (hong < 2 || !aiBtn || typeof Tutor === "undefined") return;
+      Tutor.batNut(aiBtn, function () {
+        Tutor.moBaiTap("sql", lessonId, i, ta.value, res.textContent.slice(0, 600), loi);
+      });
+    }
     var hintBtn = node.querySelector(".sqx-hint-btn");
     if (hintBtn) hintBtn.onclick = function () { var h = node.querySelector(".sqx-hint"); h.hidden = !h.hidden; };
     var solBtn = node.querySelector(".sqx-sol-btn");
@@ -318,13 +330,14 @@
         var actual, err = null;
         try { actual = runSeq(SQLmod, ex.schema, ta.value, ex.check); }
         catch (e) { err = String(e && e.message ? e.message : e); }
-        if (err) { verdict.className = "sqx-verdict err"; verdict.textContent = "❌ Lỗi SQL: " + err; restore(); return; }
+        if (err) { verdict.className = "sqx-verdict err"; verdict.textContent = "❌ Lỗi SQL: " + err; moiGiaSu(err); restore(); return; }
         var expected = runSeq(SQLmod, ex.schema, ex.solution, ex.check);
         var showRes = ex.check ? actual : actual;
         res.innerHTML = (ex.check ? '<div class="sqx-cap">Bảng sau khi chạy:</div>' : '<div class="sqx-cap">Kết quả truy vấn của bạn:</div>') +
           (showRes.rows.length ? tableHTML(showRes.columns, showRes.rows) : '<div class="sqx-cap">(không có dòng nào)</div>');
         var ok = sameResult(actual, expected, ex.orderMatters);
         if (ok && typeof Gam !== "undefined" && Gam.onExercisePass) Gam.onExercisePass({ prompt: ex.prompt });
+        if (ok) { hong = 0; if (aiBtn) aiBtn.hidden = true; } else moiGiaSu(null);
         verdict.className = "sqx-verdict " + (ok ? "ok" : "no");
         verdict.innerHTML = ok
           ? (typeof ICON === "function" ? ICON("check2", 15, "#16a34a") : "") + " <b>Chính xác!</b> Truy vấn cho đúng kết quả mong đợi."
@@ -348,7 +361,7 @@
     var host = wrap.querySelector(".sqx-host");
     host.innerHTML = list.map(exHTML).join("");
     var nodes = host.querySelectorAll(".sqx");
-    list.forEach(function (ex, i) { bindEx(nodes[i], ex); });
+    list.forEach(function (ex, i) { bindEx(nodes[i], ex, i, lesson.id); });
   }
 
   /* ---------------- SÂN CHƠI SQL (route sqlLab) ---------------- */

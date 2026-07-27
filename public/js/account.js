@@ -262,6 +262,12 @@
           '<div class="ac-err" id="acErr"></div>' +
           '<p class="ac-note">Một tài khoản dùng được cho <b>nhiều người học</b> — ví dụ hai anh em, mỗi người một hồ sơ với tiến độ riêng.</p>' +
         "</div>" +
+        '<p class="ac-note" style="margin-top:14px;text-align:center">' +
+          (isReg ? "Tạo tài khoản nghĩa là bạn đồng ý với " : "") +
+          '<a href="quyen-rieng-tu.html#dieu-khoan" target="_blank" rel="noopener">Điều khoản sử dụng</a> và ' +
+          '<a href="quyen-rieng-tu.html" target="_blank" rel="noopener">Quyền riêng tư</a>.' +
+          (isReg ? " Người học dưới 18 tuổi nên nhờ cha mẹ tạo tài khoản." : "") +
+        "</p>" +
       "</div>";
     if (typeof iconify === "function") iconify(app);
     wireGate(isReg);
@@ -388,6 +394,15 @@
         (Account.profiles.length < 6
           ? '<div class="ac-actions"><button class="btn btn-primary" id="acAdd">' + ico("user", null, 15) + " Thêm hồ sơ</button></div>"
           : '<p class="ac-note">Đã đủ 6 hồ sơ — xoá bớt nếu muốn thêm người học mới.</p>') +
+      "</div>" +
+
+      '<div class="section-title" style="margin-top:22px">' + ico("bookmark", "#64748b", 17) + " Dữ liệu của bạn</div>" +
+      '<div class="pf-card">' +
+        '<p class="ac-note" style="margin:0 0 10px">Xem ứng dụng lưu những gì và vì sao: ' +
+          '<a href="quyen-rieng-tu.html" target="_blank" rel="noopener">Quyền riêng tư</a> · ' +
+          '<a href="quyen-rieng-tu.html#dieu-khoan" target="_blank" rel="noopener">Điều khoản sử dụng</a></p>' +
+        '<div class="ac-actions"><button class="btn btn-ghost danger-text" id="acDelAcc">Xoá tài khoản</button></div>' +
+        '<p class="ac-note" style="margin:8px 0 0">Xoá tài khoản là xoá hẳn mọi hồ sơ, kết quả học và nhật ký hỏi gia sư — <b>không lấy lại được</b>.</p>' +
       "</div>";
 
     if (typeof iconify === "function") iconify(app);
@@ -405,6 +420,7 @@
     app.querySelectorAll("[data-sua]").forEach(function (b) {
       b.onclick = function () { if (typeof go === "function") go("profile"); };
     });
+    document.getElementById("acDelAcc").onclick = xoaTaiKhoan;
     app.querySelectorAll("[data-xoa]").forEach(function (b) {
       b.onclick = function () { xoaHoSo(Number(b.dataset.xoa)); };
     });
@@ -432,6 +448,41 @@
     var msg = "Toàn bộ tiến độ của hồ sơ “" + p.name + "” sẽ bị xoá vĩnh viễn. Tiếp tục?";
     if (typeof confirmBox === "function") confirmBox("Xoá hồ sơ?", msg, "Xoá").then(xong);
     else xong(window.confirm(msg));
+  }
+
+  /* Xoá hẳn tài khoản. Không dùng hộp xác nhận thường vì việc này không lấy lại
+     được — bắt gõ lại mật khẩu ngay tại chỗ, máy chủ kiểm lần nữa. */
+  function xoaTaiKhoan() {
+    var nut = document.getElementById("acDelAcc");
+    if (!nut || nut.dataset.mo === "1") return;
+    nut.dataset.mo = "1";
+    nut.disabled = true;
+    var o = document.createElement("div");
+    o.style.marginTop = "10px";
+    o.innerHTML =
+      '<div class="pf-field"><label for="acDelPass">Nhập mật khẩu để xác nhận xoá tài khoản</label>' +
+        '<input class="pf-input" id="acDelPass" type="password" autocomplete="current-password"></div>' +
+      '<div class="ac-actions">' +
+        '<button class="btn btn-ghost" id="acDelHuy">Thôi, giữ lại</button>' +
+        '<button class="btn btn-danger" id="acDelOk">Xoá vĩnh viễn</button>' +
+      "</div>" +
+      '<div class="ac-err" id="acDelErr"></div>';
+    nut.parentNode.parentNode.appendChild(o);
+    var pass = o.querySelector("#acDelPass");
+    pass.focus();
+    o.querySelector("#acDelHuy").onclick = function () { o.remove(); nut.disabled = false; nut.dataset.mo = ""; };
+    o.querySelector("#acDelOk").onclick = function () {
+      var err = o.querySelector("#acDelErr");
+      err.textContent = "";
+      api("/auth/account", "DELETE", { password: pass.value }).then(function () {
+        Account.profiles.forEach(function (p) {
+          localStorage.removeItem("tinhoc_thpt_v1:" + p.id);
+          localStorage.removeItem("tinhoc_gam_v1:" + p.id);
+        });
+        localStorage.removeItem(KEY_PROFILE);
+        location.href = "index.html";
+      }).catch(function (e) { err.textContent = e.message; });
+    };
   }
 
   Account.boot = boot;

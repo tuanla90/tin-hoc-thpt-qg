@@ -145,6 +145,21 @@ function createApi(pool) {
   /* ============================ TỪ ĐÂY CẦN ĐĂNG NHẬP ============================ */
   r.use(requireAuth);
 
+  /* Xoá hẳn tài khoản — quyền của người dùng, ghi trong trang Quyền riêng tư.
+     Bắt nhập lại mật khẩu vì đây là việc KHÔNG lấy lại được. Mọi hồ sơ, tiến độ,
+     nhật ký gia sư đều xoá theo nhờ ON DELETE CASCADE. */
+  r.delete("/auth/account", async (req, res, next) => {
+    try {
+      const found = await q("SELECT password_hash FROM users WHERE id = $1", [req.session.uid]);
+      const row = found.rows[0];
+      const ok = row && (await bcrypt.compare(String((req.body || {}).password || ""), row.password_hash));
+      if (!ok) return res.status(401).json({ error: "Mật khẩu chưa đúng — chưa xoá gì cả." });
+      await q("DELETE FROM users WHERE id = $1", [req.session.uid]);
+      if (req.session) req.session.destroy(() => res.json({ ok: true }));
+      else res.json({ ok: true });
+    } catch (e) { next(e); }
+  });
+
   /* ------------------------------ HỒ SƠ ------------------------------ */
   r.get("/profiles", async (req, res, next) => {
     try {

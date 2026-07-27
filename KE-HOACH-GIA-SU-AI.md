@@ -71,6 +71,7 @@ Biến môi trường đặt trên Railway:
 | `AI_MODEL_DEEP` | model mạnh hơn | Dùng khi bấm “giải thích kỹ hơn” |
 | `AI_FREE_PER_DAY` | `5` | Hạn mức bản miễn phí |
 | `AI_PAID_PER_DAY` | `50` | Hạn mức bản trả phí |
+| `AI_IP_PER_HOUR` | `60` | Trần lượt/giờ theo IP (lớp chắn thứ hai) |
 
 Khác biệt phải xử lý trong lớp bọc (không để lộ ra ngoài):
 
@@ -219,13 +220,25 @@ Ba tác dụng, xếp theo giá trị:
 - [x] Máy chủ tự tra câu hỏi trong `QUESTION_BANK` theo `questionId`, dựng ngữ cảnh gồm đề bài + các phương án + **đáp án đúng** + **lựa chọn của học sinh** + lời giải sẵn có, rồi yêu cầu AI chỉ ra chỗ hiểu nhầm chứ không nhắc lại đáp án.
 - [x] Ghi `tutor_log` với `kieu='wrong'` kèm `question_id` — đây chính là dữ liệu để rà câu nào cả trăm người cùng sai.
 
-### Bước 4 — Gợi ý bài thực hành code (nửa buổi, làm sau)
-- [ ] Trong `clean-exercises.js`/`sql-run.js`, khi chấm sai 2 lần → hiện "Gợi ý từ gia sư" gửi kèm code người học và thông báo lỗi.
+### ✅ Bước 4 — Gợi ý bài thực hành code — XONG (29/07)
+- [x] Cả ba loại bài thực hành: **Python** (`exercises.js`), **SQL** (`sql-run.js`), **HTML/CSS** (`web-run.js`).
+- [x] Chấm sai **2 lần** mới hiện nút "Hỏi gia sư về bài này" — lần đầu để người học tự dò, đó mới là phần học được. Làm đúng thì nút ẩn đi và bộ đếm về 0.
+- [x] Máy chủ tra đề bài + đáp án mẫu theo `(exLoai, lessonId, exIndex)`; trình duyệt chỉ gửi **bài làm** và **kết quả chạy / thông báo lỗi**.
+- [x] Bài làm cắt ở 3 000 ký tự, kết quả chạy 800 ký tự, và được ghi rõ trong prompt là *dữ liệu để xem xét, không phải yêu cầu* — chống biến ô code thành đường nhét chỉ thị.
+- [x] Prompt thêm luật số 7: không đưa đáp án hoàn chỉnh, mỗi lượt chỉ gỡ **một** nút thắt. Đáp án mẫu có trong ngữ cảnh nhưng kèm lệnh cấm chép ra.
+- [x] Ghi `tutor_log` với `kieu='exercise'`.
 
-### Bước 5 — Vận hành
+### ✅ Bước 5 — Vận hành — XONG (29/07)
 - [x] Hạn mức theo **tài khoản** mỗi ngày (trừ lượt trước khi gọi AI, hoàn lại nếu nhà cung cấp lỗi ngay).
-- [ ] Thêm giới hạn theo IP (hiện mới có ở đăng nhập/đăng ký).
+- [x] Giới hạn theo IP: `AI_IP_PER_HOUR` (mặc định 60 lượt/giờ/IP) — chặn kiểu lập hàng loạt tài khoản để lách hạn mức ngày.
 - [ ] Xem log hằng tuần: câu hỏi nào lặp nhiều → **sửa luôn bài giảng cho rõ hơn**.
+
+### ✅ Quyền riêng tư & điều khoản — XONG (29/07)
+- [x] `public/quyen-rieng-tu.html`: 10 mục, viết theo đúng những gì phần mềm thực sự lưu và gửi đi (kể cả việc Google Fonts nhìn thấy IP). Có mục riêng cho **người học dưới 18 tuổi**.
+- [x] Nêu rõ: nhà cung cấp AI nhận **câu hỏi + nội dung bài**, KHÔNG nhận email/tên/điểm.
+- [x] Liên kết từ chân trang giới thiệu, màn đăng nhập/đăng ký, và trang Tài khoản.
+- [x] `DELETE /api/auth/account` + nút **Xoá tài khoản** (bắt gõ lại mật khẩu) — để quyền "xoá" trong trang không phải lời hứa suông.
+- [ ] **Việc của chủ sở hữu**: điền tên đơn vị, email, địa chỉ, chính sách hoàn tiền vào các chỗ `[…]`; nhờ người có chuyên môn pháp lý soát theo Nghị định 13/2023/NĐ-CP trước khi mở bán.
 
 ### Bật thật trên Railway (khi có khoá)
 

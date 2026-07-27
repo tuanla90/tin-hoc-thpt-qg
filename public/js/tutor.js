@@ -25,6 +25,16 @@
     "Có mẹo nào để không nhầm nữa không?",
     "Cho tôi một câu tương tự để thử lại",
   ];
+  const GOI_Y_BT_LOI = [
+    "Máy báo lỗi này nghĩa là gì?",
+    "Sai ở dòng nào?",
+    "Chỉ tôi bước sửa đầu tiên",
+  ];
+  const GOI_Y_BT_SAI = [
+    "Vì sao kết quả chưa khớp?",
+    "Tôi hiểu sai đề ở chỗ nào?",
+    "Chỉ tôi bước sửa đầu tiên",
+  ];
   /* Gợi ý hiện SAU khi gia sư trả lời xong. Mục đầu dùng model mạnh hơn nên
      đánh dấu riêng — mỗi lần bấm vẫn tính một lượt. */
   const GOI_Y_TIEP = ["Giải thích kỹ hơn", "Cho ví dụ dễ hình dung hơn"];
@@ -88,9 +98,11 @@
   /* Nút "Hỏi gia sư" chỉ hiện khi máy chủ đã bật AI — không bật thì không có nút
      nào chết vô duyên. */
   async function batNut(nut, moKhi) {
+    if (!nut) return;
     const t = await layTrangThai();
     if (!t.on) { nut.remove(); return; }
     nut.style.display = "";
+    nut.hidden = false;      // chỗ gọi có thể dùng thuộc tính hidden thay vì style
     nut.onclick = moKhi;
   }
 
@@ -242,6 +254,11 @@
           lessonId: NGU.lessonId || null,
           questionId: NGU.questionId || null,
           daChon: NGU.daChon != null ? NGU.daChon : undefined,
+          exLoai: NGU.exLoai || undefined,
+          exIndex: NGU.exIndex != null ? NGU.exIndex : undefined,
+          code: NGU.code || undefined,
+          ketQua: NGU.ketQua || undefined,
+          loi: NGU.loi || undefined,
           question: hoi,
           history: LICH.slice(-6),
           deep: !!sau,
@@ -315,6 +332,17 @@
         tieuDe: "Câu vừa làm",
         chao: "Mình xem câu này rồi. Bạn muốn mình giảng lại chỗ nào — vì sao đáp án bạn chọn chưa đúng, hay ý chính của câu?",
       }, GOI_Y_SAI);
+    },
+    /* Bài thực hành: gửi loại + chỉ số để máy chủ tự tra đề, kèm bài làm và
+       kết quả chạy. Đề bài và đáp án mẫu KHÔNG gửi từ đây. */
+    moBaiTap(loai, lessonId, i, code, ketQua, loi) {
+      mo({
+        lessonId, exLoai: loai, exIndex: i, code, ketQua, loi,
+        tieuDe: "Bài thực hành " + (i + 1),
+        chao: loi
+          ? "Mình thấy máy đang báo lỗi ở bài làm của bạn. Hỏi mình để cùng lần ra chỗ hỏng nhé — mình sẽ không đưa đáp án sẵn đâu."
+          : "Bài chạy được nhưng kết quả chưa khớp. Bạn muốn mình gợi ý từ đâu?",
+      }, loi ? GOI_Y_BT_LOI : GOI_Y_BT_SAI);
     },
     dong,
   };
