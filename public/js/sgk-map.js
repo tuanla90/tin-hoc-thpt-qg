@@ -10,6 +10,10 @@
  *  dụng) nên MỘT BỘ CÓ TỚI 5 QUYỂN. Thêm bộ hoặc thêm quyển chỉ là thêm phần
  *  tử vào mảng — trang /doi-chieu-sgk tự sinh thêm mục và thêm trang riêng.
  *
+ *  PHẦN LÕI DÙNG CHUNG: hai quyển cùng lớp của KNTT có phần đầu giống hệt
+ *  nhau (lớp 11: bài 1-16, lớp 12: bài 1-21) vì đó là nội dung cốt lõi cho cả
+ *  hai định hướng — nên chúng trỏ về cùng một bài của app, đúng như sách.
+ *
  *  MỘT bài SGK trỏ tới ĐÚNG MỘT bài của app; ngược lại một bài của app có thể
  *  gộp nhiều bài SGK.
  *
@@ -17,8 +21,12 @@
  *  "ngoài chương trình" — phần lớn là nửa sau của một bài SGK bị tách đôi cho
  *  dễ học. Giao diện vì thế chỉ hiện đối chiếu khi CÓ, không gắn nhãn phủ định.
  *
- *  CÒN THIẾU (xem SACH-CAN-TIM.md): nhánh Tin học ứng dụng, và hai bộ Cánh
- *  Diều / Chân trời sáng tạo cho lớp 10, 11.
+ *  ⚠️ KHI THÊM BỘ CÁNH DIỀU: bộ đó ĐÁNH SỐ BÀI LẶP LẠI THEO TỪNG CHỦ ĐỀ
+ *  (Chủ đề A có Bài 1-5, Chủ đề C lại có Bài 1-4...). Phải thêm trường `chuDe`
+ *  vào từng bài và hiện kèm, nếu không hai bài khác nhau sẽ trông y hệt nhau.
+ *
+ *  CÒN THIẾU (xem SACH-CAN-TIM.md): bộ Cánh Diều (đã có đủ 5 quyển PDF, chưa
+ *  đối chiếu) và bộ Chân trời sáng tạo (mới có quyển lớp 12).
  * ==========================================================================*/
 var SGK_MAP = {
   bo: [
@@ -82,7 +90,7 @@ var SGK_MAP = {
             {"so":11,"ten":"Cơ sở dữ liệu","trang":"53–57","cua":"C11-06"},
             {"so":12,"ten":"Hệ quản trị cơ sở dữ liệu và hệ cơ sở dữ liệu","trang":"58–63","cua":"C11-08"},
             {"so":13,"ten":"Cơ sở dữ liệu quan hệ","trang":"64–68","cua":"C11-07"},
-            {"so":14,"ten":"SQL - ngôn ngữ truy vấn có cấu trúc","trang":"69–72","cua":"C11-09"},
+            {"so":14,"ten":"SQL – Ngôn ngữ truy vấn có cấu trúc","trang":"69–72","cua":"C11-09"},
             {"so":15,"ten":"Bảo mật và an toàn hệ cơ sở dữ liệu","trang":"73–76","cua":"C11-11"},
             {"so":16,"ten":"Công việc quản trị cơ sở dữ liệu","trang":"77–80","cua":"C11-20"},
             {"so":17,"ten":"Dữ liệu mảng một chiều và hai chiều","trang":"81–85","cua":"C11-12"},
@@ -100,6 +108,42 @@ var SGK_MAP = {
             {"so":29,"ten":"Thực hành thiết kế chương trình theo mô đun","trang":"132–136","cua":"C11-30"},
             {"so":30,"ten":"Thiết lập thư viện cho chương trình","trang":"137–142","cua":"C11-31"},
             {"so":31,"ten":"Thực hành thiết lập thư viện chương trình","trang":"143–145","cua":"C11-31"},
+          ],
+        },
+        {
+          ma: "tin-hoc-11-ict", ten: "Tin học 11", lop: 11, huong: "ict", tenHuong: "Tin học ứng dụng",
+          bai: [
+            {"so":1,"ten":"Hệ điều hành","trang":"5","cua":"C11-01"},
+            {"so":2,"ten":"Thực hành sử dụng hệ điều hành","trang":"10","cua":"C11-21"},
+            {"so":3,"ten":"Phần mềm nguồn mở và phần mềm chạy trên Internet","trang":"15","cua":"C11-02"},
+            {"so":4,"ten":"Bên trong máy tính","trang":"21","cua":"C11-03"},
+            {"so":5,"ten":"Kết nối máy tính với các thiết bị số","trang":"27","cua":"C11-22"},
+            {"so":6,"ten":"Lưu trữ và chia sẻ tệp tin trên Internet","trang":"32","cua":"C11-24"},
+            {"so":7,"ten":"Thực hành tìm kiếm thông tin trên Internet","trang":"36","cua":"C11-05"},
+            {"so":8,"ten":"Thực hành nâng cao sử dụng thư điện tử và mạng xã hội","trang":"39","cua":"C11-23"},
+            {"so":9,"ten":"Giao tiếp an toàn trên Internet","trang":"43","cua":"C11-25"},
+            {"so":10,"ten":"Lưu trữ dữ liệu và khai thác thông tin phục vụ quản lí","trang":"49","cua":"C11-26"},
+            {"so":11,"ten":"Cơ sở dữ liệu","trang":"53","cua":"C11-06"},
+            {"so":12,"ten":"Hệ quản trị cơ sở dữ liệu và hệ cơ sở dữ liệu","trang":"58","cua":"C11-08"},
+            {"so":13,"ten":"Cơ sở dữ liệu quan hệ","trang":"64","cua":"C11-07"},
+            {"so":14,"ten":"SQL – Ngôn ngữ truy vấn có cấu trúc","trang":"69","cua":"C11-09"},
+            {"so":15,"ten":"Bảo mật và an toàn hệ cơ sở dữ liệu","trang":"73","cua":"C11-11"},
+            {"so":16,"ten":"Công việc quản trị cơ sở dữ liệu","trang":"77","cua":"C11-20"},
+            {"so":17,"ten":"Quản trị cơ sở dữ liệu trên máy tính","trang":"81","cua":"U11-01"},
+            {"so":18,"ten":"Thực hành xác định cấu trúc bảng và các trường khoá","trang":"86","cua":"U11-02"},
+            {"so":19,"ten":"Thực hành tạo lập cơ sở dữ liệu và các bảng","trang":"91","cua":"U11-03"},
+            {"so":20,"ten":"Thực hành tạo lập các bảng có khoá ngoài","trang":"95","cua":"U11-04"},
+            {"so":21,"ten":"Thực hành cập nhật và truy xuất dữ liệu các bảng","trang":"100","cua":"U11-05"},
+            {"so":22,"ten":"Thực hành cập nhật bảng dữ liệu có tham chiếu","trang":"105","cua":"U11-06"},
+            {"so":23,"ten":"Thực hành truy xuất dữ liệu qua liên kết các bảng","trang":"109","cua":"U11-07"},
+            {"so":24,"ten":"Thực hành sao lưu dữ liệu","trang":"113","cua":"U11-08"},
+            {"so":25,"ten":"Phần mềm chỉnh sửa ảnh","trang":"116","cua":"U11-09"},
+            {"so":26,"ten":"Công cụ tinh chỉnh màu sắc và công cụ chọn","trang":"122","cua":"U11-10"},
+            {"so":27,"ten":"Công cụ vẽ và một số ứng dụng","trang":"128","cua":"U11-12"},
+            {"so":28,"ten":"Tạo ảnh động","trang":"133","cua":"U11-13"},
+            {"so":29,"ten":"Khám phá phần mềm làm phim","trang":"137","cua":"U11-14"},
+            {"so":30,"ten":"Biên tập phim","trang":"143","cua":"U11-15"},
+            {"so":31,"ten":"Thực hành tạo phim hoạt hình","trang":"148","cua":"U11-15"},
           ],
         },
         {
@@ -135,6 +179,39 @@ var SGK_MAP = {
             {"so":28,"ten":"Thực hành trải nghiệm trích rút thông tin và tri thức","trang":"149–154","cua":"C12-29"},
             {"so":29,"ten":"Mô phỏng trong giải quyết vấn đề","trang":"155–158","cua":"C12-19"},
             {"so":30,"ten":"Ứng dụng mô phỏng trong giáo dục","trang":"159–163","cua":"C12-30"},
+          ],
+        },
+        {
+          ma: "tin-hoc-12-ict", ten: "Tin học 12", lop: 12, huong: "ict", tenHuong: "Tin học ứng dụng",
+          bai: [
+            {"so":1,"ten":"Làm quen với Trí tuệ nhân tạo","trang":"5","cua":"C12-01"},
+            {"so":2,"ten":"Trí tuệ nhân tạo trong khoa học và đời sống","trang":"9","cua":"C12-02"},
+            {"so":3,"ten":"Một số thiết bị mạng thông dụng","trang":"14","cua":"C12-04"},
+            {"so":4,"ten":"Giao thức mạng","trang":"21","cua":"C12-21"},
+            {"so":5,"ten":"Thực hành chia sẻ tài nguyên trên mạng","trang":"26","cua":"C12-22"},
+            {"so":6,"ten":"Giao tiếp và ứng xử trong không gian mạng","trang":"34","cua":"C12-06"},
+            {"so":7,"ten":"HTML và cấu trúc trang web","trang":"39","cua":"C12-07"},
+            {"so":8,"ten":"Định dạng văn bản","trang":"46","cua":"C12-08"},
+            {"so":9,"ten":"Tạo danh sách, bảng","trang":"52","cua":"C12-09"},
+            {"so":10,"ten":"Tạo liên kết","trang":"57","cua":"C12-08"},
+            {"so":11,"ten":"Chèn tệp tin đa phương tiện và khung nội tuyến vào trang web","trang":"62","cua":"C12-23"},
+            {"so":12,"ten":"Tạo biểu mẫu","trang":"67","cua":"C12-24"},
+            {"so":13,"ten":"Khái niệm, vai trò của CSS","trang":"71","cua":"C12-10"},
+            {"so":14,"ten":"Định dạng văn bản bằng CSS","trang":"76","cua":"C12-11"},
+            {"so":15,"ten":"Tạo màu cho chữ và nền","trang":"83","cua":"C12-11"},
+            {"so":16,"ten":"Định dạng khung","trang":"89","cua":"C12-26"},
+            {"so":17,"ten":"Các mức ưu tiên của bộ chọn","trang":"96","cua":"C12-25"},
+            {"so":18,"ten":"Thực hành tổng hợp thiết kế trang web","trang":"102","cua":"C12-13"},
+            {"so":19,"ten":"Dịch vụ sửa chữa và bảo trì máy tính","trang":"106","cua":"C12-14"},
+            {"so":20,"ten":"Nhóm nghề quản trị thuộc ngành Công nghệ thông tin","trang":"110","cua":"C12-14"},
+            {"so":21,"ten":"Hội thảo hướng nghiệp","trang":"113","cua":"C12-14"},
+            {"so":22,"ten":"Thực hành kết nối các thiết bị số","trang":"118","cua":"U12-01"},
+            {"so":23,"ten":"Chuẩn bị xây dựng trang web","trang":"126","cua":"U12-02"},
+            {"so":24,"ten":"Xây dựng phần đầu trang web","trang":"134","cua":"U12-03"},
+            {"so":25,"ten":"Xây dựng phần thân và chân trang web","trang":"139","cua":"U12-04"},
+            {"so":26,"ten":"Liên kết và thanh điều hướng","trang":"144","cua":"U12-05"},
+            {"so":27,"ten":"Biểu mẫu trên trang web","trang":"147","cua":"U12-06"},
+            {"so":28,"ten":"Thực hành tổng hợp","trang":"151","cua":"U12-07"},
           ],
         },
       ],

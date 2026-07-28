@@ -139,8 +139,8 @@ test("đối chiếu SGK: đủ mọi quyển, mỗi bài sách trỏ đúng m�
       assert.ok(r.body.includes('href="/bai/' + muc.slug + '"'), "thiếu liên kết tới " + b.cua);
     });
   }));
-  assert.equal(soBai, 95);
-  assert.equal(soCoDich, 95, "mọi bài SGK đều phải có đích");
+  assert.equal(soBai, soCoDich, "mọi bài SGK trong bảng đều phải trỏ tới một bài của app");
+  assert.ok(soBai >= 154, "hụt bài so với các quyển đã đối chiếu, hiện " + soBai);
 
   /* Không được dùng <table> nữa — ba cột chữ dài luôn tràn ngang, phải cuộn.
      Chỉ soi phần THÂN trang: chuỗi "<table" còn nằm trong chú thích của CSS
@@ -149,7 +149,24 @@ test("đối chiếu SGK: đủ mọi quyển, mỗi bài sách trỏ đúng m�
   assert.ok(!/<table/.test(than), "trang đối chiếu không được dùng bảng");
   /* Ô lọc là thứ giúp khỏi cuộn qua 95 dòng: phải có ô nhập và dữ liệu để lọc. */
   assert.ok(r.body.includes('id="dcTim"'), "thiếu ô tìm nhanh");
-  assert.equal((r.body.match(/data-tim="/g) || []).length, 95, "mỗi hàng phải có khoá tìm không dấu");
+  assert.equal((r.body.match(/data-tim="/g) || []).length, soBai, "mỗi hàng phải có khoá tìm không dấu");
+
+  /* Hai quyển cùng lớp của KNTT dùng chung phần lõi — bài lõi phải trỏ về CÙNG
+     một bài của app ở cả hai quyển, nếu lệch là đối chiếu sai một bên. */
+  const bo = kho.SGK_MAP.bo[0];
+  const kh11 = bo.sach.find((s) => s.ma === "tin-hoc-11-khmt");
+  const ict11 = bo.sach.find((s) => s.ma === "tin-hoc-11-ict");
+  if (kh11 && ict11) {
+    for (let so = 1; so <= 16; so++) {
+      const a = kh11.bai.find((b) => b.so === so), c = ict11.bai.find((b) => b.so === so);
+      assert.equal(c.cua, a.cua, "Bài " + so + " lõi lớp 11 trỏ lệch giữa hai quyển");
+      /* Tên so sau khi chuẩn hoá gạch ngang/hoa thường: hai quyển được chép ở
+         hai thời điểm khác nhau, lệch kiểu gõ dấu là chuyện thường và không
+         đáng làm hỏng build — lệch THẬT về nội dung thì vẫn bị bắt. */
+      const chuan = (s) => s.toLowerCase().replace(/[–—-]/g, "-").replace(/\s+/g, " ").trim();
+      assert.equal(chuan(c.ten), chuan(a.ten), "Bài " + so + " lõi lớp 11 tên lệch giữa hai quyển");
+    }
+  }
 });
 
 test("mới có một bộ sách thì gom về một URL duy nhất", async () => {
