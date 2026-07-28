@@ -164,15 +164,41 @@ test("học sinh kích hoạt mã vừa tạo -> stats đếm được doanh s�
   assert.equal(kh.status, 200);
   assert.equal(kh.data.plan.tier, "paid");
 
+  // học sinh mua thật -> phải thấy NGÀY HẾT HẠN, không chỉ chữ "Premium"
+  const meHs = await req("/api/me");
+  assert.equal(meHs.data.plan.tier, "paid");
+  assert.equal(meHs.data.plan.nguon, "ma");
+  assert.ok(meHs.data.plan.hetHan, "mua bằng mã thì phải có ngày hết hạn để hiển thị");
+
   // admin (tài khoản admin coi như paid, không cần mã)
   await req("/api/auth/logout", { method: "POST" });
   await req("/api/auth/login", { method: "POST", body: { email: "chu@shop.vn", password: "123456" } });
   const me = await req("/api/me");
   assert.equal(me.data.plan.tier, "paid");
+  /* Admin CHƯA có mã: quyền đến từ vai trò, giao diện phải nói rõ như vậy. */
+  assert.equal(me.data.plan.nguon, "vaiTro");
+  assert.equal(me.data.plan.hetHan, null);
   const st = await req("/api/admin/stats");
   assert.equal(st.data.maDaKichHoat, 1);
   assert.equal(st.data.premiumConHan, 1);
   const ds2 = await req("/api/admin/licenses");
   const dung = ds2.data.licenses.filter((x) => x.nguoiDung === "hs@test.vn");
   assert.equal(dung.length, 1);
+});
+
+/* Đây chính là chỗ từng gây hiểu nhầm khi thử luồng mua: admin mua thật nhưng
+   getPlan thoát sớm ở nhánh vai trò nên KHÔNG trả ngày hết hạn, màn Tài khoản
+   hiện "Premium" trơn y như lúc chưa mua — không biết webhook đã chạy chưa. */
+test("admin có mã thật thì vẫn phải thấy ngày hết hạn, không chỉ 'Premium' trơn", async () => {
+  const tao = await req("/api/admin/licenses", { method: "POST", body: { soLuong: 1, soNgay: 365 } });
+  const code = tao.data.codes[0];
+  const kh = await req("/api/licenses/activate", { method: "POST", body: { code } });
+  assert.equal(kh.status, 200);
+
+  const me = await req("/api/me");
+  assert.equal(me.data.plan.tier, "paid");
+  assert.equal(me.data.plan.nguon, "ma", "có mã còn hạn thì nguồn phải là 'ma', không phải vai trò");
+  assert.ok(me.data.plan.hetHan, "admin mua thật vẫn phải có ngày hết hạn");
+  const con = Math.round((new Date(me.data.plan.hetHan) - Date.now()) / 86400000);
+  assert.ok(con > 360 && con <= 365, "hạn phải khoảng 365 ngày, hiện " + con);
 });

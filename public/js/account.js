@@ -468,13 +468,32 @@
     var plan = Account.plan || { tier: "free" };
     var laPaid = plan.tier === "paid";
     var hanTxt = plan.hetHan ? new Date(plan.hetHan).toLocaleDateString("vi-VN") : "";
+    /* Còn mấy ngày nữa hết hạn — con số này mới là thứ người ta muốn biết, đọc
+       ngày tháng rồi tự trừ nhẩm thì phiền. Dưới 30 ngày mới nhắc, để bình
+       thường không làm phiền. */
+    var conNgay = plan.hetHan
+      ? Math.ceil((new Date(plan.hetHan).getTime() - Date.now()) / 86400000) : null;
+    var sapHet = conNgay != null && conNgay <= 30;
+    /* nguon='vaiTro': quyền đến từ vai trò admin/giáo viên chứ không phải mã đã
+       mua. Nói rõ ra, kẻo thử luồng mua bằng tài khoản admin lại tưởng đã mua
+       thành công trong khi webhook chưa hề chạy. */
+    var theoVaiTro = plan.nguon === "vaiTro";
     var goiHtml =
       '<div class="section-title">' + ico("crown", "#b45309", 17) + " Gói của bạn</div>" +
       '<div class="pf-card" style="margin-bottom:20px">' +
         '<div class="ac-row" style="border-bottom:none"><span>Đang dùng</span><b>' +
-          (laPaid ? "Premium" + (hanTxt ? " — đến " + hanTxt : "") : "Miễn phí") + "</b></div>" +
+          (laPaid
+            ? "Premium" + (hanTxt ? " — đến " + hanTxt : theoVaiTro ? " (theo vai trò quản lí)" : "")
+            : "Miễn phí") + "</b></div>" +
+        (laPaid && hanTxt
+          ? '<div class="ac-row" style="border-bottom:none"><span>Còn lại</span><b' +
+            (sapHet ? ' style="color:var(--warning)"' : "") + ">" +
+            (conNgay > 0 ? conNgay + " ngày" : "hết hạn hôm nay") + "</b></div>"
+          : "") +
         (laPaid
-          ? '<p class="ac-note" style="margin:4px 0 0">Nhập thêm mã sẽ <b>cộng dồn</b> vào hạn hiện có.</p>'
+          ? '<p class="ac-note" style="margin:4px 0 0">' +
+            (sapHet ? "<b>Sắp hết hạn</b> — gia hạn ngay để không gián đoạn. " : "") +
+            "Nhập thêm mã hoặc gia hạn sẽ <b>cộng dồn</b> vào hạn hiện có.</p>"
           : '<p class="ac-note" style="margin:4px 0 0">Premium mở: luyện tập không giới hạn · 13 đề thi thử + đề ngẫu nhiên · toàn bộ bài thực hành · tab Chỗ yếu · gia sư AI 25 lượt/ngày · 3 hồ sơ học tập.</p>') +
         /* Mua thẳng ở đây khi máy chủ đã bật thanh toán tự động: quét QR, tiền
            vào là gói mở trong vài giây, không phải nhắn Zalo chờ mã.

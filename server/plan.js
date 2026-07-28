@@ -32,18 +32,29 @@ function chuanHoaMa(raw) {
   return "TIN-" + s.slice(3, 7) + "-" + s.slice(7);
 }
 
-/* Gói của một tài khoản: { tier: 'free'|'paid', hetHan: ISO|null }.
-   Giáo viên/admin coi như paid (không bắt thầy cô mua mã). */
+/* Gói của một tài khoản: { tier: 'free'|'paid', hetHan: ISO|null, nguon }.
+   `nguon` = 'ma' (có mã còn hạn) | 'vaiTro' (admin/giáo viên) | null.
+
+   Giáo viên/admin coi như paid — không bắt thầy cô mua mã. NHƯNG vẫn phải TRA
+   MÃ trước rồi mới trả về: trước đây thoát sớm ngay ở dòng đầu nên tài khoản
+   admin có mua thật cũng hiện "Premium" trơn, không kèm ngày hết hạn. Hệ quả
+   khó chịu nhất không phải thẩm mỹ mà là KHÔNG THỬ ĐƯỢC luồng mua: mua xong
+   nhìn màn Tài khoản vẫn y như trước, không biết webhook đã chạy hay chưa. */
 async function getPlan(pool, uid, role) {
-  if (role === "admin" || role === "teacher") return { tier: "paid", hetHan: null };
   const r = await pool.query("SELECT expires_at FROM licenses WHERE activated_by = $1", [uid]);
   let best = 0;
   for (const row of r.rows) {
     const t = row.expires_at ? new Date(row.expires_at).getTime() : 0;
     if (t > best) best = t;
   }
-  if (best > Date.now()) return { tier: "paid", hetHan: new Date(best).toISOString() };
-  return { tier: "free", hetHan: null };
+  const coMa = best > Date.now();
+  const hetHan = coMa ? new Date(best).toISOString() : null;
+
+  if (role === "admin" || role === "teacher") {
+    return { tier: "paid", hetHan, nguon: coMa ? "ma" : "vaiTro" };
+  }
+  if (coMa) return { tier: "paid", hetHan, nguon: "ma" };
+  return { tier: "free", hetHan: null, nguon: null };
 }
 
 /* Số hồ sơ học tập tối đa theo gói (admin giữ trần cũ 6 để thử nghiệm). */
