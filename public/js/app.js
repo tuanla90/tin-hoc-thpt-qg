@@ -1475,7 +1475,50 @@ function sampleByMatrix(type, dist, target, boc) {
       .slice(0, target - chosen.length)
       .forEach((q) => { chosen.push(q); used.add(q.id); });
   }
-  return boc(chosen).slice(0, target);
+  const ket = boc(chosen).slice(0, target);
+  if (type === "mc") apDungHanNgach(ket, used, boc);
+  return ket;
+}
+
+/* ---------------------------------------------------------------------------
+ *  HẠN NGẠCH DẠNG CÂU TRONG ĐỀ
+ *
+ *  Ma trận ở trên chia theo CHỦ ĐỀ, không biết gì về dạng câu. Hậu quả đo được:
+ *  đề bốc ra trung bình 2,9 câu đọc code Python (khớp đề thật) nhưng chỉ 0,1 câu
+ *  SQL — tức mười đề mới có một câu, trong khi đề thật năm nào cũng có 1–2 câu.
+ *  Câu đọc đoạn HTML/CSS cũng gần như không bao giờ được bốc.
+ *
+ *  Cách chữa: sau khi bốc đủ số câu, đếm lại theo dạng; thiếu thì đổi một câu
+ *  KHÔNG thuộc dạng nào đang thiếu lấy một câu thuộc dạng đó, ưu tiên đổi trong
+ *  cùng chủ đề để ma trận lệch ít nhất. Dùng chung hàm bốc `boc` nên đề theo mã
+ *  cố định vẫn tái lập được y hệt.
+ * ------------------------------------------------------------------------- */
+const HAN_NGACH_DE = [
+  { ten: "sql", min: 1,
+    hop: (q) => !!q.code && /\b(SELECT|INSERT\s+INTO|UPDATE|DELETE\s+FROM|CREATE\s+TABLE)\b/i.test(q.code) },
+  { ten: "web", min: 1,
+    hop: (q) => !!q.code &&
+      /<(html|head|body|div|p|span|h[1-6]|ul|ol|li|a|img|table|tr|td|form|input|button|style|link|meta)\b/i.test(q.code) },
+];
+
+function apDungHanNgach(ds, used, boc) {
+  HAN_NGACH_DE.forEach((hn) => {
+    let co = ds.filter(hn.hop).length;
+    if (co >= hn.min) return;
+    const ungVien = boc(QUESTION_BANK.filter((q) => q.type === "mc" && !used.has(q.id) && hn.hop(q)));
+    for (const q of ungVien) {
+      if (co >= hn.min) break;
+      /* Chỉ thay câu KHÔNG phục vụ hạn ngạch nào, kẻo vừa bù chỗ này lại thủng chỗ kia. */
+      const raNh = (x) => !HAN_NGACH_DE.some((h) => h.hop(x));
+      let i = ds.findIndex((x) => raNh(x) && x.topic === q.topic);
+      if (i < 0) i = ds.findIndex(raNh);
+      if (i < 0) break;
+      used.delete(ds[i].id);
+      used.add(q.id);
+      ds[i] = q;
+      co++;
+    }
+  });
 }
 
 /* ---------------------------------------------------------------------------
