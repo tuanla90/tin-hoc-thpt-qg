@@ -1,0 +1,258 @@
+/* ============================================================================
+ *  TRANG VỆ TINH (Nâng cấp, Quyền riêng tư, Quản trị)
+ *
+ *  Nạp SAU css/landing.css để dùng chung bộ token, font, nút, header và footer
+ *  của trang giới thiệu — khách đi từ landing sang không thấy "rơi" sang một
+ *  website khác. Tệp này chỉ thêm những gì landing không có: khối văn bản dài,
+ *  bảng so sánh, hộp thanh toán, biểu mẫu.
+ * ==========================================================================*/
+
+/* ------------------------------- khung trang ------------------------------ */
+.pg-main { padding: 44px 0 80px; }
+.pg-narrow { max-width: 860px; }
+
+/* landing.css đặt `a { color: inherit }` cho các khối trang trí của trang giới
+   thiệu; trong nội dung của trang vệ tinh thì liên kết phải nhìn ra là liên kết. */
+.pg-main a:not(.btn):not(.pg-zalo) {
+  color: var(--brand);
+  font-weight: 650;
+}
+.pg-main a:not(.btn):not(.pg-zalo):hover { text-decoration: underline; }
+
+.pg-hero { text-align: center; margin-bottom: 34px; }
+.pg-hero.left { text-align: left; }
+.pg-hero h1 {
+  font-family: var(--font-display);
+  font-size: clamp(28px, 4.2vw, 42px);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  font-weight: 850;
+  margin: 16px 0 12px;
+  color: var(--ink-main);
+}
+.pg-hero .lead {
+  font-size: 17px;
+  color: var(--ink-muted);
+  max-width: 620px;
+  margin: 0 auto;
+}
+.pg-hero.left .lead { margin: 0; }
+
+.pg-card {
+  background: var(--surface-card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: clamp(20px, 3vw, 30px);
+  margin-bottom: 22px;
+}
+.pg-card h2 {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 800;
+  margin: 0 0 16px;
+  color: var(--ink-main);
+}
+.pg-card > p { color: var(--ink-muted); }
+
+/* --------------------------------- giá ---------------------------------- */
+.pg-price {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.pg-price b {
+  font-family: var(--font-display);
+  font-size: clamp(34px, 5vw, 46px);
+  font-weight: 850;
+  letter-spacing: -0.02em;
+  background: var(--grad-hero);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.pg-price span { color: var(--ink-muted); font-size: 15px; }
+.pg-price-note { color: var(--ink-faint); font-size: 13.5px; font-family: var(--font-mono); margin-top: 6px; }
+
+/* ----------------------------- bảng so sánh ------------------------------ */
+.pg-table-wrap { overflow-x: auto; }
+.pg-table { width: 100%; border-collapse: collapse; font-size: 14.5px; min-width: 480px; }
+.pg-table th, .pg-table td {
+  padding: 11px 12px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+  color: var(--ink-main);
+}
+.pg-table thead th {
+  font-size: 12.5px;
+  font-family: var(--font-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  border-bottom: 1px solid var(--line-strong);
+}
+.pg-table th:nth-child(2), .pg-table td:nth-child(2),
+.pg-table th:nth-child(3), .pg-table td:nth-child(3) { text-align: center; white-space: nowrap; }
+.pg-table tbody tr:last-child td { border-bottom: 0; }
+.pg-yes { color: var(--accent-green); font-weight: 750; }
+.pg-lim { color: var(--ink-faint); }
+
+/* -------------------------------- các bước ------------------------------- */
+.pg-steps { display: grid; gap: 14px; }
+.pg-step { display: flex; gap: 14px; align-items: flex-start; }
+.pg-step-no {
+  flex: none;
+  width: 30px; height: 30px;
+  border-radius: var(--radius-full);
+  display: grid; place-items: center;
+  background: var(--grad-hero);
+  color: #fff;
+  font-weight: 800;
+  font-size: 14px;
+  box-shadow: 0 3px 10px rgba(99, 102, 241, 0.35);
+}
+.pg-step div { color: var(--ink-muted); font-size: 15px; }
+.pg-step b { color: var(--ink-main); }
+
+/* ------------------------------ thanh toán ------------------------------- */
+.pg-field { margin: 16px 0 4px; }
+.pg-field label { display: block; font-size: 13.5px; font-weight: 700; margin-bottom: 6px; color: var(--ink-main); }
+.pg-input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  font: inherit;
+  font-size: 15px;
+  background: var(--surface);
+  color: var(--ink-main);
+}
+.pg-input:focus { outline: none; border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-soft); }
+
+.pg-pay { display: flex; gap: 22px; flex-wrap: wrap; align-items: flex-start; margin-top: 18px; }
+.pg-qr {
+  width: 240px; max-width: 100%;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: #fff;
+  padding: 8px;
+}
+.pg-bank { flex: 1; min-width: 250px; }
+.pg-bank-row {
+  display: flex; justify-content: space-between; align-items: center; gap: 10px;
+  padding: 9px 0;
+  border-bottom: 1px dashed var(--line);
+  font-size: 14.5px;
+  color: var(--ink-muted);
+}
+.pg-bank-row:last-child { border-bottom: 0; }
+.pg-bank-row b { color: var(--ink-main); text-align: right; overflow-wrap: anywhere; }
+.pg-copy {
+  flex: none;
+  border: 1px solid var(--line-strong);
+  background: var(--bg-subtle);
+  color: var(--ink-muted);
+  border-radius: 8px;
+  font: 700 12px var(--font-sans);
+  padding: 4px 10px;
+  cursor: pointer;
+}
+.pg-copy:hover { border-color: var(--brand); color: var(--brand); }
+
+.pg-zalo {
+  display: inline-flex; align-items: center; gap: 9px;
+  margin-top: 18px;
+  background: #0068ff;
+  color: #fff;
+  padding: 13px 24px;
+  border-radius: var(--radius-md);
+  font-weight: 800;
+  font-size: 15px;
+  box-shadow: 0 6px 18px rgba(0, 104, 255, 0.32);
+}
+.pg-zalo:hover { background: #0055d4; }
+
+/* --------------------------------- hộp chú ------------------------------- */
+.pg-note { font-size: 13.5px; color: var(--ink-faint); margin-top: 12px; }
+.pg-box {
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  font-size: 14.5px;
+  margin: 16px 0;
+  border: 1px solid;
+}
+.pg-box.warn { background: var(--accent-amber-soft); border-color: var(--accent-amber); color: var(--ink-main); }
+.pg-box.info { background: var(--brand-soft); border-color: var(--brand); color: var(--ink-main); }
+.pg-box.ok { background: var(--accent-green-soft); border-color: var(--accent-green); color: var(--ink-main); }
+
+/* ------------------------------ văn bản dài ------------------------------ */
+.pg-prose h2 {
+  font-family: var(--font-display);
+  font-size: 21px;
+  font-weight: 800;
+  margin: 34px 0 10px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+  color: var(--ink-main);
+}
+.pg-prose h3 { font-size: 16px; font-weight: 750; margin: 20px 0 6px; color: var(--ink-main); }
+.pg-prose p, .pg-prose li { font-size: 15.5px; line-height: 1.75; color: var(--ink-muted); }
+.pg-prose ul, .pg-prose ol { margin: 8px 0 14px 20px; padding: 0; }
+.pg-prose li { margin: 5px 0; }
+.pg-prose b, .pg-prose strong { color: var(--ink-main); }
+.pg-prose code {
+  font-family: var(--font-mono); font-size: 13px;
+  background: var(--bg-subtle); border: 1px solid var(--line);
+  padding: 1px 6px; border-radius: 6px;
+}
+.pg-prose table { width: 100%; border-collapse: collapse; margin: 12px 0 16px; font-size: 14.5px; }
+.pg-prose th, .pg-prose td {
+  border: 1px solid var(--line);
+  padding: 9px 11px; text-align: left; vertical-align: top;
+  color: var(--ink-muted);
+}
+.pg-prose th { background: var(--bg-subtle); color: var(--ink-main); font-weight: 750; }
+.pg-cap { color: var(--ink-faint); font-size: 14px; }
+
+.pg-toc {
+  background: var(--bg-subtle);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
+  margin: 20px 0 6px;
+}
+.pg-toc b { color: var(--ink-main); font-size: 14px; }
+.pg-toc ol { margin: 8px 0 0 20px; padding: 0; font-size: 14.5px; line-height: 1.95; }
+.pg-toc a { color: var(--brand); font-weight: 600; }
+.pg-toc a:hover { text-decoration: underline; }
+
+/* ---------------------------- hỏi đáp gọn -------------------------------- */
+.pg-faq { border-top: 1px solid var(--line); padding-top: 14px; margin-top: 14px; }
+.pg-faq:first-of-type { border-top: 0; padding-top: 0; margin-top: 0; }
+.pg-faq b { display: block; color: var(--ink-main); font-size: 15px; margin-bottom: 4px; }
+.pg-faq p { color: var(--ink-muted); font-size: 14.5px; margin: 0; }
+
+/* --------------------------- bảng quản trị ------------------------------- */
+.pg-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
+.pg-stat {
+  background: var(--bg-subtle);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+}
+.pg-stat b { display: block; font-family: var(--font-display); font-size: 24px; font-weight: 850; color: var(--ink-main); }
+.pg-stat span { font-size: 12.5px; color: var(--ink-faint); }
+
+.pg-row { display: flex; gap: 14px; flex-wrap: wrap; }
+.pg-row > div { flex: 1; min-width: 150px; }
+.pg-err { color: var(--accent-rose); font-weight: 650; font-size: 14px; margin-top: 10px; }
+.pg-mono {
+  width: 100%; margin-top: 14px; padding: 12px 14px;
+  border: 1px solid var(--line-strong); border-radius: var(--radius-sm);
+  font: 13.5px/1.8 var(--font-mono);
+  background: var(--bg-subtle); color: var(--ink-main);
+  min-height: 90px; resize: vertical;
+}
+select.pg-input { cursor: pointer; }

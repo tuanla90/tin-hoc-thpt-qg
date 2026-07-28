@@ -6,45 +6,55 @@
   <title>Quyền riêng tư &amp; Điều khoản sử dụng — Ôn thi Tin học THPT</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@500;700;800&family=Lexend:wght@700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/styles.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@600;700;800;900&family=Lexend:wght@700;800&family=JetBrains+Mono:wght@600;700&family=Plus+Jakarta+Sans:wght@500;650;750;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/landing.css" />
+  <link rel="stylesheet" href="css/pages.css" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='25' fill='%234f46e5'/><path d='M30 40h40M30 60h40M30 50h25' stroke='%23fff' stroke-width='8' stroke-linecap='round'/></svg>" />
   <style>
-    .pv { max-width: 780px; margin: 0 auto; padding: 28px 18px 70px; }
-    .pv h1 { font-family: var(--font-display); font-size: 27px; margin: 0 0 6px; }
-    .pv h2 { font-family: var(--font-display); font-size: 19px; margin: 30px 0 8px; padding-top: 14px;
-             border-top: 1px solid var(--border); }
-    .pv h3 { font-size: 15.5px; margin: 18px 0 6px; }
-    .pv p, .pv li { font-size: 15px; line-height: 1.7; color: var(--text); }
-    .pv ul { margin: 6px 0 12px 20px; padding: 0; }
-    .pv li { margin: 4px 0; }
-    .pv .cap { color: var(--text-soft); font-size: 13.5px; }
-    .pv table { width: 100%; border-collapse: collapse; margin: 10px 0 14px; font-size: 14px; }
-    .pv th, .pv td { border: 1px solid var(--border); padding: 8px 10px; text-align: left; vertical-align: top; }
-    .pv th { background: var(--bg-soft); font-weight: 700; }
-    .pv .box { background: var(--warning-soft); border: 1px solid var(--warning);
-               border-radius: var(--radius-sm); padding: 12px 14px; margin: 14px 0; font-size: 14.5px; }
-    .pv .box.ok { background: var(--success-soft); border-color: var(--success); }
-    .pv .box.info { background: var(--primary-soft); border-color: var(--primary); }
-    .pv code { font-family: var(--font-mono); font-size: 13px; background: var(--bg-soft);
-               padding: 1px 5px; border-radius: 5px; }
-    .pv .back { display: inline-block; margin-bottom: 14px; color: var(--primary); text-decoration: none; font-weight: 700; font-size: 14px; }
-    .pv .toc { background: var(--bg-soft); border-radius: var(--radius-sm); padding: 12px 16px; margin: 16px 0 4px; }
-    .pv .toc a { color: var(--primary); text-decoration: none; }
-    .pv .toc a:hover { text-decoration: underline; }
-    .pv .toc ol { margin: 4px 0 0 18px; padding: 0; font-size: 14px; line-height: 1.9; }
-    .pv .todo { background: repeating-linear-gradient(45deg, var(--danger-soft), var(--danger-soft) 10px, transparent 10px, transparent 20px);
-                border: 1px dashed var(--danger); border-radius: var(--radius-sm); padding: 12px 14px; margin: 14px 0; font-size: 14.5px; }
+    /* Nền kẻ sọc cảnh báo: chỗ chủ sở hữu bắt buộc điền trước khi mở bán. */
+    .pv-todo {
+      background: repeating-linear-gradient(45deg, var(--accent-rose-soft), var(--accent-rose-soft) 10px, transparent 10px, transparent 20px);
+      border: 1px dashed var(--accent-rose);
+      border-radius: var(--radius-md);
+      padding: 14px 16px; margin: 18px 0; font-size: 14.5px;
+      color: var(--ink-main);
+    }
   </style>
 </head>
-<body>
-  <div class="pv">
-    <a class="back" href="index.html">&larr; Về ứng dụng</a>
-    <h1>Quyền riêng tư &amp; Điều khoản sử dụng</h1>
-    <p class="cap">Cập nhật lần cuối: 28/07/2026. Trang này áp dụng cho phần mềm ôn thi Tin học THPT
-      (dưới đây gọi là “ứng dụng”).</p>
+<body class="lp">
 
-    <div class="todo">
+  <header class="lp-head">
+    <div class="wrap">
+      <a class="brand" href="landing.html">
+        <span class="brand-mark" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 18l6-6-6-6"/><path d="M8 6l-6 6 6 6"/></svg>
+        </span>
+        Tin Học KHMT
+      </a>
+      <nav class="nav-links">
+        <a href="landing.html#tinh-nang">Tính năng</a>
+        <a href="nang-cap.html">Bảng giá</a>
+        <a href="landing.html#tac-gia">Tác giả</a>
+      </nav>
+      <div class="head-actions">
+        <button class="btn btn-ghost btn-sm" id="themeToggle" title="Chuyển giao diện Sáng/Tối">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+        <a class="btn btn-primary btn-sm" href="/">Mở ứng dụng</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="pg-main">
+  <div class="wrap pg-narrow pv pg-prose">
+    <div class="pg-hero left">
+      <span class="eyebrow">Minh bạch</span>
+      <h1>Quyền riêng tư &amp; Điều khoản sử dụng</h1>
+      <p class="pg-cap">Cập nhật lần cuối: 28/07/2026. Trang này áp dụng cho phần mềm ôn thi Tin học THPT
+        (dưới đây gọi là “ứng dụng”).</p>
+    </div>
+
+    <div class="pv-todo">
       <b>Chỗ chủ sở hữu phải điền trước khi mở bán:</b> tên đơn vị/cá nhân vận hành, địa chỉ,
       email liên hệ và số điện thoại — thay vào những chỗ ghi <code>[…]</code> bên dưới. Nếu bán
       cho học sinh dưới 18 tuổi ở Việt Nam, hãy nhờ người có chuyên môn pháp lý soát lại bản này
@@ -52,7 +62,7 @@
       đúng những gì phần mềm thực sự làm, nhưng <b>không phải là tư vấn pháp lý</b>.
     </div>
 
-    <div class="toc">
+    <div class="pg-toc">
       <b>Nội dung</b>
       <ol>
         <li><a href="#thu">Ứng dụng thu thập những gì</a></li>
@@ -92,7 +102,7 @@
         <td>Để vẽ biểu đồ năng lực, chọn câu ôn đúng chỗ yếu, tính huy hiệu.</td>
       </tr>
       <tr>
-        <td><b>Gia sư AI</b> <span class="cap">(chỉ khi bạn dùng)</span></td>
+        <td><b>Gia sư AI</b> <span class="pg-cap">(chỉ khi bạn dùng)</span></td>
         <td>Câu bạn hỏi, câu trả lời của gia sư, bài học/câu hỏi đang mở, số lượt đã dùng trong ngày.</td>
         <td>Để đếm hạn mức, và để người soạn bài biết chỗ nào giảng chưa rõ.</td>
       </tr>
@@ -112,14 +122,14 @@
       <li>Đồng bộ giữa các máy khi bạn đăng nhập.</li>
       <li>Thống kê <b>gộp, không gắn tên</b> để biết câu nào nhiều người sai — từ đó sửa lại bài giảng hoặc câu hỏi.</li>
     </ul>
-    <div class="box ok">Chúng tôi <b>không bán</b>, không cho thuê, không trao đổi dữ liệu của bạn
+    <div class="pg-box ok">Chúng tôi <b>không bán</b>, không cho thuê, không trao đổi dữ liệu của bạn
       với bên nào để làm quảng cáo.</div>
 
     <h2 id="ai">3. Gia sư AI và bên thứ ba</h2>
     <p>Khi bạn bấm hỏi gia sư, máy chủ gửi tới nhà cung cấp mô hình AI (Anthropic hoặc Google,
       tuỳ cấu hình tại thời điểm đó) <b>ba thứ</b>: nội dung bài học bạn đang mở, câu hỏi bạn gõ,
       và vài lượt trò chuyện gần nhất trong cùng phiên.</p>
-    <div class="box info">Email, tên, lớp và toàn bộ điểm số của bạn <b>không</b> được gửi cho nhà
+    <div class="pg-box info">Email, tên, lớp và toàn bộ điểm số của bạn <b>không</b> được gửi cho nhà
       cung cấp AI. Họ nhận được câu hỏi, không nhận được bạn là ai.</div>
     <p>Các bên khác có liên quan tới việc chạy dịch vụ:</p>
     <ul>
@@ -150,7 +160,7 @@
       <li>Cha mẹ/người giám hộ có thể yêu cầu xem, sửa hoặc xoá toàn bộ dữ liệu của con bất cứ lúc nào
         (xem mục 6).</li>
     </ul>
-    <div class="box">Nếu bạn dưới 18 tuổi, hãy hỏi ý kiến cha mẹ hoặc người giám hộ trước khi tạo
+    <div class="pg-box warn">Nếu bạn dưới 18 tuổi, hãy hỏi ý kiến cha mẹ hoặc người giám hộ trước khi tạo
       tài khoản và trước khi nhập bất kỳ thông tin cá nhân nào.</div>
 
     <h2 id="quyen">6. Quyền của bạn — xem, sửa, xoá</h2>
@@ -232,9 +242,54 @@
       <li>Email: [<i>email liên hệ</i>]</li>
       <li>Địa chỉ: [<i>địa chỉ</i>]</li>
     </ul>
-    <p class="cap">Chúng tôi cố gắng trả lời trong vòng 7 ngày làm việc.</p>
+    <p class="pg-cap">Chúng tôi cố gắng trả lời trong vòng 7 ngày làm việc.</p>
 
-    <p style="margin-top:26px"><a class="back" href="index.html">&larr; Về ứng dụng</a></p>
+    <p style="margin-top:28px">
+      <a class="btn btn-primary" href="/">Mở ứng dụng</a>
+    </p>
   </div>
+  </main>
+
+  <footer class="foot">
+    <div class="wrap">
+      <div class="foot-top">
+        <div>
+          <a class="brand" href="landing.html">
+            <span class="brand-mark" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 18l6-6-6-6"/><path d="M8 6l-6 6 6 6"/></svg>
+            </span>
+            Tin học KHMT
+          </a>
+          <p class="tagline">Ôn thi Tin học tốt nghiệp, định hướng Khoa học máy tính — dễ hiểu, thực hành thật.</p>
+        </div>
+        <nav class="foot-links">
+          <a href="landing.html">Giới thiệu</a>
+          <a href="nang-cap.html">Bảng giá &amp; nâng cấp</a>
+          <a href="#dieu-khoan">Điều khoản sử dụng</a>
+        </nav>
+      </div>
+      <p class="copy">© 2026 Ôn thi Tin học THPT · Lê Anh Tuấn (Tuấn LA Lab).</p>
+    </div>
+  </footer>
+
+  <script>
+    /* Chuyển sáng/tối — dùng chung lựa chọn với landing qua khoá "lpTheme". */
+    (function () {
+      var btn = document.getElementById('themeToggle');
+      var MAT_TROI = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>';
+      var MAT_TRANG = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+      var luu = null;
+      try { luu = localStorage.getItem('lpTheme'); } catch (e) { /* bỏ qua */ }
+      if (luu) document.documentElement.setAttribute('data-theme', luu);
+      if (!btn) return;
+      btn.innerHTML = luu === 'dark' ? MAT_TROI : MAT_TRANG;
+      btn.onclick = function () {
+        var toi = document.documentElement.getAttribute('data-theme') === 'dark';
+        document.documentElement.setAttribute('data-theme', toi ? 'light' : 'dark');
+        btn.innerHTML = toi ? MAT_TRANG : MAT_TROI;
+        try { localStorage.setItem('lpTheme', toi ? 'light' : 'dark'); } catch (e) { /* bỏ qua */ }
+      };
+    })();
+  </script>
 </body>
 </html>

@@ -4,116 +4,153 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Nâng cấp Premium — Ôn thi Tin học THPT</title>
-<meta name="description" content="Mở toàn bộ luyện tập, 13 đề thi thử, bài thực hành có máy chấm và gia sư AI — 249.000đ cho cả năm học.">
-<style>
-  :root { --ink:#1e293b; --soft:#64748b; --line:#e2e8f0; --card:#fff; --bg:#f6f7fb; --pri:#4f46e5; --pri-soft:#eef2ff; --ok:#16a34a; --warn:#b45309; }
-  * { box-sizing:border-box; margin:0; }
-  body { font:15.5px/1.65 system-ui,Segoe UI,Roboto,sans-serif; background:var(--bg); color:var(--ink); padding:26px 16px 70px; }
-  .wrap { max-width:760px; margin:0 auto; }
-  a { color:var(--pri); }
-  .top-link { font-size:13.5px; display:inline-block; margin-bottom:16px; text-decoration:none; }
-  h1 { font-size:26px; line-height:1.3; margin-bottom:6px; }
-  .sub { color:var(--soft); margin-bottom:20px; }
-  .card { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:20px; margin-bottom:18px; }
-  .gia-hero { display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; }
-  .gia-hero b { font-size:34px; color:var(--pri); }
-  .gia-hero span { color:var(--soft); }
-  h2 { font-size:17px; margin-bottom:12px; }
-  table { width:100%; border-collapse:collapse; font-size:14px; }
-  th, td { padding:8px 10px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top; }
-  th:nth-child(2), td:nth-child(2), th:nth-child(3), td:nth-child(3) { text-align:center; white-space:nowrap; }
-  thead th { font-size:13px; color:var(--soft); }
-  .ok { color:var(--ok); font-weight:700; }
-  .mo { color:var(--soft); }
-  .buoc { display:flex; gap:12px; margin:10px 0; align-items:flex-start; }
-  .buoc b.so { flex:none; width:28px; height:28px; border-radius:50%; background:var(--pri-soft); color:var(--pri);
-    display:flex; align-items:center; justify-content:center; font-size:14px; }
-  .qr-box { display:flex; gap:18px; flex-wrap:wrap; align-items:flex-start; margin-top:14px; }
-  .qr-box img { width:230px; max-width:100%; border:1px solid var(--line); border-radius:12px; background:#fff; }
-  .tt { flex:1; min-width:230px; font-size:14px; }
-  .tt .dong { display:flex; justify-content:space-between; gap:10px; padding:7px 0; border-bottom:1px dashed var(--line); align-items:center; }
-  .tt .dong b { text-align:right; overflow-wrap:anywhere; }
-  .chep { border:1px solid var(--line); background:var(--bg); border-radius:7px; font-size:12px; padding:2px 8px; cursor:pointer; flex:none; }
-  label { display:block; font-size:13px; font-weight:600; margin:12px 0 4px; }
-  input { width:100%; padding:9px 11px; border:1px solid var(--line); border-radius:9px; font:inherit; }
-  .zalo-btn { display:inline-block; margin-top:12px; background:#0068ff; color:#fff; text-decoration:none;
-    padding:11px 22px; border-radius:11px; font-weight:700; }
-  .note { font-size:13px; color:var(--soft); margin-top:10px; }
-  .canh-bao { background:#fef3c7; border:1px solid #f59e0b; color:#92400e; border-radius:12px; padding:14px 16px; font-size:14px; margin-bottom:18px; }
-  .faq p { margin:8px 0; font-size:14px; }
-  .faq b { display:block; }
-  footer { text-align:center; color:var(--soft); font-size:12.5px; margin-top:26px; }
-</style>
+<meta name="description" content="Mở toàn bộ luyện tập, 13 đề thi thử, 250+ bài thực hành có máy chấm và gia sư AI — 249.000đ cho cả năm học. Chuyển khoản QR, nhận mã qua Zalo.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@600;700;800;900&family=Lexend:wght@700;800&family=JetBrains+Mono:wght@600;700&family=Plus+Jakarta+Sans:wght@500;650;750;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/landing.css">
+<link rel="stylesheet" href="css/pages.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='25' fill='%234f46e5'/><path d='M30 40h40M30 60h40M30 50h25' stroke='%23fff' stroke-width='8' stroke-linecap='round'/></svg>">
 </head>
-<body>
-<div class="wrap">
-  <a class="top-link" href="/">← Mở ứng dụng</a>
-  <h1>Nâng cấp Premium</h1>
-  <p class="sub">Phần <b>Học</b> (119 bài giảng, từ vựng, playground) miễn phí mãi mãi.
-    Premium là bộ tăng tốc để <b>Luyện &amp; Thi</b> — dùng cho cả năm học.</p>
+<body class="lp">
 
-  <div class="card">
-    <div class="gia-hero"><b>249.000đ</b><span>/ 1 năm học · thanh toán một lần, không tự gia hạn</span></div>
+<header class="lp-head">
+  <div class="wrap">
+    <a class="brand" href="landing.html">
+      <span class="brand-mark" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 18l6-6-6-6"/><path d="M8 6l-6 6 6 6"/></svg>
+      </span>
+      Tin Học KHMT
+    </a>
+    <nav class="nav-links">
+      <a href="landing.html#tinh-nang">Tính năng</a>
+      <a href="landing.html#lo-trinh">Lộ trình</a>
+      <a href="landing.html#tac-gia">Tác giả</a>
+    </nav>
+    <div class="head-actions">
+      <button class="btn btn-ghost btn-sm" id="themeToggle" title="Chuyển giao diện Sáng/Tối">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+      <a class="btn btn-primary btn-sm" href="/">Mở ứng dụng</a>
+    </div>
   </div>
+</header>
 
-  <div class="card">
-    <h2>Premium mở những gì?</h2>
-    <table>
-      <thead><tr><th></th><th>Miễn phí</th><th>Premium</th></tr></thead>
-      <tbody>
-        <tr><td>Bài giảng, từ vựng, playground, đồng bộ thiết bị</td><td class="ok">Đủ</td><td class="ok">Đủ</td></tr>
-        <tr><td>Luyện tập có chấm điểm</td><td class="mo">30 câu/ngày</td><td class="ok">Không giới hạn</td></tr>
-        <tr><td>Đề thi thử theo cấu trúc 2025</td><td class="mo">3 đề</td><td class="ok">13 đề + đề ngẫu nhiên</td></tr>
-        <tr><td>Bài thực hành Python · SQL · HTML/CSS có máy chấm</td><td class="mo">~15% bài đầu</td><td class="ok">Toàn bộ 250+</td></tr>
-        <tr><td>Tab "Chỗ yếu" — ôn đúng chủ đề đang yếu</td><td class="mo">—</td><td class="ok">Có</td></tr>
-        <tr><td>Gia sư AI (kèm "Vì sao tôi sai?")</td><td class="mo">5 lượt/ngày</td><td class="ok">50 lượt/ngày + giải thích sâu</td></tr>
-        <tr><td>Hồ sơ học tập trong một tài khoản</td><td class="mo">1</td><td class="ok">3</td></tr>
-      </tbody>
-    </table>
-  </div>
+<main class="pg-main">
+  <div class="wrap pg-narrow">
 
-  <div class="card" id="muaCard">
-    <h2>Cách mua — 3 bước, nhận mã qua Zalo</h2>
-    <div class="buoc"><b class="so">1</b><div><b>Chuyển khoản 249.000đ</b> theo mã QR bên dưới
-      (nhớ giữ nguyên <b>nội dung chuyển khoản</b> để được nhận mã nhanh).</div></div>
-    <div class="buoc"><b class="so">2</b><div><b>Nhắn Zalo</b> kèm ảnh chuyển khoản — mã kích hoạt
-      <code>TIN-XXXX-XXXX</code> sẽ được gửi lại, thường trong ít phút (giờ hành chính).</div></div>
-    <div class="buoc"><b class="so">3</b><div>Mở ứng dụng → <b>Tài khoản</b> → dán mã → <b>Kích hoạt</b>.
-      Premium bật ngay cho cả năm. <a href="/#/account">Đến trang nhập mã</a></div></div>
-
-    <div id="chuaCauHinh" class="canh-bao" hidden>
-      Trang chưa được cấu hình thông tin thanh toán (chủ ứng dụng: điền <code>SHOP</code>
-      ở đầu file <code>nang-cap.html</code> — số tài khoản, ngân hàng, Zalo).
+    <div class="pg-hero">
+      <span class="eyebrow">Gói Premium</span>
+      <h1>Mở khoá phần <span class="hl">Luyện &amp; Thi</span></h1>
+      <p class="lead">Phần Học — 119 bài giảng, từ vựng, sân chơi code — miễn phí mãi mãi.
+        Premium là bộ tăng tốc cho giai đoạn ôn thi.</p>
     </div>
 
-    <div id="thanhToan" hidden>
-      <label for="emailNguoiMua">Email tài khoản học (để người bán kích hoạt đúng người)</label>
-      <input id="emailNguoiMua" type="email" placeholder="vd: an.nguyen@gmail.com" autocomplete="email">
-      <div class="qr-box">
-        <img id="qrAnh" alt="Mã VietQR chuyển khoản">
-        <div class="tt">
-          <div class="dong"><span>Ngân hàng</span><b id="ttBank"></b></div>
-          <div class="dong"><span>Số tài khoản</span><b id="ttStk"></b><button class="chep" data-chep="stk">Chép</button></div>
-          <div class="dong"><span>Chủ tài khoản</span><b id="ttChu"></b></div>
-          <div class="dong"><span>Số tiền</span><b id="ttTien"></b></div>
-          <div class="dong"><span>Nội dung CK</span><b id="ttNoiDung"></b><button class="chep" data-chep="nd">Chép</button></div>
-        </div>
+    <div class="pg-card">
+      <div class="pg-price">
+        <b>249.000đ</b>
+        <span>/ 1 năm học · thanh toán một lần, không tự gia hạn</span>
       </div>
-      <a id="zaloBtn" class="zalo-btn" target="_blank" rel="noopener">Nhắn Zalo nhận mã</a>
-      <p class="note">Quét QR bằng app ngân hàng là thông tin tự điền sẵn. Nếu nhập tay, hãy giữ đúng nội dung chuyển khoản ở trên.</p>
+      <p class="pg-price-note">chỉ khoảng 20.000đ mỗi tháng</p>
     </div>
-  </div>
 
-  <div class="card faq">
-    <h2>Hỏi nhanh</h2>
-    <p><b>Mã dùng được mấy lần?</b> Mỗi mã kích hoạt cho đúng một tài khoản. Nhập thêm mã mới khi còn hạn sẽ cộng dồn thời gian.</p>
-    <p><b>Dùng được trên nhiều máy không?</b> Được — đăng nhập cùng tài khoản là tiến độ và Premium theo bạn trên mọi thiết bị.</p>
-    <p><b>Nhà có hai anh em?</b> Premium mở 3 hồ sơ học tập trong một tài khoản, tiến độ mỗi người tách riêng.</p>
-    <p><b>Chuyển khoản rồi mà chưa nhận được mã?</b> Nhắn Zalo kèm ảnh chuyển khoản, người bán đối soát và gửi mã cho bạn.</p>
-  </div>
+    <div class="pg-card">
+      <h2>Premium mở những gì?</h2>
+      <div class="pg-table-wrap">
+        <table class="pg-table">
+          <thead><tr><th></th><th>Miễn phí</th><th>Premium</th></tr></thead>
+          <tbody>
+            <tr><td>119 bài giảng, từ vựng, playground, đồng bộ thiết bị</td><td class="pg-yes">Đủ</td><td class="pg-yes">Đủ</td></tr>
+            <tr><td>Luyện tập có chấm điểm</td><td class="pg-lim">30 câu/ngày</td><td class="pg-yes">Không giới hạn</td></tr>
+            <tr><td>Đề thi thử theo cấu trúc 2025</td><td class="pg-lim">3 đề</td><td class="pg-yes">13 đề + đề ngẫu nhiên</td></tr>
+            <tr><td>Bài thực hành Python · SQL · HTML/CSS có máy chấm</td><td class="pg-lim">~15% bài đầu</td><td class="pg-yes">Toàn bộ 250+</td></tr>
+            <tr><td>Tab “Chỗ yếu” — ôn đúng chủ đề đang hổng</td><td class="pg-lim">—</td><td class="pg-yes">Có</td></tr>
+            <tr><td>Gia sư AI (kèm “Vì sao tôi sai?”)</td><td class="pg-lim">5 lượt/ngày</td><td class="pg-yes">50 lượt/ngày + giải thích sâu</td></tr>
+            <tr><td>Hồ sơ học tập trong một tài khoản</td><td class="pg-lim">1</td><td class="pg-yes">3</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
 
-  <footer>Phần mềm ôn thi Tin học THPT · Chương trình GDPT 2018 · <a href="quyen-rieng-tu.html">Quyền riêng tư</a></footer>
-</div>
+    <div class="pg-card" id="muaCard">
+      <h2>Cách mua — 3 bước, nhận mã qua Zalo</h2>
+      <div class="pg-steps">
+        <div class="pg-step"><span class="pg-step-no">1</span>
+          <div><b>Chuyển khoản 249.000đ</b> theo mã QR bên dưới — nhớ giữ nguyên
+            <b>nội dung chuyển khoản</b> để được đối soát nhanh.</div></div>
+        <div class="pg-step"><span class="pg-step-no">2</span>
+          <div><b>Nhắn Zalo</b> kèm ảnh chuyển khoản. Mã kích hoạt dạng
+            <code>TIN-XXXX-XXXX</code> sẽ được gửi lại, thường trong ít phút (giờ hành chính).</div></div>
+        <div class="pg-step"><span class="pg-step-no">3</span>
+          <div>Mở ứng dụng → <b>Tài khoản</b> → dán mã → <b>Kích hoạt</b>. Premium bật ngay cho cả năm.
+            <a href="/#/account">Đến trang nhập mã</a></div></div>
+      </div>
+
+      <div id="chuaCauHinh" class="pg-box warn" hidden>
+        Trang chưa được cấu hình thông tin thanh toán. Chủ ứng dụng: điền khối <code>SHOP</code>
+        ở đầu phần script của <code>nang-cap.html</code> — mã ngân hàng, số tài khoản, tên chủ tài khoản, số Zalo.
+      </div>
+
+      <div id="thanhToan" hidden>
+        <div class="pg-field">
+          <label for="emailNguoiMua">Email tài khoản học (để người bán kích hoạt đúng người)</label>
+          <input class="pg-input" id="emailNguoiMua" type="email" placeholder="vd: an.nguyen@gmail.com" autocomplete="email">
+        </div>
+        <div class="pg-pay">
+          <img class="pg-qr" id="qrAnh" alt="Mã VietQR chuyển khoản">
+          <div class="pg-bank">
+            <div class="pg-bank-row"><span>Ngân hàng</span><b id="ttBank"></b></div>
+            <div class="pg-bank-row"><span>Số tài khoản</span><b id="ttStk"></b><button class="pg-copy" data-chep="stk">Chép</button></div>
+            <div class="pg-bank-row"><span>Chủ tài khoản</span><b id="ttChu"></b></div>
+            <div class="pg-bank-row"><span>Số tiền</span><b id="ttTien"></b></div>
+            <div class="pg-bank-row"><span>Nội dung CK</span><b id="ttNoiDung"></b><button class="pg-copy" data-chep="nd">Chép</button></div>
+          </div>
+        </div>
+        <a id="zaloBtn" class="pg-zalo" target="_blank" rel="noopener">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+          Nhắn Zalo nhận mã
+        </a>
+        <p class="pg-note">Quét QR bằng app ngân hàng là số tiền và nội dung tự điền sẵn.
+          Nếu nhập tay, hãy giữ đúng nội dung chuyển khoản ở trên.</p>
+      </div>
+    </div>
+
+    <div class="pg-card">
+      <h2>Hỏi nhanh</h2>
+      <div class="pg-faq"><b>Mã dùng được mấy lần?</b>
+        <p>Mỗi mã kích hoạt cho đúng một tài khoản. Nhập thêm mã mới khi còn hạn thì thời gian được cộng dồn.</p></div>
+      <div class="pg-faq"><b>Dùng được trên nhiều máy không?</b>
+        <p>Được. Đăng nhập cùng tài khoản là tiến độ và Premium theo bạn trên mọi thiết bị.</p></div>
+      <div class="pg-faq"><b>Nhà có hai anh em?</b>
+        <p>Premium mở 3 hồ sơ học tập trong một tài khoản, tiến độ mỗi người tách riêng.</p></div>
+      <div class="pg-faq"><b>Chuyển khoản rồi mà chưa nhận được mã?</b>
+        <p>Nhắn Zalo kèm ảnh chuyển khoản để người bán đối soát và gửi mã. Trong lúc chờ, phần Học vẫn dùng bình thường nên việc ôn không bị gián đoạn.</p></div>
+    </div>
+
+  </div>
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <div class="foot-top">
+      <div>
+        <a class="brand" href="landing.html">
+          <span class="brand-mark" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 18l6-6-6-6"/><path d="M8 6l-6 6 6 6"/></svg>
+          </span>
+          Tin học KHMT
+        </a>
+        <p class="tagline">Ôn thi Tin học tốt nghiệp, định hướng Khoa học máy tính — dễ hiểu, thực hành thật.</p>
+      </div>
+      <nav class="foot-links">
+        <a href="landing.html">Giới thiệu</a>
+        <a href="quyen-rieng-tu.html#dieu-khoan">Điều khoản sử dụng</a>
+        <a href="quyen-rieng-tu.html">Quyền riêng tư</a>
+      </nav>
+    </div>
+    <p class="copy">© 2026 Ôn thi Tin học THPT · Lê Anh Tuấn (Tuấn LA Lab).</p>
+  </div>
+</footer>
 
 <script>
 (function () {
@@ -158,7 +195,7 @@
   }
 
   $("emailNguoiMua").addEventListener("input", veThanhToan);
-  document.querySelectorAll(".chep").forEach(function (b) {
+  document.querySelectorAll(".pg-copy").forEach(function (b) {
     b.onclick = function () {
       var chu = b.dataset.chep === "stk" ? SHOP.stk : $("ttNoiDung").textContent;
       (navigator.clipboard ? navigator.clipboard.writeText(chu) : Promise.reject())
@@ -176,6 +213,23 @@
     })
     .catch(veThanhToan);
   veThanhToan();
+
+  /* Chuyển sáng/tối — nhớ lựa chọn giống trang giới thiệu. */
+  var themeBtn = $("themeToggle");
+  var MAT_TROI = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>';
+  var MAT_TRANG = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+  var luu = null;
+  try { luu = localStorage.getItem("lpTheme"); } catch (e) { /* chặn cookie thì bỏ qua */ }
+  if (luu) document.documentElement.setAttribute("data-theme", luu);
+  if (themeBtn) {
+    themeBtn.innerHTML = luu === "dark" ? MAT_TROI : MAT_TRANG;
+    themeBtn.onclick = function () {
+      var toi = document.documentElement.getAttribute("data-theme") === "dark";
+      document.documentElement.setAttribute("data-theme", toi ? "light" : "dark");
+      themeBtn.innerHTML = toi ? MAT_TRANG : MAT_TROI;
+      try { localStorage.setItem("lpTheme", toi ? "light" : "dark"); } catch (e) { /* bỏ qua */ }
+    };
+  }
 })();
 </script>
 </body>

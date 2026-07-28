@@ -5,86 +5,97 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex">
 <title>Quản trị — Ôn thi Tin học THPT</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@600;700;800;900&family=Lexend:wght@700;800&family=JetBrains+Mono:wght@600;700&family=Plus+Jakarta+Sans:wght@500;650;750;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/landing.css">
+<link rel="stylesheet" href="css/pages.css">
 <style>
-  :root { --ink:#17231f; --soft:#586a62; --line:#e2e8f0; --card:#fff; --bg:#f6f8f7; --pri:#4f46e5; --ok:#16a34a; --warn:#b45309; }
-  * { box-sizing:border-box; margin:0; }
-  body { font:15px/1.6 system-ui,Segoe UI,Roboto,sans-serif; background:var(--bg); color:var(--ink); padding:24px 16px 60px; }
-  .wrap { max-width:860px; margin:0 auto; }
-  h1 { font-size:22px; margin-bottom:4px; }
-  .sub { color:var(--soft); font-size:13.5px; margin-bottom:22px; }
-  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px; margin-bottom:18px; }
-  .card h2 { font-size:16px; margin-bottom:12px; }
-  .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:12px; }
-  .stat { background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:10px 12px; }
-  .stat b { display:block; font-size:20px; }
-  .stat span { font-size:12px; color:var(--soft); }
-  label { display:block; font-size:13px; font-weight:600; margin:10px 0 4px; }
-  input, select { width:100%; padding:8px 10px; border:1px solid var(--line); border-radius:8px; font:inherit; }
-  .row { display:flex; gap:12px; flex-wrap:wrap; } .row > div { flex:1; min-width:140px; }
-  button { margin-top:14px; padding:9px 18px; border:0; border-radius:9px; background:var(--pri); color:#fff; font:600 14px/1 inherit; cursor:pointer; }
-  button:disabled { opacity:.5; }
-  textarea { width:100%; margin-top:12px; padding:10px; border:1px solid var(--line); border-radius:8px; font:13px/1.7 ui-monospace,Consolas,monospace; min-height:90px; }
-  table { width:100%; border-collapse:collapse; font-size:13px; }
-  th, td { text-align:left; padding:7px 8px; border-bottom:1px solid var(--line); white-space:nowrap; }
-  td.ghi { white-space:normal; }
-  .tbl-wrap { overflow-x:auto; }
-  .err { color:#dc2626; font-weight:600; font-size:13.5px; margin-top:10px; }
-  .tag-ok { color:var(--ok); font-weight:700; } .tag-cho { color:var(--soft); }
-  a { color:var(--pri); }
+  /* Bảng quản trị: dày dữ liệu nên chữ nhỏ hơn bảng thường và không xuống dòng. */
+  .ad-tbl { width:100%; border-collapse:collapse; font-size:13.5px; }
+  .ad-tbl th, .ad-tbl td { text-align:left; padding:9px 10px; border-bottom:1px solid var(--line);
+    white-space:nowrap; color:var(--ink-muted); }
+  .ad-tbl th { color:var(--ink-faint); font-size:12px; font-family:var(--font-mono);
+    letter-spacing:.05em; text-transform:uppercase; }
+  .ad-tbl td b, .ad-tbl td code { color:var(--ink-main); }
+  .ad-tbl td.ghi { white-space:normal; }
+  .ad-tbl code { font-family:var(--font-mono); font-size:12.5px; }
 </style>
 </head>
-<body>
-<div class="wrap">
-  <h1>Quản trị bán hàng</h1>
-  <p class="sub">Tạo lô mã kích hoạt Premium, theo dõi mã đã bán. Trang này chỉ mở với tài khoản admin
-    (đặt <code>ADMIN_EMAILS</code> trên máy chủ rồi đăng nhập bằng email đó trong <a href="/">ứng dụng</a>).</p>
+<body class="lp">
 
-  <div id="chan" class="card" hidden><b id="chanMsg"></b></div>
+<header class="lp-head">
+  <div class="wrap">
+    <a class="brand" href="/">
+      <span class="brand-mark" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 18l6-6-6-6"/><path d="M8 6l-6 6 6 6"/></svg>
+      </span>
+      Quản trị
+    </a>
+    <div class="head-actions">
+      <a class="btn btn-ghost btn-sm" href="nang-cap.html">Trang bán hàng</a>
+      <a class="btn btn-primary btn-sm" href="/">Mở ứng dụng</a>
+    </div>
+  </div>
+</header>
+
+<main class="pg-main">
+<div class="wrap pg-narrow">
+  <div class="pg-hero left">
+    <span class="eyebrow">Nội bộ</span>
+    <h1>Quản trị bán hàng</h1>
+    <p class="lead">Tạo lô mã kích hoạt Premium, theo dõi mã đã bán và hỗ trợ người dùng.
+      Trang này chỉ mở với tài khoản admin (đặt <code>ADMIN_EMAILS</code> trên máy chủ rồi
+      đăng nhập bằng email đó trong <a href="/">ứng dụng</a>).</p>
+  </div>
+
+  <div id="chan" class="pg-box warn" hidden><b id="chanMsg"></b></div>
 
   <div id="noiDung" hidden>
-    <div class="card">
+    <div class="pg-card">
       <h2>Số liệu nhanh</h2>
-      <div class="stats" id="stats"></div>
+      <div class="pg-stats" id="stats"></div>
     </div>
 
-    <div class="card">
+    <div class="pg-card">
       <h2>Tạo lô mã</h2>
-      <div class="row">
-        <div><label>Số lượng mã</label><input id="soLuong" type="number" min="1" max="100" value="10"></div>
+      <div class="pg-row">
+        <div><label>Số lượng mã</label><input class="pg-input" id="soLuong" type="number" min="1" max="100" value="10"></div>
         <div><label>Thời hạn</label>
-          <select id="soNgay">
+          <select class="pg-input" id="soNgay">
             <option value="365" selected>1 năm học (365 ngày)</option>
             <option value="90">Nước rút (90 ngày)</option>
             <option value="30">Dùng thử (30 ngày)</option>
           </select></div>
-        <div><label>Ghi chú lô (đợt bán, kênh…)</label><input id="ghiChu" type="text" maxlength="200" placeholder="vd: đợt 1 nhóm hạt giống"></div>
+        <div style="flex:2"><label>Ghi chú lô (đợt bán, kênh…)</label><input class="pg-input" id="ghiChu" type="text" maxlength="200" placeholder="vd: đợt 1 nhóm hạt giống"></div>
       </div>
-      <button id="taoBtn">Tạo mã</button>
-      <div class="err" id="taoErr"></div>
-      <textarea id="ketQua" hidden readonly title="Danh sách mã vừa tạo — bôi đen để copy"></textarea>
+      <button class="btn btn-primary" id="taoBtn" style="margin-top:16px">Tạo mã</button>
+      <div class="pg-err" id="taoErr"></div>
+      <textarea class="pg-mono" id="ketQua" hidden readonly title="Danh sách mã vừa tạo — bôi đen để copy"></textarea>
     </div>
 
-    <div class="card">
+    <div class="pg-card">
       <h2>Người dùng</h2>
-      <div class="row">
+      <div class="pg-row" style="align-items:flex-end">
         <div style="flex:3"><label>Tìm theo email hoặc tên</label>
-          <input id="timUser" type="text" placeholder="vd: an.nguyen@gmail — để trống là 200 tài khoản mới nhất"></div>
-        <div style="flex:0; align-self:flex-end"><button id="timBtn" style="margin-top:0">Tìm</button></div>
+          <input class="pg-input" id="timUser" type="text" placeholder="vd: an.nguyen@gmail — để trống là 200 tài khoản mới nhất"></div>
+        <div style="flex:0"><button class="btn btn-ghost" id="timBtn">Tìm</button></div>
       </div>
-      <div class="err" id="userErr"></div>
-      <div class="tbl-wrap" style="margin-top:12px"><table id="bangUser"><thead>
+      <div class="pg-err" id="userErr"></div>
+      <div class="pg-table-wrap" style="margin-top:14px"><table class="ad-tbl" id="bangUser"><thead>
         <tr><th>Email</th><th>Tên</th><th>Gói</th><th>Hồ sơ</th><th>Lượt làm</th><th>Hoạt động cuối</th><th></th></tr>
       </thead><tbody></tbody></table></div>
     </div>
 
-    <div class="card">
+    <div class="pg-card">
       <h2>Mã gần đây</h2>
-      <div class="tbl-wrap"><table id="bang"><thead>
+      <div class="pg-table-wrap"><table class="ad-tbl" id="bang"><thead>
         <tr><th>Mã</th><th>Hạn (ngày)</th><th>Trạng thái</th><th>Người kích hoạt</th><th>Hết hạn</th><th>Ghi chú</th></tr>
       </thead><tbody></tbody></table></div>
     </div>
   </div>
 </div>
+</main>
 
 <script>
 (function () {
@@ -106,13 +117,13 @@
   function veStats() {
     return api("/admin/stats").then(function (d) {
       document.getElementById("stats").innerHTML =
-        '<div class="stat"><b>' + d.users + "</b><span>tài khoản</span></div>" +
-        '<div class="stat"><b>' + d.attempts + "</b><span>lượt làm bài đã lưu</span></div>" +
-        '<div class="stat"><b>' + d.maDaTao + "</b><span>mã đã tạo</span></div>" +
-        '<div class="stat"><b>' + d.maDaKichHoat + "</b><span>mã đã kích hoạt</span></div>" +
-        '<div class="stat"><b>' + d.premiumConHan + "</b><span>Premium còn hạn</span></div>" +
-        '<div class="stat"><b>' + d.kichHoat30Ngay + "</b><span>kích hoạt 30 ngày qua</span></div>" +
-        '<div class="stat"><b>' + d.aiHomNay + "</b><span>lượt AI hôm nay</span></div>";
+        '<div class="pg-stat"><b>' + d.users + "</b><span>tài khoản</span></div>" +
+        '<div class="pg-stat"><b>' + d.attempts + "</b><span>lượt làm bài đã lưu</span></div>" +
+        '<div class="pg-stat"><b>' + d.maDaTao + "</b><span>mã đã tạo</span></div>" +
+        '<div class="pg-stat"><b>' + d.maDaKichHoat + "</b><span>mã đã kích hoạt</span></div>" +
+        '<div class="pg-stat"><b>' + d.premiumConHan + "</b><span>Premium còn hạn</span></div>" +
+        '<div class="pg-stat"><b>' + d.kichHoat30Ngay + "</b><span>kích hoạt 30 ngày qua</span></div>" +
+        '<div class="pg-stat"><b>' + d.aiHomNay + "</b><span>lượt AI hôm nay</span></div>";
     });
   }
 
@@ -129,8 +140,8 @@
     return api("/admin/users" + (tuKhoa ? "?q=" + encodeURIComponent(tuKhoa) : "")).then(function (d) {
       document.querySelector("#bangUser tbody").innerHTML = (d.users || []).map(function (u) {
         var goi = u.goi.tier === "paid"
-          ? '<span class="tag-ok">Premium</span>' + (u.goi.hetHan ? " → " + ngay(u.goi.hetHan) : "")
-          : '<span class="tag-cho">Free</span>';
+          ? '<span class="pg-yes">Premium</span>' + (u.goi.hetHan ? " → " + ngay(u.goi.hetHan) : "")
+          : '<span class="pg-lim">Free</span>';
         return "<tr><td>" + esc(u.email) + (u.role !== "student" ? " <b>[" + esc(u.role) + "]</b>" : "") + "</td>" +
           "<td>" + esc(u.name) + "</td><td>" + goi + "</td>" +
           "<td>" + u.soHoSo + "</td><td>" + u.soLuotLam + "</td><td>" + ngay(u.hoatDongCuoi) + "</td>" +
@@ -152,7 +163,7 @@
     return api("/admin/licenses").then(function (d) {
       document.querySelector("#bang tbody").innerHTML = (d.licenses || []).map(function (x) {
         return "<tr><td><code>" + x.code + "</code></td><td>" + x.soNgay + "</td>" +
-          "<td>" + (x.nguoiDung ? '<span class="tag-ok">đã dùng</span>' : '<span class="tag-cho">chưa dùng</span>') + "</td>" +
+          "<td>" + (x.nguoiDung ? '<span class="pg-yes">đã dùng</span>' : '<span class="pg-lim">chưa dùng</span>') + "</td>" +
           "<td>" + (x.nguoiDung || "") + "</td><td>" + ngay(x.hetHan) + "</td>" +
           '<td class="ghi">' + (x.note || "") + "</td></tr>";
       }).join("");
