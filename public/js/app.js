@@ -256,7 +256,35 @@ let keepScrollOnce = false;
 function goStay(view, data) { keepScrollOnce = true; go(view, data); }
 
 /* Đọc hash rồi render. Cả nút trong app lẫn Back/Forward đều đi qua đây. */
+/* Bọc ngoài renderFromHash: ứng dụng dựng toàn bộ giao diện bằng JS từ ~40 tệp
+   nạp nối nhau, chỉ cần MỘT tệp tải hỏng (mạng chập chờn, deploy dở) là <main>
+   trống trơn và học sinh không hiểu chuyện gì. Thà báo lỗi và mời tải lại. */
 function renderFromHash() {
+  try {
+    renderFromHashThat();
+    window.__appDaVe = true;   // lưới an toàn trong index.html dựa vào cờ này
+  } catch (e) {
+    console.error("[app] Không dựng được màn hình:", e);
+    baoLoiTai(e);
+  }
+}
+
+function baoLoiTai(e) {
+  const app = document.getElementById("app");
+  if (!app) return;
+  app.innerHTML =
+    '<div style="max-width:520px;margin:56px auto;text-align:center;padding:0 20px">' +
+    '<div style="font-size:44px;margin-bottom:8px">😵‍💫</div>' +
+    '<h2 style="margin:0 0 10px">Trang chưa tải xong</h2>' +
+    '<p style="color:var(--text-soft,#64748b);line-height:1.6;margin:0 0 20px">' +
+    'Một phần dữ liệu bài học chưa tải được — thường do mạng chập chờn. ' +
+    'Bấm nút dưới để tải lại, bài học và tiến độ của em vẫn còn nguyên.</p>' +
+    '<button class="btn btn-primary" onclick="location.reload()">Tải lại trang</button>' +
+    '<p style="color:var(--text-soft,#94a3b8);font-size:12px;margin-top:22px">Chi tiết: ' +
+    esc(String((e && e.message) || e)).slice(0, 160) + "</p></div>";
+}
+
+function renderFromHashThat() {
   const parsed = parseHash();
   const view = parsed.view;
   const d = (pendingNav && pendingNav.view === view) ? pendingNav.data : parsed.data;
@@ -981,14 +1009,23 @@ function previewDoc(code) {
 
 /* Chạy một đoạn Python, đưa kết quả vào phần tử outEl */
 function runPython(code, outEl, runBtn) {
-  if (typeof Sk === "undefined") {
-    outEl.textContent = "⚠ Trình chạy Python chưa tải được. Hãy mở lại trang khi có mạng lần đầu, hoặc kiểm tra thư mục js/vendor.";
-    outEl.classList.add("has-error");
-    return;
-  }
   outEl.hidden = false;
-  outEl.textContent = "Đang chạy...";
+  outEl.textContent = "Đang tải trình chạy Python…";
   outEl.classList.remove("has-error");
+  if (runBtn) runBtn.disabled = true;
+  skulptReady().then(
+    () => chayPython(code, outEl, runBtn),
+    () => {
+      outEl.textContent = "⚠ Trình chạy Python chưa tải được. Kiểm tra kết nối mạng rồi bấm Chạy lại.";
+      outEl.classList.add("has-error");
+      if (runBtn) runBtn.disabled = false;
+    }
+  );
+}
+
+/* Chạy thật, gọi khi Skulpt đã sẵn sàng */
+function chayPython(code, outEl, runBtn) {
+  outEl.textContent = "Đang chạy...";
   let buffer = "";
   Sk.configure({
     output: (t) => { buffer += t; outEl.textContent = buffer; },

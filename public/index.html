@@ -59,10 +59,9 @@
     </div>
   </div>
 
-  <!-- Trình chạy Python offline (Skulpt) -->
   <script src="js/session.js"></script>
-  <script src="js/vendor/skulpt.min.js"></script>
-  <script src="js/vendor/skulpt-stdlib.js"></script>
+  <!-- Trình chạy Python offline (Skulpt, ~948KB): nạp lười khi bấm Chạy, xem js/skulpt-lazy.js -->
+  <script src="js/skulpt-lazy.js"></script>
   <!-- Nạp dữ liệu TRƯỚC, sau đó nạp ứng dụng -->
   <script src="js/questions.js"></script>
   <script src="js/questions-extra.js"></script>
@@ -106,5 +105,23 @@
   <script src="js/app.js"></script>
   <script src="js/tutor.js"></script>
   <script src="js/exam-modes.js"></script>
+
+  <!-- Lưới an toàn cuối cùng: nếu chính app.js (hoặc một tệp dữ liệu) không tải
+       được thì không hàm nào của ứng dụng chạy, và học sinh chỉ thấy trang trắng.
+       Đoạn nội tuyến này không phụ thuộc tệp ngoài nào nên luôn chạy được. -->
+  <script>
+    setTimeout(function () {
+      var m = document.getElementById("app");
+      if (window.__appDaVe || !m || m.children.length) return;
+      m.innerHTML =
+        '<div style="max-width:520px;margin:56px auto;text-align:center;padding:0 20px;font-family:system-ui,sans-serif">' +
+        '<div style="font-size:44px;margin-bottom:8px">😵&zwj;💫</div>' +
+        '<h2 style="margin:0 0 10px">Trang chưa tải xong</h2>' +
+        '<p style="color:#64748b;line-height:1.6;margin:0 0 20px">Một phần dữ liệu bài học chưa tải được — ' +
+        'thường do mạng chập chờn. Bấm nút dưới để tải lại, tiến độ của em vẫn còn nguyên.</p>' +
+        '<button onclick="location.reload()" style="padding:12px 22px;border:0;border-radius:10px;' +
+        'background:#4f46e5;color:#fff;font-size:15px;font-weight:600;cursor:pointer">Tải lại trang</button></div>';
+    }, 8000);
+  </script>
 </body>
 </html>

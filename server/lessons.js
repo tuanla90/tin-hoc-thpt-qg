@@ -68,20 +68,28 @@ function napKho() {
   if (KHO) return KHO;
   const box = dungSandbox();
   const ctx = vm.createContext(box);
+  const hong = [];
   for (const src of danhSachTep()) {
     const file = path.join(PUB, src);
     if (!fs.existsSync(file)) continue;
     try {
       vm.runInContext(fs.readFileSync(file, "utf8"), ctx, { filename: src, timeout: 20000 });
     } catch (e) {
-      console.warn("[lessons] Bỏ qua", src, "-", e.message.slice(0, 120));
+      hong.push(src);
+      console.error("[lessons] LỖI NẠP", src, "-", e.message.slice(0, 120));
     }
+  }
+  /* Nạp hỏng thì KHÔNG nhớ kết quả: trước đây một tệp lỗi là gia sư AI chạy tiếp
+     với 0 câu hỏi cho tới lần khởi động lại, mà không ai biết. Bỏ cache để lần
+     gọi sau thử lại (tệp đang được ghi dở sẽ đọc được ở lần sau). */
+  if (hong.length) {
+    console.error("[lessons] Có", hong.length, "tệp dữ liệu không nạp được — sẽ thử lại ở lần gọi sau.");
   }
   const baiTheoId = new Map();
   (box.LESSONS || []).forEach((l) => baiTheoId.set(l.id, l));
   const cauTheoId = new Map();
   (box.QUESTION_BANK || []).forEach((q) => cauTheoId.set(q.id, q));
-  KHO = {
+  const kho = {
     baiTheoId, cauTheoId, soBai: baiTheoId.size, soCau: cauTheoId.size,
     VOCAB: box.VOCAB || {},
     /* STAGES (nhãn lớp) và VOCAB_TERMS (từ điển thuật ngữ) cần cho trang SEO
@@ -96,7 +104,9 @@ function napKho() {
     TOPICS: box.TOPICS || null,
     BT: { python: box.EXERCISES || {}, sql: box.SQL_EXERCISES || {}, web: box.WEB_EXERCISES || {} },
   };
-  console.log("[lessons] Đã nạp", KHO.soBai, "bài,", KHO.soCau, "câu hỏi cho gia sư AI.");
+  console.log("[lessons] Đã nạp", kho.soBai, "bài,", kho.soCau, "câu hỏi cho gia sư AI.");
+  if (hong.length) return kho;   // trả tạm bản thiếu, nhưng không nhớ -> lần sau nạp lại
+  KHO = kho;
   return KHO;
 }
 

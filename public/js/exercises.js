@@ -179,7 +179,13 @@ function normOut(s) {
 
 /* Chạy code Python, gọi onDone(output, errorOrNull) */
 function execPython(code, onDone) {
-  if (typeof Sk === "undefined") { onDone("", "Trình chạy Python chưa sẵn sàng (thiếu thư viện js/vendor/skulpt)."); return; }
+  skulptReady().then(
+    function () { chayPythonBaiTap(code, onDone); },
+    function () { onDone("", "Không tải được trình chạy Python. Kiểm tra kết nối mạng rồi chạy lại."); }
+  );
+}
+
+function chayPythonBaiTap(code, onDone) {
   var buffer = "";
   Sk.configure({
     output: function (t) { buffer += t; },

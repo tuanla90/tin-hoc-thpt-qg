@@ -6,6 +6,7 @@
  * ==========================================================================*/
 const path = require("path");
 const express = require("express");
+const compression = require("compression");
 const session = require("express-session");
 const PgSession = require("connect-pg-simple")(session);
 const { createApi } = require("./api");
@@ -19,6 +20,9 @@ const PUBLIC_DIR = path.join(__dirname, "..", "public");
 function createApp({ pool, sessionStore } = {}) {
   const app = express();
   app.set("trust proxy", 1); // Railway đứng sau proxy — cần cho cookie secure
+  /* Nén trước mọi thứ: dữ liệu bài học/câu hỏi là JS text tiếng Việt nên gzip
+     ăn rất mạnh (khoảng 5MB -> 1,2MB). Phải đặt trên static mới nén được tệp tĩnh. */
+  app.use(compression());
   app.use(express.json({ limit: "1mb" }));
 
   const store = sessionStore || (pool && !pool._pgmem
@@ -52,14 +56,28 @@ function createApp({ pool, sessionStore } = {}) {
      không cần đăng nhập. Đặt trước static để chắc chắn đứng trước lối "về trang chính". */
   app.use(createSeo());
 
-  app.use(express.static(PUBLIC_DIR, { extensions: ["html"] }));
+  /* Cache tệp tĩnh.
+     Tên tệp CHƯA có mã băm nên không dám cache lâu thứ gì hay đổi: js/css chỉ
+     revalidate (ETag trả 304, rẻ) để deploy xong là người dùng thấy ngay bản mới.
+     Ảnh, phông và thư viện trong js/vendor gần như không bao giờ đổi nội dung mà
+     lại nặng nhất (skulpt ~948KB, sql-wasm ~692KB) — cache thẳng 30 ngày. */
+  const CACHE_LAU = /[\\/](asset|vendor)[\\/]|\.(png|jpe?g|jfif|gif|svg|ico|webp|avif|woff2?|wasm)$/i;
+  app.use(express.static(PUBLIC_DIR, {
+    extensions: ["html"],
+    setHeaders(res, filePath) {
+      if (CACHE_LAU.test(filePath)) res.setHeader("Cache-Control", "public, max-age=2592000");
+      else if (filePath.endsWith(".html")) res.setHeader("Cache-Control", "no-cache");
+      else res.setHeader("Cache-Control", "no-cache"); // js/css: luôn hỏi lại, ETag lo phần còn lại
+    },
+  }));
 
-  /* Đường dẫn lạ (không phải /api, không phải tệp tĩnh) -> về trang chính. */
+  /* Đường dẫn lạ -> 404 THẬT.
+     Trước đây trả index.html kèm status 200, nên mọi URL sai đều thành "soft 404":
+     Google index URL rác và phí crawl budget. Ứng dụng định tuyến bằng hash (#...)
+     nên không có đường dẫn hợp lệ nào rơi xuống đây. */
   app.use((req, res, next) => {
-    if (req.method === "GET" && !req.path.startsWith("/api")) {
-      return res.sendFile(path.join(PUBLIC_DIR, "index.html"));
-    }
-    next();
+    if (req.method !== "GET" || req.path.startsWith("/api")) return next();
+    res.status(404).sendFile(path.join(PUBLIC_DIR, "404.html"));
   });
 
   /* Lỗi -> JSON gọn, log đầy đủ ở server. */
