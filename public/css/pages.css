@@ -30,6 +30,15 @@
   margin: 16px 0 12px;
   color: var(--ink-main);
 }
+/* Chữ tô gradient — landing chỉ định nghĩa trong .hero h1, dùng lại ở đây. */
+.pg-hero h1 .hl {
+  background: var(--grad-hero);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 2px 10px rgba(168, 85, 247, 0.3));
+}
+
 .pg-hero .lead {
   font-size: 17px;
   color: var(--ink-muted);
