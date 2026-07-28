@@ -1348,3 +1348,14 @@ details.faq .faq-a {
   .nav-links { gap: 26px; }
   .nav-links .nav-opt { display: inline; }
 }
+
+/* ---------------- Header trên điện thoại nhỏ (≤ 430px) ----------------
+   Thanh đầu trang gồm logo + chữ + nút Sáng/Tối + nút CTA. Ở khổ 375px tổng bề
+   ngang ~440px nên ĐẨY CẢ TRANG trượt ngang — mà đây đúng là khổ máy của phần
+   lớn khách vào từ Google. Thu đệm và cỡ nút cho vừa, không giấu thứ gì. */
+@media (max-width: 430px) {
+  .lp-head .wrap { padding-left: 14px; padding-right: 14px; gap: 10px; }
+  .lp-head .brand { font-size: 15px; gap: 8px; }
+  .lp-head .head-actions { gap: 6px; }
+  .lp-head .head-actions .btn { padding: 7px 11px; font-size: 13px; }
+}

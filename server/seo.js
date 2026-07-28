@@ -95,6 +95,16 @@ function cat(s, n) {
 function moTa(s, n) {
   return cat(String(s || "").replace(/\*\*/g, "").replace(/`/g, ""), n);
 }
+/* Tóm tắt hiển thị cho người đọc: cắt TRỌN CÂU, không cụt giữa chừng.
+   Cắt theo số ký tự cho ra những mẩu như "hiểu ba bước máy…" — vô nghĩa và
+   trông như lỗi. Lấy hết câu đầu; câu đầu mà dài quá thì mới đành cắt theo từ. */
+function cauDau(s, toiDa) {
+  const t = String(s || "").replace(/\*\*/g, "").replace(/`/g, "").replace(/\s+/g, " ").trim();
+  if (!t) return "";
+  const m = t.match(/^[\s\S]*?[.!?…](\s|$)/);
+  const cau = (m ? m[0] : t).trim();
+  return cau.length > toiDa ? cat(cau, toiDa) : cau;
+}
 
 /* ---------------------------- chỉ mục bài học ---------------------------- */
 let CHI_MUC = null;
@@ -147,95 +157,116 @@ function tuVung(l, kho) {
   return khoa.map((k) => (typeof k === "string" ? td[k] : k)).filter((t) => t && t.en && t.vi);
 }
 
-/* --------------------------------- CSS --------------------------------- */
-const CSS = `
-:root{--bg:#f8fafc;--card:#fff;--ink:#0f172a;--soft:#475569;--line:#e2e8f0;
-  --pri:#4f46e5;--pri-soft:#eef2ff;--ok:#16a34a;--warn:#b45309}
-@media(prefers-color-scheme:dark){:root{--bg:#0f172a;--card:#1e293b;--ink:#e2e8f0;
-  --soft:#94a3b8;--line:#334155;--pri:#818cf8;--pri-soft:#1e1b4b}}
-*{box-sizing:border-box;margin:0}
-body{font:16px/1.7 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);
-  color:var(--ink);padding:0 16px 56px}
-.wrap{max-width:760px;margin:0 auto}
-a{color:var(--pri)}
-header.top{display:flex;align-items:center;justify-content:space-between;gap:12px;
-  padding:14px 0;border-bottom:1px solid var(--line);margin-bottom:20px;flex-wrap:wrap}
-header.top b{font-size:15px}
-.crumb{font-size:13px;color:var(--soft);margin-bottom:10px}
-.crumb a{color:var(--soft)}
-.lop{display:inline-block;font-size:12.5px;font-weight:700;color:var(--pri);
-  background:var(--pri-soft);border-radius:999px;padding:4px 11px;margin-bottom:10px}
-h1{font-size:26px;line-height:1.3;margin-bottom:8px}
-h2{font-size:19px;margin:30px 0 10px;padding-top:4px}
-h3{font-size:16px;margin:18px 0 6px}
-p{margin:0 0 12px}
-code{font-family:ui-monospace,Consolas,monospace;font-size:.9em;background:var(--pri-soft);
-  padding:1px 5px;border-radius:5px}
-pre{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:11px 13px;
-  margin:9px 0;overflow-x:auto;font-size:13.5px;line-height:1.55}
+/* ---------------------------- KHUNG TRANG ----------------------------
+ *  Dùng CHUNG hệ thống thiết kế với landing / nang-cap / quyen-rieng-tu
+ *  (css/landing.css + css/pages.css): cùng phông chữ, cùng bảng màu, cùng
+ *  header và chân trang, có cả nút Sáng/Tối. Trước đây tệp này tự bịa một bộ
+ *  CSS riêng nên khách bấm từ Google vào thấy như lạc sang website khác.
+ *  Chỉ giữ vài lớp RIÊNG cho trang bài (thẻ câu hỏi, lưới danh sách, khối kể
+ *  chuyện) và đều viết bằng biến màu của hệ thống chung.
+ * ------------------------------------------------------------------- */
+const CSS_RIENG = `
+.seo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(265px,1fr));gap:12px;margin:14px 0 4px}
+.seo-grid a{display:block;background:var(--surface-card);border:1px solid var(--line);border-radius:14px;
+  padding:14px 16px;text-decoration:none;color:var(--ink-main);transition:border-color .15s,transform .1s}
+.seo-grid a:hover{border-color:var(--brand);transform:translateY(-2px)}
+.seo-grid b{display:block;font-size:15px;line-height:1.45;margin-bottom:4px}
+/* Giới thiệu để NGUYÊN CÂU (p90 ~235 ký tự), chỉ nhờ CSS thu về 3 dòng cho các
+   thẻ bằng nhau. Cắt bằng số ký tự cho ra mẩu cụt trông như lỗi; cắt bằng dòng
+   thì đứt ở mép thẻ, mắt đọc thấy tự nhiên. */
+.seo-grid small{display:block;color:var(--ink-muted);font-size:13px;line-height:1.55;
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.seo-lop{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:32px 0 0}
+.seo-lop h2{margin:0}
+.seo-lop span{color:var(--ink-faint);font-size:13.5px}
+.seo-meta{color:var(--ink-muted);font-size:14px;margin:0 0 18px}
+.seo-crumb{font-size:13px;color:var(--ink-faint);margin-bottom:10px}
+.seo-crumb a{color:var(--ink-muted);text-decoration:none}
+.seo-crumb a:hover{color:var(--brand)}
+.seo-story{border-left:3px solid var(--brand);background:var(--brand-soft);border-radius:0 14px 14px 0;
+  padding:15px 18px;margin:18px 0}
+/* Dùng --ink-main chứ KHÔNG dùng --brand-dark: ở chế độ tối, --brand-dark
+   (#4f46e5) nằm trên nền --brand-soft (#1e1b4b) là hai màu chàm sát nhau, chữ
+   chìm hẳn. Viền trái và nền nhạt đã đủ báo hiệu khối này rồi. */
+.seo-story h3{margin:0 0 6px;font-size:15.5px;color:var(--ink-main)}
+.seo-q{background:var(--surface-card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin:12px 0}
+.seo-q-no{font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:6px}
+.seo-q ol{margin:10px 0 10px 22px;padding:0}
+.seo-q li{margin:4px 0}
+.seo-dap{margin-top:11px;padding-top:11px;border-top:1px dashed var(--line);font-size:14.5px;color:var(--ink-muted)}
+.seo-dap b{color:var(--accent-green)}
+.seo-nav{display:flex;justify-content:space-between;gap:14px;margin-top:28px;font-size:14.5px;flex-wrap:wrap}
+.seo-nav a{text-decoration:none}
+pre{background:var(--bg-subtle);border:1px solid var(--line);border-radius:10px;padding:12px 14px;
+  margin:10px 0;overflow-x:auto;font-size:13.5px;line-height:1.6}
 pre code{background:none;padding:0;font-size:inherit}
-.meta{color:var(--soft);font-size:13.5px;margin-bottom:18px}
-.box{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin:14px 0}
-.story{border-left:3px solid var(--pri)}
-ul,ol{margin:0 0 12px 20px;padding:0}
-li{margin:5px 0}
-table{width:100%;border-collapse:collapse;font-size:14.5px;margin:6px 0 4px}
-th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
-th{color:var(--soft);font-size:12.5px;text-transform:uppercase;letter-spacing:.03em}
-.q{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:15px 17px;margin:12px 0}
-.q .no{font-size:12.5px;color:var(--soft);font-weight:700;margin-bottom:5px}
-.q ol{margin:8px 0 8px 22px}
-.dap{margin-top:9px;padding-top:9px;border-top:1px dashed var(--line);font-size:14.5px}
-.dap b{color:var(--ok)}
-.cta{background:var(--pri-soft);border:1px solid var(--pri);border-radius:16px;padding:20px;margin:28px 0;text-align:center}
-.cta h2{margin:0 0 8px;font-size:19px}
-.cta p{color:var(--soft);font-size:14.5px}
-.btn{display:inline-block;background:var(--pri);color:#fff;text-decoration:none;font-weight:700;
-  border-radius:10px;padding:11px 22px;margin-top:6px}
-.nav{display:flex;justify-content:space-between;gap:12px;margin-top:26px;font-size:14.5px;flex-wrap:wrap}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px;margin:10px 0 6px}
-.grid a{display:block;background:var(--card);border:1px solid var(--line);border-radius:11px;
-  padding:11px 13px;text-decoration:none;color:var(--ink);font-size:14.5px}
-.grid a:hover{border-color:var(--pri)}
-.grid a small{display:block;color:var(--soft);font-size:12.5px;margin-top:2px}
-footer{margin-top:38px;padding-top:16px;border-top:1px solid var(--line);color:var(--soft);font-size:13px}
-footer a{margin-right:14px}
 `;
 
-function khung({ title, desc, canonical, body, ld }) {
-  return `<!DOCTYPE html>
-<html lang="vi">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>${esc(title)}</title>
-<meta name="description" content="${esc(desc)}">
-<link rel="canonical" href="${esc(canonical)}">
-<meta property="og:type" content="article">
-<meta property="og:title" content="${esc(title)}">
-<meta property="og:description" content="${esc(desc)}">
-<meta property="og:url" content="${esc(canonical)}">
-<meta property="og:site_name" content="Ôn thi Tin học THPT">
-<meta property="og:locale" content="vi_VN">
-<meta name="twitter:card" content="summary">
-<style>${CSS}</style>
-${ld ? '<script type="application/ld+json">' + JSON.stringify(ld) + "</script>" : ""}
-</head>
-<body><div class="wrap">
-<header class="top">
-  <b><a href="/bai" style="text-decoration:none;color:inherit">Ôn thi Tin học THPT</a></b>
-  <a href="/">Vào ứng dụng học →</a>
-</header>
-${body}
-<footer>
-  <a href="/bai">Tất cả bài học</a>
-  <a href="/landing.html">Giới thiệu</a>
-  <a href="/nang-cap.html">Bảng giá</a>
-  <a href="/quyen-rieng-tu.html">Quyền riêng tư</a>
-  <p style="margin-top:8px">Nội dung do người dạy tự biên soạn theo Chương trình GDPT 2018 — không sao chép sách giáo khoa.</p>
-</footer>
-</div></body>
-</html>`;
+const LOGO_SVG = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 18l6-6-6-6"/><path d="M8 6l-6 6 6 6"/></svg>';
+const IC_TRANG = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+const IC_TROI = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>';
+
+/* Nút Sáng/Tối dùng chung một khoá localStorage 'lpTheme' với các trang vệ tinh,
+   để đổi ở trang nào thì sang trang khác vẫn giữ nguyên lựa chọn. */
+const JS_THEME = "(function(){var b=document.getElementById('themeToggle');" +
+  "var S=" + JSON.stringify(IC_TROI) + ",T=" + JSON.stringify(IC_TRANG) + ";" +
+  "var l=null;try{l=localStorage.getItem('lpTheme')}catch(e){}" +
+  "if(l)document.documentElement.setAttribute('data-theme',l);if(!b)return;" +
+  "b.innerHTML=l==='dark'?S:T;b.onclick=function(){" +
+  "var t=document.documentElement.getAttribute('data-theme')==='dark';" +
+  "document.documentElement.setAttribute('data-theme',t?'light':'dark');" +
+  "b.innerHTML=t?T:S;try{localStorage.setItem('lpTheme',t?'light':'dark')}catch(e){}}})();";
+
+function khung(o) {
+  return '<!DOCTYPE html>\n<html lang="vi">\n<head>\n' +
+    '<meta charset="UTF-8">\n' +
+    '<meta name="viewport" content="width=device-width,initial-scale=1">\n' +
+    "<title>" + esc(o.title) + "</title>\n" +
+    '<meta name="description" content="' + esc(o.desc) + '">\n' +
+    '<link rel="canonical" href="' + esc(o.canonical) + '">\n' +
+    '<meta property="og:type" content="article">\n' +
+    '<meta property="og:title" content="' + esc(o.title) + '">\n' +
+    '<meta property="og:description" content="' + esc(o.desc) + '">\n' +
+    '<meta property="og:url" content="' + esc(o.canonical) + '">\n' +
+    '<meta property="og:site_name" content="Ôn thi Tin học THPT">\n' +
+    '<meta property="og:locale" content="vi_VN">\n' +
+    '<meta name="twitter:card" content="summary">\n' +
+    '<link rel="preconnect" href="https://fonts.googleapis.com">\n' +
+    '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n' +
+    '<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@600;700;800;900&family=Lexend:wght@700;800&family=JetBrains+Mono:wght@600;700&family=Plus+Jakarta+Sans:wght@500;650;750;800&display=swap" rel="stylesheet">\n' +
+    '<link rel="stylesheet" href="/css/landing.css">\n' +
+    '<link rel="stylesheet" href="/css/pages.css">\n' +
+    "<style>" + CSS_RIENG + "</style>\n" +
+    (o.ld ? '<script type="application/ld+json">' + JSON.stringify(o.ld) + "</script>\n" : "") +
+    '</head>\n<body class="lp">\n\n' +
+    '<header class="lp-head"><div class="wrap">' +
+      '<a class="brand" href="/landing.html"><span class="brand-mark" aria-hidden="true">' + LOGO_SVG + "</span>Tin Học KHMT</a>" +
+      '<nav class="nav-links">' +
+        '<a href="/bai">Ôn tập theo bài</a>' +
+        '<a href="/landing.html#tinh-nang">Tính năng</a>' +
+        '<a href="/nang-cap.html">Bảng giá</a>' +
+      "</nav>" +
+      '<div class="head-actions">' +
+        '<button class="btn btn-ghost btn-sm" id="themeToggle" title="Chuyển giao diện Sáng/Tối">' + IC_TRANG + "</button>" +
+        '<a class="btn btn-primary btn-sm" href="/">Học thử miễn phí</a>' +
+      "</div>" +
+    "</div></header>\n\n" +
+    '<main class="pg-main"><div class="wrap pg-narrow">\n' + o.body + "\n</div></main>\n\n" +
+    '<footer class="foot"><div class="wrap">' +
+      '<div class="foot-top"><div>' +
+        '<a class="brand" href="/landing.html"><span class="brand-mark" aria-hidden="true">' + LOGO_SVG + "</span>Tin học KHMT</a>" +
+        '<p class="tagline">Ôn thi Tin học tốt nghiệp, định hướng Khoa học máy tính — dễ hiểu, thực hành thật.</p>' +
+      "</div>" +
+      '<nav class="foot-links">' +
+        '<a href="/bai">Tất cả bài học</a>' +
+        '<a href="/landing.html">Giới thiệu</a>' +
+        '<a href="/nang-cap.html">Bảng giá &amp; nâng cấp</a>' +
+        '<a href="/quyen-rieng-tu.html">Quyền riêng tư</a>' +
+      "</nav></div>" +
+      '<p class="copy">Nội dung do người dạy tự biên soạn theo Chương trình GDPT 2018 — không sao chép sách giáo khoa. ' +
+      "© 2026 Ôn thi Tin học THPT · Lê Anh Tuấn (Tuấn LA Lab).</p>" +
+    "</div></footer>\n" +
+    "<script>" + JS_THEME + "</script>\n</body>\n</html>";
 }
 
 /* ------------------------------ trang một bài ------------------------------ */
@@ -260,55 +291,65 @@ function trangBai(muc, base) {
   const tv = tuVung(l, kho);
 
   const cauMcHtml = mc.map((q, i) => `
-  <div class="q">
-    <div class="no">Câu ${i + 1} · ${esc(TEN_MUC[q.level] || "")}</div>
+  <div class="seo-q">
+    <div class="seo-q-no">Câu ${i + 1} · ${esc(TEN_MUC[q.level] || "")}</div>
     <div>${nhan(q.question)}</div>
     ${q.code ? "<pre><code>" + esc(q.code) + "</code></pre>" : ""}
     <ol type="A">${(q.options || []).map((o) => "<li>" + nhan(o) + "</li>").join("")}</ol>
-    <div class="dap"><b>Đáp án: ${String.fromCharCode(65 + q.answer)}</b>${q.explain ? " — " + nhan(q.explain) : ""}</div>
+    <div class="seo-dap"><b>Đáp án: ${String.fromCharCode(65 + q.answer)}</b>${q.explain ? " — " + nhan(q.explain) : ""}</div>
   </div>`).join("");
 
   const cauTfHtml = tf.map((q) => `
-  <div class="q">
-    <div class="no">Câu Đúng/Sai (Phần II) · ${esc(TEN_MUC[q.level] || "")}</div>
+  <div class="seo-q">
+    <div class="seo-q-no">Câu Đúng/Sai (Phần II) · ${esc(TEN_MUC[q.level] || "")}</div>
     <div>${nhan(q.question)}</div>
     ${q.code ? "<pre><code>" + esc(q.code) + "</code></pre>" : ""}
-    <table>${(q.statements || []).map((s, i) => `<tr><td>${"abcd"[i]})</td><td>${nhan(s.text)}</td>
-      <td style="white-space:nowrap"><b style="color:${s.correct ? "var(--ok)" : "var(--warn)"}">${s.correct ? "Đúng" : "Sai"}</b></td></tr>`).join("")}</table>
-    ${q.explain ? '<div class="dap">' + nhan(q.explain) + "</div>" : ""}
+    <div class="pg-table-wrap"><table class="pg-table">${(q.statements || []).map((s, i) => `<tr><td>${"abcd"[i]})</td><td>${nhan(s.text)}</td>
+      <td style="white-space:nowrap"><b class="${s.correct ? "pg-yes" : "pg-lim"}">${s.correct ? "Đúng" : "Sai"}</b></td></tr>`).join("")}</table></div>
+    ${q.explain ? '<div class="seo-dap">' + nhan(q.explain) + "</div>" : ""}
   </div>`).join("");
 
   const body = `
-<div class="crumb"><a href="/bai">Ôn tập Tin học THPT</a> › ${esc(muc.lop)} › Bài ${l.order}</div>
-<span class="lop">${esc(muc.lop)}</span>
-<h1>Bài ${l.order}. ${esc(l.title)}</h1>
-<p class="meta">Chủ đề ${esc(l.topic)} · ${esc(TEN_CHU_DE[l.topic] || "")} — đọc khoảng ${l.minutes || 10} phút${
-    (l.quiz || []).length ? ` · bài này có ${(l.quiz || []).length} câu luyện tập trong ứng dụng` : ""}</p>
-${doan(l.intro)}
-${mo ? '<div class="box story"><h3>Bắt đầu bằng một hình dung</h3>' + doan(mo.text) + "</div>" : ""}
-${mucLon.length ? "<h2>Nội dung bài học</h2><ol>" + mucLon.map((h) => "<li>" + nhan(h) + "</li>").join("") + "</ol>" : ""}
-${(l.keypoints || []).length ? '<h2>Tóm tắt lý thuyết cần nhớ</h2><div class="box"><ul>' +
-    l.keypoints.map((k) => "<li>" + nhan(k) + "</li>").join("") + "</ul></div>" : ""}
-${tv.length ? `<h2>Thuật ngữ tiếng Anh trong bài</h2>
-<table><tr><th>Tiếng Anh</th><th>Đọc là</th><th>Nghĩa</th></tr>
-${tv.map((t) => `<tr><td><b>${esc(t.en)}</b></td><td>${esc(t.say || "")}</td><td>${esc(t.vi)}${
-    t.gloss ? '<br><small style="color:var(--soft)">' + esc(moTa(t.gloss, 150)) + "</small>" : ""}</td></tr>`).join("")}
-</table>` : ""}
-${(cauMcHtml || cauTfHtml) ? `<h2>Câu hỏi trắc nghiệm có đáp án</h2>
-<p class="meta">Mấy câu mẫu để bạn tự kiểm tra ngay. Trong ứng dụng, bài này có đủ ${(l.quiz || []).length} câu, chấm điểm tự động và giải thích từng câu sai.</p>
-${cauMcHtml}${cauTfHtml}` : ""}
-
-<div class="cta">
-  <h2>Học trọn bài này trong ứng dụng</h2>
-  <p>Bài giảng đầy đủ, ${(l.quiz || []).length} câu luyện tập chấm tự động, thi thử đúng cấu trúc đề tốt nghiệp
-  (24 trắc nghiệm + 4 Đúng/Sai), bài thực hành máy tự chấm và gia sư AI giải thích chỗ sai.</p>
-  <a class="btn" href="/#/lesson/${esc(l.id)}">Mở bài ${l.order} trong ứng dụng</a>
-  <p style="margin-top:10px;font-size:13px">Miễn phí toàn bộ phần học — tạo tài khoản để lưu tiến độ.</p>
+<div class="pg-hero left">
+  <div class="seo-crumb"><a href="/bai">Ôn tập Tin học THPT</a> › ${esc(muc.lop)} › Bài ${l.order}</div>
+  <span class="eyebrow">${esc(muc.lop)}</span>
+  <h1>Bài ${l.order}. ${esc(l.title)}</h1>
+  <p class="lead">${nhan(l.intro || "")}</p>
+  <p class="seo-meta">Chủ đề ${esc(l.topic)} · ${esc(TEN_CHU_DE[l.topic] || "")} — đọc khoảng ${l.minutes || 10} phút${
+    (l.quiz || []).length ? ` · ${(l.quiz || []).length} câu luyện tập trong ứng dụng` : ""}</p>
 </div>
 
-<div class="nav">
-  <span>${muc.truoc ? '<a href="/bai/' + muc.truoc.slug + '">← Bài ' + muc.truoc.bai.order + ". " + esc(moTa(muc.truoc.bai.title, 40)) + "</a>" : ""}</span>
-  <span>${muc.sau ? '<a href="/bai/' + muc.sau.slug + '">Bài ' + muc.sau.bai.order + ". " + esc(moTa(muc.sau.bai.title, 40)) + " →</a>" : ""}</span>
+<div class="pg-card pg-prose">
+${mo ? '<div class="seo-story"><h3>Bắt đầu bằng một hình dung</h3>' + doan(mo.text) + "</div>" : ""}
+${mucLon.length ? "<h2>Nội dung bài học</h2><ol>" + mucLon.map((h) => "<li>" + nhan(h) + "</li>").join("") + "</ol>" : ""}
+${(l.keypoints || []).length ? "<h2>Tóm tắt lý thuyết cần nhớ</h2><ul>" +
+    l.keypoints.map((k) => "<li>" + nhan(k) + "</li>").join("") + "</ul>" : ""}
+</div>
+
+${tv.length ? `<div class="pg-card">
+<h2>Thuật ngữ tiếng Anh trong bài</h2>
+<div class="pg-table-wrap"><table class="pg-table seo-tv">
+<thead><tr><th>Tiếng Anh</th><th>Đọc là</th><th>Nghĩa</th></tr></thead>
+<tbody>${tv.map((t) => `<tr><td><b>${esc(t.en)}</b></td><td>${esc(t.say || "")}</td><td>${esc(t.vi)}${
+    t.gloss ? "<br><small>" + esc(cauDau(t.gloss, 170)) + "</small>" : ""}</td></tr>`).join("")}</tbody>
+</table></div></div>` : ""}
+
+${(cauMcHtml || cauTfHtml) ? `<div class="pg-card">
+<h2>Câu hỏi trắc nghiệm có đáp án</h2>
+<p class="pg-note" style="margin-top:0">Mấy câu mẫu để bạn tự kiểm tra ngay. Trong ứng dụng, bài này có đủ ${(l.quiz || []).length} câu, chấm điểm tự động và giải thích từng câu sai.</p>
+${cauMcHtml}${cauTfHtml}</div>` : ""}
+
+<div class="pg-card" style="text-align:center">
+  <h2>Học trọn bài này trong ứng dụng</h2>
+  <p class="pg-note">Bài giảng đầy đủ, ${(l.quiz || []).length} câu luyện tập chấm tự động, thi thử đúng cấu trúc đề tốt nghiệp
+  (24 trắc nghiệm + 4 Đúng/Sai), bài thực hành máy tự chấm và gia sư AI giải thích chỗ sai.</p>
+  <p style="margin-top:14px"><a class="btn btn-primary btn-lg" href="/#/lesson/${esc(l.id)}">Mở bài ${l.order} trong ứng dụng</a></p>
+  <p class="pg-note" style="margin-top:10px">Phần học miễn phí, không cần tạo tài khoản.</p>
+</div>
+
+<div class="seo-nav">
+  <span>${muc.truoc ? '<a href="/bai/' + muc.truoc.slug + '">← Bài ' + muc.truoc.bai.order + ". " + esc(muc.truoc.bai.title) + "</a>" : ""}</span>
+  <span>${muc.sau ? '<a href="/bai/' + muc.sau.slug + '">Bài ' + muc.sau.bai.order + ". " + esc(muc.sau.bai.title) + " →</a>" : ""}</span>
 </div>`;
 
   const ld = {
@@ -353,21 +394,27 @@ function trangDanhSach(base) {
     theoLop.get(m.bai.stage).push(m);
   });
 
+  /* Mô tả mỗi thẻ: lấy TRỌN CÂU ĐẦU của phần giới thiệu. Cắt cứng theo số ký tự
+     cho ra những mẩu cụt lủn kiểu "hiểu ba bước máy…" — trông như lỗi hiển thị. */
   const khoi = [...theoLop].map(([stage, ms]) => `
-<h2 id="stage${stage}">${esc(ms[0].lop)} <small style="color:var(--soft);font-weight:400">(${ms.length} bài)</small></h2>
-<div class="grid">${ms.map((m) => `<a href="/bai/${m.slug}"><b>Bài ${m.bai.order}. ${esc(m.bai.title)}</b>
-  <small>${esc(moTa(m.bai.intro, 70))}</small></a>`).join("")}</div>`).join("");
+<div class="seo-lop"><h2 id="stage${stage}">${esc(ms[0].lop)}</h2><span>${ms.length} bài</span></div>
+<div class="seo-grid">${ms.map((m) => `<a href="/bai/${m.slug}"><b>Bài ${m.bai.order}. ${esc(m.bai.title)}</b>
+  <small>${esc(cauDau(m.bai.intro, 280))}</small></a>`).join("")}</div>`).join("");
 
   const body = `
-<h1>Ôn tập Tin học THPT — ${ds.length} bài lý thuyết &amp; trắc nghiệm có đáp án</h1>
-<p class="meta">Tóm tắt lý thuyết, thuật ngữ tiếng Anh và câu hỏi trắc nghiệm có đáp án cho cả ba lớp 10, 11, 12
-— cả nhánh Khoa học máy tính lẫn Tin học ứng dụng, bám Chương trình GDPT 2018 và cấu trúc đề tốt nghiệp
-(24 câu trắc nghiệm + 4 câu Đúng/Sai).</p>
-<div class="cta">
-  <h2>Ứng dụng học đầy đủ</h2>
-  <p>${ds.length} bài giảng, ${kho.soCau} câu hỏi, 13 đề thi thử, hơn 320 bài thực hành máy tự chấm
-  (Python, SQL, HTML/CSS, đồ hoạ) và gia sư AI.</p>
-  <a class="btn" href="/">Bắt đầu học miễn phí</a>
+<div class="pg-hero left">
+  <span class="eyebrow">Ôn tập theo bài</span>
+  <h1>${ds.length} bài Tin học THPT — lý thuyết &amp; trắc nghiệm có đáp án</h1>
+  <p class="lead">Tóm tắt lý thuyết, thuật ngữ tiếng Anh và câu hỏi trắc nghiệm có đáp án cho cả ba lớp 10, 11, 12
+  — cả nhánh Khoa học máy tính lẫn Tin học ứng dụng, bám Chương trình GDPT 2018 và cấu trúc đề tốt nghiệp
+  (24 câu trắc nghiệm + 4 câu Đúng/Sai).</p>
+</div>
+
+<div class="pg-card" style="text-align:center">
+  <h2>Học đầy đủ trong ứng dụng</h2>
+  <p class="pg-note">${ds.length} bài giảng, ${kho.soCau} câu hỏi, 13 đề thi thử, hơn 320 bài thực hành máy tự chấm
+  (Python, SQL, HTML/CSS, đồ hoạ) và gia sư AI kèm riêng.</p>
+  <p style="margin-top:14px"><a class="btn btn-primary btn-lg" href="/">Bắt đầu học miễn phí</a></p>
 </div>
 ${khoi}`;
 
@@ -431,7 +478,10 @@ function createSeo() {
         title: "Không tìm thấy bài học",
         desc: "Đường dẫn không đúng.",
         canonical: goc(req) + "/bai",
-        body: '<h1>Không tìm thấy bài học này</h1><p>Có thể đường dẫn đã đổi. <a href="/bai">Xem danh sách tất cả bài học</a>.</p>',
+        body: '<div class="pg-hero left"><h1>Không tìm thấy bài học này</h1>' +
+          '<p class="lead">Có thể đường dẫn đã đổi.</p></div>' +
+          '<div class="pg-card" style="text-align:center"><p style="margin-bottom:12px">Xem danh sách đầy đủ để tìm đúng bài bạn cần.</p>' +
+          '<a class="btn btn-primary" href="/bai">Tất cả bài học</a></div>',
       }));
     } catch (e) { next(e); }
   });
