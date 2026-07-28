@@ -7,7 +7,7 @@
 Chương trình GDPT 2018: **lớp 10 học chung**, từ **lớp 11 tách hai định hướng** —
 *Khoa học máy tính* (KHMT) và *Tin học ứng dụng* (ICT).
 
-## ✅ Đã đối chiếu xong — 11 quyển · 353 bài
+## ✅ Đã đối chiếu xong — 12 quyển · 386 bài
 
 **Kết nối tri thức (5/5 quyển — đủ bộ)**
 - [x] Tin học 10
@@ -19,17 +19,14 @@ Chương trình GDPT 2018: **lớp 10 học chung**, từ **lớp 11 tách hai �
 - [x] Tin học 11 – Khoa học máy tính · [x] Tin học 11 – Tin học ứng dụng
 - [x] Tin học 12 – Khoa học máy tính · [x] Tin học 12 – Tin học ứng dụng
 
-**Chân trời sáng tạo (1 quyển)**
-- [x] Tin học 12 – Khoa học máy tính
+**Chân trời sáng tạo (2 quyển — đủ những gì bộ này xuất bản)**
+- [x] Tin học 12 – Khoa học máy tính · [x] Tin học 12 – Tin học ứng dụng
 
-## 🔴 Còn thiếu — 1 quyển
+## 🎉 Không còn quyển nào cần tìm
 
-- [ ] **Tin học 12 – Định hướng Tin học ứng dụng** — Chân trời sáng tạo
-
-Anh/chị nói đã tìm được 2 quyển lớp 12 của bộ này, nhưng trong `public/sach/` mới
-thấy quyển Khoa học máy tính. Có bản PDF quyển Ứng dụng là làm được ngay.
-Một nguồn thấy khi tra: `loigiaihay.com` có trang PDF cho đúng quyển này
-(tìm "SGK Tin học Định hướng tin học ứng dụng 12 Chân trời sáng tạo").
+Hai quyển lớp 12 của Chân trời đã xong (28/07/2026). Lớp 10 và 11 của bộ này gần
+như chắc chắn không tồn tại — xem phần dưới. Nếu sau này có bằng chứng ngược lại
+thì mở lại mục này.
 
 ## ⛔ Chân trời sáng tạo lớp 10 và 11 — nhiều khả năng KHÔNG TỒN TẠI
 
@@ -46,7 +43,7 @@ Một nguồn thấy khi tra: `loigiaihay.com` có trang PDF cho đúng quyển 
   hướng Tin học ứng dụng* và mục 22 là *Tin học 12 – Định hướng Khoa học máy tính*.
 
 → Nhiều khả năng bộ Chân trời chỉ làm sách Tin học từ **lớp 12**. Nếu đúng thì bảng
-đối chiếu hiện đã **phủ hết những gì tồn tại**, trừ một quyển ghi ở trên.
+đối chiếu hiện đã **phủ hết những gì tồn tại**.
 
 ## 💡 Cách nhận ra nguồn ghi nhầm bộ sách
 
@@ -70,3 +67,6 @@ chép nhầm của Kết nối tri thức.
 - Bản scan dùng được: phần đối chiếu chỉ cần **mục lục**. Vị trí mục lục theo bộ:
   **KNTT ở đầu sách** (trang 4–6), **Cánh Diều ở trang áp chót**, **Chân trời ở đầu
   sách** (2 trang).
+- Hai quyển cùng lớp dùng chung nhiều bài lõi, nhưng **số trang thì khác nhau** —
+  quyển Ứng dụng chèn thêm chủ đề riêng vào giữa nên phần sau dịch hết xuống.
+  Chép đích của nhau thì được, **chép số trang là sai**.

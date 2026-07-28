@@ -157,6 +157,10 @@ test("đối chiếu SGK: đủ mọi quyển, mỗi bài sách trỏ đúng m�
         if (b.maBai) {
           assert.ok(t.body.includes("Bài " + b.maBai),
             "thiếu mã bài kiểu Chân trời: " + s.ma + " → Bài " + b.maBai);
+          /* Gõ lại đúng cái vừa nhìn thấy phải ra kết quả: mã bài in trên hàng
+             cũng phải nằm trong khoá tìm, không thì gõ "E7" lại báo 0 bài. */
+          assert.ok(t.body.includes('data-tim="' + b.maBai.toLowerCase() + ' '),
+            "mã bài không nằm trong khoá tìm: " + s.ma + " → " + b.maBai);
         } else if (b.chuDe) {
           /* Bài không đánh số trong sách (chủ đề chỉ có một bài) thì chỉ hiện
              "Chủ đề D" — không được bịa thêm "Bài 1". */
@@ -176,6 +180,12 @@ test("đối chiếu SGK: đủ mọi quyển, mỗi bài sách trỏ đúng m�
   assert.ok(!/<table/.test(than), "trang đối chiếu không được dùng bảng");
   /* Ô lọc là thứ giúp khỏi cuộn qua 95 dòng: phải có ô nhập và dữ liệu để lọc. */
   assert.ok(r.body.includes('id="dcTim"'), "thiếu ô tìm nhanh");
+  /* Bộ lọc ẩn hàng bằng thuộc tính `hidden`, nhưng .dc-hang có display:grid của
+     tác giả — thắng luật [hidden] mặc định của trình duyệt. Thiếu quy tắc đè
+     này thì ô lọc vẫn đếm "1 bài khớp" mà cả 33 dòng còn nguyên trên màn hình,
+     và không test nào khác bắt được vì HTML sinh ra vẫn đúng. */
+  assert.ok(/\.dc-hang\[hidden\][^{]*\{[^}]*display:\s*none/.test(r.body),
+    "thiếu quy tắc CSS ẩn hàng bị lọc — ô lọc sẽ không ẩn được gì");
 
   /* Hai quyển cùng lớp của KNTT dùng chung phần lõi — bài lõi phải trỏ về CÙNG
      một bài của app ở cả hai quyển, nếu lệch là đối chiếu sai một bên. */
@@ -192,6 +202,25 @@ test("đối chiếu SGK: đủ mọi quyển, mỗi bài sách trỏ đúng m�
       const chuan = (s) => s.toLowerCase().replace(/[–—-]/g, "-").replace(/\s+/g, " ").trim();
       assert.equal(chuan(c.ten), chuan(a.ten), "Bài " + so + " lõi lớp 11 tên lệch giữa hai quyển");
     }
+  }
+
+  /* Chân trời lớp 12 cũng dùng chung phần lõi, nhưng quyển Ứng dụng chèn thêm
+     chủ đề E vào giữa nên MỌI BÀI LÕI PHÍA SAU LỆCH TRANG. Chép cả dòng từ
+     quyển kia là học sinh giở đúng số trang mà không thấy bài — nên vừa kiểm
+     đích phải trùng, vừa kiểm số trang phải khác. */
+  const ct = kho.SGK_MAP.bo.find((x) => x.ma === "chan-troi-sang-tao");
+  const ctKh = ct && ct.sach.find((s) => s.ma === "ctst-tin-hoc-12-khmt");
+  const ctIct = ct && ct.sach.find((s) => s.ma === "ctst-tin-hoc-12-ict");
+  if (ctKh && ctIct) {
+    let soLech = 0;
+    for (const c of ctIct.bai) {
+      const a = ctKh.bai.find((b) => b.maBai === c.maBai);
+      if (!a) continue; /* A3, A4 và cả chủ đề E là bài riêng của quyển Ứng dụng */
+      assert.equal(c.cua, a.cua, "Bài " + c.maBai + " lõi CTST 12 trỏ lệch giữa hai quyển");
+      if (c.trang !== a.trang) soLech++;
+    }
+    assert.ok(soLech >= 10,
+      "bài lõi CTST 12 đang trùng số trang với quyển kia — nhiều khả năng chép nhầm cả dòng");
   }
 });
 

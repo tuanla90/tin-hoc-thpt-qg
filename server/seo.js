@@ -349,6 +349,9 @@ const CSS_RIENG = `
 .dc-hang{display:grid;grid-template-columns:126px minmax(0,1fr) minmax(0,1.05fr);gap:6px 14px;align-items:baseline;
   padding:11px 8px;border-bottom:1px solid var(--line);text-decoration:none;
   border-radius:8px;transition:background .12s}
+/* BẮT BUỘC: quy tắc display ở trên thắng [hidden] mặc định của trình duyệt, nên
+   thiếu dòng này thì ô lọc đếm "1 bài khớp" mà cả 33 dòng vẫn nằm đó. */
+.dc-hang[hidden],.dc-muc[hidden]{display:none}
 /* Cả hàng là một thẻ <a> nên nếu không nói rõ, chữ tên bài SGK bị tô màu link —
    nhìn như mọi thứ đều bấm được. Chọn đủ cụ thể để thắng quy tắc màu liên kết
    chung của pages.css (.pg-card a). */
@@ -726,11 +729,17 @@ function mucSach(s, theoId, mo) {
     const phai = muc
       ? `<span class="dc-toi">Bài ${muc.bai.order}. ${esc(muc.bai.title)}</span>`
       : '<span class="dc-toi dc-trong">chưa có bài tương ứng</span>';
-    /* data-tim: chuỗi không dấu để ô lọc tìm được cả khi gõ thiếu dấu. */
-    /* Gộp cả cách gõ tự nhiên ("chủ đề F") lẫn mã trần, và tên bài hai bên. */
-    const tim = esc(boDau((b.so + " bài " + b.so + " " +
-      (b.chuDe ? "chủ đề " + b.chuDe + " " : "") + (b.tenChuDe || "") + " " +
-      b.ten + " " + (muc ? muc.bai.title : "")).toLowerCase()));
+    /* data-tim: chuỗi không dấu để ô lọc tìm được cả khi gõ thiếu dấu.
+       Phải chứa ĐÚNG CÁI ĐANG IN TRÊN HÀNG, nếu không người ta gõ lại thứ vừa
+       nhìn thấy mà máy báo không có: bộ Chân trời in "Bài E7" nhưng chuỗi tìm
+       chỉ có số 7 thì gõ "E7" ra rỗng. Gộp cả cách gõ tự nhiên ("chủ đề F")
+       lẫn mã trần, và tên bài của cả hai bên. */
+    const tim = esc(boDau([
+      b.maBai ? b.maBai + " bài " + b.maBai : "",
+      b.so != null ? b.so + " bài " + b.so : "",
+      b.chuDe ? "chủ đề " + b.chuDe : "",
+      b.tenChuDe || "", b.ten, muc ? muc.bai.title : "",
+    ].join(" ").toLowerCase()));
     return muc
       ? `<a class="dc-hang" href="/bai/${muc.slug}" data-tim="${tim}">${trai}${phai}</a>`
       : `<div class="dc-hang dc-kho" data-tim="${tim}">${trai}${phai}</div>`;
@@ -822,6 +831,19 @@ function trangDoiChieu(base, boMa) {
   if (CACHE.has(khoaCache)) return CACHE.get(khoaCache);
 
   const lop = [...new Set(bo.sach.map((s) => s.lop))].sort();
+
+  /* Câu chốt cuối trang phải nói đúng tình trạng của TỪNG bộ: bộ đủ 5 quyển thì
+     đừng hứa "sẽ bổ sung", còn bộ Chân trời thiếu lớp 10-11 là do nhà xuất bản
+     không làm sách chứ không phải chúng ta chưa đối chiếu — nói nhầm hướng nào
+     cũng khiến người tra tưởng bảng còn dở. */
+  const duLop = [10, 11, 12].every((n) => lop.includes(n));
+  const duHuong = [11, 12].every((n) =>
+    !lop.includes(n) || bo.sach.filter((s) => s.lop === n).length >= 2);
+  const tinhTrang = duLop && duHuong
+    ? "Đủ cả ba lớp và cả hai định hướng từ lớp 11."
+    : duHuong
+      ? "Bộ này chỉ xuất bản sách Tin học cho lớp " + lop.join(", ") + "."
+      : "Các quyển còn lại sẽ bổ sung khi có sách.";
   const chonBo = nhieuBo
     ? '<nav class="dc-bo">' + ds.map((b) =>
         b.ma === bo.ma
@@ -853,8 +875,7 @@ ${chonBo}
 ${bo.sach.map((s, i) => mucSach(s, theoId, i === 0)).join("")}
 <div class="pg-card">
   <p class="pg-note" style="margin:0">Đang có ${bo.sach.length} quyển của bộ <b>${esc(bo.ten)}</b>${
-    lop.length ? " (lớp " + lop.join(", ") + ")" : ""}.
-  Nhánh Tin học ứng dụng và các bộ sách khác sẽ bổ sung khi có sách.
+    lop.length ? " (lớp " + lop.join(", ") + ")" : ""}. ${tinhTrang}
   Một bài trong ứng dụng đôi khi gộp hai bài của sách, và ngược lại một bài sách dài có thể được tách đôi —
   nên vài bài của ứng dụng không xuất hiện ở bảng này, <b>không phải vì nằm ngoài chương trình</b>.</p>
 </div>`;

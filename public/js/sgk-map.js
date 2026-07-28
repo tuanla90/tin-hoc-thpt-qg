@@ -10,9 +10,13 @@
  *  dụng) nên MỘT BỘ CÓ TỚI 5 QUYỂN. Thêm bộ hoặc thêm quyển chỉ là thêm phần
  *  tử vào mảng — trang /doi-chieu-sgk tự sinh thêm mục và thêm trang riêng.
  *
- *  PHẦN LÕI DÙNG CHUNG: hai quyển cùng lớp của KNTT có phần đầu giống hệt
- *  nhau (lớp 11: bài 1-16, lớp 12: bài 1-21) vì đó là nội dung cốt lõi cho cả
- *  hai định hướng — nên chúng trỏ về cùng một bài của app, đúng như sách.
+ *  PHẦN LÕI DÙNG CHUNG: hai quyển cùng lớp thường có một phần giống hệt nhau
+ *  vì đó là nội dung cốt lõi cho cả hai định hướng — chúng trỏ về cùng một bài
+ *  của app, đúng như sách. KNTT: lớp 11 bài 1-16, lớp 12 bài 1-21 (nằm liền
+ *  đầu quyển). Cánh Diều và Chân trời: rải theo chủ đề, KHÔNG liền mạch.
+ *  ⚠️ Trùng tên bài KHÔNG có nghĩa trùng số trang: quyển Chân trời 12 ICT chèn
+ *  thêm chủ đề E nên các bài lõi phía sau lệch trang hẳn so với quyển KHMT.
+ *  Đích (`cua`) chép của nhau được, SỐ TRANG thì phải lấy đúng của từng quyển.
  *
  *  MỘT bài SGK trỏ tới ĐÚNG MỘT bài của app; ngược lại một bài của app có thể
  *  gộp nhiều bài SGK.
@@ -21,12 +25,14 @@
  *  "ngoài chương trình" — phần lớn là nửa sau của một bài SGK bị tách đôi cho
  *  dễ học. Giao diện vì thế chỉ hiện đối chiếu khi CÓ, không gắn nhãn phủ định.
  *
- *  ⚠️ KHI THÊM BỘ CÁNH DIỀU: bộ đó ĐÁNH SỐ BÀI LẶP LẠI THEO TỪNG CHỦ ĐỀ
- *  (Chủ đề A có Bài 1-5, Chủ đề C lại có Bài 1-4...). Phải thêm trường `chuDe`
- *  vào từng bài và hiện kèm, nếu không hai bài khác nhau sẽ trông y hệt nhau.
+ *  ⚠️ BA BỘ ĐÁNH SỐ BÀI BA KIỂU — đừng gộp chung một cách hiển thị:
+ *    · Kết nối tri thức  — liên tục 1..n cả quyển        -> chỉ có `so`
+ *    · Cánh Diều         — đánh LẠI TỪ 1 trong mỗi chủ đề -> bắt buộc có `chuDe`,
+ *      thiếu nó thì hai bài khác hẳn nhau trông y hệt ("Bài 1" của A và của C)
+ *    · Chân trời sáng tạo — chữ chủ đề + số ("Bài F14")   -> dùng `maBai`
  *
- *  CÒN THIẾU (xem SACH-CAN-TIM.md): bộ Cánh Diều (đã có đủ 5 quyển PDF, chưa
- *  đối chiếu) và bộ Chân trời sáng tạo (mới có quyển lớp 12).
+ *  CÒN THIẾU (xem SACH-CAN-TIM.md): nhiều khả năng KHÔNG còn quyển nào — bộ
+ *  Chân trời gần như chắc chắn chỉ làm sách Tin học từ lớp 12.
  * ==========================================================================*/
 var SGK_MAP = {
   bo: [
@@ -449,6 +455,44 @@ var SGK_MAP = {
             {"maBai":"G1","so":1,"chuDe":"G","tenChuDe":"Hướng nghiệp với tin học","ten":"Nhóm nghề dịch vụ thuộc ngành Công nghệ thông tin","trang":"179","cua":"C12-14"},
             {"maBai":"G2","so":2,"chuDe":"G","tenChuDe":"Hướng nghiệp với tin học","ten":"Nhóm nghề quản trị thuộc ngành Công nghệ thông tin","trang":"183","cua":"C12-14"},
             {"maBai":"G3","so":3,"chuDe":"G","tenChuDe":"Hướng nghiệp với tin học","ten":"Một số nghề ứng dụng tin học và một số ngành thuộc lĩnh vực Công nghệ thông tin","trang":"189","cua":"C12-14"},
+          ],
+        },
+        {
+          ma: "ctst-tin-hoc-12-ict", ten: "Tin học 12", lop: 12, huong: "ict", tenHuong: "Tin học ứng dụng",
+          bai: [
+            {"maBai":"A1","so":1,"chuDe":"A","tenChuDe":"Máy tính và xã hội tri thức","ten":"Giới thiệu Trí tuệ nhân tạo","trang":"6","cua":"C12-01"},
+            {"maBai":"A2","so":2,"chuDe":"A","tenChuDe":"Máy tính và xã hội tri thức","ten":"Trí tuệ nhân tạo và cuộc sống","trang":"10","cua":"C12-02"},
+            {"maBai":"A3","so":3,"chuDe":"A","tenChuDe":"Máy tính và xã hội tri thức","ten":"Thực hành kết nối thiết bị số với máy tính","trang":"14","cua":"U12-01"},
+            {"maBai":"A4","so":4,"chuDe":"A","tenChuDe":"Máy tính và xã hội tri thức","ten":"Thực hành kết nối thiết bị số với máy tính (tiếp theo)","trang":"20","cua":"U12-01"},
+            {"maBai":"B1","so":1,"chuDe":"B","tenChuDe":"Mạng máy tính và Internet","ten":"Thiết bị và giao thức mạng","trang":"22","cua":"C12-03"},
+            {"maBai":"B2","so":2,"chuDe":"B","tenChuDe":"Mạng máy tính và Internet","ten":"Các chức năng mạng của hệ điều hành","trang":"28","cua":"C12-22"},
+            {"maBai":"B3","so":3,"chuDe":"B","tenChuDe":"Mạng máy tính và Internet","ten":"Thực hành kết nối và sử dụng mạng trên thiết bị thông minh","trang":"35","cua":"C12-22"},
+            {"maBai":"D1","so":1,"chuDe":"D","tenChuDe":"Đạo đức, pháp luật và văn hoá trong môi trường số","ten":"Giao tiếp trong không gian mạng","trang":"39","cua":"C12-06"},
+            {"maBai":"D2","so":2,"chuDe":"D","tenChuDe":"Đạo đức, pháp luật và văn hoá trong môi trường số","ten":"Gìn giữ tính nhân văn trong không gian mạng","trang":"44","cua":"C12-06"},
+            {"maBai":"E1","so":1,"chuDe":"E","tenChuDe":"Ứng dụng tin học","ten":"Tạo trang web, thiết lập giao diện và xem trước trang web","trang":"49","cua":"U12-02"},
+            {"maBai":"E2","so":2,"chuDe":"E","tenChuDe":"Ứng dụng tin học","ten":"Tạo, hiệu chỉnh trang web và thiết kế thanh điều hướng","trang":"57","cua":"U12-05"},
+            {"maBai":"E3","so":3,"chuDe":"E","tenChuDe":"Ứng dụng tin học","ten":"Tạo văn bản, chèn hình ảnh và tạo chân trang","trang":"64","cua":"U12-04"},
+            {"maBai":"E4","so":4,"chuDe":"E","tenChuDe":"Ứng dụng tin học","ten":"Sử dụng Content Blocks, Button, Divider","trang":"72","cua":"U12-04"},
+            {"maBai":"E5","so":5,"chuDe":"E","tenChuDe":"Ứng dụng tin học","ten":"Nhúng mã và tạo băng chuyền hình ảnh","trang":"78","cua":"U12-03"},
+            {"maBai":"E6","so":6,"chuDe":"E","tenChuDe":"Ứng dụng tin học","ten":"Chèn YouTube, Calendar, Drive và Collapsible group","trang":"84","cua":"U12-03"},
+            {"maBai":"E7","so":7,"chuDe":"E","tenChuDe":"Ứng dụng tin học","ten":"Sử dụng Map, Forms và các thiết lập trang web","trang":"90","cua":"U12-06"},
+            {"maBai":"E8","so":8,"chuDe":"E","tenChuDe":"Ứng dụng tin học","ten":"Hoàn thiện và xuất bản trang web","trang":"96","cua":"U12-07"},
+            {"maBai":"F1","so":1,"chuDe":"F","tenChuDe":"Giải quyết vấn đề với sự trợ giúp của máy tính","ten":"HTML và trang web","trang":"100","cua":"C12-07"},
+            {"maBai":"F2","so":2,"chuDe":"F","tenChuDe":"Giải quyết vấn đề với sự trợ giúp của máy tính","ten":"Tạo và định dạng trang web với các thẻ HTML","trang":"106","cua":"C12-08"},
+            {"maBai":"F3","so":3,"chuDe":"F","tenChuDe":"Giải quyết vấn đề với sự trợ giúp của máy tính","ten":"Tạo bảng và khung trong trang web với HTML","trang":"114","cua":"C12-09"},
+            {"maBai":"F4","so":4,"chuDe":"F","tenChuDe":"Giải quyết vấn đề với sự trợ giúp của máy tính","ten":"Thêm dữ liệu đa phương tiện vào trang web","trang":"122","cua":"C12-23"},
+            {"maBai":"F5","so":5,"chuDe":"F","tenChuDe":"Giải quyết vấn đề với sự trợ giúp của máy tính","ten":"Tạo biểu mẫu trong trang web","trang":"127","cua":"C12-24"},
+            {"maBai":"F6","so":6,"chuDe":"F","tenChuDe":"Giải quyết vấn đề với sự trợ giúp của máy tính","ten":"Dự án tạo trang web","trang":"132","cua":"C12-13"},
+            {"maBai":"F7","so":7,"chuDe":"F","tenChuDe":"Giải quyết vấn đề với sự trợ giúp của máy tính","ten":"Giới thiệu CSS","trang":"134","cua":"C12-10"},
+            {"maBai":"F8","so":8,"chuDe":"F","tenChuDe":"Giải quyết vấn đề với sự trợ giúp của máy tính","ten":"Một số thuộc tính cơ bản của CSS","trang":"141","cua":"C12-11"},
+            {"maBai":"F9","so":9,"chuDe":"F","tenChuDe":"Giải quyết vấn đề với sự trợ giúp của máy tính","ten":"Một số kĩ thuật định kiểu bằng vùng chọn trong CSS","trang":"150","cua":"C12-25"},
+            {"maBai":"F10","so":10,"chuDe":"F","tenChuDe":"Giải quyết vấn đề với sự trợ giúp của máy tính","ten":"Định kiểu CSS cho siêu liên kết và danh sách","trang":"156","cua":"C12-25"},
+            {"maBai":"F11","so":11,"chuDe":"F","tenChuDe":"Giải quyết vấn đề với sự trợ giúp của máy tính","ten":"Định kiểu CSS cho bảng và phần tử <div>","trang":"162","cua":"C12-12"},
+            {"maBai":"F12","so":12,"chuDe":"F","tenChuDe":"Giải quyết vấn đề với sự trợ giúp của máy tính","ten":"Định kiểu CSS cho biểu mẫu","trang":"170","cua":"C12-26"},
+            {"maBai":"F13","so":13,"chuDe":"F","tenChuDe":"Giải quyết vấn đề với sự trợ giúp của máy tính","ten":"Dự án tạo trang web (tiếp theo)","trang":"175","cua":"C12-13"},
+            {"maBai":"G1","so":1,"chuDe":"G","tenChuDe":"Hướng nghiệp với tin học","ten":"Nhóm nghề dịch vụ thuộc ngành Công nghệ thông tin","trang":"176","cua":"C12-14"},
+            {"maBai":"G2","so":2,"chuDe":"G","tenChuDe":"Hướng nghiệp với tin học","ten":"Nhóm nghề quản trị thuộc ngành Công nghệ thông tin","trang":"180","cua":"C12-14"},
+            {"maBai":"G3","so":3,"chuDe":"G","tenChuDe":"Hướng nghiệp với tin học","ten":"Một số nghề ứng dụng tin học và một số ngành thuộc lĩnh vực Công nghệ thông tin","trang":"186","cua":"C12-14"},
           ],
         },
       ],
