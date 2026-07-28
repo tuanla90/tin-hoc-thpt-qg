@@ -82,7 +82,7 @@
 
   function anh() {
     return typeof mascotSrc === "function"
-      ? mascotSrc("asset/mascot/poses/explaining.png") : "asset/mascot/poses/explaining.png";
+      ? mascotSrc("asset/mascot/scenes/explaining.png") : "asset/mascot/scenes/explaining.png";
   }
 
   /* ------------------------------ trạng thái ------------------------------ */
@@ -352,9 +352,9 @@
   const st = document.createElement("style");
   st.textContent = `
 .tt-nen { position:fixed; inset:0; background:rgba(15,23,42,.35); opacity:0; pointer-events:none;
-  transition:opacity .2s; z-index:1200; }
+  transition:opacity .2s; z-index:10000; }
 .tt-nen.mo { opacity:1; pointer-events:auto; }
-.tt-panel { position:fixed; top:0; right:0; height:100%; width:min(420px,100%); z-index:1201;
+.tt-panel { position:fixed; top:0; right:0; height:100%; width:min(420px,100%); z-index:10001;
   background:var(--bg-card); border-left:1px solid var(--border); box-shadow:var(--shadow-lg);
   display:flex; flex-direction:column; transform:translateX(100%); transition:transform .25s ease;
   font-family:var(--font-sans); }

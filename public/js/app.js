@@ -2029,8 +2029,24 @@ function renderReviewList(result) {
           <div>Đáp án đúng: <b style="color:var(--success)">${correctAns}</b></div>
         </div>
         <div class="explain-box"><b>${aIco("bulb", "#d97706", 14)} Giải thích:</b> ${esc(q.explain || "")}</div>
+        ${d.fullyCorrect ? "" : `<button class="btn btn-ghost rv-why" data-i="${i}" hidden style="margin-top:10px">${aIco("bulb", "#d97706", 15)} Vì sao tôi sai?</button>`}
       </div>`;
   }).join("");
+
+  /* Mời hỏi gia sư ngay dưới lời giải của từng câu SAI — cùng lối vào
+     Tutor.moCauSai như lúc chấm từng câu. Chỉ hiện khi máy chủ đã bật AI. */
+  if (typeof Tutor !== "undefined") {
+    Tutor.trangThai().then((t) => {
+      if (!t.on) return;
+      rev.querySelectorAll(".rv-why").forEach((b) => {
+        b.hidden = false;
+        b.onclick = () => {
+          const d = result.details[+b.dataset.i];
+          Tutor.moCauSai(d.q, d.ans, State.quiz?.lessonId || null);
+        };
+      });
+    });
+  }
 }
 
 /* Vẽ vòng tròn điểm số bằng SVG */
