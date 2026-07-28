@@ -61,30 +61,46 @@
       khoi.push('<pre class="tt-code">' + esc2(code.replace(/\n$/, "")) + "</pre>");
       return "\u0000" + (khoi.length - 1) + "\u0000";
     });
+    /* Đậm theo luật markdown CHẶT (không có khoảng trắng sát trong cặp **), nếu
+       không thì "2 ** 3 = 8" — luỹ thừa Python — bị bôi đậm nhầm cả đoạn. */
     t = esc2(t)
-      .replace(/\*\*([^*\n]+)\*\*/g, "<strong>$1</strong>")
+      .replace(/\*\*(?!\s)([^*\n]+?)(?<!\s)\*\*/g, "<strong>$1</strong>")
       .replace(/`([^`\n]+)`/g, "<code>$1</code>");
     const dong = t.split("\n");
     const ra = [];
-    let trongUl = false;
+    let trongUl = false, trongOl = false;
+    const dongDs = () => {
+      if (trongUl) { ra.push("</ul>"); trongUl = false; }
+      if (trongOl) { ra.push("</ol>"); trongOl = false; }
+    };
     dong.forEach((d) => {
       const li = d.match(/^\s*[-*]\s+(.*)$/);
       if (li) {
+        if (trongOl) { ra.push("</ol>"); trongOl = false; }
         if (!trongUl) { ra.push("<ul>"); trongUl = true; }
         ra.push("<li>" + li[1] + "</li>");
         return;
       }
-      if (trongUl) { ra.push("</ul>"); trongUl = false; }
+      /* Gia sư được dặn "gợi ý từng bước" nên rất hay trả lời bằng danh sách
+         ĐÁNH SỐ — thiếu nhánh này thì "1." "2." hiện trần giữa đoạn văn. */
+      const so = d.match(/^\s*\d+[.)]\s+(.*)$/);
+      if (so) {
+        if (trongUl) { ra.push("</ul>"); trongUl = false; }
+        if (!trongOl) { ra.push("<ol>"); trongOl = true; }
+        ra.push("<li>" + so[1] + "</li>");
+        return;
+      }
+      dongDs();
       if (/^#{1,4}\s/.test(d)) ra.push("<b>" + d.replace(/^#{1,4}\s/, "") + "</b>");
       else if (d.trim() === "") ra.push("");
       else ra.push(d);
     });
-    if (trongUl) ra.push("</ul>");
+    dongDs();
     return ra.join("\n").replace(/\n{2,}/g, "<br><br>").replace(/\n/g, "<br>")
       .replace(/\u0000(\d+)\u0000/g, (m, i) => khoi[+i])
       // <br> nằm sát danh sách / khối code chỉ tạo khoảng trống thừa
-      .replace(/<br>\s*(<\/?(?:ul|li|pre)\b[^>]*>)/g, "$1")
-      .replace(/(<\/(?:ul|li|pre)>)\s*<br>/g, "$1");
+      .replace(/<br>\s*(<\/?(?:ul|ol|li|pre)\b[^>]*>)/g, "$1")
+      .replace(/(<\/(?:ul|ol|li|pre)>)\s*<br>/g, "$1");
   }
 
   function anh() {
@@ -414,7 +430,7 @@
   background:var(--bg-soft); color:var(--text); overflow-wrap:anywhere; }
 .tt-msg.toi .tt-noi { background:var(--primary); color:#fff; border-bottom-right-radius:4px; }
 .tt-msg.bot .tt-noi { border-bottom-left-radius:4px; }
-.tt-noi ul { margin:6px 0 6px 18px; padding:0; }
+.tt-noi ul, .tt-noi ol { margin:6px 0 6px 18px; padding:0; }
 .tt-noi li { margin:2px 0; }
 .tt-noi code { font-family:var(--font-mono); font-size:12.5px; background:rgba(79,70,229,.12);
   padding:1px 5px; border-radius:5px; }

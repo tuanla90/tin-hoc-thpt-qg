@@ -737,11 +737,20 @@ function injectPathCss() {
 }
 
 /* Định dạng nội dung nội tuyến: **đậm** -> <strong>, `mã` -> <code> */
+/* Markdown gọn dùng chung cho MỌI nội dung do người soạn viết (bài học, câu hỏi,
+   lựa chọn, mệnh đề Đúng/Sai, lời giải).
+   Luật ĐẬM bám đúng markdown: KHÔNG có khoảng trắng ngay sau `**` mở và ngay
+   trước `**` đóng. Bắt buộc chặt như vậy vì nội dung Python có toán tử luỹ thừa
+   `2 ** 3` — luật lỏng sẽ bôi đậm nhầm cả đoạn (đã kiểm: 2.370 cụm đậm thật vẫn
+   nhận đủ, 2 chuỗi bị bỏ qua đều đúng là toán tử **). */
 function fmtInline(s) {
   return esc(s)
-    .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+    .replace(/\*\*(?!\s)([^*]+?)(?<!\s)\*\*/g, "<strong>$1</strong>")
     .replace(/`([^`]+)`/g, '<code class="ic">$1</code>');
 }
+
+/* Như trên, thêm giữ xuống dòng — dùng cho câu hỏi và lời giải. */
+function fmtQ(s) { return fmtInline(s).replace(/\n/g, "<br>"); }
 
 function renderBlocks(sections) {
   const fi = (s) => fmtInline(s).replace(/\n/g, "<br>");   // giữ xuống dòng trong đoạn văn
@@ -1650,7 +1659,7 @@ function renderQuiz() {
 
     <div class="question-card">
       <div class="q-number">Câu ${Q.index + 1} / ${Q.questions.length}</div>
-      <div class="q-text">${esc(q.question)}</div>
+      <div class="q-text">${fmtQ(q.question)}</div>
       ${q.code ? `<pre class="q-code">${esc(q.code)}</pre>` : ""}
       <div id="answerArea"></div>
       <div id="explainArea"></div>
@@ -1718,7 +1727,7 @@ function renderAnswerArea(q, revealed) {
         else if (i === cur) cls += " wrong";
       } else if (i === cur) cls += " selected";
       const key = String.fromCharCode(65 + i);
-      return `<div class="${cls}" data-i="${i}"><span class="opt-key">${key}</span><span>${esc(opt)}</span></div>`;
+      return `<div class="${cls}" data-i="${i}"><span class="opt-key">${key}</span><span>${fmtQ(opt)}</span></div>`;
     }).join("") + `</div>`;
     /* Chọn đáp án chỉ đổi trạng thái 1 ô -> tô lại tại chỗ thay vì dựng lại cả
        màn hình (dựng lại sẽ kéo trang về đầu, mất chỗ đang đọc). */
@@ -1742,7 +1751,7 @@ function renderAnswerArea(q, revealed) {
       }
       return `
         <div class="${rowCls}">
-          <div class="tf-text"><b>${letters[i]})</b> ${esc(st.text)}</div>
+          <div class="tf-text"><b>${letters[i]})</b> ${fmtQ(st.text)}</div>
           <div class="tf-choices" data-i="${i}">
             <button data-v="true" class="${cur[i] === true ? "sel-true" : ""}">Đúng</button>
             <button data-v="false" class="${cur[i] === false ? "sel-false" : ""}">Sai</button>
@@ -1783,8 +1792,8 @@ function renderExplain(q) {
   const correct = isAnswerCorrect(q, cur);
   const area = document.getElementById("explainArea");
   let correctText = "";
-  if (q.type === "mc") correctText = `Đáp án đúng: <b>${String.fromCharCode(65 + q.answer)}. ${esc(q.options[q.answer])}</b>`;
-  else if (q.type === "sa") correctText = `Đáp án đúng: <b>${esc(q.answer)}</b>`;
+  if (q.type === "mc") correctText = `Đáp án đúng: <b>${String.fromCharCode(65 + q.answer)}. ${fmtQ(q.options[q.answer])}</b>`;
+  else if (q.type === "sa") correctText = `Đáp án đúng: <b>${fmtQ(q.answer)}</b>`;
   else if (q.type === "tf") correctText = `Đáp án: ${q.statements.map((s, i) => `${["a", "b", "c", "d"][i]}-${s.correct ? "Đ" : "S"}`).join(", ")}`;
 
   // Đổi tư thế linh vật khi người dùng xem giải thích
@@ -1798,7 +1807,7 @@ function renderExplain(q) {
         <img src="${hintReaction.pose}" alt="Robot Giải thích" style="width:42px; height:42px; object-fit:contain; flex-shrink:0;" />
         <div>
           <b>${aIco("bulb", "#d97706", 14)} ${hintReaction.msg}</b>
-          <div style="margin-top:4px;">${esc(q.explain || "")}</div>
+          <div style="margin-top:4px;">${fmtQ(q.explain || "")}</div>
         </div>
       </div>
       <button class="btn btn-ghost" id="whyBtn" style="display:none; margin-top:10px">${aIco("bulb", "#d97706", 15)} Vì sao tôi sai?</button>
@@ -2035,25 +2044,25 @@ function renderReviewList(result) {
   rev.innerHTML = `<div class="section-title">${aIco("exam", "#4f46e5", 17)} Xem lại từng câu</div>` + result.details.map((d, i) => {
     const q = d.q;
     let userAns = "";
-    if (q.type === "mc") userAns = d.ans != null ? `${String.fromCharCode(65 + d.ans)}. ${esc(q.options[d.ans])}` : "(chưa trả lời)";
+    if (q.type === "mc") userAns = d.ans != null ? `${String.fromCharCode(65 + d.ans)}. ${fmtQ(q.options[d.ans])}` : "(chưa trả lời)";
     else if (q.type === "sa") userAns = d.ans ? esc(d.ans) : "(chưa trả lời)";
     else if (q.type === "tf") userAns = Array.isArray(d.ans) ? q.statements.map((s, k) => `${["a", "b", "c", "d"][k]}-${d.ans[k] == null ? "?" : (d.ans[k] ? "Đ" : "S")}`).join(", ") : "(chưa trả lời)";
 
     let correctAns = "";
-    if (q.type === "mc") correctAns = `${String.fromCharCode(65 + q.answer)}. ${esc(q.options[q.answer])}`;
-    else if (q.type === "sa") correctAns = esc(q.answer);
+    if (q.type === "mc") correctAns = `${String.fromCharCode(65 + q.answer)}. ${fmtQ(q.options[q.answer])}`;
+    else if (q.type === "sa") correctAns = fmtQ(q.answer);
     else if (q.type === "tf") correctAns = q.statements.map((s, k) => `${["a", "b", "c", "d"][k]}-${s.correct ? "Đ" : "S"}`).join(", ");
 
     return `
       <div class="review-item ${d.fullyCorrect ? "ok" : "no"}">
-        <div class="review-q">Câu ${i + 1}. ${esc(q.question)}</div>
+        <div class="review-q">Câu ${i + 1}. ${fmtQ(q.question)}</div>
         ${q.code ? `<pre class="q-code">${esc(q.code)}</pre>` : ""}
         <div style="font-size:14px;margin:6px 0">
           <div>Bạn trả lời: <b style="color:${d.fullyCorrect ? "var(--success)" : "var(--danger)"}">${userAns}</b>
             ${q.type === "tf" ? ` — <span style="color:var(--text-soft)">${d.subCorrect}/${q.statements.length} ý đúng (${d.pts.toFixed(2)}đ)</span>` : ""}</div>
           <div>Đáp án đúng: <b style="color:var(--success)">${correctAns}</b></div>
         </div>
-        <div class="explain-box"><b>${aIco("bulb", "#d97706", 14)} Giải thích:</b> ${esc(q.explain || "")}</div>
+        <div class="explain-box"><b>${aIco("bulb", "#d97706", 14)} Giải thích:</b> ${fmtQ(q.explain || "")}</div>
         ${d.fullyCorrect ? "" : `<button class="btn btn-ghost rv-why" data-i="${i}" hidden style="margin-top:10px">${aIco("bulb", "#d97706", 15)} Vì sao tôi sai?</button>`}
       </div>`;
   }).join("");

@@ -72,10 +72,12 @@ function slugHoa(s) {
   return boDau(s).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 80);
 }
 
-/* Markdown rút gọn giống fmtInline của app: **đậm** và `mã`. Escape TRƯỚC. */
+/* Markdown rút gọn giống fmtInline của app: **đậm** và `mã`. Escape TRƯỚC.
+   Luật đậm chặt (không có khoảng trắng sát dấu **) để không bôi đậm nhầm toán tử
+   luỹ thừa Python trong lời giải, ví dụ "2 ** 3 = 8". */
 function nhan(s) {
   return esc(s)
-    .replace(/\*\*([^*\n]+)\*\*/g, "<strong>$1</strong>")
+    .replace(/\*\*(?!\s)([^*\n]+?)(?<!\s)\*\*/g, "<strong>$1</strong>")
     .replace(/`([^`\n]+)`/g, "<code>$1</code>");
 }
 

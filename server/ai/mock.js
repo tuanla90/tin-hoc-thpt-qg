@@ -34,7 +34,11 @@ function chat({ system, messages, onText }) {
     "- **Thông tin** là nghĩa ta hiểu ra\n" +
     "- Phép chia lấy phần nguyên viết là `a // b`\n" +
     "\nVí dụ:\n```python\na = 5\nprint(a // 2)\n```\n" +
-    "Bạn thử đọc lại mục đầu rồi làm một câu luyện tập xem sao nhé.";
+    "Các bước nên làm:\n" +
+    "1. Đọc lại mục đầu của bài\n" +
+    "2. Làm thử một câu luyện tập\n" +
+    "3. Sai chỗ nào thì hỏi mình tiếp\n" +
+    "\nLưu ý: 2 ** 3 = 8 (dấu ** ở đây là luỹ thừa, không phải chữ đậm).";
   return new Promise((ok) => {
     const tu = cau.split(" ");
     let i = 0;
