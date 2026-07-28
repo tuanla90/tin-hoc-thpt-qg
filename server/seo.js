@@ -199,6 +199,10 @@ function sgkCua(lessonId, kho) {
 /* Tên đầy đủ một quyển: "Tin học 11 (Khoa học máy tính)" */
 function tenQuyen(s) { return s.ten + (s.tenHuong ? " (" + s.tenHuong + ")" : ""); }
 
+/* Tên chủ đề: lấy đúng bảng TOPICS của app, không dùng TEN_CHU_DE (bản viết cho
+   prompt gia sư, đặt tên khác — dùng nhầm là gắn sai nhãn cho cả trăm trang). */
+function tenChuDe(kho) { return (kho && kho.TOPICS) || TEN_CHU_DE; }
+
 function tuVung(l, kho) {
   const khoa = (kho.VOCAB || {})[l.id] || [];
   const td = tuDien(kho);
@@ -227,8 +231,10 @@ const CSS_RIENG = `
 .seo-so{flex:none;min-width:26px;height:26px;padding:0 6px;border-radius:8px;display:flex;
   align-items:center;justify-content:center;background:var(--brand-soft);color:var(--brand);
   font-family:var(--font-mono);font-size:12.5px;font-weight:700}
-.seo-grid b{font-size:14.5px;font-weight:650;line-height:1.4;
-  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+/* KHÔNG cắt tên bài. Kẹp 2 dòng làm những tên dài như "Giấy phép sử dụng sản
+   phẩm số và khung pháp lí…" cụt mất phần quan trọng nhất — người tra cứu không
+   biết đó có phải bài mình cần không. Thẻ cứ cao thấp khác nhau, lưới vẫn đều. */
+.seo-grid b{font-size:14.5px;font-weight:650;line-height:1.4}
 .seo-lop{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:30px 0 0;
   padding-top:14px;border-top:1px solid var(--line)}
 .seo-lop h2{margin:0;font-size:20px}
@@ -238,6 +244,21 @@ const CSS_RIENG = `
 .seo-jump a{font-size:13.5px;font-weight:650;text-decoration:none;color:var(--ink-muted);
   background:var(--bg-subtle);border:1px solid var(--line);border-radius:999px;padding:6px 14px}
 .seo-jump a:hover{border-color:var(--brand);color:var(--brand)}
+/* Câu dẫn ở đầu trang: .pg-hero .lead bị kẹp 620px nên ở khổ rộng chữ dồn thành
+   cột hẹp, chừa một mảng trống lớn bên phải trông như lỗi dựng trang. */
+.pg-hero.left .lead{max-width:none}
+/* Mở/thu theo lớp — dùng <details> nên chạy không cần JavaScript và Google vẫn
+   đọc được nội dung bên trong. Mặc định mở để không giấu mất 119 liên kết. */
+.seo-lop-box{border-top:1px solid var(--line);margin-top:26px}
+.seo-lop-box>summary{list-style:none;cursor:pointer;display:flex;align-items:baseline;gap:10px;
+  flex-wrap:wrap;padding:14px 0 2px}
+.seo-lop-box>summary::-webkit-details-marker{display:none}
+.seo-lop-box>summary h2{margin:0;font-size:20px}
+.seo-lop-box>summary span{color:var(--ink-faint);font-size:13.5px}
+.seo-lop-box>summary::after{content:"▾";margin-left:auto;color:var(--ink-faint);font-size:13px;
+  transition:transform .15s}
+.seo-lop-box[open]>summary::after{transform:rotate(180deg)}
+.seo-lop-box>summary:hover h2{color:var(--brand)}
 .seo-meta{color:var(--ink-muted);font-size:14px;margin:0 0 18px}
 .seo-crumb{font-size:13px;color:var(--ink-faint);margin-bottom:10px}
 .seo-crumb a{color:var(--ink-muted);text-decoration:none}
@@ -258,9 +279,19 @@ const CSS_RIENG = `
 .seo-dap{margin-top:9px;padding-top:9px;border-top:1px dashed var(--line);font-size:14px;color:var(--ink-muted)}
 /* Bảng từ vựng: cột tiếng Anh không cần rộng bằng cột nghĩa, và dòng thưa quá
    làm khối này dài gần bằng cả phần lý thuyết. */
-.pg-table.seo-tv td,.pg-table.seo-tv th{padding:7px 11px}
+.pg-table.seo-tv td,.pg-table.seo-tv th{padding:7px 11px;text-align:left;white-space:normal}
 .pg-table.seo-tv td:first-child{white-space:nowrap;font-weight:650;width:1%}
-.pg-table.seo-tv small{color:var(--ink-faint);line-height:1.5}
+.pg-table.seo-tv td:nth-child(2){white-space:nowrap;width:1%;color:var(--ink-muted)}
+.pg-table.seo-tv small{display:block;margin-top:2px;color:var(--ink-faint);line-height:1.5}
+/* Mệnh đề Đúng/Sai: KHÔNG dùng <table>. Ba cột chữ dài luôn tràn ngang trên máy
+   hẹp, mà nhét vào khung cuộn thì người đọc phải kéo ngang mới thấy hết câu —
+   đọc đề thi kiểu đó là hỏng. Danh sách co giãn được theo bề ngang màn hình. */
+.seo-ds{list-style:none;margin:9px 0 0;padding:0}
+.seo-ds li{display:flex;gap:9px;align-items:baseline;padding:7px 0;border-top:1px solid var(--line)}
+.seo-ds li:first-child{border-top:0}
+.seo-ds-k{flex:none;font-weight:700;color:var(--ink-faint);font-size:13.5px}
+.seo-ds-t{flex:1;min-width:0}
+.seo-ds-d{flex:none;font-size:13.5px}
 .seo-dap b{color:var(--accent-green)}
 .seo-nav{display:flex;justify-content:space-between;gap:14px;margin-top:28px;font-size:14.5px;flex-wrap:wrap}
 .seo-nav a{text-decoration:none}
@@ -295,6 +326,16 @@ a.dc-hang:hover{background:var(--brand-soft)}
 a.dc-hang .dc-toi::after{content:" →";color:var(--ink-faint);font-weight:400}
 .dc-trong{color:var(--ink-faint);font-weight:400;font-style:italic}
 .dc-kho{opacity:.75}
+/* Lọc trên trang danh sách bài — chip chủ đề là đích của các chip ở trang chủ */
+.seo-loc-hop label{display:block;font-size:13.5px;font-weight:650;color:var(--ink-muted);margin-bottom:6px}
+.seo-loc-hop .pg-note{margin:8px 0 0;min-height:20px}
+.seo-chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:11px}
+.seo-chip{border:1px solid var(--line-strong);background:var(--surface-card);color:var(--ink-muted);
+  border-radius:999px;padding:7px 13px;font:650 13px/1.2 inherit;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.seo-chip span{font-size:11.5px;opacity:.6;font-family:var(--font-mono,monospace)}
+.seo-chip:hover{border-color:var(--brand);color:var(--brand)}
+.seo-chip.on{background:var(--brand);border-color:var(--brand);color:#fff}
+.seo-chip.on span{opacity:.8}
 .dc-tim-hop label{display:block;font-size:13.5px;font-weight:650;color:var(--ink-muted);margin-bottom:6px}
 .dc-tim-hop .pg-note{margin:8px 0 0;min-height:20px}
 .dc-bo{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
@@ -425,9 +466,10 @@ function trangBai(muc, base) {
     <div class="seo-q-no">Câu Đúng/Sai (Phần II) · ${esc(TEN_MUC[q.level] || "")}</div>
     <div>${nhan(q.question)}</div>
     ${q.code ? "<pre><code>" + esc(q.code) + "</code></pre>" : ""}
-    <div class="pg-table-wrap"><table class="pg-table">${(q.statements || []).map((s, i) => `<tr><td>${"abcd"[i]})</td><td>${nhan(s.text)}</td>
-      <td style="white-space:nowrap"><b class="${s.correct ? "pg-yes" : "pg-lim"}">${s.correct ? "Đúng" : "Sai"}</b></td></tr>`).join("")}</table></div>
-    ${q.explain ? '<div class="seo-dap">' + nhan(q.explain) + "</div>" : ""}
+    <ul class="seo-ds">${(q.statements || []).map((s, i) => `<li><span class="seo-ds-k">${"abcd"[i]})</span>` +
+      `<span class="seo-ds-t">${nhan(s.text)}</span>` +
+      `<b class="seo-ds-d ${s.correct ? "pg-yes" : "pg-lim"}">${s.correct ? "Đúng" : "Sai"}</b></li>`).join("")}</ul>
+    ${q.explain ? '<div class="seo-dap"><b>Vì sao:</b> ' + nhan(q.explain) + "</div>" : ""}
   </div>`).join("");
 
   const body = `
@@ -436,7 +478,7 @@ function trangBai(muc, base) {
   <span class="eyebrow">${esc(muc.lop)}</span>
   <h1>Bài ${l.order}. ${esc(l.title)}</h1>
   <p class="lead">${nhan(l.intro || "")}</p>
-  <p class="seo-meta">Chủ đề ${esc(l.topic)} · ${esc(TEN_CHU_DE[l.topic] || "")} — đọc khoảng ${l.minutes || 10} phút${
+  <p class="seo-meta">Chủ đề ${esc(l.topic)} · ${esc(tenChuDe(kho)[l.topic] || "")} — đọc khoảng ${l.minutes || 10} phút${
     (l.quiz || []).length ? ` · ${(l.quiz || []).length} câu luyện tập trong ứng dụng` : ""}</p>
 ${sgk.length ? `<div class="seo-sgk">
   <b>Tương ứng sách giáo khoa</b>
@@ -490,7 +532,7 @@ ${cauMcHtml}${cauTfHtml}</div>` : ""}
         inLanguage: "vi",
         educationalLevel: muc.lop,
         learningResourceType: ["Bài giảng", "Trắc nghiệm"],
-        about: TEN_CHU_DE[l.topic] || "Tin học",
+        about: tenChuDe(kho)[l.topic] || "Tin học",
         isAccessibleForFree: true,
       },
       {
@@ -524,15 +566,34 @@ function trangDanhSach(base) {
   /* Mô tả mỗi thẻ: lấy TRỌN CÂU ĐẦU của phần giới thiệu. Cắt cứng theo số ký tự
      cho ra những mẩu cụt lủn kiểu "hiểu ba bước máy…" — trông như lỗi hiển thị. */
   const khoi = [...theoLop].map(([stage, ms]) => `
-<div class="seo-lop"><h2 id="stage${stage}">${esc(ms[0].lop)}</h2><span>${ms.length} bài</span></div>
-<div class="seo-grid">${ms.map((m) => `<a href="/bai/${m.slug}" title="${esc(cauDau(m.bai.intro, 160))}">` +
-  `<span class="seo-so">${m.bai.order}</span><b>${esc(m.bai.title)}</b></a>`).join("")}</div>`).join("");
+<details class="seo-lop-box" id="stage${stage}" data-lop open>
+<summary class="seo-lop"><h2>${esc(ms[0].lop)}</h2><span>${ms.length} bài</span></summary>
+<div class="seo-grid">${ms.map((m) => `<a href="/bai/${m.slug}" title="${esc(cauDau(m.bai.intro, 160))}"` +
+  ` data-cd="${esc(m.bai.topic || "")}" data-tim="${esc(boDau(m.bai.title.toLowerCase()))}">` +
+  `<span class="seo-so">${m.bai.order}</span><b>${esc(m.bai.title)}</b></a>`).join("")}</div>
+</details>`).join("");
 
   /* Thanh nhảy nhanh: 119 bài chia 5 lớp, không ai muốn cuộn tìm lớp của mình. */
   const nhay = `<nav class="seo-jump" aria-label="Nhảy tới lớp">` +
     [...theoLop].map(([stage, ms]) =>
       `<a href="#stage${stage}">${esc(ms[0].lop)} <span style="opacity:.65">${ms.length}</span></a>`).join("") +
     `</nav>`;
+
+  /* Lọc theo CHỦ ĐỀ: các chip ở trang chủ trỏ thẳng vào đây bằng #cd-<mã>, nên
+     bấm "Lập trình Python" là ra ngay danh sách bài của mạch đó thay vì đổ 119
+     bài rồi bắt người ta tự dò. Đếm trước để chủ đề rỗng không hiện chip chết. */
+  const demCd = {};
+  ds.forEach((m) => { const c = m.bai.topic; if (c) demCd[c] = (demCd[c] || 0) + 1; });
+  const TCD = tenChuDe(kho);
+  const chipCd = Object.keys(TCD).filter((c) => demCd[c]).map((c) =>
+    `<button class="seo-chip" data-cd="${c}">${esc(TCD[c])} <span>${demCd[c]}</span></button>`).join("");
+  const locHtml = `
+<div class="pg-card seo-loc-hop">
+  <label for="seoTim">Tìm nhanh trong ${ds.length} bài — gõ tên bài, hoặc chọn một mạch kiến thức</label>
+  <input class="pg-input" id="seoTim" type="search" placeholder="ví dụ: python · mạng · css · học máy" autocomplete="off">
+  <div class="seo-chips"><button class="seo-chip on" data-cd="">Tất cả <span>${ds.length}</span></button>${chipCd}</div>
+  <p class="pg-note" id="seoDem"></p>
+</div>`;
 
   const body = `
 <div class="pg-hero left">
@@ -545,6 +606,7 @@ function trangDanhSach(base) {
     ? '<p class="seo-meta">Đang học theo sách giáo khoa? <a href="/doi-chieu-sgk"><b>Tra bảng đối chiếu bài trong sách ' +
       esc(kho.SGK_MAP.bo[0].tenNgan || kho.SGK_MAP.bo[0].ten) + "</b></a> để mở nhanh đúng bài bạn học trên lớp.</p>" : ""}
 </div>
+${locHtml}
 ${nhay}
 ${khoi}
 
@@ -560,6 +622,7 @@ ${khoi}
     desc: `Tổng hợp ${ds.length} bài Tin học lớp 10, 11, 12: tóm tắt lý thuyết, thuật ngữ tiếng Anh và câu trắc nghiệm có đáp án, bám cấu trúc đề thi tốt nghiệp THPT.`,
     canonical: base + "/bai",
     body,
+    them: "<script>" + JS_LOC_BAI + "</script>",
     ld: {
       "@context": "https://schema.org",
       "@type": "ItemList",
@@ -624,6 +687,28 @@ const JS_LOC = "(function(){var o=document.getElementById('dcTim');if(!o)return;
   "m.forEach(function(s){s.hidden=!s.querySelector('.dc-hang:not([hidden])');});" +
   "if(d)d.textContent=t?('Đang hiện '+n+' bài khớp \"'+o.value.trim()+'\"'):'';}" +
   "o.addEventListener('input',loc);})();";
+
+/* Lọc danh sách bài: ô gõ + chip chủ đề. Đọc luôn #cd-<mã> trên URL để các chip
+   ở trang chủ ("Lập trình Python"…) mở thẳng đúng mạch kiến thức đó. Chạy ở
+   trình duyệt nên Google vẫn thấy đủ 119 bài. */
+const JS_LOC_BAI = "(function(){var o=document.getElementById('seoTim');if(!o)return;" +
+  "var a=[].slice.call(document.querySelectorAll('.seo-grid a'));" +
+  "var g=[].slice.call(document.querySelectorAll('.seo-grid'));" +
+  "var chip=[].slice.call(document.querySelectorAll('.seo-chip'));" +
+  "var d=document.getElementById('seoDem');var cd='';" +
+  "function bd(s){return s.normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').replace(/đ/g,'d')}" +
+  "function loc(){var t=bd(o.value.toLowerCase().trim());var n=0;" +
+  "a.forEach(function(x){var ok=(!t||x.dataset.tim.indexOf(t)>=0)&&(!cd||x.dataset.cd===cd);x.hidden=!ok;if(ok)n++;});" +
+  "g.forEach(function(x){var co=!!x.querySelector('a:not([hidden])');x.hidden=!co;" +
+  "var h=x.previousElementSibling;if(h&&h.classList.contains('seo-lop'))h.hidden=!co;});" +
+  "chip.forEach(function(c){c.classList.toggle('on',(c.dataset.cd||'')===cd)});" +
+  "if(d)d.textContent=(t||cd)?('Đang hiện '+n+' bài'):'';}" +
+  "chip.forEach(function(c){c.addEventListener('click',function(){cd=c.dataset.cd||'';loc();" +
+  "history.replaceState(null,'',cd?('#cd-'+cd):location.pathname);})});" +
+  "o.addEventListener('input',loc);" +
+  "var m=(location.hash||'').match(/^#cd-([A-G])$/);if(m){cd=m[1];loc();" +
+  "var k=document.querySelector('.seo-loc-hop');if(k)k.scrollIntoView({block:'start'});}" +
+  "})();";
 
 function trangDoiChieu(base, boMa) {
   const { theoId, kho } = chiMuc();
