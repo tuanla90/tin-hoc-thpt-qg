@@ -152,8 +152,12 @@ test("đối chiếu SGK: đủ mọi quyển, mỗi bài sách trỏ đúng m�
         assert.ok(t.body.includes('href="/bai/' + muc.slug + '"'), "thiếu liên kết tới " + b.cua);
         /* Bộ đánh số theo chủ đề thì PHẢI hiện mã chủ đề, không thì hai bài
            khác nhau cùng hiện "Bài 1" — người tra không phân biệt được. */
-        if (b.chuDe) assert.ok(t.body.includes("Chủ đề " + b.chuDe + " · Bài " + b.so),
-          "thiếu mã chủ đề cho " + s.ma + " chủ đề " + b.chuDe + " bài " + b.so);
+        if (b.chuDe) {
+          /* Bài không đánh số trong sách (chủ đề chỉ có một bài) thì chỉ hiện
+             "Chủ đề D" — không được bịa thêm "Bài 1". */
+          const mong = "Chủ đề " + b.chuDe + (b.so != null ? " · Bài " + b.so : "");
+          assert.ok(t.body.includes(mong), "thiếu/sai nhãn chủ đề: " + s.ma + " → " + mong);
+        }
       }
     }
   }
@@ -205,9 +209,16 @@ test("trang bài có khối đối chiếu SGK, và KHÔNG gắn nhãn sai cho b
   assert.match(coMap.body, /Tương ứng sách giáo khoa/);
   assert.match(coMap.body, /Bài 1\. Thông tin và xử lí thông tin/);
 
-  /* C11-10 là nửa sau của một bài SGK bị tách đôi -> không có trong bảng.
-     Tuyệt đối không được hiện chữ nào ám chỉ "ngoài chương trình". */
-  const khongMap = await lay("/bai/" + theoId.get("C11-10").slug);
+  /* Bài nào chưa có trong bảng đối chiếu (thường là nửa sau của một bài SGK bị
+     tách đôi) thì tuyệt đối không được hiện chữ nào ám chỉ "ngoài chương trình".
+     Tìm ĐỘNG một bài như vậy — càng thêm sách thì danh sách này càng đổi, ghi
+     cứng một mã bài là test tự hỏng sau mỗi lần bổ sung sách. */
+  const daMap = new Set();
+  (chiMuc().kho.SGK_MAP.bo || []).forEach((b) => (b.sach || []).forEach((s) =>
+    (s.bai || []).forEach((x) => x.cua && daMap.add(x.cua))));
+  const chuaMap = chiMuc().ds.find((m) => !daMap.has(m.bai.id));
+  assert.ok(chuaMap, "không còn bài nào chưa đối chiếu — cập nhật lại test này");
+  const khongMap = await lay("/bai/" + chuaMap.slug);
   assert.equal(khongMap.status, 200);
   assert.ok(!/Tương ứng sách giáo khoa/.test(khongMap.body));
   assert.ok(!/ngoài SGK|ngoài chương trình|không thuộc/i.test(khongMap.body));

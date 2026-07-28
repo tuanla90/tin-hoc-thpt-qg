@@ -501,7 +501,8 @@ function trangBai(muc, base) {
 ${sgk.length ? `<div class="seo-sgk">
   <b>Tương ứng sách giáo khoa</b>
   ${sgk.map((b) => `<span>${esc(b.bo)} · ${esc(tenQuyen(b.sach))} — ` +
-    (b.chuDe ? "Chủ đề " + esc(b.chuDe) + " · " : "") + "Bài " + b.so + ". " + esc(b.ten) +
+    (b.chuDe ? "Chủ đề " + esc(b.chuDe) + (b.so != null ? " · " : ", ") : "") +
+    (b.so != null ? "Bài " + b.so + ". " : "") + esc(b.ten) +
     (b.trang ? " <i>(trang " + esc(b.trang) + ")</i>" : "") + "</span>").join("")}
   <a href="/doi-chieu-sgk">Xem bảng đối chiếu cả bộ →</a>
 </div>` : ""}
@@ -674,7 +675,10 @@ function mucSach(s, theoId, mo) {
     const muc = b.cua ? theoId.get(b.cua) : null;
     /* Cánh Diều đánh số bài lặp lại theo từng chủ đề, nên thiếu mã chủ đề là
        "Bài 1" của chủ đề A và của chủ đề F trông y hệt nhau. */
-    const soTxt = (b.chuDe ? "Chủ đề " + esc(b.chuDe) + " · " : "") + "Bài " + b.so;
+    /* so = null: chủ đề chỉ có một bài và sách KHÔNG đánh số nó — hiện "Chủ đề D"
+       trần, không bịa ra "Bài 1" mà trong sách không hề có. */
+    const soTxt = (b.chuDe ? "Chủ đề " + esc(b.chuDe) : "") +
+      (b.so != null ? (b.chuDe ? " · " : "") + "Bài " + b.so : "");
     const trai =
       `<span class="dc-so">${soTxt}${b.trang ? "<small>tr. " + esc(b.trang) + "</small>" : ""}</span>` +
       `<span class="dc-ten">${esc(b.ten)}</span>`;
