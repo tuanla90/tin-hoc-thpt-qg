@@ -264,6 +264,7 @@ function renderFromHash() {
   if (view === "quiz" && !(typeof State !== "undefined" && State.quiz)) { go("home"); return; }
   if (view === "result" && !d) { go("history"); return; }
   State.view = view;
+  if (view !== "lesson") LESSON_DANG_MO = null; // robot trợ lý dựa vào đây để biết ngữ cảnh
   const keepScroll = keepScrollOnce;
   keepScrollOnce = false;
   const prevY = window.scrollY;
@@ -761,6 +762,7 @@ function renderLesson(data) {
   const idx = sorted.findIndex((l) => l.id === data.id);
   const l = sorted[idx];
   if (!l) { go("lessons"); return; }
+  LESSON_DANG_MO = l; // để robot trợ lý mở gia sư đúng bài này
   const done = isLearned(l.id);
   const prev = sorted[idx - 1], next = sorted[idx + 1];
   const runCode = firstRunnableCode(l);
@@ -2147,6 +2149,7 @@ const FLOATING_POSES = [
 ];
 
 let mascotBubbleOpen = true;
+let LESSON_DANG_MO = null; // bài học đang mở (đặt ở renderLesson, xoá khi rời trang bài)
 
 function initFloatingMascot() {
   if (document.getElementById("floatingMascot")) return;
@@ -2166,6 +2169,7 @@ function initFloatingMascot() {
           <button class="floating-mascot-close" id="closeMascotBubble" title="Đóng bóng thoại">&times;</button>
         </div>
         <div class="floating-mascot-text" id="mascotTipText">${randomTip}</div>
+        <button class="floating-mascot-ask" id="mascotAsk" hidden>${aIco("bulb", "#d97706", 14)} Hỏi gia sư</button>
       </div>
       <button class="floating-mascot-btn" id="mascotBtn" title="Bấm để tương tác với Robot!">
         <div class="floating-mascot-pulse"></div>
@@ -2187,6 +2191,22 @@ function initFloatingMascot() {
     bubble.hidden = true;
     mascotBubbleOpen = false;
   };
+
+  /* Robot kiêm gia sư: đang mở bài -> hỏi về bài đó; đang làm bài luyện của một
+     bài -> hỏi về bài gốc; còn lại -> hỏi chung (máy chủ rào phạm vi môn học).
+     Nút chỉ hiện khi máy chủ đã bật AI. */
+  const askBtn = document.getElementById("mascotAsk");
+  if (typeof Tutor !== "undefined") {
+    Tutor.trangThai().then((t) => { if (t.on) askBtn.hidden = false; });
+    askBtn.onclick = (e) => {
+      e.stopPropagation();
+      let l = LESSON_DANG_MO;
+      if (!l && State.view === "quiz" && State.quiz && State.quiz.lessonId) {
+        l = LESSONS.find((x) => x.id === State.quiz.lessonId) || null;
+      }
+      if (l) Tutor.moBai(l); else Tutor.moChung();
+    };
+  }
 
   btn.onclick = () => {
     if (bubble.hidden) {

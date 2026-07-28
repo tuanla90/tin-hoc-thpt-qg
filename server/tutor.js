@@ -17,7 +17,7 @@
  * ==========================================================================*/
 const express = require("express");
 const { aiConfig, aiChat } = require("./ai");
-const { layBai, layCau, layBaiTap, noiDungBai, noiDungCau, noiDungBaiTap } = require("./lessons");
+const { layBai, layCau, layBaiTap, noiDungBai, noiDungCau, noiDungBaiTap, danhMucBai } = require("./lessons");
 
 const TOI_DA_HOI = 500;      // ký tự một câu hỏi
 const TOI_DA_LICH_SU = 6;    // lượt hội thoại gửi kèm
@@ -26,13 +26,19 @@ const TOI_DA_CODE = 3000;    // ký tự bài làm gửi kèm
 const TOI_DA_KETQUA = 800;   // ký tự kết quả chạy / thông báo lỗi
 const LOAI_BT = ["python", "sql", "web"];
 
-const LUAT = `Quy tắc:
-1. CHỈ trả lời dựa trên nội dung bài ở trên. Hỏi ngoài phạm vi thì nói thẳng là bài này không bàn tới, chỉ tên chủ đề/bài có nội dung đó rồi mời họ mở bài ấy.
+/* Quy tắc 1 đổi theo chế độ: đang mở bài thì bám nội dung bài; hỏi chung (từ
+   robot trợ lý, không mở bài nào) thì rào theo phạm vi MÔN HỌC và danh mục bài. */
+function luat(coBai) {
+  return `Quy tắc:
+1. ${coBai
+    ? "CHỈ trả lời dựa trên nội dung bài ở trên. Hỏi ngoài phạm vi thì nói thẳng là bài này không bàn tới, chỉ tên chủ đề/bài có nội dung đó rồi mời họ mở bài ấy."
+    : "CHỈ trả lời câu hỏi thuộc chương trình Tin học THPT. Chuyện ngoài môn học thì từ chối nhẹ nhàng rồi kéo về việc ôn thi. Nếu chủ đề nằm trong một bài ở danh mục trên, trả lời ngắn gọn rồi mời họ mở bài đó để hỏi sâu hơn."}
 2. KHÔNG làm hộ bài tập. Gợi ý từng bước, hỏi ngược lại để họ tự nghĩ.
 3. Giải thích dễ hiểu, xưng "mình" và gọi người học là "bạn", KHÔNG trẻ con hoá. Thuật ngữ tiếng Anh kèm nghĩa tiếng Việt.
 4. Trả lời ngắn (dưới 200 chữ) trừ khi được yêu cầu nói kỹ.
 5. Nếu bài có ví dụ code, ưu tiên giải thích bằng chính ví dụ đó.
 6. Viết bằng tiếng Việt, dùng markdown đơn giản (in đậm, gạch đầu dòng, khối code).`;
+}
 
 /* Ghép prompt hệ thống từ những mảnh MÁY CHỦ tự tra được.
    `cau` chỉ có ở chế độ "vì sao tôi sai"; `bt` chỉ có ở chế độ gợi ý bài code. */
@@ -41,7 +47,8 @@ function dungSystem(bai, cau, daChon, bt) {
   if (bai) {
     p.push(noiDungBai(bai, bt ? 3500 : 7000)); // có bài tập thì để dành chỗ cho code
   } else {
-    p.push("BÀI ĐANG HỌC: (người học đang ôn luyện, không mở bài cụ thể nào)");
+    p.push("BÀI ĐANG HỌC: (không mở bài nào — người học hỏi nhanh trong lúc ôn)");
+    p.push("", "DANH MỤC BÀI HỌC TRONG ỨNG DỤNG (để chỉ người học mở đúng bài khi cần):", danhMucBai());
   }
   if (cau) {
     p.push("", "─────────", "Người học vừa làm câu hỏi sau và muốn hiểu vì sao mình sai:", noiDungCau(cau, daChon),
@@ -50,7 +57,7 @@ function dungSystem(bai, cau, daChon, bt) {
   if (bt) {
     p.push("", "─────────", noiDungBaiTap(bt.loai, bt.de, bt.code, bt.ketQua, bt.loi));
   }
-  p.push("", "─────────", LUAT);
+  p.push("", "─────────", luat(!!bai));
   if (bt) p.push("7. Đây là bài thực hành: TUYỆT ĐỐI không đưa đáp án hoàn chỉnh. Mỗi lượt chỉ gỡ MỘT nút thắt rồi mời học sinh chạy lại.");
   return p.join("\n");
 }
@@ -178,7 +185,9 @@ function createTutor(pool) {
           loi: String(b.loi || "").slice(0, TOI_DA_KETQUA),
         };
       }
-      if (!bai && !cau) return res.status(400).json({ error: "Thiếu bài học để hỏi." });
+      /* Không có bài lẫn câu hỏi = chế độ HỎI CHUNG (từ robot trợ lý). Vẫn phải
+         đăng nhập, vẫn trừ lượt như thường, và prompt tự rào trong phạm vi môn
+         Tin học THPT — nên không thành chatbot chung miễn phí. */
 
       /* Hồ sơ (nếu có) chỉ dùng để ghi nhật ký, phải thuộc đúng tài khoản. */
       let profileId = null;
@@ -230,7 +239,7 @@ function createTutor(pool) {
           await q(
             `INSERT INTO tutor_log (user_id, profile_id, kieu, lesson_id, question_id, cau_hoi, tra_loi)
              VALUES ($1,$2,$3,$4,$5,$6,$7)`,
-            [req.session.uid, profileId, bt ? "exercise" : cau ? "wrong" : "lesson", bai ? bai.id : null,
+            [req.session.uid, profileId, bt ? "exercise" : cau ? "wrong" : bai ? "lesson" : "general", bai ? bai.id : null,
              cau ? cau.id : null, hoi, traLoi.slice(0, TOI_DA_LUU)]
           );
         } catch (e) { console.error("[tutor] Không ghi được nhật ký:", e.message); }

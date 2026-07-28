@@ -92,6 +92,15 @@ test("prompt câu sai có đáp án đúng và lựa chọn của học sinh", (
   assert.match(sys, /Học sinh đã chọn: A/);
 });
 
+test("prompt hỏi chung: có danh mục bài và rào phạm vi môn học", () => {
+  const sys = dungSystem(null, null);
+  assert.match(sys, /không mở bài nào/);
+  assert.match(sys, /DANH MỤC BÀI HỌC/);
+  assert.match(sys, /Lớp 10:/);
+  assert.match(sys, /CHỈ trả lời câu hỏi thuộc chương trình Tin học THPT/);
+  assert.match(sys, /KHÔNG làm hộ bài tập/);
+});
+
 test("bài thực hành: đề và đáp án mẫu tra từ máy chủ, bài làm được đánh dấu là dữ liệu", () => {
   const de = layBaiTap("python", "C10-11", 0);
   assert.ok(de, "phải tra được bài thực hành");
@@ -135,8 +144,6 @@ test("đăng nhập xong hỏi được, chữ chảy về theo luồng", async 
 test("ngữ cảnh không nhận từ trình duyệt: lessonId bịa -> 400", async () => {
   const r = await req("/api/tutor", { method: "POST", body: { lessonId: "KHONG-CO", question: "Bit là gì?" } });
   assert.equal(r.status, 400);
-  const r2 = await req("/api/tutor", { method: "POST", body: { question: "Thủ đô nước Pháp?" } });
-  assert.equal(r2.status, 400); // thiếu bài -> không trả lời chuyện ngoài lề
 });
 
 test("câu hỏi rỗng bị chặn và KHÔNG trừ lượt", async () => {
@@ -195,6 +202,22 @@ test("gợi ý bài thực hành: chỉ nhận chỉ số hợp lệ, ghi nhật
   const l = await pool.query("SELECT * FROM tutor_log ORDER BY id DESC LIMIT 1");
   assert.equal(l.rows[0].kieu, "exercise");
   assert.equal(l.rows[0].lesson_id, "C10-11");
+});
+
+test("hỏi chung không cần mở bài: vẫn trả lời và ghi nhật ký kiểu 'general'", async () => {
+  await req("/api/auth/logout", { method: "POST" });
+  await req("/api/auth/register", { method: "POST", body: { email: "hs3@test.vn", password: "123456", name: "Chi" } });
+  const r = await req("/api/tutor", { method: "POST", body: { question: "Nên bắt đầu ôn từ phần nào?" } });
+  assert.equal(r.status, 200);
+  const { chu } = gomLuong(r.raw);
+  assert.match(chu, /không mở bài nào/, "mock nhại lại dòng BÀI ĐANG HỌC của chế độ hỏi chung");
+  const l = await pool.query("SELECT * FROM tutor_log ORDER BY id DESC LIMIT 1");
+  assert.equal(l.rows[0].kieu, "general");
+  assert.equal(l.rows[0].lesson_id, null);
+  assert.equal(l.rows[0].question_id, null);
+  // đăng nhập lại hs2 cho các test phía sau dùng đúng tài khoản như trước
+  await req("/api/auth/logout", { method: "POST" });
+  await req("/api/auth/login", { method: "POST", body: { email: "hs2@test.vn", password: "123456" } });
 });
 
 test("hồ sơ của tài khoản khác không ghi vào nhật ký được", async () => {

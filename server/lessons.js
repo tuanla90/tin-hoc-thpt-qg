@@ -109,6 +109,22 @@ const TEN_CHU_DE = {
   G: "Khoa học máy tính (chuyên sâu)",
 };
 
+/* Danh mục tên bài theo lớp — cho chế độ hỏi chung (không mở bài nào): gia sư
+   nhìn danh mục để chỉ người học mở đúng bài, thay vì bịa nội dung. */
+let DANH_MUC = null;
+function danhMucBai() {
+  if (DANH_MUC) return DANH_MUC;
+  const ds = [...napKho().baiTheoId.values()]
+    .sort((a, b) => a.grade - b.grade || a.stage - b.stage || a.order - b.order);
+  const theoLop = new Map();
+  ds.forEach((l) => {
+    if (!theoLop.has(l.grade)) theoLop.set(l.grade, []);
+    theoLop.get(l.grade).push(l.title);
+  });
+  DANH_MUC = [...theoLop].map(([lop, ten]) => "Lớp " + lop + ": " + ten.join(" · ")).join("\n");
+  return DANH_MUC;
+}
+
 /* Bài học -> văn bản thuần để nhét vào prompt. Cắt bớt cho vừa hạn mức token:
    giữ trọn phần lý thuyết, bỏ bớt phần kể chuyện dẫn nhập nếu quá dài. */
 function noiDungBai(bai, gioiHan = 7000) {
@@ -188,5 +204,5 @@ function noiDungBaiTap(loai, bt, code, ketQua, loi) {
 
 module.exports = {
   layBai, layCau, layBaiTap, noiDungBai, noiDungCau, noiDungBaiTap, napKho,
-  TEN_CHU_DE, TEN_LOAI_BT,
+  danhMucBai, TEN_CHU_DE, TEN_LOAI_BT,
 };

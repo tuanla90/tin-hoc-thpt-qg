@@ -1,9 +1,11 @@
 /* ============================================================================
  *  GIA SƯ AI — BẢNG CHAT TRƯỢT TỪ PHẢI
  *
- *  Hai lối vào:
+ *  Các lối vào:
  *    - Trang bài học: nút "Hỏi gia sư"  -> Tutor.moBai(bai)
  *    - Sau khi chấm sai một câu: nút "Vì sao tôi sai?" -> Tutor.moCauSai(...)
+ *    - Robot trợ lý góc phải: "Hỏi gia sư" -> Tutor.moChung() khi không mở bài
+ *      nào (máy chủ tự rào trong phạm vi môn Tin học THPT)
  *
  *  Trình duyệt CHỈ gửi ID (lessonId / questionId) — nội dung bài do máy chủ tự
  *  lấy. Không có khoá API ở đây và không bao giờ được có.
@@ -34,6 +36,11 @@
     "Vì sao kết quả chưa khớp?",
     "Tôi hiểu sai đề ở chỗ nào?",
     "Chỉ tôi bước sửa đầu tiên",
+  ];
+  const GOI_Y_CHUNG = [
+    "Nên bắt đầu ôn từ phần nào?",
+    "Muốn chắc phần Python thì ôn bài nào?",
+    "Mẹo làm dạng câu Đúng/Sai?",
   ];
   /* Gợi ý hiện SAU khi gia sư trả lời xong. Mục đầu dùng model mạnh hơn nên
      đánh dấu riêng — mỗi lần bấm vẫn tính một lượt. */
@@ -213,7 +220,8 @@
 
   function khoaNhap(khoa) {
     const i = document.getElementById("ttInput"), s = document.getElementById("ttSend");
-    if (i) { i.disabled = khoa; i.placeholder = khoa ? "Chưa dùng được" : "Hỏi về bài này…"; }
+    const chungChung = NGU && !NGU.lessonId && !NGU.questionId; // chế độ hỏi chung
+    if (i) { i.disabled = khoa; i.placeholder = khoa ? "Chưa dùng được" : chungChung ? "Hỏi về môn Tin học…" : "Hỏi về bài này…"; }
     if (s) s.disabled = khoa;
   }
 
@@ -325,6 +333,15 @@
         chao: "Chào bạn! Mình đọc cùng bạn bài **" + bai.title + "**. " +
           "Chỗ nào chưa thông thì hỏi mình nhé — mình chỉ bàn trong phạm vi bài này thôi.",
       }, GOI_Y_BAI);
+    },
+    /* Hỏi chung từ robot trợ lý — không gắn với bài nào, máy chủ tự rào phạm vi
+       trong chương trình Tin học THPT và chỉ bài nên mở khi hỏi sâu. */
+    moChung() {
+      mo({
+        tieuDe: "Hỏi nhanh",
+        chao: "Chào bạn! Mình là robot trợ lý kiêm **gia sư AI**. Cứ hỏi mình bất kỳ " +
+          "kiến thức Tin học THPT nào — mình trả lời ngắn gọn và chỉ luôn bài nên mở để học kỹ nhé.",
+      }, GOI_Y_CHUNG);
     },
     moCauSai(q, daChon, lessonId) {
       mo({
