@@ -74,6 +74,43 @@ test("email trong ADMIN_EMAILS đăng nhập là thành admin, tạo được l�
   assert.equal(st.data.maDaKichHoat, 0);
 });
 
+test("danh sách người dùng: thấy gói, lọc theo email", async () => {
+  // đang đăng nhập admin (test trước để lại phiên chu@shop.vn)
+  const ds = await req("/api/admin/users");
+  assert.equal(ds.status, 200);
+  assert.ok(ds.data.users.length >= 2);
+  const chu = ds.data.users.find((u) => u.email === "chu@shop.vn");
+  assert.equal(chu.goi.tier, "paid"); // admin coi như paid
+  const hs = ds.data.users.find((u) => u.email === "hs@test.vn");
+  assert.equal(hs.goi.tier, "free"); // chưa kích hoạt mã ở thời điểm này
+
+  const loc = await req("/api/admin/users?q=hs@test");
+  assert.equal(loc.data.users.length, 1);
+  assert.equal(loc.data.users[0].email, "hs@test.vn");
+});
+
+test("admin đặt lại mật khẩu hộ: mật khẩu mới vào được, cũ hết vào", async () => {
+  const ds = await req("/api/admin/users?q=hs@test");
+  const id = ds.data.users[0].id;
+
+  const ngan = await req("/api/admin/users/" + id + "/password", { method: "POST", body: { matKhau: "123" } });
+  assert.equal(ngan.status, 400); // dưới 6 ký tự bị chặn
+
+  const doi = await req("/api/admin/users/" + id + "/password", { method: "POST", body: { matKhau: "tam-123456" } });
+  assert.equal(doi.status, 200);
+  assert.equal(doi.data.email, "hs@test.vn");
+
+  await req("/api/auth/logout", { method: "POST" });
+  const cu = await req("/api/auth/login", { method: "POST", body: { email: "hs@test.vn", password: "123456" } });
+  assert.equal(cu.status, 401);
+  const moi = await req("/api/auth/login", { method: "POST", body: { email: "hs@test.vn", password: "tam-123456" } });
+  assert.equal(moi.status, 200);
+  // trả phiên về admin và trả mật khẩu hs về "123456" cho các test phía sau
+  await req("/api/auth/logout", { method: "POST" });
+  await req("/api/auth/login", { method: "POST", body: { email: "chu@shop.vn", password: "123456" } });
+  await req("/api/admin/users/" + id + "/password", { method: "POST", body: { matKhau: "123456" } });
+});
+
 test("học sinh kích hoạt mã vừa tạo -> stats đếm được doanh số", async () => {
   const ds = await req("/api/admin/licenses");
   const code = ds.data.licenses[0].code;

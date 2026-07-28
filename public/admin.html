@@ -65,6 +65,19 @@
     </div>
 
     <div class="card">
+      <h2>Người dùng</h2>
+      <div class="row">
+        <div style="flex:3"><label>Tìm theo email hoặc tên</label>
+          <input id="timUser" type="text" placeholder="vd: an.nguyen@gmail — để trống là 200 tài khoản mới nhất"></div>
+        <div style="flex:0; align-self:flex-end"><button id="timBtn" style="margin-top:0">Tìm</button></div>
+      </div>
+      <div class="err" id="userErr"></div>
+      <div class="tbl-wrap" style="margin-top:12px"><table id="bangUser"><thead>
+        <tr><th>Email</th><th>Tên</th><th>Gói</th><th>Hồ sơ</th><th>Lượt làm</th><th>Hoạt động cuối</th><th></th></tr>
+      </thead><tbody></tbody></table></div>
+    </div>
+
+    <div class="card">
       <h2>Mã gần đây</h2>
       <div class="tbl-wrap"><table id="bang"><thead>
         <tr><th>Mã</th><th>Hạn (ngày)</th><th>Trạng thái</th><th>Người kích hoạt</th><th>Hết hạn</th><th>Ghi chú</th></tr>
@@ -97,8 +110,43 @@
         '<div class="stat"><b>' + d.attempts + "</b><span>lượt làm bài đã lưu</span></div>" +
         '<div class="stat"><b>' + d.maDaTao + "</b><span>mã đã tạo</span></div>" +
         '<div class="stat"><b>' + d.maDaKichHoat + "</b><span>mã đã kích hoạt</span></div>" +
-        '<div class="stat"><b>' + d.premiumConHan + "</b><span>Premium còn hạn</span></div>";
+        '<div class="stat"><b>' + d.premiumConHan + "</b><span>Premium còn hạn</span></div>" +
+        '<div class="stat"><b>' + d.kichHoat30Ngay + "</b><span>kích hoạt 30 ngày qua</span></div>" +
+        '<div class="stat"><b>' + d.aiHomNay + "</b><span>lượt AI hôm nay</span></div>";
     });
+  }
+
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  function veNguoiDung() {
+    var tuKhoa = document.getElementById("timUser").value.trim();
+    var err = document.getElementById("userErr");
+    err.textContent = "";
+    return api("/admin/users" + (tuKhoa ? "?q=" + encodeURIComponent(tuKhoa) : "")).then(function (d) {
+      document.querySelector("#bangUser tbody").innerHTML = (d.users || []).map(function (u) {
+        var goi = u.goi.tier === "paid"
+          ? '<span class="tag-ok">Premium</span>' + (u.goi.hetHan ? " → " + ngay(u.goi.hetHan) : "")
+          : '<span class="tag-cho">Free</span>';
+        return "<tr><td>" + esc(u.email) + (u.role !== "student" ? " <b>[" + esc(u.role) + "]</b>" : "") + "</td>" +
+          "<td>" + esc(u.name) + "</td><td>" + goi + "</td>" +
+          "<td>" + u.soHoSo + "</td><td>" + u.soLuotLam + "</td><td>" + ngay(u.hoatDongCuoi) + "</td>" +
+          '<td><a href="#" data-id="' + u.id + '" data-email="' + esc(u.email) + '" class="doiMk">đặt lại mật khẩu</a></td></tr>';
+      }).join("");
+      document.querySelectorAll("#bangUser .doiMk").forEach(function (a) {
+        a.onclick = function (e) {
+          e.preventDefault();
+          var mk = window.prompt("Mật khẩu TẠM cho " + a.dataset.email + " (≥6 ký tự).\nĐặt xong nhắn khách vào Tài khoản tự đổi lại:");
+          if (mk == null) return;
+          api("/admin/users/" + a.dataset.id + "/password", "POST", { matKhau: mk })
+            .then(function () { window.alert("Đã đặt lại mật khẩu cho " + a.dataset.email); })
+            .catch(function (e2) { window.alert("Lỗi: " + e2.message); });
+        };
+      });
+    }).catch(function (e) { err.textContent = e.message; });
   }
   function veBang() {
     return api("/admin/licenses").then(function (d) {
@@ -127,9 +175,14 @@
       .then(function () { btn.disabled = false; });
   };
 
+  document.getElementById("timBtn").onclick = veNguoiDung;
+  document.getElementById("timUser").addEventListener("keydown", function (e) {
+    if (e.key === "Enter") veNguoiDung();
+  });
+
   api("/admin/stats").then(function () {
     document.getElementById("noiDung").hidden = false;
-    return Promise.all([veStats(), veBang()]);
+    return Promise.all([veStats(), veBang(), veNguoiDung()]);
   }).catch(function (e) {
     var c = document.getElementById("chan");
     c.hidden = false;
