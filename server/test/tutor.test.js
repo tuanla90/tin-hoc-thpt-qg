@@ -13,8 +13,8 @@ process.env.AI_FREE_PER_DAY = "3";
 
 const { initDb } = require("../db");
 const { createApp } = require("../app");
-const { dungSystem, locLichSu, hopLe } = require("../tutor");
-const { layBai, layCau, layBaiTap } = require("../lessons");
+const { dungSystem, locLichSu, hopLe, khoaNguCanh } = require("../tutor");
+const { layBai, layCau, layBaiTap, noiDungBai } = require("../lessons");
 
 let srv, base, pool, cookie = "";
 
@@ -67,13 +67,65 @@ test("rào chắn câu hỏi: rỗng / spam bị loại, dài bị cắt", () =>
   assert.equal(hopLe("Bit là gì? ".repeat(80)).length, 500); // hỏi thật mà dài -> cắt
 });
 
-test("lịch sử: chỉ giữ 6 lượt gần nhất, role lạ quy về user", () => {
+test("lịch sử: chỉ giữ 4 lượt gần nhất, role lạ quy về user, cắt lượt quá dài", () => {
   const ls = Array.from({ length: 10 }, (_, i) => ({ role: i % 2 ? "assistant" : "he-thong", content: "c" + i }));
   const r = locLichSu(ls);
-  assert.equal(r.length, 6);
-  assert.equal(r[0].content, "c4");
+  assert.equal(r.length, 4);
+  assert.equal(r[0].content, "c6");
   assert.ok(r.every((m) => m.role === "user" || m.role === "assistant"));
+  assert.equal(locLichSu([{ role: "user", content: "x".repeat(5000) }])[0].content.length, 800);
   assert.deepEqual(locLichSu("không phải mảng"), []);
+});
+
+test("đổi ngữ cảnh thì máy chủ tự bỏ lịch sử của bài/câu cũ", () => {
+  const ls = [
+    { role: "user", content: "hỏi bài A", ngu: "bai:C10-01" },
+    { role: "assistant", content: "đáp bài A", ngu: "bai:C10-01" },
+    { role: "user", content: "hỏi bài B", ngu: "bai:C10-02" },
+    { role: "assistant", content: "đáp bài B", ngu: "bai:C10-02" },
+  ];
+  const b = locLichSu(ls, "bai:C10-02");
+  assert.equal(b.length, 2, "chỉ còn hội thoại của bài đang mở");
+  assert.ok(b.every((m) => /bài B/.test(m.content)));
+
+  // lượt KHÔNG gắn dấu vẫn nhận (bản trình duyệt cũ còn trong bộ nhớ đệm)
+  assert.equal(locLichSu([{ role: "user", content: "cũ" }], "bai:C10-02").length, 1);
+  // không truyền khoá thì giữ nguyên nếp cũ
+  assert.equal(locLichSu(ls).length, 4);
+});
+
+test("khoá ngữ cảnh phân biệt bài / câu / bài thực hành", () => {
+  assert.equal(khoaNguCanh({ id: "C10-01" }, null, null), "bai:C10-01");
+  assert.equal(khoaNguCanh(null, { id: "CA-mc-101" }, null), "cau:CA-mc-101");
+  assert.equal(khoaNguCanh({ id: "C10-11" }, null, { loai: "python", i: 0 }), "bt:python:C10-11:0");
+  assert.equal(khoaNguCanh({ id: "C10-11" }, null, { loai: "python", i: 1 }), "bt:python:C10-11:1");
+  assert.equal(khoaNguCanh(null, null, null), "chung");
+});
+
+test("cắt nội dung bài: vừa hạn mức nhưng KHÔNG cụt giữa chừng", () => {
+  const bai = layBai("C11-33"); // bài dài nhất kho (~13k ký tự)
+  const vb = noiDungBai(bai, 4000);
+  assert.ok(vb.length <= 4000, "phải vừa hạn mức, thực tế " + vb.length);
+  assert.match(vb, /BÀI ĐANG HỌC: /, "luôn giữ tên bài");
+  assert.match(vb, /Ý chính cần nhớ/, "luôn giữ phần tóm tắt — đắt giá nhất trên mỗi token");
+  bai.keypoints.forEach((k) => assert.ok(vb.includes(k), "giữ đủ ý chính: " + k.slice(0, 30)));
+  assert.match(vb, /đã lược .* mục/, "phải nói rõ là đã lược, để gia sư không tưởng mình thấy cả bài");
+});
+
+test("cắt nội dung bài: giữ đúng mục liên quan tới câu hỏi của học sinh", () => {
+  const bai = layBai("C10-02");
+  const muc = "Âm thanh — đo sóng thật nhanh, thật nhiều lần";
+  assert.ok(noiDungBai(bai, 999999).includes(muc), "mục này có thật trong bài");
+  assert.ok(!noiDungBai(bai, 4000).includes(muc), "cắt suông thì mục này rơi mất");
+  assert.ok(noiDungBai(bai, 4000, "Âm thanh được số hoá bằng cách đo sóng thế nào?").includes(muc),
+    "hỏi đúng chủ đề thì mục phải được giữ lại");
+});
+
+test("bài ngắn hơn hạn mức thì giữ trọn vẹn, không lược gì", () => {
+  const bai = layBai("C10-01");
+  const day = noiDungBai(bai, 999999);
+  assert.ok(!/đã lược/.test(day));
+  assert.ok(day.length > 1000);
 });
 
 test("prompt dựng từ nội dung bài thật ở máy chủ", () => {

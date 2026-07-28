@@ -21,7 +21,10 @@ const { getPlan } = require("./plan");
 const { layBai, layCau, layBaiTap, noiDungBai, noiDungCau, noiDungBaiTap, danhMucBai } = require("./lessons");
 
 const TOI_DA_HOI = 500;      // ký tự một câu hỏi
-const TOI_DA_LICH_SU = 6;    // lượt hội thoại gửi kèm
+const TOI_DA_LICH_SU = 4;    // lượt hội thoại gửi kèm
+const TOI_DA_MOI_LUOT = 800; // ký tự mỗi lượt trong lịch sử (trả lời vốn dưới 200 chữ)
+const TOI_DA_BAI = 4000;     // ký tự nội dung bài nhét vào prompt
+const TOI_DA_BAI_BT = 2500;  // ...khi còn phải nhét cả đề + bài làm của học sinh
 const TOI_DA_LUU = 4000;     // ký tự câu trả lời lưu vào nhật ký
 const TOI_DA_CODE = 3000;    // ký tự bài làm gửi kèm
 const TOI_DA_KETQUA = 800;   // ký tự kết quả chạy / thông báo lỗi
@@ -42,11 +45,13 @@ function luat(coBai) {
 }
 
 /* Ghép prompt hệ thống từ những mảnh MÁY CHỦ tự tra được.
-   `cau` chỉ có ở chế độ "vì sao tôi sai"; `bt` chỉ có ở chế độ gợi ý bài code. */
-function dungSystem(bai, cau, daChon, bt) {
+   `cau` chỉ có ở chế độ "vì sao tôi sai"; `bt` chỉ có ở chế độ gợi ý bài code.
+   `hoi` là câu học sinh vừa gõ — dùng để chọn phần bài liên quan nhất khi bài
+   dài hơn hạn mức (xem noiDungBai trong lessons.js). */
+function dungSystem(bai, cau, daChon, bt, hoi) {
   const p = ["Bạn là gia sư môn Tin học THPT, đang kèm một người TỰ HỌC ôn thi tốt nghiệp.", ""];
   if (bai) {
-    p.push(noiDungBai(bai, bt ? 3500 : 7000)); // có bài tập thì để dành chỗ cho code
+    p.push(noiDungBai(bai, bt ? TOI_DA_BAI_BT : TOI_DA_BAI, hoi)); // có bài tập thì để dành chỗ cho code
   } else {
     p.push("BÀI ĐANG HỌC: (không mở bài nào — người học hỏi nhanh trong lúc ôn)");
     p.push("", "DANH MỤC BÀI HỌC TRONG ỨNG DỤNG (để chỉ người học mở đúng bài khi cần):", danhMucBai());
@@ -63,15 +68,29 @@ function dungSystem(bai, cau, daChon, bt) {
   return p.join("\n");
 }
 
-/* Bỏ lượt rỗng/spam; chỉ giữ role hợp lệ và cắt độ dài. */
-function locLichSu(ls) {
+/* Khoá định danh NGỮ CẢNH: đổi bài, đổi câu, đổi bài thực hành là khoá đổi.
+   MÁY CHỦ tự tính từ ngữ cảnh nó đã tra được, KHÔNG lấy theo lời trình duyệt. */
+function khoaNguCanh(bai, cau, bt) {
+  if (bt) return "bt:" + bt.loai + ":" + (bai ? bai.id : "") + ":" + bt.i;
+  if (cau) return "cau:" + cau.id;
+  if (bai) return "bai:" + bai.id;
+  return "chung";
+}
+
+/* Bỏ lượt rỗng/spam; chỉ giữ role hợp lệ và cắt độ dài.
+   `khoa` = ngữ cảnh hiện tại: lượt nào được gắn khoá KHÁC (học sinh vừa chuyển
+   sang câu khác / bài khác) thì bỏ đi — vừa khỏi tốn token cho chuyện cũ, vừa
+   không để hội thoại bài A lẫn sang bài B. Lượt không gắn khoá thì vẫn nhận,
+   để bản trình duyệt cũ còn trong bộ nhớ đệm không gãy. */
+function locLichSu(ls, khoa) {
   if (!Array.isArray(ls)) return [];
   return ls
     .filter((m) => m && typeof m.content === "string" && m.content.trim())
+    .filter((m) => !khoa || !m.ngu || m.ngu === khoa)
     .slice(-TOI_DA_LICH_SU)
     .map((m) => ({
       role: m.role === "assistant" ? "assistant" : "user",
-      content: String(m.content).slice(0, 2000),
+      content: String(m.content).slice(0, TOI_DA_MOI_LUOT),
     }));
 }
 
@@ -181,7 +200,7 @@ function createTutor(pool) {
         const de = loai ? layBaiTap(loai, b.lessonId, b.exIndex) : null;
         if (!de) return res.status(400).json({ error: "Không tìm thấy bài thực hành này." });
         bt = {
-          loai, de,
+          loai, de, i: Number(b.exIndex),
           code: String(b.code || "").slice(0, TOI_DA_CODE),
           ketQua: String(b.ketQua || "").slice(0, TOI_DA_KETQUA),
           loi: String(b.loi || "").slice(0, TOI_DA_KETQUA),
@@ -209,8 +228,9 @@ function createTutor(pool) {
       }
       await themLuot(req.session.uid, 1); // trừ trước để không bị lách bằng cách ngắt giữa chừng
 
-      const system = dungSystem(bai, cau, b.daChon, bt);
-      const messages = locLichSu(b.history).concat([{ role: "user", content: hoi }]);
+      const system = dungSystem(bai, cau, b.daChon, bt, hoi);
+      const messages = locLichSu(b.history, khoaNguCanh(bai, cau, bt))
+        .concat([{ role: "user", content: hoi }]);
 
       res.setHeader("Content-Type", "application/x-ndjson; charset=utf-8");
       res.setHeader("Cache-Control", "no-store");
@@ -261,4 +281,4 @@ function createTutor(pool) {
   return r;
 }
 
-module.exports = { createTutor, dungSystem, locLichSu, hopLe };
+module.exports = { createTutor, dungSystem, locLichSu, hopLe, khoaNguCanh };

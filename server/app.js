@@ -11,6 +11,7 @@ const PgSession = require("connect-pg-simple")(session);
 const { createApi } = require("./api");
 const { createTutor } = require("./tutor");
 const { createAdmin } = require("./admin");
+const { createSeo } = require("./seo");
 
 const PUBLIC_DIR = path.join(__dirname, "..", "public");
 
@@ -44,6 +45,10 @@ function createApp({ pool, sessionStore } = {}) {
   app.use("/api", createTutor(pool)); // đặt trước createApi để /tutor/status trả được cả khi chưa có DB
   app.use("/api", createAdmin(pool));
   app.use("/api", createApi(pool));
+
+  /* Trang công khai cho Google (/bai, /sitemap.xml, /robots.txt) — không cần DB,
+     không cần đăng nhập. Đặt trước static để chắc chắn đứng trước lối "về trang chính". */
+  app.use(createSeo());
 
   app.use(express.static(PUBLIC_DIR, { extensions: ["html"] }));
 

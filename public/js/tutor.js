@@ -190,8 +190,21 @@
       (typeof conLai === "number" ? "  •  còn " + conLai + " lượt hôm nay" : "");
   }
 
+  /* Khoá định danh ngữ cảnh — phải trùng KHỚP với khoaNguCanh() ở máy chủ.
+     Mỗi lượt hội thoại được đóng dấu khoá này; đổi bài / đổi câu là máy chủ tự
+     bỏ những lượt mang dấu cũ, nên chuyện của bài trước không lẫn sang bài sau
+     và cũng không tốn token gửi đi gửi lại. */
+  function khoaNgu(n) {
+    if (!n) return "chung";
+    if (n.exLoai) return "bt:" + n.exLoai + ":" + (n.lessonId || "") + ":" + n.exIndex;
+    if (n.questionId) return "cau:" + n.questionId;
+    if (n.lessonId) return "bai:" + n.lessonId;
+    return "chung";
+  }
+
   function mo(ngu, goiY) {
     NGU = ngu;
+    NGU.khoa = khoaNgu(ngu);
     LICH = [];
     const el = dungBang();
     document.getElementById("ttBody").innerHTML = "";
@@ -274,7 +287,7 @@
           ketQua: NGU.ketQua || undefined,
           loi: NGU.loi || undefined,
           question: hoi,
-          history: LICH.slice(-6),
+          history: LICH.slice(-4),
           deep: !!sau,
         }),
       });
@@ -302,7 +315,9 @@
         }
       }
       if (ra) {
-        LICH.push({ role: "user", content: hoi }, { role: "assistant", content: ra });
+        // đóng dấu ngữ cảnh vào từng lượt để máy chủ bỏ được lượt của bài/câu cũ
+        LICH.push({ role: "user", content: hoi, ngu: NGU.khoa },
+          { role: "assistant", content: ra, ngu: NGU.khoa });
         if (TT && TT.conLai !== 0) veGoiY(sau ? GOI_Y_TIEP.slice(1) : GOI_Y_TIEP);
       } else if (!noi.textContent.trim()) {
         noi.innerHTML = '<span class="tt-loi">Gia sư chưa trả lời được, thử hỏi lại nhé.</span>';
