@@ -231,7 +231,20 @@ này rất rõ, chỉ có gói năm sẽ mất nhóm đơn này.
   danh sách người dùng (gói/hồ sơ/lượt làm bài, tìm theo email/tên) + **đặt lại mật khẩu hộ**
   (tạm thay luồng "quên mật khẩu" chưa có — đặt xong dặn khách vào Tài khoản tự đổi);
   số liệu thêm kích hoạt 30 ngày qua + lượt AI hôm nay. (28/07, 40/40 test)
-- [ ] Sau khi có doanh thu đều: tích hợp xác nhận chuyển khoản tự động (SePay/Casso webhook — phí thấp, hợp cá nhân) hoặc PayOS.
+- [x] **Thanh toán tự động ✅ CODE XONG (28/07/2026)** — không đợi "có doanh thu đều" nữa,
+  vì khâu gửi mã tay là chỗ khách phải CHỜ (trả tiền 11 giờ đêm, sáng mới có gói).
+  `server/pay.js`: khách bấm mua → đơn có mã riêng nhúng sẵn vào nội dung chuyển khoản →
+  quét QR → tiền vào → SePay bắn webhook → mở Premium trong vài giây. Trang mua tự dò và
+  báo, không cần bấm gì thêm. Mã kích hoạt vẫn giữ cho kênh bán tay / tặng / giáo viên.
+  - Chống hớ: xác thực khoá `timingSafeEqual`, chống ghi trùng bằng `pay_events.tx_id UNIQUE`
+    (SePay bắn lại tới 7 lần), thiếu tiền KHÔNG mở gói, giao dịch không khớp ghi vào mục
+    đối soát trong admin chứ không nuốt im lặng. 14 test riêng cho luồng tiền.
+  - **Việc user làm**: đăng ký SePay → liên kết tài khoản ngân hàng → tạo webhook trỏ
+    `https://<domain>/api/pay/webhook` kiểu xác thực API Key → đặt trên Railway:
+    `PAY_PROVIDER=sepay`, `PAY_API_KEY`, `PAY_BANK`, `PAY_STK`, `PAY_CHU_TK`
+    (xem `.env.example`). Chưa đặt thì app tự quay về bán bằng mã, không gãy gì.
+  - Còn để sau: SePay free 500 giao dịch/tháng trong 1 năm cho cá nhân — quá thừa ở giai
+    đoạn đầu; khi vượt thì xem lại bảng giá.
 - [ ] Chống copy dần: chuyển các file JS nội dung premium sang serve qua endpoint có auth.
 - **Xong khi**: người lạ tự mua → kích hoạt → mở khoá, không cần mình can thiệp ngoài gửi mã.
 
