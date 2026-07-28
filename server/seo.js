@@ -184,15 +184,20 @@ function cauMau(l, kho) {
    một bài SGK bị tách đôi cho dễ học (xem chú thích trong public/js/sgk-map.js). */
 function sgkCua(lessonId, kho) {
   const m = kho.SGK_MAP;
-  if (!m || !m.sach) return [];
+  if (!m || !Array.isArray(m.bo)) return [];
   const ra = [];
-  Object.keys(m.sach).forEach((lop) => {
-    (m.sach[lop].bai || []).forEach((b) => {
-      if (b.cua === lessonId) ra.push({ lop: Number(lop), tenSach: m.sach[lop].ten, ...b });
+  m.bo.forEach((bo) => {
+    (bo.sach || []).forEach((s) => {
+      (s.bai || []).forEach((b) => {
+        if (b.cua === lessonId) ra.push({ bo: bo.tenNgan || bo.ten, boMa: bo.ma, sach: s, ...b });
+      });
     });
   });
-  return ra.sort((a, b) => a.lop - b.lop || a.so - b.so);
+  return ra.sort((a, b) => a.sach.lop - b.sach.lop || a.so - b.so);
 }
+
+/* Tên đầy đủ một quyển: "Tin học 11 (Khoa học máy tính)" */
+function tenQuyen(s) { return s.ten + (s.tenHuong ? " (" + s.tenHuong + ")" : ""); }
 
 function tuVung(l, kho) {
   const khoa = (kho.VOCAB || {})[l.id] || [];
@@ -265,7 +270,44 @@ const CSS_RIENG = `
 .seo-sgk i{font-style:normal;color:var(--ink-muted)}
 .seo-sgk a{display:inline-block;margin-top:6px;font-size:13.5px;text-decoration:none}
 [data-theme="dark"] .seo-sgk{background:var(--info-soft,#134e4a);color:var(--ink-main)}
-.seo-dc td:first-child{white-space:nowrap;font-family:var(--font-mono,monospace);font-size:13px}
+/* ---- Trang đối chiếu SGK: hàng bấm được, KHÔNG dùng bảng ----
+   Bảng ba cột chữ dài luôn tràn ngang, đọc phải kéo qua kéo lại. Lưới này co
+   thành một cột trên điện thoại nên không bao giờ phải cuộn ngang. */
+.dc-muc{padding-top:16px}
+.dc-dau{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:10px}
+.dc-dau h2{margin:0;font-size:19px}
+.dc-dem{color:var(--ink-faint);font-size:13px;white-space:nowrap}
+.dc-bang{border-top:1px solid var(--line)}
+.dc-hang{display:grid;grid-template-columns:86px minmax(0,1fr) minmax(0,1.05fr);gap:6px 14px;align-items:baseline;
+  padding:11px 8px;border-bottom:1px solid var(--line);text-decoration:none;
+  border-radius:8px;transition:background .12s}
+/* Cả hàng là một thẻ <a> nên nếu không nói rõ, chữ tên bài SGK bị tô màu link —
+   nhìn như mọi thứ đều bấm được. Chọn đủ cụ thể để thắng quy tắc màu liên kết
+   chung của pages.css (.pg-card a). */
+.dc-bang a.dc-hang,.dc-bang .dc-hang{color:var(--ink-main)}
+.dc-bang .dc-hang .dc-ten{color:var(--ink-main)}
+.dc-bang a.dc-hang .dc-toi{color:var(--brand)}
+a.dc-hang:hover{background:var(--brand-soft)}
+.dc-so{font-size:13px;font-weight:750;color:var(--ink-muted);white-space:nowrap}
+.dc-so small{display:block;font-weight:500;font-size:11.5px;color:var(--ink-faint)}
+.dc-ten{font-size:14.5px;line-height:1.5}
+.dc-toi{font-size:14.5px;line-height:1.5;color:var(--brand);font-weight:650}
+a.dc-hang .dc-toi::after{content:" →";color:var(--ink-faint);font-weight:400}
+.dc-trong{color:var(--ink-faint);font-weight:400;font-style:italic}
+.dc-kho{opacity:.75}
+.dc-tim-hop label{display:block;font-size:13.5px;font-weight:650;color:var(--ink-muted);margin-bottom:6px}
+.dc-tim-hop .pg-note{margin:8px 0 0;min-height:20px}
+.dc-bo{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.dc-bo a,.dc-bo-on{padding:8px 15px;border-radius:999px;font-size:14px;font-weight:700;text-decoration:none;
+  border:1px solid var(--line-strong);color:var(--ink-muted)}
+.dc-bo a:hover{border-color:var(--brand);color:var(--brand)}
+.dc-bo-on{background:var(--brand);border-color:var(--brand);color:#fff}
+@media(max-width:640px){
+  .dc-hang{grid-template-columns:1fr;gap:3px;padding:12px 8px}
+  .dc-so{display:flex;align-items:baseline;gap:8px}
+  .dc-so small{display:inline}
+  .dc-toi::before{content:"↳ "}
+}
 pre{background:var(--bg-subtle);border:1px solid var(--line);border-radius:10px;padding:12px 14px;
   margin:10px 0;overflow-x:auto;font-size:13.5px;line-height:1.6}
 pre code{background:none;padding:0;font-size:inherit}
@@ -343,7 +385,8 @@ function khung(o) {
       '<p class="copy">Nội dung do người dạy tự biên soạn theo Chương trình GDPT 2018 — không sao chép sách giáo khoa. ' +
       "© 2026 Ôn thi Tin học THPT · Lê Anh Tuấn (Tuấn LA Lab).</p>" +
     "</div></footer>\n" +
-    "<script>" + JS_THEME + "</script>\n</body>\n</html>";
+    "<script>" + JS_THEME + "</script>\n" +
+    (o.them || "") + "\n</body>\n</html>";
 }
 
 /* ------------------------------ trang một bài ------------------------------ */
@@ -397,7 +440,7 @@ function trangBai(muc, base) {
     (l.quiz || []).length ? ` · ${(l.quiz || []).length} câu luyện tập trong ứng dụng` : ""}</p>
 ${sgk.length ? `<div class="seo-sgk">
   <b>Tương ứng sách giáo khoa</b>
-  <span>${esc(kho.SGK_MAP.ten)} · ${esc(sgk[0].tenSach)} — ${sgk.map((b) =>
+  <span>${esc(sgk[0].bo)} · ${esc(tenQuyen(sgk[0].sach))} — ${sgk.map((b) =>
     "Bài " + b.so + ". " + esc(b.ten) + (b.trang ? " <i>(trang " + esc(b.trang) + ")</i>" : "")).join("; ")}</span>
   <a href="/doi-chieu-sgk">Xem bảng đối chiếu cả bộ →</a>
 </div>` : ""}
@@ -498,8 +541,9 @@ function trangDanhSach(base) {
   <p class="lead">Tóm tắt lý thuyết, thuật ngữ tiếng Anh và câu hỏi trắc nghiệm có đáp án cho cả ba lớp 10, 11, 12
   — cả nhánh Khoa học máy tính lẫn Tin học ứng dụng, bám Chương trình GDPT 2018 và cấu trúc đề tốt nghiệp
   (24 câu trắc nghiệm + 4 câu Đúng/Sai).</p>
-  ${kho.SGK_MAP ? '<p class="seo-meta">Đang học theo sách giáo khoa? <a href="/doi-chieu-sgk"><b>Tra bảng đối chiếu bài trong sách ' +
-    esc(kho.SGK_MAP.ten) + "</b></a> để mở nhanh đúng bài bạn học trên lớp.</p>" : ""}
+  ${kho.SGK_MAP && (kho.SGK_MAP.bo || []).length
+    ? '<p class="seo-meta">Đang học theo sách giáo khoa? <a href="/doi-chieu-sgk"><b>Tra bảng đối chiếu bài trong sách ' +
+      esc(kho.SGK_MAP.bo[0].tenNgan || kho.SGK_MAP.bo[0].ten) + "</b></a> để mở nhanh đúng bài bạn học trên lớp.</p>" : ""}
 </div>
 ${nhay}
 ${khoi}
@@ -535,59 +579,111 @@ ${khoi}
    Học sinh tìm bài theo SÁCH ("tin học 12 bài 16 kết nối tri thức"), trong khi
    app đã sắp lại thứ tự cho dễ học. Trang này bắc cầu hai chiều — và cũng là
    trang trả lời được câu hỏi đầu tiên của phụ huynh, giáo viên: bám sách nào. */
-function trangDoiChieu(base) {
-  const khoaCache = "__dc|" + base;
-  if (CACHE.has(khoaCache)) return CACHE.get(khoaCache);
-  const { theoId, kho } = chiMuc();
+function danhSachBo(kho) {
   const m = kho.SGK_MAP;
-  if (!m || !m.sach) return null;
+  return m && Array.isArray(m.bo) ? m.bo.filter((b) => (b.sach || []).length) : [];
+}
 
-  const bang = Object.keys(m.sach).sort().map((lop) => {
-    const s = m.sach[lop];
-    const hang = (s.bai || []).map((b) => {
-      const muc = b.cua ? theoId.get(b.cua) : null;
-      return `<tr>
-        <td>Bài ${b.so}${b.trang ? "<br><small>tr. " + esc(b.trang) + "</small>" : ""}</td>
-        <td>${esc(b.ten)}</td>
-        <td>${muc
-          ? '<a href="/bai/' + muc.slug + '">Bài ' + muc.bai.order + ". " + esc(muc.bai.title) + "</a>"
-          : '<span class="pg-lim">chưa có</span>'}</td>
-      </tr>`;
-    }).join("");
-    return `<div class="pg-card">
-      <h2 id="lop${lop}">${esc(s.ten)}</h2>
-      <p class="pg-note" style="margin-top:0">${(s.bai || []).length} bài trong sách — bấm vào cột bên phải để mở bài tương ứng.</p>
-      <div class="pg-table-wrap"><table class="pg-table seo-dc">
-        <thead><tr><th>SGK</th><th>Tên bài trong sách</th><th>Bài tương ứng trong ứng dụng</th></tr></thead>
-        <tbody>${hang}</tbody>
-      </table></div>
-    </div>`;
+/* Một quyển sách = một mục, mỗi bài một HÀNG BẤM ĐƯỢC.
+   Không dùng <table> nữa: ba cột chữ dài luôn tràn ngang ở mọi khổ máy, đọc
+   phải kéo qua kéo lại. Lưới CSS co lại thành một cột trên điện thoại. */
+function mucSach(s, theoId) {
+  const hang = (s.bai || []).map((b) => {
+    const muc = b.cua ? theoId.get(b.cua) : null;
+    const trai =
+      `<span class="dc-so">Bài ${b.so}${b.trang ? "<small>tr. " + esc(b.trang) + "</small>" : ""}</span>` +
+      `<span class="dc-ten">${esc(b.ten)}</span>`;
+    const phai = muc
+      ? `<span class="dc-toi">Bài ${muc.bai.order}. ${esc(muc.bai.title)}</span>`
+      : '<span class="dc-toi dc-trong">chưa có bài tương ứng</span>';
+    /* data-tim: chuỗi không dấu để ô lọc tìm được cả khi gõ thiếu dấu. */
+    const tim = esc(boDau((b.so + " bài " + b.so + " " + b.ten + " " + (muc ? muc.bai.title : "")).toLowerCase()));
+    return muc
+      ? `<a class="dc-hang" href="/bai/${muc.slug}" data-tim="${tim}">${trai}${phai}</a>`
+      : `<div class="dc-hang dc-kho" data-tim="${tim}">${trai}${phai}</div>`;
   }).join("");
+
+  return `<section class="pg-card dc-muc" id="${esc(s.ma)}">
+    <div class="dc-dau">
+      <h2>${esc(tenQuyen(s))}</h2>
+      <span class="dc-dem">${(s.bai || []).length} bài</span>
+    </div>
+    <div class="dc-bang">${hang}</div>
+  </section>`;
+}
+
+/* Ô lọc + thanh nhảy: hai thứ này để KHÔNG PHẢI CUỘN qua cả trăm dòng.
+   Gõ "16" hoặc "css" là còn đúng mấy dòng cần xem. Chạy hoàn toàn ở trình duyệt
+   nên Google vẫn thấy đủ nội dung. */
+const JS_LOC = "(function(){var o=document.getElementById('dcTim');if(!o)return;" +
+  "var h=[].slice.call(document.querySelectorAll('.dc-hang'));" +
+  "var m=[].slice.call(document.querySelectorAll('.dc-muc'));var d=document.getElementById('dcDem');" +
+  "function bd(s){return s.normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').replace(/đ/g,'d')}" +
+  "function loc(){var t=bd(o.value.toLowerCase().trim());var n=0;" +
+  "h.forEach(function(x){var ok=!t||x.dataset.tim.indexOf(t)>=0;x.hidden=!ok;if(ok)n++;});" +
+  "m.forEach(function(s){s.hidden=!s.querySelector('.dc-hang:not([hidden])');});" +
+  "if(d)d.textContent=t?('Đang hiện '+n+' bài khớp \"'+o.value.trim()+'\"'):'';}" +
+  "o.addEventListener('input',loc);})();";
+
+function trangDoiChieu(base, boMa) {
+  const { theoId, kho } = chiMuc();
+  const ds = danhSachBo(kho);
+  if (!ds.length) return null;
+  const bo = boMa ? ds.find((b) => b.ma === boMa) : ds[0];
+  if (!bo) return null;
+
+  /* Một bộ thì để nguyên ở /doi-chieu-sgk cho khỏi chia đôi tín hiệu SEO; từ bộ
+     thứ hai trở đi mỗi bộ một trang riêng (đúng thứ học sinh gõ: "… cánh diều"). */
+  const nhieuBo = ds.length > 1;
+  const duong = nhieuBo ? "/doi-chieu-sgk/" + bo.ma : "/doi-chieu-sgk";
+  const khoaCache = "__dc|" + bo.ma + "|" + base;
+  if (CACHE.has(khoaCache)) return CACHE.get(khoaCache);
+
+  const lop = [...new Set(bo.sach.map((s) => s.lop))].sort();
+  const chonBo = nhieuBo
+    ? '<nav class="dc-bo">' + ds.map((b) =>
+        b.ma === bo.ma
+          ? '<span class="dc-bo-on">' + esc(b.tenNgan || b.ten) + "</span>"
+          : '<a href="/doi-chieu-sgk/' + esc(b.ma) + '">' + esc(b.tenNgan || b.ten) + "</a>").join("") + "</nav>"
+    : "";
+
+  const nhay = '<nav class="seo-nhay">' + bo.sach.map((s) =>
+    '<a href="#' + esc(s.ma) + '">' + esc(tenQuyen(s)) + "</a>").join("") + "</nav>";
 
   const body = `
 <div class="pg-hero left">
   <span class="eyebrow">Đối chiếu chương trình</span>
-  <h1>Bài trong ứng dụng tương ứng bài nào trong SGK ${esc(m.ten)}?</h1>
-  <p class="lead">Nội dung trong ứng dụng là bài giảng tự biên soạn theo Chương trình GDPT 2018 và
-  <b>đã sắp lại thứ tự cho dễ học</b>, nên số bài không trùng số bài trong sách. Bảng dưới đây tra
-  theo đúng số bài của sách để bạn mở nhanh phần mình đang học trên lớp.</p>
+  <h1>Đối chiếu bài học với SGK ${esc(bo.tenNgan || bo.ten)}</h1>
+  <p class="lead">Bài trong ứng dụng là bài giảng tự biên soạn theo Chương trình GDPT 2018 và
+  <b>đã sắp lại thứ tự cho dễ học</b> nên số bài không trùng sách. Tra theo đúng số bài của sách
+  để mở nhanh phần bạn đang học trên lớp.</p>
 </div>
+${chonBo}
+<div class="pg-card dc-tim-hop">
+  <label for="dcTim">Tìm nhanh — gõ số bài hoặc vài chữ trong tên bài</label>
+  <input class="pg-input" id="dcTim" type="search" placeholder="ví dụ: 16 · css · mạng máy tính · học máy" autocomplete="off">
+  <p class="pg-note" id="dcDem"></p>
+  ${nhay}
+</div>
+${bo.sach.map((s) => mucSach(s, theoId)).join("")}
 <div class="pg-card">
-  <p class="pg-note" style="margin:0">Hiện có bộ <b>${esc(m.ten)}</b> cho ba lớp (nhánh Khoa học máy tính).
-  Bộ Cánh Diều, Chân trời sáng tạo và nhánh Tin học ứng dụng sẽ bổ sung sau.
-  Một bài trong ứng dụng đôi khi gộp hai bài của sách, và ngược lại một bài sách dài có thể được tách đôi.</p>
-</div>
-${bang}`;
+  <p class="pg-note" style="margin:0">Đang có ${bo.sach.length} quyển của bộ <b>${esc(bo.ten)}</b>${
+    lop.length ? " (lớp " + lop.join(", ") + ")" : ""}.
+  Nhánh Tin học ứng dụng và các bộ sách khác sẽ bổ sung khi có sách.
+  Một bài trong ứng dụng đôi khi gộp hai bài của sách, và ngược lại một bài sách dài có thể được tách đôi —
+  nên vài bài của ứng dụng không xuất hiện ở bảng này, <b>không phải vì nằm ngoài chương trình</b>.</p>
+</div>`;
 
   const html = khung({
-    title: `Đối chiếu SGK ${m.ten} — Tin học 10, 11, 12`,
-    desc: `Tra nhanh: bài trong sách giáo khoa Tin học ${m.ten} tương ứng bài nào trong ứng dụng ôn thi. Đủ ba lớp 10, 11, 12 kèm số trang.`,
-    canonical: base + "/doi-chieu-sgk",
+    title: `Đối chiếu SGK ${bo.tenNgan || bo.ten} — Tin học ${lop.join(", ")}`,
+    desc: `Tra nhanh bài trong sách giáo khoa Tin học ${bo.tenNgan || bo.ten} tương ứng bài nào trong ứng dụng ôn thi, kèm số trang. Đủ lớp ${lop.join(", ")}.`,
+    canonical: base + duong,
     body,
+    them: "<script>" + JS_LOC + "</script>",
     ld: {
       "@context": "https://schema.org",
       "@type": "Table",
-      about: "Đối chiếu chương trình Tin học THPT với sách giáo khoa " + m.ten,
+      about: "Đối chiếu chương trình Tin học THPT với sách giáo khoa " + bo.ten,
     },
   });
   CACHE.set(khoaCache, html);
@@ -623,6 +719,19 @@ function createSeo() {
     try {
       const html = trangDoiChieu(goc(req));
       if (!html) return res.redirect(302, "/bai");   // chưa có dữ liệu đối chiếu
+      traHtml(res, html);
+    } catch (e) { next(e); }
+  });
+
+  /* Mỗi bộ sách một trang riêng — đúng thứ học sinh gõ ("… cánh diều"). Khi mới
+     có ĐÚNG MỘT bộ thì gom hết về /doi-chieu-sgk, tránh hai URL cùng nội dung. */
+  r.get("/doi-chieu-sgk/:bo", (req, res, next) => {
+    try {
+      const { kho } = chiMuc();
+      const ds = danhSachBo(kho);
+      if (ds.length <= 1) return res.redirect(301, "/doi-chieu-sgk");
+      const html = trangDoiChieu(goc(req), String(req.params.bo || "").toLowerCase());
+      if (!html) return res.redirect(302, "/doi-chieu-sgk");
       traHtml(res, html);
     } catch (e) { next(e); }
   });
@@ -670,7 +779,14 @@ function createSeo() {
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${url(base + "/", "1.0", lmTinh("index.html"))}
 ${url(base + "/bai", "0.9", lmBai)}
-${chiMuc().kho.SGK_MAP ? url(base + "/doi-chieu-sgk", "0.8", lmBai) : ""}
+${(() => {
+        const ds = danhSachBo(chiMuc().kho);
+        if (!ds.length) return "";
+        /* Một bộ -> chỉ /doi-chieu-sgk. Nhiều bộ -> thêm trang riêng từng bộ. */
+        return [url(base + "/doi-chieu-sgk", "0.8", lmBai)]
+          .concat(ds.length > 1 ? ds.map((b) => url(base + "/doi-chieu-sgk/" + b.ma, "0.8", lmBai)) : [])
+          .join("\n");
+      })()}
 ${url(base + "/landing.html", "0.8", lmTinh("landing.html"))}
 ${url(base + "/nang-cap.html", "0.6", lmTinh("nang-cap.html"))}
 ${url(base + "/quyen-rieng-tu.html", "0.3", lmTinh("quyen-rieng-tu.html"))}

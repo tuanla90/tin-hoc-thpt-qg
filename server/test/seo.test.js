@@ -120,26 +120,46 @@ test("sitemap liệt kê mọi bài, robots chặn trang quản trị", async ()
   assert.match(rb.body, /Sitemap: http/);
 });
 
-test("đối chiếu SGK: trang tra cứu đủ ba lớp, mỗi bài sách trỏ đúng một bài app", async () => {
+test("đối chiếu SGK: đủ mọi quyển, mỗi bài sách trỏ đúng một bài app", async () => {
   const { kho, theoId } = chiMuc();
-  assert.ok(kho.SGK_MAP, "phải nạp được bảng đối chiếu SGK");
+  assert.ok(kho.SGK_MAP && Array.isArray(kho.SGK_MAP.bo), "phải nạp được bảng đối chiếu SGK");
   const r = await lay("/doi-chieu-sgk");
   assert.equal(r.status, 200);
   assert.match(r.body, /Kết nối tri thức/);
-  [10, 11, 12].forEach((lop) => assert.ok(r.body.includes('id="lop' + lop + '"'), "thiếu lớp " + lop));
 
   let soBai = 0, soCoDich = 0;
-  Object.values(kho.SGK_MAP.sach).forEach((s) => (s.bai || []).forEach((b) => {
-    soBai++;
-    if (!b.cua) return;
-    soCoDich++;
-    const muc = theoId.get(b.cua);
-    assert.ok(muc, "bài SGK trỏ tới id không tồn tại: " + b.cua);
-    assert.ok(r.body.includes('href="/bai/' + muc.slug + '"'), "thiếu liên kết tới " + b.cua);
+  kho.SGK_MAP.bo.forEach((bo) => (bo.sach || []).forEach((s) => {
+    assert.ok(r.body.includes('id="' + s.ma + '"'), "thiếu mục cho quyển " + s.ma);
+    (s.bai || []).forEach((b) => {
+      soBai++;
+      if (!b.cua) return;
+      soCoDich++;
+      const muc = theoId.get(b.cua);
+      assert.ok(muc, "bài SGK trỏ tới id không tồn tại: " + b.cua);
+      assert.ok(r.body.includes('href="/bai/' + muc.slug + '"'), "thiếu liên kết tới " + b.cua);
+    });
   }));
   assert.equal(soBai, 95);
   assert.equal(soCoDich, 95, "mọi bài SGK đều phải có đích");
-  assert.ok(r.body.includes("/sitemap.xml") === false); // trang thường, không lẫn xml
+
+  /* Không được dùng <table> nữa — ba cột chữ dài luôn tràn ngang, phải cuộn. */
+  assert.ok(!/<table/.test(r.body), "trang đối chiếu không được dùng bảng");
+  /* Ô lọc là thứ giúp khỏi cuộn qua 95 dòng: phải có ô nhập và dữ liệu để lọc. */
+  assert.ok(r.body.includes('id="dcTim"'), "thiếu ô tìm nhanh");
+  assert.equal((r.body.match(/data-tim="/g) || []).length, 95, "mỗi hàng phải có khoá tìm không dấu");
+});
+
+test("mới có một bộ sách thì gom về một URL duy nhất", async () => {
+  const { kho } = chiMuc();
+  const soBo = kho.SGK_MAP.bo.length;
+  const r = await lay("/doi-chieu-sgk/kntt");
+  if (soBo <= 1) {
+    assert.equal(r.status, 301, "một bộ -> dồn về /doi-chieu-sgk, tránh hai URL trùng nội dung");
+    assert.equal(r.loc, "/doi-chieu-sgk");
+  } else {
+    assert.equal(r.status, 200);
+    assert.match(r.body, /dc-bo/, "nhiều bộ thì phải có thanh chọn bộ sách");
+  }
 });
 
 test("trang bài có khối đối chiếu SGK, và KHÔNG gắn nhãn sai cho bài chưa map", async () => {

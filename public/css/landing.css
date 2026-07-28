@@ -1362,3 +1362,12 @@ details.faq .faq-a {
   .lp-head .head-actions { gap: 6px; }
   .lp-head .head-actions .btn { padding: 7px 11px; font-size: 13px; }
 }
+
+/* Máy rất hẹp (≤ 390px): chỉ còn logo, bỏ chữ thương hiệu trên thanh đầu trang.
+   Giữ cả chữ thì header rộng ~395px, tràn ở mọi máy 360–375px. Chữ vẫn nằm
+   trong DOM nên trình đọc màn hình và Google vẫn thấy. */
+@media (max-width: 390px) {
+  .lp-head .brand { font-size: 0; gap: 0; }
+  .lp-head .brand .brand-mark { font-size: 15px; }
+  .lp-head .head-actions .btn { padding: 7px 10px; font-size: 12.5px; }
+}
