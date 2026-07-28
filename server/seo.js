@@ -223,6 +223,23 @@ function sgkCua(lessonId, kho) {
 /* Tên đầy đủ một quyển: "Tin học 11 (Khoa học máy tính)" */
 function tenQuyen(s) { return s.ten + (s.tenHuong ? " (" + s.tenHuong + ")" : ""); }
 
+/* Số quyển hiện thẳng ở khối "Tương ứng sách giáo khoa"; phần dư gấp vào
+   <details>. Ba bộ x hai định hướng nên một bài có thể ứng tới 18 quyển (bài
+   hướng nghiệp Tin 12) — trải hết là khối tham chiếu cao gần 1000px, dài hơn cả
+   phần nội dung nó đứng cạnh. Mức 6 để 110/119 bài vẫn hiện trọn. */
+const SGK_HIEN = 6;
+
+function dongSgk(b) {
+  return "<li>" +
+    `<span class="seo-sgk-bo">${esc(b.bo)}</span>` +
+    `<span class="seo-sgk-noi"><em>${esc(tenQuyen(b.sach))}</em> — ` +
+    (b.maBai
+      ? "Bài " + esc(b.maBai) + ". "
+      : (b.chuDe ? "Chủ đề " + esc(b.chuDe) + (b.so != null ? " · " : ", ") : "") +
+        (b.so != null ? "Bài " + b.so + ". " : "")) + esc(b.ten) + "</span>" +
+    (b.trang ? `<i class="seo-sgk-tr">tr. ${esc(b.trang)}</i>` : "") + "</li>";
+}
+
 /* Tên chủ đề: lấy đúng bảng TOPICS của app, không dùng TEN_CHU_DE (bản viết cho
    prompt gia sư, đặt tên khác — dùng nhầm là gắn sai nhãn cho cả trăm trang). */
 function tenChuDe(kho) { return (kho && kho.TOPICS) || TEN_CHU_DE; }
@@ -325,12 +342,53 @@ const CSS_RIENG = `
 .seo-dap b{color:var(--accent-green)}
 .seo-nav{display:flex;justify-content:space-between;gap:14px;margin-top:28px;font-size:14.5px;flex-wrap:wrap}
 .seo-nav a{text-decoration:none}
-.seo-sgk{margin-top:16px;padding:12px 15px;background:var(--accent-teal-soft);border:1px solid var(--accent-teal);
-  border-radius:12px;font-size:14px;line-height:1.6;color:var(--ink-main)}
-.seo-sgk b{display:block;font-size:12.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--accent-teal);margin-bottom:2px}
-.seo-sgk i{font-style:normal;color:var(--ink-muted)}
-.seo-sgk a{display:inline-block;margin-top:6px;font-size:13.5px;text-decoration:none}
-[data-theme="dark"] .seo-sgk{background:var(--info-soft,#134e4a);color:var(--ink-main)}
+/* --sgk-nhan: màu chữ cho nhãn. KHÔNG dùng thẳng --accent-teal (#0d9488): trên
+   nền hộp nó chỉ đạt ~3,3:1 ở nền sáng và ~2,6:1 ở nền tối, mà đây là chữ 11–12px
+   in hoa nên đọc rất mờ. Hai sắc dưới cho ~4,9:1 và ~6,5:1. Viền hộp vẫn để
+   --accent-teal vì viền không phải chữ. */
+.seo-sgk{--sgk-nhan:#0f766e;margin-top:16px;padding:12px 15px;background:var(--accent-teal-soft);
+  border:1px solid var(--accent-teal);border-radius:12px;font-size:14px;line-height:1.6;color:var(--ink-main)}
+.seo-sgk b{display:block;font-size:12.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--sgk-nhan);margin-bottom:2px}
+/* Chỉ bỏ nghiêng ở đây. Đừng đặt màu: luật này là .seo-sgk i (0,1,1), đè mất
+   .seo-sgk-tr (0,1,0) nên số trang giữ nguyên --ink-muted kể cả ở nền tối. */
+.seo-sgk i{font-style:normal}
+/* Màu link mặc định là xanh dương, đặt lên nền teal chỉ được 2,1:1 lúc tối.
+   Buộc theo --sgk-nhan và trả lại gạch chân cho biết đây là link. */
+.seo-sgk a{display:inline-block;margin-top:8px;font-size:13.5px;font-weight:650;
+  text-decoration:underline;text-underline-offset:3px}
+/* pages.css có .pg-main a:not(.btn):not(.pg-zalo) — độ đặc trưng (0,3,1), cao hơn
+   .seo-sgk a (0,1,1) — nên link ở đây bị kéo về màu chàm --brand, đặt trên nền
+   teal đậm chỉ còn 2,1:1. Phải nhắc lại màu ở mức đặc trưng cao hơn. */
+.pg-main .seo-sgk a:not(.btn):not(.pg-zalo){color:var(--sgk-nhan)}
+/* Mỗi quyển sách MỘT DÒNG. Trước đây các mục là thẻ span (inline) nối bằng chuỗi
+   rỗng nên dính liền nhau: "...trang 67)Cánh Diều · Tin học 11..." — nhìn như
+   lỗi dữ liệu. Một bài có thể ứng với 4 quyển (2 bộ x 2 định hướng) nên càng
+   phải tách bạch. Tên bộ tách thành nhãn để mắt bắt nhanh, số trang đẩy sang
+   phải cho các dòng thẳng cột. */
+.seo-sgk-ds{list-style:none;margin:6px 0 0;padding:0}
+.seo-sgk-ds li{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px;padding:6px 0;
+  border-top:1px solid color-mix(in srgb, var(--accent-teal) 22%, transparent)}
+.seo-sgk-ds li:first-child{border-top:0}
+.seo-sgk-bo{flex:none;font-size:11.5px;font-weight:750;letter-spacing:.03em;text-transform:uppercase;
+  color:var(--sgk-nhan);background:var(--surface-card);border-radius:999px;padding:2px 9px}
+.seo-sgk-noi{flex:1;min-width:190px;line-height:1.5}
+.seo-sgk-them summary{cursor:pointer;padding:7px 0 0;font-size:13px;font-weight:650;color:var(--sgk-nhan)}
+.seo-sgk-them summary::marker{color:var(--sgk-nhan)}
+.seo-sgk-them .seo-sgk-ds{margin-top:0}
+.seo-sgk-them .seo-sgk-ds li:first-child{border-top:1px solid color-mix(in srgb, var(--accent-teal) 22%, transparent)}
+.seo-sgk-noi em{font-style:normal;font-weight:650}
+.seo-sgk-tr{flex:none;margin-left:auto;font-size:12.5px;color:var(--sgk-mo,var(--ink-muted));font-family:var(--font-mono)}
+/* Màn hẹp: để nguyên một hàng thì tên quyển chỉ còn ~215px, mỗi mục ngốn 3–4
+   dòng chữ. Đảo thứ tự cho nhãn bộ và số trang đứng chung hàng trên, tên bài
+   xuống dưới ăn trọn chiều ngang — mỗi mục rút còn 2 dòng. */
+@media (max-width:560px){
+  .seo-sgk-bo{order:1}
+  .seo-sgk-tr{order:2}
+  .seo-sgk-noi{order:3;flex-basis:100%;min-width:0}
+}
+/* --sgk-mo: nền hộp lúc tối là teal đậm, không phải nền trang, nên --ink-muted
+   đặt lên chỉ được 3,7:1. Sắc bạc hà nhạt cho 5,7:1 mà vẫn nhạt hơn tên bài. */
+[data-theme="dark"] .seo-sgk{--sgk-nhan:#5eead4;--sgk-mo:#8fd3c9;background:var(--info-soft,#134e4a);color:var(--ink-main)}
 /* ---- Trang đối chiếu SGK: hàng bấm được, KHÔNG dùng bảng ----
    Bảng ba cột chữ dài luôn tràn ngang, đọc phải kéo qua kéo lại. Lưới này co
    thành một cột trên điện thoại nên không bao giờ phải cuộn ngang. */
@@ -537,12 +595,11 @@ function trangBai(muc, base) {
     (l.quiz || []).length ? ` · ${(l.quiz || []).length} câu luyện tập trong ứng dụng` : ""}</p>
 ${sgk.length ? `<div class="seo-sgk">
   <b>Tương ứng sách giáo khoa</b>
-  ${sgk.map((b) => `<span>${esc(b.bo)} · ${esc(tenQuyen(b.sach))} — ` +
-    (b.maBai
-      ? "Bài " + esc(b.maBai) + ". "
-      : (b.chuDe ? "Chủ đề " + esc(b.chuDe) + (b.so != null ? " · " : ", ") : "") +
-        (b.so != null ? "Bài " + b.so + ". " : "")) + esc(b.ten) +
-    (b.trang ? " <i>(trang " + esc(b.trang) + ")</i>" : "") + "</span>").join("")}
+  <ul class="seo-sgk-ds">${sgk.slice(0, SGK_HIEN).map(dongSgk).join("")}</ul>
+  ${sgk.length > SGK_HIEN ? `<details class="seo-sgk-them">
+    <summary>Xem thêm ${sgk.length - SGK_HIEN} quyển</summary>
+    <ul class="seo-sgk-ds">${sgk.slice(SGK_HIEN).map(dongSgk).join("")}</ul>
+  </details>` : ""}
   <a href="/doi-chieu-sgk">Xem bảng đối chiếu cả bộ →</a>
 </div>` : ""}
 </div>
