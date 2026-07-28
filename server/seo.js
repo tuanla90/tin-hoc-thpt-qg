@@ -81,6 +81,30 @@ function nhan(s) {
     .replace(/`([^`\n]+)`/g, "<code>$1</code>");
 }
 
+/* Lời giải câu Đúng/Sai vốn viết liền một mạch "(1) ... (2) ... (3) ... (4) ...",
+   đọc trên màn hình thành một khối chữ đặc, phải dò mắt mới biết ý nào ứng với
+   mệnh đề nào. Tách ra mỗi ý một dòng.
+
+   HAI CHỐT AN TOÀN, vì tách sai là MẤT CHỮ của lời giải:
+     1. Chuỗi phải MỞ ĐẦU bằng một ý — có câu viết "Ý (2) sai: ... Còn lại đúng:
+        (1) ..." , cắt theo dấu ngoặc sẽ nuốt mất phần đầu.
+     2. Ghép các ý lại phải ra ĐÚNG chuỗi gốc, sai một ký tự là trả null.
+   Không thoả thì giữ nguyên một đoạn — thà xấu còn hơn thiếu.
+   Đã kiểm trên cả 2.052 câu: tách được 576, giữ nguyên 1.476, mất chữ 0. */
+function tachY(s) {
+  const t = String(s || "").trim();
+  const re = /(^|[.;!?]\s+)(\((?:[1-4]|[a-d])\))/g;
+  const idx = [];
+  let m;
+  while ((m = re.exec(t))) idx.push(m.index + m[1].length);
+  if (idx.length < 2 || idx[0] !== 0) return null;
+  const ra = idx
+    .map((p, i) => t.slice(p, i + 1 < idx.length ? idx[i + 1] : t.length).trim())
+    .filter(Boolean);
+  const gon = (x) => x.replace(/\s+/g, "");
+  return gon(ra.join(" ")) === gon(t) ? ra : null;
+}
+
 /* Chuỗi nhiều đoạn (ngăn bằng dòng trống) -> nhiều thẻ <p>. */
 function doan(s) {
   return String(s || "").split(/\n{2,}/).map((p) => p.trim()).filter(Boolean)
@@ -292,6 +316,12 @@ const CSS_RIENG = `
 .seo-ds-k{flex:none;font-weight:700;color:var(--ink-faint);font-size:13.5px}
 .seo-ds-t{flex:1;min-width:0}
 .seo-ds-d{flex:none;font-size:13.5px}
+/* Lời giải tách thành từng ý — mỗi ý một dòng, thụt vào cho thẳng hàng với
+   dấu (1)(2)(3)(4) chứ không dùng chấm đầu dòng (đã có số rồi, thêm chấm là
+   thừa hai lớp đánh dấu). */
+.seo-vs{list-style:none;margin:6px 0 0;padding:0}
+.seo-vs li{padding:3px 0 3px 2px}
+.seo-vs li+li{border-top:1px dashed var(--line)}
 .seo-dap b{color:var(--accent-green)}
 .seo-nav{display:flex;justify-content:space-between;gap:14px;margin-top:28px;font-size:14.5px;flex-wrap:wrap}
 .seo-nav a{text-decoration:none}
@@ -487,7 +517,11 @@ function trangBai(muc, base) {
     <ul class="seo-ds">${(q.statements || []).map((s, i) => `<li><span class="seo-ds-k">${"abcd"[i]})</span>` +
       `<span class="seo-ds-t">${nhan(s.text)}</span>` +
       `<b class="seo-ds-d ${s.correct ? "pg-yes" : "pg-lim"}">${s.correct ? "Đúng" : "Sai"}</b></li>`).join("")}</ul>
-    ${q.explain ? '<div class="seo-dap"><b>Vì sao:</b> ' + nhan(q.explain) + "</div>" : ""}
+    ${q.explain ? '<div class="seo-dap"><b>Vì sao:</b>' + (() => {
+      const y = tachY(q.explain);
+      return y ? '<ul class="seo-vs">' + y.map((x) => "<li>" + nhan(x) + "</li>").join("") + "</ul>"
+        : " " + nhan(q.explain);
+    })() + "</div>" : ""}
   </div>`).join("");
 
   const body = `
@@ -501,8 +535,10 @@ function trangBai(muc, base) {
 ${sgk.length ? `<div class="seo-sgk">
   <b>Tương ứng sách giáo khoa</b>
   ${sgk.map((b) => `<span>${esc(b.bo)} · ${esc(tenQuyen(b.sach))} — ` +
-    (b.chuDe ? "Chủ đề " + esc(b.chuDe) + (b.so != null ? " · " : ", ") : "") +
-    (b.so != null ? "Bài " + b.so + ". " : "") + esc(b.ten) +
+    (b.maBai
+      ? "Bài " + esc(b.maBai) + ". "
+      : (b.chuDe ? "Chủ đề " + esc(b.chuDe) + (b.so != null ? " · " : ", ") : "") +
+        (b.so != null ? "Bài " + b.so + ". " : "")) + esc(b.ten) +
     (b.trang ? " <i>(trang " + esc(b.trang) + ")</i>" : "") + "</span>").join("")}
   <a href="/doi-chieu-sgk">Xem bảng đối chiếu cả bộ →</a>
 </div>` : ""}
@@ -675,10 +711,15 @@ function mucSach(s, theoId, mo) {
     const muc = b.cua ? theoId.get(b.cua) : null;
     /* Cánh Diều đánh số bài lặp lại theo từng chủ đề, nên thiếu mã chủ đề là
        "Bài 1" của chủ đề A và của chủ đề F trông y hệt nhau. */
-    /* so = null: chủ đề chỉ có một bài và sách KHÔNG đánh số nó — hiện "Chủ đề D"
-       trần, không bịa ra "Bài 1" mà trong sách không hề có. */
-    const soTxt = (b.chuDe ? "Chủ đề " + esc(b.chuDe) : "") +
-      (b.so != null ? (b.chuDe ? " · " : "") + "Bài " + b.so : "");
+    /* Ba bộ sách đánh số bài ba kiểu khác nhau — hiện ĐÚNG như sách in:
+         maBai có sẵn (Chân trời): "Bài F14"
+         chuDe + so   (Cánh Diều): "Chủ đề F · Bài 14"
+         chỉ có so       (KNTT)  : "Bài 14"
+         so = null (chủ đề một bài, sách không đánh số): "Chủ đề D" trần. */
+    const soTxt = b.maBai
+      ? "Bài " + esc(b.maBai)
+      : (b.chuDe ? "Chủ đề " + esc(b.chuDe) : "") +
+        (b.so != null ? (b.chuDe ? " · " : "") + "Bài " + b.so : "");
     const trai =
       `<span class="dc-so">${soTxt}${b.trang ? "<small>tr. " + esc(b.trang) + "</small>" : ""}</span>` +
       `<span class="dc-ten">${esc(b.ten)}</span>`;

@@ -152,7 +152,12 @@ test("đối chiếu SGK: đủ mọi quyển, mỗi bài sách trỏ đúng m�
         assert.ok(t.body.includes('href="/bai/' + muc.slug + '"'), "thiếu liên kết tới " + b.cua);
         /* Bộ đánh số theo chủ đề thì PHẢI hiện mã chủ đề, không thì hai bài
            khác nhau cùng hiện "Bài 1" — người tra không phân biệt được. */
-        if (b.chuDe) {
+        /* Mỗi bộ đánh số một kiểu — trang phải hiện ĐÚNG kiểu của sách đó, vì
+           đây là thứ người tra dùng để đối chiếu với quyển đang cầm trên tay. */
+        if (b.maBai) {
+          assert.ok(t.body.includes("Bài " + b.maBai),
+            "thiếu mã bài kiểu Chân trời: " + s.ma + " → Bài " + b.maBai);
+        } else if (b.chuDe) {
           /* Bài không đánh số trong sách (chủ đề chỉ có một bài) thì chỉ hiện
              "Chủ đề D" — không được bịa thêm "Bài 1". */
           const mong = "Chủ đề " + b.chuDe + (b.so != null ? " · Bài " + b.so : "");
