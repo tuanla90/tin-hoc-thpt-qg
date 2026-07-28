@@ -174,10 +174,11 @@
         }).join("") + "</ul>" +
         (quotaText() ? '<p class="plan-m-quota">' + quotaText() + "</p>" : "") +
         '<div class="plan-m-btns">' +
-          '<button class="btn btn-primary btn-lg" id="planGoAcc">Nhập mã kích hoạt</button>' +
+          '<a class="btn btn-primary btn-lg" href="nang-cap.html" target="_blank" rel="noopener">Xem giá &amp; mua mã — 249.000đ/năm</a>' +
+          '<button class="btn btn-ghost" id="planGoAcc">Nhập mã kích hoạt</button>' +
           '<button class="btn btn-ghost" id="planLater">Để sau</button>' +
         "</div>" +
-        '<p class="plan-m-note">Chưa có mã? Xem cách mua trong trang <b>Tài khoản</b>.</p>' +
+        '<p class="plan-m-note">Chuyển khoản QR → nhận mã qua Zalo trong ít phút → dán mã là lên Premium.</p>' +
       "</div>";
     document.body.appendChild(o);
     o.onclick = function (e) { if (e.target === o) dongUpsell(); };
@@ -204,6 +205,7 @@
     ".plan-m-ul li svg{flex:none;margin-top:3px}" +
     ".plan-m-quota{font-size:12.5px;color:var(--text-soft);margin:0 0 10px}" +
     ".plan-m-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}" +
+    ".plan-m-btns a.btn{text-decoration:none}" +
     ".plan-m-note{font-size:12.5px;color:var(--text-soft);margin:10px 0 0}" +
     ".plan-lockbox{display:flex;align-items:center;gap:12px;margin:24px 0 0;padding:14px 16px;flex-wrap:wrap;" +
       "background:var(--bg-soft);border:1px dashed var(--border-strong);border-radius:14px}" +

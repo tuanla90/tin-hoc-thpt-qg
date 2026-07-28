@@ -397,7 +397,9 @@
           '<div style="display:flex;gap:8px"><input class="pf-input" id="acLic" type="text" maxlength="16" placeholder="TIN-" style="flex:1;text-transform:uppercase" autocomplete="off">' +
           '<button class="btn btn-primary" id="acLicGo">Kích hoạt</button></div></div>' +
         '<div class="ac-err" id="acLicErr"></div>' +
-        (laPaid ? "" : '<p class="ac-note" style="margin:6px 0 0">Chưa có mã? Liên hệ người bán hoặc giáo viên của bạn để nhận mã.</p>') +
+        (laPaid ? "" : '<p class="ac-note" style="margin:6px 0 0">Chưa có mã? ' +
+          '<a href="nang-cap.html" target="_blank" rel="noopener"><b>Xem giá &amp; cách mua</b> — 249.000đ/năm học</a>, ' +
+          'hoặc nhận mã từ giáo viên của bạn.</p>') +
       "</div>";
     app.innerHTML =
       '<button class="back-link" id="acBack">' + ico("aleft", null, 15) + " Trang chủ</button>" +

@@ -8,8 +8,8 @@
 > **✅ TRẠNG THÁI (28/07/2026): Phase 0 + 1 + 2 XONG; ĐÃ CHẠY THẬT TRÊN RAILWAY.**
 > Railway đã nối (web + Postgres), **AI thật đã bật**. Đã chốt ranh giới
 > Free/Premium (bảng ở Phase 4); plan/licenses + gate client + màn kích hoạt +
-> trang admin ĐÃ XONG — **còn lại để bán được: trang Nâng cấp (giá + VietQR +
-> Zalo), landing public, chốt giá** (Phase 4) và chuyển repo private.
+> trang admin + trang Nâng cấp ĐÃ XONG — **còn lại để bán được: điền STK/Zalo
+> vào `nang-cap.html`, landing public, chốt giá nước rút** và chuyển repo private.
 > Backup: có cơ chế TAY `npm run backup` (kéo qua public URL của Postgres) —
 > backup tự động của Railway chưa bật được. **Còn chờ user:** chuyển repo private.
 
@@ -174,6 +174,11 @@ Thứ tự triển khai gate (sau khi có bảng `licenses`):
 
 Giá: theo khung `business-onepager.html` (~249k/năm học); cân nhắc thêm **gói nước rút 2–3 tháng** giá thấp cho HS 12 vào muộn (tháng 4–6) — mùa vụ môn này rất rõ, chỉ có gói năm sẽ mất nhóm đơn này.
 - [x] Bán **mã kích hoạt** — phần app ĐÃ XONG (28/07): admin tạo mã → khách nhập trong Tài khoản (`POST /api/licenses/activate`, gõ thường/thiếu gạch vẫn nhận, mã 1 lần, cộng dồn hạn). Còn lại là việc TAY: nhận chuyển khoản VietQR/Momo → gửi mã qua Zalo.
+- [x] **Trang Nâng cấp `public/nang-cap.html`** (28/07) — đứng riêng, gửi link qua Zalo được,
+  khách chưa đăng nhập vẫn xem: giá 249k/năm + bảng Free/Premium + 3 bước mua +
+  **VietQR động** (img.vietqr.io, nội dung CK tự sinh `TIN <email>` để đối soát,
+  đăng nhập rồi thì tự điền email) + nút Zalo. Modal upsell và trang Tài khoản đã trỏ sang.
+  ⚠️ **CẦN ĐIỀN `SHOP`** (bank/STK/chủ TK/Zalo) ở đầu file — chưa điền trang tự hiện cảnh báo thay vì QR.
 - [x] Trang admin mini (`public/admin.html`, role `admin`): tạo lô mã, xem mã/doanh số;
   danh sách người dùng (gói/hồ sơ/lượt làm bài, tìm theo email/tên) + **đặt lại mật khẩu hộ**
   (tạm thay luồng "quên mật khẩu" chưa có — đặt xong dặn khách vào Tài khoản tự đổi);
