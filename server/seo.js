@@ -106,6 +106,34 @@ function cauDau(s, toiDa) {
   return cau.length > toiDa ? cat(cau, toiDa) : cau;
 }
 
+/* ---------------------- NGÀY SỬA (cho lastmod trong sitemap) ----------------------
+   Google đã bỏ qua `priority` và `changefreq` từ lâu; `lastmod` là thẻ duy nhất
+   còn được dùng — nhưng chỉ khi nó nói thật. Nên lấy thẳng từ thời điểm sửa tệp,
+   không đặt cứng và cũng không lấy ngày hôm nay (khai man mọi trang mới sửa thì
+   Google sẽ thôi tin toàn bộ sitemap). */
+function ngaySua(duongDan) {
+  try { return fs.statSync(duongDan).mtime.toISOString().slice(0, 10); } catch (e) { return null; }
+}
+
+/* Trang bài dựng từ nhiều tệp dữ liệu, nên lấy tệp nội dung MỚI NHẤT. Nhớ lại
+   kết quả vì sitemap có thể bị gọi liên tục. */
+let _NGAY_ND = undefined;
+function ngaySuaNoiDung() {
+  if (_NGAY_ND !== undefined) return _NGAY_ND;
+  const thuMuc = path.join(__dirname, "..", "public", "js");
+  let moiNhat = 0;
+  try {
+    fs.readdirSync(thuMuc)
+      .filter((f) => /^(clean-|questions|lessons|vocab|sgk-map)/.test(f) && f.endsWith(".js"))
+      .forEach((f) => {
+        const t = fs.statSync(path.join(thuMuc, f)).mtimeMs;
+        if (t > moiNhat) moiNhat = t;
+      });
+  } catch (e) { /* không đọc được thì bỏ lastmod, còn hơn ghi bừa */ }
+  _NGAY_ND = moiNhat ? new Date(moiNhat).toISOString().slice(0, 10) : null;
+  return _NGAY_ND;
+}
+
 /* ---------------------------- chỉ mục bài học ---------------------------- */
 let CHI_MUC = null;
 
@@ -149,6 +177,21 @@ function cauMau(l, kho) {
     mc: qs.filter((q) => q.type === "mc").slice(0, SO_MC_MAU),
     tf: qs.filter((q) => q.type === "tf").slice(0, SO_TF_MAU),
   };
+}
+
+/* Bài SGK nào ứng với bài này. Trả [] khi không có — và KHÔNG được suy ra
+   "bài này ngoài chương trình": phần lớn bài không có mặt ở đây là nửa sau của
+   một bài SGK bị tách đôi cho dễ học (xem chú thích trong public/js/sgk-map.js). */
+function sgkCua(lessonId, kho) {
+  const m = kho.SGK_MAP;
+  if (!m || !m.sach) return [];
+  const ra = [];
+  Object.keys(m.sach).forEach((lop) => {
+    (m.sach[lop].bai || []).forEach((b) => {
+      if (b.cua === lessonId) ra.push({ lop: Number(lop), tenSach: m.sach[lop].ten, ...b });
+    });
+  });
+  return ra.sort((a, b) => a.lop - b.lop || a.so - b.so);
 }
 
 function tuVung(l, kho) {
@@ -197,6 +240,13 @@ const CSS_RIENG = `
 .seo-dap b{color:var(--accent-green)}
 .seo-nav{display:flex;justify-content:space-between;gap:14px;margin-top:28px;font-size:14.5px;flex-wrap:wrap}
 .seo-nav a{text-decoration:none}
+.seo-sgk{margin-top:16px;padding:12px 15px;background:var(--accent-teal-soft);border:1px solid var(--accent-teal);
+  border-radius:12px;font-size:14px;line-height:1.6;color:var(--ink-main)}
+.seo-sgk b{display:block;font-size:12.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--accent-teal);margin-bottom:2px}
+.seo-sgk i{font-style:normal;color:var(--ink-muted)}
+.seo-sgk a{display:inline-block;margin-top:6px;font-size:13.5px;text-decoration:none}
+[data-theme="dark"] .seo-sgk{background:var(--info-soft,#134e4a);color:var(--ink-main)}
+.seo-dc td:first-child{white-space:nowrap;font-family:var(--font-mono,monospace);font-size:13px}
 pre{background:var(--bg-subtle);border:1px solid var(--line);border-radius:10px;padding:12px 14px;
   margin:10px 0;overflow-x:auto;font-size:13.5px;line-height:1.6}
 pre code{background:none;padding:0;font-size:inherit}
@@ -243,7 +293,7 @@ function khung(o) {
       '<a class="brand" href="/landing.html"><span class="brand-mark" aria-hidden="true">' + LOGO_SVG + "</span>Tin Học KHMT</a>" +
       '<nav class="nav-links">' +
         '<a href="/bai">Ôn tập theo bài</a>' +
-        '<a href="/landing.html#tinh-nang">Tính năng</a>' +
+        '<a href="/doi-chieu-sgk">Đối chiếu SGK</a>' +
         '<a href="/nang-cap.html">Bảng giá</a>' +
       "</nav>" +
       '<div class="head-actions">' +
@@ -259,6 +309,7 @@ function khung(o) {
       "</div>" +
       '<nav class="foot-links">' +
         '<a href="/bai">Tất cả bài học</a>' +
+        '<a href="/doi-chieu-sgk">Đối chiếu SGK</a>' +
         '<a href="/landing.html">Giới thiệu</a>' +
         '<a href="/nang-cap.html">Bảng giá &amp; nâng cấp</a>' +
         '<a href="/quyen-rieng-tu.html">Quyền riêng tư</a>' +
@@ -289,6 +340,7 @@ function trangBai(muc, base) {
   const mucLon = (l.sections || []).filter((s) => (s.t || s.type) === "h").map((s) => s.text);
   const { mc, tf } = cauMau(l, kho);
   const tv = tuVung(l, kho);
+  const sgk = sgkCua(l.id, kho);
 
   const cauMcHtml = mc.map((q, i) => `
   <div class="seo-q">
@@ -317,6 +369,12 @@ function trangBai(muc, base) {
   <p class="lead">${nhan(l.intro || "")}</p>
   <p class="seo-meta">Chủ đề ${esc(l.topic)} · ${esc(TEN_CHU_DE[l.topic] || "")} — đọc khoảng ${l.minutes || 10} phút${
     (l.quiz || []).length ? ` · ${(l.quiz || []).length} câu luyện tập trong ứng dụng` : ""}</p>
+${sgk.length ? `<div class="seo-sgk">
+  <b>Tương ứng sách giáo khoa</b>
+  <span>${esc(kho.SGK_MAP.ten)} · ${esc(sgk[0].tenSach)} — ${sgk.map((b) =>
+    "Bài " + b.so + ". " + esc(b.ten) + (b.trang ? " <i>(trang " + esc(b.trang) + ")</i>" : "")).join("; ")}</span>
+  <a href="/doi-chieu-sgk">Xem bảng đối chiếu cả bộ →</a>
+</div>` : ""}
 </div>
 
 <div class="pg-card pg-prose">
@@ -408,6 +466,8 @@ function trangDanhSach(base) {
   <p class="lead">Tóm tắt lý thuyết, thuật ngữ tiếng Anh và câu hỏi trắc nghiệm có đáp án cho cả ba lớp 10, 11, 12
   — cả nhánh Khoa học máy tính lẫn Tin học ứng dụng, bám Chương trình GDPT 2018 và cấu trúc đề tốt nghiệp
   (24 câu trắc nghiệm + 4 câu Đúng/Sai).</p>
+  ${kho.SGK_MAP ? '<p class="seo-meta">Đang học theo sách giáo khoa? <a href="/doi-chieu-sgk"><b>Tra bảng đối chiếu bài trong sách ' +
+    esc(kho.SGK_MAP.ten) + "</b></a> để mở nhanh đúng bài bạn học trên lớp.</p>" : ""}
 </div>
 
 <div class="pg-card" style="text-align:center">
@@ -432,6 +492,69 @@ ${khoi}`;
         name: `Bài ${m.bai.order}. ${m.bai.title}`,
         url: base + "/bai/" + m.slug,
       })),
+    },
+  });
+  CACHE.set(khoaCache, html);
+  return html;
+}
+
+/* ------------------------- trang đối chiếu với SGK -------------------------
+   Học sinh tìm bài theo SÁCH ("tin học 12 bài 16 kết nối tri thức"), trong khi
+   app đã sắp lại thứ tự cho dễ học. Trang này bắc cầu hai chiều — và cũng là
+   trang trả lời được câu hỏi đầu tiên của phụ huynh, giáo viên: bám sách nào. */
+function trangDoiChieu(base) {
+  const khoaCache = "__dc|" + base;
+  if (CACHE.has(khoaCache)) return CACHE.get(khoaCache);
+  const { theoId, kho } = chiMuc();
+  const m = kho.SGK_MAP;
+  if (!m || !m.sach) return null;
+
+  const bang = Object.keys(m.sach).sort().map((lop) => {
+    const s = m.sach[lop];
+    const hang = (s.bai || []).map((b) => {
+      const muc = b.cua ? theoId.get(b.cua) : null;
+      return `<tr>
+        <td>Bài ${b.so}${b.trang ? "<br><small>tr. " + esc(b.trang) + "</small>" : ""}</td>
+        <td>${esc(b.ten)}</td>
+        <td>${muc
+          ? '<a href="/bai/' + muc.slug + '">Bài ' + muc.bai.order + ". " + esc(muc.bai.title) + "</a>"
+          : '<span class="pg-lim">chưa có</span>'}</td>
+      </tr>`;
+    }).join("");
+    return `<div class="pg-card">
+      <h2 id="lop${lop}">${esc(s.ten)}</h2>
+      <p class="pg-note" style="margin-top:0">${(s.bai || []).length} bài trong sách — bấm vào cột bên phải để mở bài tương ứng.</p>
+      <div class="pg-table-wrap"><table class="pg-table seo-dc">
+        <thead><tr><th>SGK</th><th>Tên bài trong sách</th><th>Bài tương ứng trong ứng dụng</th></tr></thead>
+        <tbody>${hang}</tbody>
+      </table></div>
+    </div>`;
+  }).join("");
+
+  const body = `
+<div class="pg-hero left">
+  <span class="eyebrow">Đối chiếu chương trình</span>
+  <h1>Bài trong ứng dụng tương ứng bài nào trong SGK ${esc(m.ten)}?</h1>
+  <p class="lead">Nội dung trong ứng dụng là bài giảng tự biên soạn theo Chương trình GDPT 2018 và
+  <b>đã sắp lại thứ tự cho dễ học</b>, nên số bài không trùng số bài trong sách. Bảng dưới đây tra
+  theo đúng số bài của sách để bạn mở nhanh phần mình đang học trên lớp.</p>
+</div>
+<div class="pg-card">
+  <p class="pg-note" style="margin:0">Hiện có bộ <b>${esc(m.ten)}</b> cho ba lớp (nhánh Khoa học máy tính).
+  Bộ Cánh Diều, Chân trời sáng tạo và nhánh Tin học ứng dụng sẽ bổ sung sau.
+  Một bài trong ứng dụng đôi khi gộp hai bài của sách, và ngược lại một bài sách dài có thể được tách đôi.</p>
+</div>
+${bang}`;
+
+  const html = khung({
+    title: `Đối chiếu SGK ${m.ten} — Tin học 10, 11, 12`,
+    desc: `Tra nhanh: bài trong sách giáo khoa Tin học ${m.ten} tương ứng bài nào trong ứng dụng ôn thi. Đủ ba lớp 10, 11, 12 kèm số trang.`,
+    canonical: base + "/doi-chieu-sgk",
+    body,
+    ld: {
+      "@context": "https://schema.org",
+      "@type": "Table",
+      about: "Đối chiếu chương trình Tin học THPT với sách giáo khoa " + m.ten,
     },
   });
   CACHE.set(khoaCache, html);
@@ -463,6 +586,14 @@ function createSeo() {
     try { traHtml(res, trangDanhSach(goc(req))); } catch (e) { next(e); }
   });
 
+  r.get("/doi-chieu-sgk", (req, res, next) => {
+    try {
+      const html = trangDoiChieu(goc(req));
+      if (!html) return res.redirect(302, "/bai");   // chưa có dữ liệu đối chiếu
+      traHtml(res, html);
+    } catch (e) { next(e); }
+  });
+
   r.get("/bai/:slug", (req, res, next) => {
     try {
       const { theoSlug, theoId } = chiMuc();
@@ -490,16 +621,27 @@ function createSeo() {
     try {
       const base = goc(req);
       const { ds } = chiMuc();
-      const url = (loc, uu) => `<url><loc>${esc(loc)}</loc><changefreq>monthly</changefreq><priority>${uu}</priority></url>`;
+      /* `lastmod` là thẻ DUY NHẤT Google còn thực sự dùng (priority và changefreq
+         bị bỏ qua từ lâu) — nhưng chỉ có giá trị nếu nói thật. Nên lấy từ thời
+         điểm sửa tệp: trang tĩnh lấy theo chính tệp HTML, trang bài lấy theo tệp
+         nội dung mới nhất. Đẩy nội dung mới là ngày tự cập nhật, không phải sửa tay. */
+      const url = (loc, uu, lm) =>
+        `<url><loc>${esc(loc)}</loc>` + (lm ? `<lastmod>${lm}</lastmod>` : "") +
+        `<changefreq>monthly</changefreq><priority>${uu}</priority></url>`;
+      const lmTinh = (ten) => ngaySua(path.join(__dirname, "..", "public", ten));
+      const lmBai = ngaySuaNoiDung();
+
       res.set("Content-Type", "application/xml; charset=utf-8");
       res.set("Cache-Control", "public, max-age=86400");
       res.send(`<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${url(base + "/", "1.0")}
-${url(base + "/bai", "0.9")}
-${url(base + "/landing.html", "0.8")}
-${url(base + "/nang-cap.html", "0.6")}
-${ds.map((m) => url(base + "/bai/" + m.slug, "0.7")).join("\n")}
+${url(base + "/", "1.0", lmTinh("index.html"))}
+${url(base + "/bai", "0.9", lmBai)}
+${chiMuc().kho.SGK_MAP ? url(base + "/doi-chieu-sgk", "0.8", lmBai) : ""}
+${url(base + "/landing.html", "0.8", lmTinh("landing.html"))}
+${url(base + "/nang-cap.html", "0.6", lmTinh("nang-cap.html"))}
+${url(base + "/quyen-rieng-tu.html", "0.3", lmTinh("quyen-rieng-tu.html"))}
+${ds.map((m) => url(base + "/bai/" + m.slug, "0.7", lmBai)).join("\n")}
 </urlset>`);
     } catch (e) { next(e); }
   });

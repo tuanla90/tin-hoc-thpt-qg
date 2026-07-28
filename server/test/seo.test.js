@@ -91,15 +91,74 @@ test("sitemap liệt kê mọi bài, robots chặn trang quản trị", async ()
   const s = await lay("/sitemap.xml");
   assert.equal(s.status, 200);
   assert.match(s.kieu, /xml/);
+  /* Đếm theo DANH SÁCH thật thay vì một con số ma: thêm trang tĩnh mới là test
+     tự đúng, không phải đi sửa số. */
+  const trangTinh = ["/", "/bai", "/doi-chieu-sgk", "/landing.html", "/nang-cap.html", "/quyen-rieng-tu.html"];
+  trangTinh.forEach((p) => assert.ok(s.body.includes("<loc>http") && s.body.includes(p), "sitemap thiếu " + p));
   const soUrl = (s.body.match(/<loc>/g) || []).length;
-  assert.equal(soUrl, ds.length + 4); // 119 bài + trang chủ + /bai + landing + nâng cấp
+  assert.equal(soUrl, ds.length + trangTinh.length);
   ds.forEach((m) => assert.ok(s.body.includes("/bai/" + m.slug), "sitemap thiếu " + m.slug));
+
+  const loc = [...s.body.matchAll(/<loc>(.*?)<\/loc>/g)].map((m) => m[1]);
+  assert.equal(loc.length, new Set(loc).size, "sitemap có URL trùng nhau");
+
+  /* lastmod là thẻ DUY NHẤT Google còn dùng (priority và changefreq bị bỏ qua).
+     Thiếu hoặc sai định dạng thì mất tín hiệu cập nhật mà không ai nhận ra, vì
+     trang vẫn hiện bình thường — nên phải có test canh. */
+  const urls = [...s.body.matchAll(/<url>[\s\S]*?<\/url>/g)].map((m) => m[0]);
+  assert.equal(urls.length, soUrl, "mỗi <url> phải có đúng một <loc>");
+  urls.forEach((u) => {
+    const lm = (u.match(/<lastmod>(.*?)<\/lastmod>/) || [])[1];
+    assert.ok(lm, "thiếu lastmod: " + (u.match(/<loc>(.*?)<\/loc>/) || [])[1]);
+    assert.match(lm, /^\d{4}-\d{2}-\d{2}$/, "lastmod sai định dạng: " + lm);
+  });
 
   const rb = await lay("/robots.txt");
   assert.equal(rb.status, 200);
   assert.match(rb.body, /Disallow: \/admin\.html/);
   assert.match(rb.body, /Disallow: \/api\//);
   assert.match(rb.body, /Sitemap: http/);
+});
+
+test("đối chiếu SGK: trang tra cứu đủ ba lớp, mỗi bài sách trỏ đúng một bài app", async () => {
+  const { kho, theoId } = chiMuc();
+  assert.ok(kho.SGK_MAP, "phải nạp được bảng đối chiếu SGK");
+  const r = await lay("/doi-chieu-sgk");
+  assert.equal(r.status, 200);
+  assert.match(r.body, /Kết nối tri thức/);
+  [10, 11, 12].forEach((lop) => assert.ok(r.body.includes('id="lop' + lop + '"'), "thiếu lớp " + lop));
+
+  let soBai = 0, soCoDich = 0;
+  Object.values(kho.SGK_MAP.sach).forEach((s) => (s.bai || []).forEach((b) => {
+    soBai++;
+    if (!b.cua) return;
+    soCoDich++;
+    const muc = theoId.get(b.cua);
+    assert.ok(muc, "bài SGK trỏ tới id không tồn tại: " + b.cua);
+    assert.ok(r.body.includes('href="/bai/' + muc.slug + '"'), "thiếu liên kết tới " + b.cua);
+  }));
+  assert.equal(soBai, 95);
+  assert.equal(soCoDich, 95, "mọi bài SGK đều phải có đích");
+  assert.ok(r.body.includes("/sitemap.xml") === false); // trang thường, không lẫn xml
+});
+
+test("trang bài có khối đối chiếu SGK, và KHÔNG gắn nhãn sai cho bài chưa map", async () => {
+  const { theoId } = chiMuc();
+  const coMap = await lay("/bai/" + theoId.get("C10-01").slug);
+  assert.match(coMap.body, /Tương ứng sách giáo khoa/);
+  assert.match(coMap.body, /Bài 1\. Thông tin và xử lí thông tin/);
+
+  /* C11-10 là nửa sau của một bài SGK bị tách đôi -> không có trong bảng.
+     Tuyệt đối không được hiện chữ nào ám chỉ "ngoài chương trình". */
+  const khongMap = await lay("/bai/" + theoId.get("C11-10").slug);
+  assert.equal(khongMap.status, 200);
+  assert.ok(!/Tương ứng sách giáo khoa/.test(khongMap.body));
+  assert.ok(!/ngoài SGK|ngoài chương trình|không thuộc/i.test(khongMap.body));
+});
+
+test("sitemap có trang đối chiếu SGK", async () => {
+  const s = await lay("/sitemap.xml");
+  assert.ok(s.body.includes("/doi-chieu-sgk"));
 });
 
 test("slug không trùng nhau và không có ký tự lạ", () => {

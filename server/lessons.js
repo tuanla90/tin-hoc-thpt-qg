@@ -88,6 +88,7 @@ function napKho() {
        công khai — xem server/seo.js. */
     STAGES: box.STAGES || {},
     VOCAB_TERMS: box.VOCAB_TERMS || {},
+    SGK_MAP: box.SGK_MAP || null,   // đối chiếu bài với SGK, cho trang công khai
     BT: { python: box.EXERCISES || {}, sql: box.SQL_EXERCISES || {}, web: box.WEB_EXERCISES || {} },
   };
   console.log("[lessons] Đã nạp", KHO.soBai, "bài,", KHO.soCau, "câu hỏi cho gia sư AI.");
