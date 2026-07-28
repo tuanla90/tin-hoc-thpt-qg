@@ -231,7 +231,7 @@
         { text: "1 byte gồm 8 bit", correct: true },
         { text: "1 MB lớn hơn 1 GB", correct: false },
       ],
-      explain: "Thứ tự từ nhỏ tới lớn: bit → byte (8 bit) → KB → MB → GB → TB. Chỉ có ý (d) đảo ngược thứ tự nên sai." },
+      explain: "(a) Đúng: 1 KB = 1024 byte nên lớn hơn 1 byte. (b) Đúng: 1 GB = 1024 MB nên lớn hơn 1 MB. (c) Đúng: 1 byte gồm đúng 8 bit. (d) Sai: thứ tự từ nhỏ tới lớn là bit → byte → KB → MB → GB → TB, nên 1 MB nhỏ hơn 1 GB chứ không lớn hơn." },
 
     { type: "tf", topic: "A", grade: 11, level: "medium",
       question: "Chị của Minh làm nghề chỉnh sửa ảnh, hay nhắc tới độ phân giải. Xét tính đúng/sai:",
