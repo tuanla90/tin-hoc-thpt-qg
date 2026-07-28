@@ -20,6 +20,31 @@
   .ad-tbl td b, .ad-tbl td code { color:var(--ink-main); }
   .ad-tbl td.ghi { white-space:normal; }
   .ad-tbl code { font-family:var(--font-mono); font-size:12.5px; }
+
+  /* --- Biểu đồ SVG: màu lấy từ biến chủ đề nên tự đúng ở cả nền sáng và tối.
+         Một chuỗi dữ liệu = MỘT sắc độ, không tô đậm nhạt theo giá trị (làm vậy
+         là mã hoá hai lần cùng một thứ), không legend, không trục thứ hai. --- */
+  .cht-wrap { position:relative; margin:6px 0 4px; }
+  .cht-wrap svg { display:block; width:100%; height:auto; }
+  .cht-area { fill:var(--brand); opacity:.10; }
+  .cht-line { fill:none; stroke:var(--brand); stroke-width:2; stroke-linejoin:round; stroke-linecap:round; }
+  .cht-grid { stroke:var(--line); stroke-width:1; }
+  .cht-dot  { fill:var(--brand); stroke:var(--surface-card); stroke-width:2; }
+  .cht-bar  { fill:var(--brand); }
+  .cht-tick { fill:var(--ink-faint); font-size:11px; font-family:var(--font-mono); }
+  .cht-lbl  { fill:var(--ink-muted); font-size:12px; }
+  .cht-val  { fill:var(--ink-main); font-size:12px; font-weight:750; }
+  .cht-hit  { fill:transparent; cursor:crosshair; }
+  .cht-cross { stroke:var(--line-strong); stroke-width:1; }
+  .cht-tip {
+    position:absolute; pointer-events:none; z-index:5; white-space:nowrap;
+    background:var(--surface-card); border:1px solid var(--line-strong);
+    border-radius:10px; box-shadow:var(--shadow-md);
+    padding:8px 11px; font-size:12.5px; line-height:1.55; color:var(--ink-main);
+    transform:translate(-50%, -100%); opacity:0; transition:opacity .1s;
+  }
+  .cht-tip b { font-family:var(--font-mono); }
+  .cht-empty { color:var(--ink-faint); font-size:13.5px; padding:22px 0; text-align:center; }
 </style>
 </head>
 <body class="lp">
@@ -88,8 +113,14 @@
       <div class="pg-stats" id="aiStats" style="margin-bottom:16px"></div>
       <p class="pg-note" id="aiGia" style="margin-top:0"></p>
 
-      <div class="pg-table-wrap" style="margin-top:14px"><table class="ad-tbl" id="bangNgay"><thead>
-        <tr><th>Ngày</th><th>Lượt</th><th>Token vào</th><th>Đệm</th><th>Token ra</th><th>Tiền</th><th style="width:130px"></th></tr>
+      <h2 style="margin:22px 0 2px; font-size:17px">Tiền mỗi ngày</h2>
+      <div class="cht-wrap" id="chtNgay"></div>
+
+      <h2 style="margin:22px 0 2px; font-size:17px">Lượt hỏi theo lối vào</h2>
+      <div class="cht-wrap" id="chtKieu"></div>
+
+      <div class="pg-table-wrap" style="margin-top:18px"><table class="ad-tbl" id="bangNgay"><thead>
+        <tr><th>Ngày</th><th>Lượt</th><th>Token vào</th><th>Đệm</th><th>Token ra</th><th>Tiền</th></tr>
       </thead><tbody></tbody></table></div>
 
       <h2 style="margin:22px 0 12px; font-size:17px">Theo tài khoản</h2>
@@ -160,6 +191,127 @@
   function so(n) { return Number(n || 0).toLocaleString("vi-VN"); }
   function tien(n) { return so(Math.round(n)) + "đ"; }
 
+  /* ===================== BIỂU ĐỒ (SVG dựng tay, không thư viện) =====================
+     Nguyên tắc: mỗi biểu đồ chỉ MỘT chuỗi dữ liệu -> một sắc độ, không legend
+     (tiêu đề đã nói rõ đang vẽ gì), một trục y duy nhất. Nhãn đặt CÓ CHỌN LỌC —
+     chỉ điểm cuối và điểm cao nhất — còn lại để tooltip và bảng bên dưới gánh. */
+
+  /* Trần trục y làm tròn cho đẹp. Nấc phải MỊN (1 · 1,5 · 2 · 2,5 · 3 · 4 · 5 · 7,5)
+     chứ nhảy cóc 2,5 -> 5 thì đường chỉ dùng nửa chiều cao khung, nhìn như số
+     liệu đang tụt. Chia hết cho 2 để nhãn giữa trục cũng ra số tròn. */
+  var NAC = [1, 1.5, 2, 2.5, 3, 4, 5, 7.5, 10];
+  function tranDep(v) {
+    if (!(v > 0)) return 10;
+    var p = Math.pow(10, Math.floor(Math.log10(v))), b = v / p;
+    for (var i = 0; i < NAC.length; i++) if (b <= NAC[i]) return NAC[i] * p;
+    return 10 * p;
+  }
+  function svgEsc(s) { return esc(s); }
+  function tipEl(wrap) {
+    var t = wrap.querySelector(".cht-tip");
+    if (!t) { t = document.createElement("div"); t.className = "cht-tip"; wrap.appendChild(t); }
+    return t;
+  }
+
+  /* Đường + vùng tô: tiền theo ngày. */
+  function veDuong(wrap, ds) {
+    wrap.innerHTML = "";
+    if (!ds.length) { wrap.innerHTML = '<div class="cht-empty">Chưa có lượt hỏi nào trong kỳ.</div>'; return; }
+    if (ds.length === 1) {
+      wrap.innerHTML = '<div class="cht-empty">Mới có số liệu của <b>' + svgEsc(ds[0].ngay) +
+        "</b>: " + tien(ds[0].tien) + " · " + so(ds[0].luot) + " lượt. Cần ít nhất 2 ngày mới vẽ được xu hướng.</div>";
+      return;
+    }
+    var W = Math.max(320, wrap.clientWidth || 640), H = 210;
+    var tr = 14, ph = 26, tri = 52, pd = 26;              // lề trên/phải/trái/dưới
+    var w = W - tri - ph, h = H - tr - pd;
+    var max = tranDep(Math.max.apply(null, ds.map(function (x) { return x.tien; })));
+    var buoc = ds.length > 1 ? w / (ds.length - 1) : 0;
+    var X = function (i) { return tri + i * buoc; };
+    var Y = function (v) { return tr + h - (v / max) * h; };
+
+    var diem = ds.map(function (x, i) { return X(i) + "," + Y(x.tien); });
+    var luoi = [0, 0.5, 1].map(function (t) {
+      var y = tr + h - t * h;
+      return '<line class="cht-grid" x1="' + tri + '" y1="' + y + '" x2="' + (tri + w) + '" y2="' + y + '"/>' +
+        '<text class="cht-tick" x="' + (tri - 8) + '" y="' + (y + 4) + '" text-anchor="end">' +
+        so(Math.round(max * t)) + "</text>";
+    }).join("");
+
+    /* Nhãn trục x: đầu, giữa, cuối — nhiều hơn là chữ chồng lên nhau. */
+    var moc = ds.length <= 6 ? ds.map(function (_, i) { return i; })
+      : [0, Math.floor((ds.length - 1) / 2), ds.length - 1];
+    var nhanX = moc.map(function (i) {
+      var t = ds[i].ngay.slice(8) + "/" + ds[i].ngay.slice(5, 7);
+      var neo = i === 0 ? "start" : i === ds.length - 1 ? "end" : "middle";
+      return '<text class="cht-tick" x="' + X(i) + '" y="' + (H - 6) + '" text-anchor="' + neo + '">' + t + "</text>";
+    }).join("");
+
+    // chỉ đánh dấu điểm CUỐI (mới nhất) — nhãn trên mọi điểm là nhiễu
+    var c = ds.length - 1;
+    var nhanCuoi = '<circle class="cht-dot" cx="' + X(c) + '" cy="' + Y(ds[c].tien) + '" r="4.5"/>' +
+      '<text class="cht-val" x="' + X(c) + '" y="' + (Y(ds[c].tien) - 12) + '" text-anchor="end">' +
+      tien(ds[c].tien) + "</text>";
+
+    wrap.innerHTML =
+      '<svg viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="Tiền gia sư AI mỗi ngày">' +
+        luoi +
+        '<path class="cht-area" d="M' + X(0) + "," + (tr + h) + " L" + diem.join(" L") +
+          " L" + X(c) + "," + (tr + h) + ' Z"/>' +
+        '<path class="cht-line" d="M' + diem.join(" L") + '"/>' +
+        nhanCuoi + nhanX +
+        '<line class="cht-cross" id="chtCross" x1="0" y1="' + tr + '" x2="0" y2="' + (tr + h) + '" style="display:none"/>' +
+        '<rect class="cht-hit" x="' + tri + '" y="' + tr + '" width="' + w + '" height="' + h + '"/>' +
+      "</svg>";
+
+    var tip = tipEl(wrap), hit = wrap.querySelector(".cht-hit"), cross = wrap.querySelector("#chtCross");
+    var tyLe = function () { return wrap.clientWidth / W; };   // svg co giãn theo bề ngang
+    hit.addEventListener("mousemove", function (e) {
+      var r = wrap.getBoundingClientRect();
+      var x = (e.clientX - r.left) / tyLe();
+      var i = Math.max(0, Math.min(ds.length - 1, Math.round((x - tri) / buoc)));
+      var d = ds[i];
+      cross.style.display = "";
+      cross.setAttribute("x1", X(i)); cross.setAttribute("x2", X(i));
+      tip.innerHTML = "<b>" + svgEsc(d.ngay) + "</b><br>" + tien(d.tien) + " · " + so(d.luot) + " lượt<br>" +
+        so(d.vao) + " token vào" + (d.dem ? " (đệm " + so(d.dem) + ")" : "") + " · " + so(d.ra) + " ra";
+      tip.style.left = (X(i) * tyLe()) + "px";
+      tip.style.top = (Y(d.tien) * tyLe() - 10) + "px";
+      tip.style.opacity = "1";
+    });
+    hit.addEventListener("mouseleave", function () { tip.style.opacity = "0"; cross.style.display = "none"; });
+  }
+
+  var TEN_KIEU = {
+    lesson: "Trong bài học", wrong: "Vì sao tôi sai", exercise: "Bài thực hành", general: "Hỏi nhanh",
+  };
+
+  /* Thanh ngang: lượt hỏi theo lối vào. Tên dài nên nằm ngang cho dễ đọc. */
+  function veThanh(wrap, ds) {
+    wrap.innerHTML = "";
+    if (!ds.length) { wrap.innerHTML = '<div class="cht-empty">Chưa có lượt hỏi nào trong kỳ.</div>'; return; }
+    ds = ds.slice().sort(function (a, b) { return b.luot - a.luot; });
+    var W = Math.max(320, wrap.clientWidth || 640);
+    var day = 24, khe = 14, tri = 118, ph = 56;            // dày <= 24px, khe > 2px
+    var H = ds.length * (day + khe) + 6;
+    var w = W - tri - ph;
+    var max = Math.max.apply(null, ds.map(function (x) { return x.luot; })) || 1;
+
+    var than = ds.map(function (x, i) {
+      var y = i * (day + khe) + 2, len = Math.max(3, (x.luot / max) * w);
+      return '<text class="cht-lbl" x="' + (tri - 10) + '" y="' + (y + day / 2 + 4) + '" text-anchor="end">' +
+          svgEsc(TEN_KIEU[x.kieu] || x.kieu) + "</text>" +
+        '<rect class="cht-bar" x="' + tri + '" y="' + y + '" width="' + len + '" height="' + day +
+          '" rx="4" ry="4"/>' +
+        /* góc trái vuông ở gốc trục: đắp lại phần bo của rect */
+        '<rect class="cht-bar" x="' + tri + '" y="' + y + '" width="4" height="' + day + '"/>' +
+        '<text class="cht-val" x="' + (tri + len + 8) + '" y="' + (y + day / 2 + 4) + '">' + so(x.luot) + "</text>";
+    }).join("");
+
+    wrap.innerHTML = '<svg viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="Lượt hỏi theo lối vào">' +
+      than + "</svg>";
+  }
+
   function veAiUsage() {
     var n = document.getElementById("aiNgay").value;
     var err = document.getElementById("aiErr");
@@ -182,14 +334,16 @@
           ? "  Lối vào: " + d.theoKieu.map(function (x) { return x.kieu + " " + x.luot; }).join(" · ")
           : "");
 
-      var maxTien = Math.max.apply(null, d.theoNgay.map(function (x) { return x.tien; }).concat([1]));
+      /* API trả ngày mới nhất trước; biểu đồ cần xuôi theo thời gian. */
+      AI_NGAY = d.theoNgay.slice().reverse();
+      AI_KIEU = d.theoKieu || [];
+      veDuong(document.getElementById("chtNgay"), AI_NGAY);
+      veThanh(document.getElementById("chtKieu"), AI_KIEU);
+
       document.querySelector("#bangNgay tbody").innerHTML = d.theoNgay.map(function (x) {
-        var pct = Math.round(x.tien / maxTien * 100);
         return "<tr><td>" + x.ngay + "</td><td>" + so(x.luot) + "</td><td>" + so(x.vao) + "</td>" +
-          "<td>" + so(x.dem) + "</td><td>" + so(x.ra) + "</td><td><b>" + tien(x.tien) + "</b></td>" +
-          '<td><span style="display:block;height:8px;border-radius:4px;background:var(--brand);width:' +
-          Math.max(2, pct) + '%"></span></td></tr>';
-      }).join("") || '<tr><td colspan="7">Chưa có lượt hỏi nào trong kỳ.</td></tr>';
+          "<td>" + so(x.dem) + "</td><td>" + so(x.ra) + "</td><td><b>" + tien(x.tien) + "</b></td></tr>";
+      }).join("") || '<tr><td colspan="6">Chưa có lượt hỏi nào trong kỳ.</td></tr>';
 
       document.querySelector("#bangTk tbody").innerHTML = d.theoTaiKhoan.map(function (x) {
         return "<tr><td>" + esc(x.email) + "</td><td>" + so(x.luot) + "</td><td>" + so(x.vao) + "</td>" +
@@ -257,6 +411,17 @@
   });
 
   document.getElementById("aiNgay").onchange = veAiUsage;
+
+  /* Vẽ lại khi đổi bề ngang cửa sổ — toạ độ SVG tính theo px thật lúc dựng. */
+  var AI_NGAY = [], AI_KIEU = [], hen;
+  window.addEventListener("resize", function () {
+    clearTimeout(hen);
+    hen = setTimeout(function () {
+      if (!AI_NGAY.length && !AI_KIEU.length) return;
+      veDuong(document.getElementById("chtNgay"), AI_NGAY);
+      veThanh(document.getElementById("chtKieu"), AI_KIEU);
+    }, 180);
+  });
 
   api("/admin/stats").then(function () {
     document.getElementById("noiDung").hidden = false;
