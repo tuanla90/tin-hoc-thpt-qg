@@ -5,12 +5,12 @@
 > Nguyên tắc xuyên suốt: **giữ nguyên frontend vanilla JS**, thêm dần backend,
 > app vẫn dùng được đầy đủ khi CHƯA đăng nhập (offline-first).
 
-> **✅ TRẠNG THÁI (24/07/2026): Phase 0 + 1 + 2 ĐÃ CODE XONG & TEST.**
-> 10/10 test API pass (`npm test`, pg-mem); e2e trình duyệt OK (đăng ký → làm bài
-> → xoá máy → đăng nhập lại → tiến độ kéo về đủ). **Đã chốt:** làm cho học sinh
-> tự học trước; tạm **FREE toàn bộ nội dung** (chưa gate premium); dùng **pg
-> thuần** thay Prisma (đơn giản, không build step). **Còn chờ user:** nối Railway
-> (các bước ở Phase 1 bên dưới) và chuyển repo private.
+> **✅ TRẠNG THÁI (28/07/2026): Phase 0 + 1 + 2 XONG; ĐÃ CHẠY THẬT TRÊN RAILWAY.**
+> Railway đã nối (web + Postgres), **AI thật đã bật**. Đã chốt ranh giới
+> Free/Premium (bảng ở Phase 4); server-side plan/licenses + gia sư theo gói đã
+> code; **đang làm: các gate client + màn kích hoạt + admin** (Phase 4).
+> Backup: có cơ chế TAY `npm run backup` (kéo qua public URL của Postgres) —
+> backup tự động của Railway chưa bật được. **Còn chờ user:** chuyển repo private.
 
 ## 1. Hiện trạng (đã khảo sát)
 
@@ -108,7 +108,7 @@ Quyền premium của 1 user = tồn tại license `activated_by = user.id` (ho�
 ### Phase 1 — Backend skeleton + deploy Railway ✅ CODE XONG — còn bước nối Railway (user làm)
 - [x] `server/` Express: serve `public/` + `GET /api/health`; `npm start`; test `npm test`.
 - [x] Chạy local không cần Postgres: `.env` với `DATABASE_URL=pgmem` (DB giả lập RAM để thử tài khoản) hoặc bỏ trống (chỉ trang tĩnh, API trả 503).
-- [ ] **Railway (làm 1 lần, ~10 phút):**
+- [x] **Railway — ✅ đã nối (28/07/2026).** Các bước đã làm, giữ lại để tham khảo:
   1. New Project → **Deploy from GitHub repo** → chọn repo này (auto-deploy nhánh `main` bật sẵn).
   2. Trong project: **+ New → Database → PostgreSQL**.
   3. Vào service web → tab **Variables** → thêm:
@@ -166,10 +166,10 @@ Ghi chú thực thi (độ kín):
 - **Rủi ro cần theo dõi**: quỹ câu/ngày cắt vào vòng lặp giữ chân (XP/streak) — sau khi bật, theo dõi tỉ lệ quay lại; nếu rớt thì nới 30 → 50 câu/ngày TRƯỚC khi nghĩ cách khác.
 
 Thứ tự triển khai gate (sau khi có bảng `licenses`):
-1. Hàm chung `getPlan(userId)` server + `GET /api/me` trả thêm `plan`.
-2. Nối `hanMuc()` của tutor vào đó (xoá TODO có sẵn).
-3. Frontend: helper `Plan.has(...)` + khoá 4 điểm móc có sẵn: `EXAM_CODES`/`MOCK_EXAMS` (exam-modes.js), quỹ câu trong `newQuiz`/`doSubmit` (app.js), cụm `injectExercises/injectSqlExercises/injectWebExercises/injectGraphicsLab` (app.js), tab Chỗ yếu (`PRACTICE_TABS`). 1 modal upsell dùng chung.
-4. Màn nhập mã kích hoạt trong trang Tài khoản + trang admin mini tạo mã (mục dưới).
+1. [x] Hàm chung `getPlan(userId)` server (`server/plan.js`) + `GET /api/me` trả thêm `plan`. (28/07)
+2. [x] Nối hạn mức tutor vào gói (`goiCua()` trong `server/tutor.js`, model sâu chỉ premium). (28/07)
+3. [~] **ĐANG LÀM (28/07):** frontend helper `Plan.has(...)` + khoá 4 điểm móc có sẵn: `EXAM_CODES`/`MOCK_EXAMS` (exam-modes.js), quỹ câu trong `newQuiz`/`doSubmit` (app.js), cụm `injectExercises/injectSqlExercises/injectWebExercises/injectGraphicsLab` (app.js), tab Chỗ yếu (`PRACTICE_TABS`). 1 modal upsell dùng chung.
+4. [~] **ĐANG LÀM:** màn nhập mã kích hoạt trong trang Tài khoản (API `/api/licenses/activate` xong) + trang admin mini tạo mã (mục dưới).
 
 Giá: theo khung `business-onepager.html` (~249k/năm học); cân nhắc thêm **gói nước rút 2–3 tháng** giá thấp cho HS 12 vào muộn (tháng 4–6) — mùa vụ môn này rất rõ, chỉ có gói năm sẽ mất nhóm đơn này.
 - [ ] Bán **mã kích hoạt**: khách chuyển khoản VietQR/Momo cá nhân → gửi mã qua Zalo → nhập mã trong app (`POST /api/licenses/activate`). Chưa cần cổng thanh toán, chưa cần pháp nhân.
@@ -179,7 +179,12 @@ Giá: theo khung `business-onepager.html` (~249k/năm học); cân nhắc thêm 
 - **Xong khi**: người lạ tự mua → kích hoạt → mở khoá, không cần mình can thiệp ngoài gửi mã.
 
 ### Phase 5 — Vận hành (song song, mỗi thứ 30')
-- [ ] Backup: bật backup Postgres của Railway + cron `pg_dump` hàng tuần về máy.
+- [x] **Backup TAY (28/07/2026)**: `npm run backup` — kéo toàn bộ bảng về `backup/*.json`
+  qua public URL của Postgres (dán chuỗi Public Network của Railway vào `.env`:
+  `BACKUP_DATABASE_URL=...`). Phục hồi: `node scripts/restore.js <file> "<url-db-mới>"`.
+  Test vòng tròn sao lưu→phục hồi có trong `npm test`. Chạy tay MỖI TUẦN (hoặc đặt
+  Task Scheduler). Backup tự động của Railway chưa bật được — khi bật được thì
+  dùng song song, backup tay vẫn giữ vì file nằm ngoài Railway.
 - [ ] Uptime monitor miễn phí (UptimeRobot) trỏ `/api/health`.
 - [ ] Trang Điều khoản + Quyền riêng tư (HS vị thành niên → thu thập tối thiểu: tên hiển thị + email; tham chiếu NĐ 13/2023/NĐ-CP).
 - [ ] Domain riêng (~300k/năm) trỏ vào Railway.

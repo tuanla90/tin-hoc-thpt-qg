@@ -6,6 +6,9 @@ public/sach/
 node_modules/
 .env
 
+# --- Bản sao lưu DB (dữ liệu cá nhân học sinh + mã kích hoạt — TUYỆT ĐỐI không commit) ---
+backup/
+
 # --- Ảnh nguồn thô của mascot (tuỳ chọn giữ local) ---
 # Các sheet gốc chưa cắt; bản đã cắt nằm trong asset/mascot/ vẫn được đưa lên.
 # (Bỏ comment 2 dòng dưới nếu muốn loại luôn ảnh gốc khỏi repo)
