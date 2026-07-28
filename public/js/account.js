@@ -170,6 +170,8 @@
       Account.available = true;
       Account.user = d.user || null;
       Account.profiles = d.profiles || [];
+      Account.plan = d.plan || null;             // { tier: 'free'|'paid', hetHan } — plan.js đọc
+      Account.maxProfiles = d.maxProfiles || 1;  // theo gói: free 1, premium 3
       var luu = Number(localStorage.getItem(KEY_PROFILE)) || null;
       var hopLe = Account.profiles.some(function (p) { return p.id === luu; });
       Account.profileId = hopLe ? luu : null;
@@ -312,9 +314,12 @@
         (phu ? '<span class="hs-phu">' + esc2(phu) + "</span>" : "") +
         "</button>";
     }).join("");
-    var them = Account.profiles.length < 6
+    var toiDa = Account.maxProfiles || 1;
+    var them = Account.profiles.length < toiDa
       ? '<button class="hs-card hs-them" id="hsThem"><span class="hs-ava">+</span><span class="hs-ten">Thêm hồ sơ</span></button>'
-      : "";
+      : (toiDa <= 1
+        ? '<button class="hs-card hs-them" id="hsThemKhoa"><span class="hs-ava">' + ico("lock", "#b45309", 22) + '</span><span class="hs-ten">Thêm hồ sơ<br><small style="font-weight:600;color:var(--text-soft)">Premium</small></span></button>'
+        : "");
     app.innerHTML =
       '<div class="gate" style="max-width:620px">' +
         "<h1>Ai đang học?</h1>" +
@@ -328,6 +333,10 @@
     });
     var themBtn = document.getElementById("hsThem");
     if (themBtn) themBtn.onclick = function () { themHoSo(); };
+    var themKhoa = document.getElementById("hsThemKhoa");
+    if (themKhoa) themKhoa.onclick = function () {
+      if (typeof Plan !== "undefined") Plan.upsell("hoso");
+    };
     document.getElementById("hsOut").onclick = function () { dangXuat(); };
   }
 
@@ -372,6 +381,24 @@
     }).join("");
 
     var si = Account.syncInfo || {};
+    var toiDa = Account.maxProfiles || 1;
+    var plan = Account.plan || { tier: "free" };
+    var laPaid = plan.tier === "paid";
+    var hanTxt = plan.hetHan ? new Date(plan.hetHan).toLocaleDateString("vi-VN") : "";
+    var goiHtml =
+      '<div class="section-title">' + ico("crown", "#b45309", 17) + " Gói của bạn</div>" +
+      '<div class="pf-card" style="margin-bottom:20px">' +
+        '<div class="ac-row" style="border-bottom:none"><span>Đang dùng</span><b>' +
+          (laPaid ? "Premium" + (hanTxt ? " — đến " + hanTxt : "") : "Miễn phí") + "</b></div>" +
+        (laPaid
+          ? '<p class="ac-note" style="margin:4px 0 0">Nhập thêm mã sẽ <b>cộng dồn</b> vào hạn hiện có.</p>'
+          : '<p class="ac-note" style="margin:4px 0 0">Premium mở: luyện tập không giới hạn · 13 đề thi thử + đề ngẫu nhiên · toàn bộ bài thực hành · tab Chỗ yếu · gia sư AI 50 lượt/ngày · 3 hồ sơ học tập.</p>') +
+        '<div class="pf-field" style="margin-top:12px"><label for="acLic">Mã kích hoạt (mẫu: TIN-XXXX-XXXX)</label>' +
+          '<div style="display:flex;gap:8px"><input class="pf-input" id="acLic" type="text" maxlength="16" placeholder="TIN-" style="flex:1;text-transform:uppercase" autocomplete="off">' +
+          '<button class="btn btn-primary" id="acLicGo">Kích hoạt</button></div></div>' +
+        '<div class="ac-err" id="acLicErr"></div>' +
+        (laPaid ? "" : '<p class="ac-note" style="margin:6px 0 0">Chưa có mã? Liên hệ người bán hoặc giáo viên của bạn để nhận mã.</p>') +
+      "</div>";
     app.innerHTML =
       '<button class="back-link" id="acBack">' + ico("aleft", null, 15) + " Trang chủ</button>" +
       '<h2 style="margin-bottom:6px">' + ico("user", "#4f46e5", 22) + " Tài khoản</h2>" +
@@ -389,11 +416,15 @@
         "</div>" +
       "</div>" +
 
-      '<div class="section-title">' + ico("user", "#4f46e5", 17) + " Hồ sơ học tập (" + Account.profiles.length + "/6)</div>" +
+      goiHtml +
+
+      '<div class="section-title">' + ico("user", "#4f46e5", 17) + " Hồ sơ học tập (" + Account.profiles.length + "/" + toiDa + ")</div>" +
       '<div class="pf-card">' + hs +
-        (Account.profiles.length < 6
+        (Account.profiles.length < toiDa
           ? '<div class="ac-actions"><button class="btn btn-primary" id="acAdd">' + ico("user", null, 15) + " Thêm hồ sơ</button></div>"
-          : '<p class="ac-note">Đã đủ 6 hồ sơ — xoá bớt nếu muốn thêm người học mới.</p>') +
+          : (toiDa <= 1
+            ? '<p class="ac-note">Gói Miễn phí dùng 1 hồ sơ học tập. <b>Premium</b> mở 3 hồ sơ — anh chị em dùng chung tài khoản, tiến độ vẫn riêng.</p>'
+            : '<p class="ac-note">Đã đủ ' + toiDa + " hồ sơ — xoá bớt nếu muốn thêm người học mới.</p>")) +
       "</div>" +
 
       '<div class="section-title" style="margin-top:22px">' + ico("bookmark", "#64748b", 17) + " Dữ liệu của bạn</div>" +
@@ -412,6 +443,22 @@
       fullSync().then(function () { if (typeof toast === "function") toast("Đã đồng bộ ✓"); renderAccount(); });
     };
     document.getElementById("acOut").onclick = dangXuat;
+    var licGo = document.getElementById("acLicGo");
+    if (licGo) licGo.onclick = function () {
+      var inp = document.getElementById("acLic"), err = document.getElementById("acLicErr");
+      err.textContent = ""; licGo.disabled = true;
+      api("/licenses/activate", "POST", { code: inp.value }).then(function (d) {
+        var han = d.plan && d.plan.hetHan ? new Date(d.plan.hetHan).toLocaleDateString("vi-VN") : "";
+        if (typeof toast === "function") {
+          toast(d.daTung ? "Mã này bạn đã kích hoạt từ trước ✓" : "Đã lên Premium" + (han ? " — dùng đến " + han : "") + " ✓");
+        }
+        // nạp lại trang để mọi khoá (đề, xưởng, quỹ câu, gia sư) mở theo gói mới
+        setTimeout(function () { location.reload(); }, 900);
+      }).catch(function (e) {
+        err.textContent = e.network ? "Không kết nối được máy chủ." : e.message;
+        licGo.disabled = false;
+      });
+    };
     var add = document.getElementById("acAdd");
     if (add) add.onclick = themHoSo;
     app.querySelectorAll("[data-doi]").forEach(function (b) {

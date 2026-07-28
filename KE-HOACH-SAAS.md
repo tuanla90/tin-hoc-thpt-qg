@@ -168,12 +168,12 @@ Ghi chú thực thi (độ kín):
 Thứ tự triển khai gate (sau khi có bảng `licenses`):
 1. [x] Hàm chung `getPlan(userId)` server (`server/plan.js`) + `GET /api/me` trả thêm `plan`. (28/07)
 2. [x] Nối hạn mức tutor vào gói (`goiCua()` trong `server/tutor.js`, model sâu chỉ premium). (28/07)
-3. [~] **ĐANG LÀM (28/07):** frontend helper `Plan.has(...)` + khoá 4 điểm móc có sẵn: `EXAM_CODES`/`MOCK_EXAMS` (exam-modes.js), quỹ câu trong `newQuiz`/`doSubmit` (app.js), cụm `injectExercises/injectSqlExercises/injectWebExercises/injectGraphicsLab` (app.js), tab Chỗ yếu (`PRACTICE_TABS`). 1 modal upsell dùng chung.
-4. [~] **ĐANG LÀM:** màn nhập mã kích hoạt trong trang Tài khoản (API `/api/licenses/activate` xong) + trang admin mini tạo mã (mục dưới).
+3. [x] Frontend `public/js/plan.js` (`window.Plan`): quỹ câu/ngày + modal upsell dùng chung; đã khoá đủ 4 điểm: đề thi (`startExamCode` + thẻ khoá, 3 đề biên soạn TC1-3 nay hiện luôn ở màn Thi thử), quỹ câu (practiceLesson/startPractice/startQuick/tfStart chặn + cắt, `doSubmit` trừ theo số câu ĐÃ trả lời), xưởng (cụm `inject*` trong renderLesson → hộp khoá đứng đúng chỗ), tab Chỗ yếu. Nút "giải thích kỹ hơn" của gia sư gắn nhãn Premium (server tự hạ model nếu free cố gọi). (28/07, e2e pass)
+4. [x] Màn "Gói của bạn" + ô nhập mã trong trang Tài khoản (mã cộng dồn hạn khi còn hạn); trang admin `public/admin.html` (tạo lô mã theo thời hạn 365/90/30 ngày, xem mã + doanh số; admin bootstrap bằng biến `ADMIN_EMAILS` — **cần đặt biến này trên Railway**). (28/07, e2e pass; 38/38 test)
 
 Giá: theo khung `business-onepager.html` (~249k/năm học); cân nhắc thêm **gói nước rút 2–3 tháng** giá thấp cho HS 12 vào muộn (tháng 4–6) — mùa vụ môn này rất rõ, chỉ có gói năm sẽ mất nhóm đơn này.
-- [ ] Bán **mã kích hoạt**: khách chuyển khoản VietQR/Momo cá nhân → gửi mã qua Zalo → nhập mã trong app (`POST /api/licenses/activate`). Chưa cần cổng thanh toán, chưa cần pháp nhân.
-- [ ] Trang admin mini (role `admin`): tạo lô mã, xem user/doanh số.
+- [x] Bán **mã kích hoạt** — phần app ĐÃ XONG (28/07): admin tạo mã → khách nhập trong Tài khoản (`POST /api/licenses/activate`, gõ thường/thiếu gạch vẫn nhận, mã 1 lần, cộng dồn hạn). Còn lại là việc TAY: nhận chuyển khoản VietQR/Momo → gửi mã qua Zalo.
+- [x] Trang admin mini (`public/admin.html`, role `admin`): tạo lô mã, xem mã/doanh số. (28/07)
 - [ ] Sau khi có doanh thu đều: tích hợp xác nhận chuyển khoản tự động (SePay/Casso webhook — phí thấp, hợp cá nhân) hoặc PayOS.
 - [ ] Chống copy dần: chuyển các file JS nội dung premium sang serve qua endpoint có auth.
 - **Xong khi**: người lạ tự mua → kích hoạt → mở khoá, không cần mình can thiệp ngoài gửi mã.

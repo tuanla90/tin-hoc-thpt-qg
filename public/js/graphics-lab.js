@@ -381,6 +381,7 @@
   if (typeof window !== "undefined") {
     window.GLAB = GLAB;
     window.injectGraphicsLab = injectGraphicsLab;
+    window.GLAB = GLAB; // plan.js đếm số bài mỗi bài học để chia phần free/premium
     window.renderGfxLab = renderGfxLab;
     window.renderGfxLabInner = renderGfxLabInner;
     window.renderConceptWidget = renderWidget; // tái dùng renderer (match/order/hotspot) cho bài lí thuyết

@@ -66,6 +66,9 @@ function examSampleByMatrix(type, dist, target, rnd) {
 var EXAM_CODES = [101, 102, 103, 104, 105, 106, 107, 108, 109, 110];
 
 function startExamCode(code) {
+  /* Gói free chỉ mở TC1 + mã 101, 102 (xem plan.js) — mọi lối vào đề cố định
+     đều qua đây (thẻ đề, nút "Làm lại đề này" ở màn kết quả) nên chặn một chỗ đủ. */
+  if (typeof Plan !== "undefined" && !Plan.deMo(code)) { Plan.upsell("exam"); return; }
   /* Mã "TC1..TC3" = đề tuyển chọn tay (định nghĩa trong questions-vandung.js).
      Nhận ở đây để nút "Làm lại đề này" ở màn kết quả dùng chung một lối. */
   if (typeof code === "string" && code.indexOf("TC") === 0) {
@@ -93,28 +96,46 @@ function renderExamCodes() {
   var cauHinh = EXAM_CONFIG.mc + " câu trắc nghiệm + " + EXAM_CONFIG.tf + " câu Đúng/Sai · " +
     EXAM_CONFIG.minutes + " phút · chấm thang 10 như thi thật";
 
-  /* Một thẻ đề: số thứ tự + điểm cao nhất đã đạt */
-  var deCoDinh = EXAM_CODES.map(function (code, i) {
+  /* Một thẻ đề: số thứ tự + điểm cao nhất đã đạt (hoặc nhãn Premium nếu khoá) */
+  var theDe = function (code, ten, phu) {
     var best = examBestForCode(code);
-    var so = String(i + 1).padStart(2, "0");
-    return '<button class="exam-card" data-code="' + code + '">' +
-      '<span class="exam-card-num">Đề ' + so + "</span>" +
+    var khoa = typeof Plan !== "undefined" && !Plan.deMo(code);
+    return '<button class="exam-card' + (khoa ? " plan-khoa" : "") + '" data-code="' + code + '">' +
+      '<span class="exam-card-num">' + ten + "</span>" +
       '<span class="exam-card-best">' +
-        (best != null ? (eIco("trophy", "#f59e0b", 14) + " Cao nhất <b>" + best.toFixed(2) + "</b>") : "Chưa làm lần nào") +
+        (khoa ? (eIco("lock", "#b45309", 13) + " Premium")
+          : best != null ? (eIco("trophy", "#f59e0b", 14) + " Cao nhất <b>" + best.toFixed(2) + "</b>") : phu) +
       "</span></button>";
+  };
+  var deCoDinh = EXAM_CODES.map(function (code, i) {
+    return theDe(code, "Đề " + String(i + 1).padStart(2, "0"), "Chưa làm lần nào");
   }).join("");
+  /* 3 đề biên soạn tay (MOCK_EXAMS, questions-vandung.js) hiện chung một màn */
+  var deTay = (typeof MOCK_EXAMS !== "undefined" ? MOCK_EXAMS : []).map(function (e, i) {
+    return theDe("TC" + (i + 1), "Biên soạn " + (i + 1), "Chưa làm lần nào");
+  }).join("");
+  var freeGhiChu = (typeof Plan !== "undefined" && !Plan.paid())
+    ? ' Gói Miễn phí mở <b>Biên soạn 1</b> và <b>Đề 01, 02</b> — làm lại thoải mái.' : "";
 
   app.innerHTML =
     '<button class="back-link" id="ecBack">' + eIco("aleft", null, 15) + " Về trang chủ</button>" +
     '<h2 style="margin-bottom:6px">' + eIco("exam", "#4f46e5", 22) + " Thi thử</h2>" +
     '<p style="color:var(--text-soft);font-size:14.5px;margin-bottom:16px">Mỗi đề gồm ' + cauHinh +
-      ". Nộp bài xong có đáp án và lời giải từng câu.</p>" +
+      ". Nộp bài xong có đáp án và lời giải từng câu." + freeGhiChu + "</p>" +
 
     '<button class="exam-start" id="ecRand">' +
       '<span class="exam-start-ic">' + eIco("dice", null, 26) + "</span>" +
-      "<span><b>Thi thử ngay</b><small>Đề mới mỗi lần bấm — dùng khi muốn luyện nhiều đề khác nhau</small></span>" +
+      "<span><b>Thi thử ngay" +
+        ((typeof Plan !== "undefined" && !Plan.has("exam_random")) ? " · Premium" : "") +
+      "</b><small>Đề mới mỗi lần bấm — dùng khi muốn luyện nhiều đề khác nhau</small></span>" +
       '<span class="exam-start-go">' + eIco("aright", null, 20) + "</span>" +
     "</button>" +
+
+    (deTay
+      ? '<div class="section-title" style="margin-top:26px">' + eIco("bookmark", "#7c3aed", 18) + " Đề biên soạn</div>" +
+        '<p style="color:var(--text-soft);font-size:13.5px;margin:-4px 0 12px">Ba đề tuyển chọn tay, bám ma trận đề thật, <b>luôn giữ nguyên câu hỏi</b> và có lời giải từng câu.</p>' +
+        '<div class="exam-grid">' + deTay + "</div>"
+      : "") +
 
     '<div class="section-title" style="margin-top:26px">' + eIco("bookmark", "#0891b2", 18) + " 10 đề tuyển chọn</div>" +
     '<p style="color:var(--text-soft);font-size:13.5px;margin:-4px 0 12px">Mười đề lắp theo đúng ma trận đề thật, <b>luôn giữ nguyên câu hỏi</b> — làm lại là so được điểm với lần trước. Chọn một đề rồi quay lại sau vài tuần để đo tiến bộ.</p>' +
@@ -170,8 +191,10 @@ function renderTFDrill() {
   document.getElementById("tfBack").onclick = function () { go("home"); };
   document.getElementById("tfStart").onclick = function () {
     var p = tfPool(); if (!p.length) return;
+    if (typeof Plan !== "undefined" && !Plan.chanLuyen()) return; // dùng chung quỹ câu/ngày
     var n = Math.min(tfCfg.count, p.length);
     var qs = (typeof pick === "function") ? pick(p, n) : p.slice(0, n);
+    if (typeof Plan !== "undefined") qs = Plan.catQuota(qs);
     State.quiz = newQuiz(qs, "practice", { title: "Luyện Đúng/Sai" });
     go("quiz");
   };

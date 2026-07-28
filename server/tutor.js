@@ -17,6 +17,7 @@
  * ==========================================================================*/
 const express = require("express");
 const { aiConfig, aiChat } = require("./ai");
+const { getPlan } = require("./plan");
 const { layBai, layCau, layBaiTap, noiDungBai, noiDungCau, noiDungBaiTap, danhMucBai } = require("./lessons");
 
 const TOI_DA_HOI = 500;      // ký tự một câu hỏi
@@ -114,12 +115,14 @@ function createTutor(pool) {
     next();
   });
 
-  /* Hạng tài khoản: tạm thời mọi người là "miễn phí"; khi bán hàng sẽ đọc từ
-     users.profile->>'plan'. Tách hàm để chỗ khác không phải sửa. */
-  function hanMuc(user) {
+  /* Gói của tài khoản (đọc từ bảng licenses qua getPlan) -> hạn mức lượt/ngày.
+     Trả { tier, max } để chỗ gọi vừa biết hạn mức vừa biết có được dùng model
+     sâu ("giải thích kỹ hơn") hay không. */
+  async function goiCua(uid) {
     const cfg = aiConfig();
-    const plan = (user && user.profile && user.profile.plan) || "free";
-    return plan === "paid" ? cfg.paidPerDay : cfg.freePerDay;
+    const u = await q("SELECT role FROM users WHERE id = $1", [uid]);
+    const plan = await getPlan(pool, uid, u.rows[0] && u.rows[0].role);
+    return { tier: plan.tier, max: plan.tier === "paid" ? cfg.paidPerDay : cfg.freePerDay };
   }
 
   async function daDung(uid) {
@@ -147,10 +150,9 @@ function createTutor(pool) {
       const cfg = aiConfig();
       if (!cfg.ready) return res.json({ on: false });
       if (!req.session || !req.session.uid) return res.json({ on: true, dangNhap: false });
-      const u = await q("SELECT profile FROM users WHERE id = $1", [req.session.uid]);
-      const max = hanMuc(u.rows[0]);
+      const goi = await goiCua(req.session.uid);
       const dung = await daDung(req.session.uid);
-      res.json({ on: true, dangNhap: true, hanMuc: max, conLai: Math.max(0, max - dung) });
+      res.json({ on: true, dangNhap: true, goi: goi.tier, hanMuc: goi.max, conLai: Math.max(0, goi.max - dung) });
     } catch (e) { next(e); }
   });
 
@@ -196,13 +198,13 @@ function createTutor(pool) {
         profileId = p.rows[0] ? p.rows[0].id : null;
       }
 
-      const u = await q("SELECT profile FROM users WHERE id = $1", [req.session.uid]);
-      const max = hanMuc(u.rows[0]);
+      const goi = await goiCua(req.session.uid);
+      const max = goi.max;
       const dung = await daDung(req.session.uid);
       if (dung >= max) {
         return res.status(429).json({
           error: "Hôm nay bạn đã dùng hết " + max + " lượt hỏi gia sư. Mai lượt được cấp lại nhé.",
-          hetLuot: true, hanMuc: max,
+          hetLuot: true, hanMuc: max, goi: goi.tier,
         });
       }
       await themLuot(req.session.uid, 1); // trừ trước để không bị lách bằng cách ngắt giữa chừng
@@ -220,8 +222,11 @@ function createTutor(pool) {
 
       let traLoi = "";
       try {
+        /* Model sâu ("giải thích kỹ hơn") chỉ dành gói paid — free bấm vẫn được
+           trả lời nhưng bằng model thường, không lộ lỗi khó hiểu. */
+        const duocDeep = !!b.deep && goi.tier === "paid";
         await aiChat({
-          system, messages, deep: !!b.deep, maxTokens: b.deep ? 1200 : 700,
+          system, messages, deep: duocDeep, maxTokens: duocDeep ? 1200 : 700,
           signal: huy.signal,
           onText(t) {
             traLoi += t;

@@ -10,6 +10,7 @@ const session = require("express-session");
 const PgSession = require("connect-pg-simple")(session);
 const { createApi } = require("./api");
 const { createTutor } = require("./tutor");
+const { createAdmin } = require("./admin");
 
 const PUBLIC_DIR = path.join(__dirname, "..", "public");
 
@@ -41,6 +42,7 @@ function createApp({ pool, sessionStore } = {}) {
   }));
 
   app.use("/api", createTutor(pool)); // đặt trước createApi để /tutor/status trả được cả khi chưa có DB
+  app.use("/api", createAdmin(pool));
   app.use("/api", createApi(pool));
 
   app.use(express.static(PUBLIC_DIR, { extensions: ["html"] }));

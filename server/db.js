@@ -69,6 +69,19 @@ CREATE TABLE IF NOT EXISTS gamify (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+CREATE TABLE IF NOT EXISTS licenses (
+  id            SERIAL PRIMARY KEY,
+  code          TEXT UNIQUE NOT NULL,
+  plan          TEXT NOT NULL DEFAULT 'student',
+  duration_days INT NOT NULL DEFAULT 365,
+  activated_by  INT,
+  activated_at  TIMESTAMPTZ,
+  expires_at    TIMESTAMPTZ,
+  note          TEXT NOT NULL DEFAULT '',
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS licenses_user_idx ON licenses (activated_by);
+
 CREATE TABLE IF NOT EXISTS tutor_usage (
   user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   ngay    DATE NOT NULL,

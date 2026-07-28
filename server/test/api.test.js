@@ -8,7 +8,7 @@ const { newDb } = require("pg-mem");
 const { initDb } = require("../db");
 const { createApp } = require("../app");
 
-let srv, base, cookie = "";
+let srv, base, pool, cookie = "";
 let hoSo1 = null, hoSo2 = null;
 
 function req(path, opts = {}) {
@@ -26,7 +26,7 @@ function req(path, opts = {}) {
 before(async () => {
   const mem = newDb();
   const { Pool } = mem.adapters.createPg();
-  const pool = await initDb(new Pool());
+  pool = await initDb(new Pool());
   const app = createApp({ pool, sessionStore: new session.MemoryStore() });
   srv = app.listen(0);
   base = "http://127.0.0.1:" + srv.address().port;
@@ -62,7 +62,42 @@ test("đăng ký trùng email -> 409", async () => {
   assert.equal((await req("/api/auth/register", { method: "POST", body: { email: "an.nguyen@gmail.com", password: "abcdef" } })).status, 409);
 });
 
-test("thêm hồ sơ thứ hai và sửa thông tin", async () => {
+test("gói Miễn phí: 1 hồ sơ, /me báo tier free", async () => {
+  const me = await req("/api/me");
+  assert.equal(me.data.plan.tier, "free");
+  assert.equal(me.data.maxProfiles, 1);
+  const r = await req("/api/profiles", { method: "POST", body: { name: "Bình" } });
+  assert.equal(r.status, 400);                       // free chưa thêm được hồ sơ thứ hai
+  assert.match(r.data.error, /Premium/);
+});
+
+test("kích hoạt mã: sai mã bị chặn, đúng mã lên Premium, mã dùng rồi không dùng lại được", async () => {
+  await pool.query("INSERT INTO licenses (code, duration_days, note) VALUES ('TIN-AAAA-2222', 365, 'test')");
+
+  assert.equal((await req("/api/licenses/activate", { method: "POST", body: { code: "xyz" } })).status, 400);
+  assert.equal((await req("/api/licenses/activate", { method: "POST", body: { code: "TIN-AAAA-9999" } })).status, 404);
+
+  // gõ thường, thiếu gạch nối vẫn nhận
+  const ok = await req("/api/licenses/activate", { method: "POST", body: { code: "tin aaaa 2222" } });
+  assert.equal(ok.status, 200);
+  assert.equal(ok.data.plan.tier, "paid");
+  assert.ok(new Date(ok.data.plan.hetHan).getTime() > Date.now() + 300 * 86400000);
+
+  const me = await req("/api/me");
+  assert.equal(me.data.plan.tier, "paid");
+  assert.equal(me.data.maxProfiles, 3);
+
+  // chính mình nhập lại -> báo đã dùng, không lỗi; người khác nhập -> 409
+  assert.equal((await req("/api/licenses/activate", { method: "POST", body: { code: "TIN-AAAA-2222" } })).data.daTung, true);
+  await req("/api/auth/logout", { method: "POST" });
+  await req("/api/auth/register", { method: "POST", body: { email: "chomo@test.vn", password: "123456", name: "Chờ" } });
+  assert.equal((await req("/api/licenses/activate", { method: "POST", body: { code: "TIN-AAAA-2222" } })).status, 409);
+  // logout huỷ session phía máy chủ nên phải ĐĂNG NHẬP LẠI, không khôi phục cookie cũ được
+  await req("/api/auth/logout", { method: "POST" });
+  await req("/api/auth/login", { method: "POST", body: { email: "an.nguyen@gmail.com", password: "123456" } });
+});
+
+test("thêm hồ sơ thứ hai (đã Premium) và sửa thông tin", async () => {
   const r = await req("/api/profiles", { method: "POST", body: { name: "Bình" } });
   assert.equal(r.status, 200);
   hoSo2 = r.data.profile.id;

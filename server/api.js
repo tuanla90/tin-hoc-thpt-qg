@@ -14,10 +14,10 @@
  * ==========================================================================*/
 const express = require("express");
 const bcrypt = require("bcryptjs");
+const { getPlan, maxProfiles, kichHoat } = require("./plan");
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PUBLIC_USER_SQL = "id, email, name, role, created_at";
-const MAX_PROFILES = 6;
 
 /* pg thật trả JSONB thành object; pg-mem (chế độ dev) trả chuỗi — chuẩn hoá. */
 function asObj(v, def) {
@@ -138,7 +138,11 @@ function createApi(pool) {
       const found = await q(`SELECT ${PUBLIC_USER_SQL} FROM users WHERE id = $1`, [req.session.uid]);
       if (!found.rows[0]) { req.session.destroy(() => {}); return res.json({ user: null, profiles: [] }); }
       const ps = await q("SELECT * FROM profiles WHERE user_id = $1 ORDER BY id", [req.session.uid]);
-      res.json({ user: publicUser(found.rows[0]), profiles: ps.rows.map(publicProfile) });
+      const plan = await getPlan(pool, req.session.uid, found.rows[0].role);
+      res.json({
+        user: publicUser(found.rows[0]), profiles: ps.rows.map(publicProfile),
+        plan, maxProfiles: maxProfiles(plan.tier, found.rows[0].role),
+      });
     } catch (e) { next(e); }
   });
 
@@ -160,6 +164,20 @@ function createApi(pool) {
     } catch (e) { next(e); }
   });
 
+  /* --------------------------- MÃ KÍCH HOẠT --------------------------- */
+  /* Giới hạn chặt hơn auth: mã chỉ có 31^8 tổ hợp nhưng cũng không để dò tự do. */
+  const activateLimit = makeRateLimit(15, 10 * 60 * 1000);
+
+  r.post("/licenses/activate", activateLimit, async (req, res, next) => {
+    try {
+      const kq = await kichHoat(pool, req.session.uid, (req.body || {}).code);
+      res.json({ ok: true, daTung: !!kq.daTung, plan: { tier: "paid", hetHan: kq.hetHan } });
+    } catch (e) {
+      if (e.status) return res.status(e.status).json({ error: e.message });
+      next(e);
+    }
+  });
+
   /* ------------------------------ HỒ SƠ ------------------------------ */
   r.get("/profiles", async (req, res, next) => {
     try {
@@ -170,9 +188,16 @@ function createApi(pool) {
 
   r.post("/profiles", async (req, res, next) => {
     try {
+      const me = await q("SELECT role FROM users WHERE id = $1", [req.session.uid]);
+      const plan = await getPlan(pool, req.session.uid, me.rows[0] && me.rows[0].role);
+      const toiDa = maxProfiles(plan.tier, me.rows[0] && me.rows[0].role);
       const dem = await q("SELECT COUNT(*)::int AS n FROM profiles WHERE user_id = $1", [req.session.uid]);
-      if (dem.rows[0].n >= MAX_PROFILES) {
-        return res.status(400).json({ error: `Mỗi tài khoản tối đa ${MAX_PROFILES} hồ sơ.` });
+      if (dem.rows[0].n >= toiDa) {
+        return res.status(400).json({
+          error: plan.tier === "free"
+            ? "Gói Miễn phí dùng 1 hồ sơ học tập. Nâng cấp Premium để thêm hồ sơ cho anh chị em dùng chung tài khoản."
+            : `Gói của bạn dùng tối đa ${toiDa} hồ sơ.`,
+        });
       }
       const b = req.body || {};
       const name = String(b.name || "").trim().slice(0, 40);

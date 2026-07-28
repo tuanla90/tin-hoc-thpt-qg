@@ -5,7 +5,8 @@
       "name": "web",
       "runtimeExecutable": "node",
       "runtimeArgs": ["--env-file-if-exists=.env", "server/index.js"],
-      "port": 3000
+      "port": 3000,
+      "autoPort": true
     },
     {
       "name": "tin-hoc",

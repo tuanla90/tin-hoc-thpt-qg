@@ -814,10 +814,18 @@ function renderLesson(data) {
   attachRunButtons(app.querySelector(".lesson-body"));
   if (runCode) buildEditor(document.getElementById("lessonPg"), runCode);
   else if (webCode) buildWebEditor(document.getElementById("lessonPg"), webCode);
-  if (typeof injectExercises === "function") injectExercises(l);
-  if (typeof injectSqlExercises === "function") injectSqlExercises(l);
-  if (typeof injectWebExercises === "function") injectWebExercises(l);
-  if (typeof injectGraphicsLab === "function") injectGraphicsLab(l);
+  /* Xưởng thực hành: gói free chỉ mở các bài thuộc chương đầu mỗi xưởng
+     (plan.js quyết định); bài khoá thay bằng hộp Premium đứng đúng vị trí đó.
+     Concept lab thuộc PHẦN HỌC nên luôn mở. */
+  const xuongBiKhoa = (loai, ds) => {
+    if (!ds || !ds.length || typeof Plan === "undefined" || Plan.xuongMo(loai, l)) return false;
+    Plan.khoaXuongBox(loai, l, ds.length);
+    return true;
+  };
+  if (typeof injectExercises === "function" && !xuongBiKhoa("python", (window.EXERCISES || {})[l.id])) injectExercises(l);
+  if (typeof injectSqlExercises === "function" && !xuongBiKhoa("sql", (window.SQL_EXERCISES || {})[l.id])) injectSqlExercises(l);
+  if (typeof injectWebExercises === "function" && !xuongBiKhoa("web", (window.WEB_EXERCISES || {})[l.id])) injectWebExercises(l);
+  if (typeof injectGraphicsLab === "function" && !xuongBiKhoa("gfx", (window.GLAB || {})[l.id])) injectGraphicsLab(l);
   if (typeof injectConceptLab === "function") injectConceptLab(l);
   if (typeof injectVocab === "function") injectVocab(l);
   const sgkT = document.getElementById("sgkToggle");
@@ -833,7 +841,9 @@ function practiceLesson(l) {
   const ids = l.quiz || [];
   const pool = QUESTION_BANK.filter((q) => ids.includes(q.id));
   if (!pool.length) { toast("Bài này chưa có câu luyện tập"); return; }
-  const qs = shuffle(pool).slice(0, Math.min(10, pool.length));
+  if (typeof Plan !== "undefined" && !Plan.chanLuyen()) return; // hết quỹ câu/ngày của gói free
+  let qs = shuffle(pool).slice(0, Math.min(10, pool.length));
+  if (typeof Plan !== "undefined") qs = Plan.catQuota(qs);
   State.quiz = newQuiz(qs, "practice", { title: "Luyện tập: " + l.title, lessonId: l.id });
   go("quiz");
 }
@@ -1116,9 +1126,10 @@ function renderPracticeSetup(data) {
   const demTheo = (fn) => QUESTION_BANK.filter(fn).length;
 
   /* ---------- thanh tab ---------- */
-  const tabsHtml = PRACTICE_TABS.map((t) =>
-    `<button class="ptab ${t.id === tab ? "active" : ""}" data-tab="${t.id}">${aIco(t.ic, null, 15)} ${esc(t.nhan)}</button>`
-  ).join("");
+  const tabsHtml = PRACTICE_TABS.map((t) => {
+    const khoa = t.id === "yeu" && typeof Plan !== "undefined" && !Plan.has("yeu");
+    return `<button class="ptab ${t.id === tab ? "active" : ""}" data-tab="${t.id}">${aIco(t.ic, null, 15)} ${esc(t.nhan)}${khoa ? " " + aIco("lock", "#b45309", 12) : ""}</button>`;
+  }).join("");
   const moTaTab = (PRACTICE_TABS.find((t) => t.id === tab) || {}).mo || "";
 
   /* ---------- phần chọn chính, tuỳ theo tab ---------- */
@@ -1239,13 +1250,15 @@ function renderPracticeSetup(data) {
     const pool = filterPool();
     const el = document.getElementById("availMsg");
     const nguon = practiceNguon();
-    el.textContent = pool.length
+    const quota = (typeof Plan !== "undefined" && Plan.quotaText()) ? " " + Plan.quotaText() : "";
+    el.textContent = (pool.length
       ? `${nguon}: có ${pool.length} câu phù hợp — sẽ lấy ${Math.min(setupCfg.count, pool.length)} câu.`
-      : `${nguon}: chưa có câu nào khớp, hãy nới bộ lọc bên trên.`;
+      : `${nguon}: chưa có câu nào khớp, hãy nới bộ lọc bên trên.`) + quota;
     document.getElementById("startPractice").disabled = pool.length === 0;
   };
 
   app.querySelectorAll(".ptab").forEach((b) => b.onclick = () => {
+    if (b.dataset.tab === "yeu" && typeof Plan !== "undefined" && !Plan.has("yeu")) { Plan.upsell("yeu"); return; }
     setupCfg.tab = b.dataset.tab;
     if (setupCfg.tab === "lop" && setupCfg.grade === "all") setupCfg.grade = (State.profile && State.profile.grade) || "12";
     renderPracticeSetup();
@@ -1356,10 +1369,12 @@ function newQuiz(questions, mode, opts = {}) {
 function startPractice() {
   const pool = filterPool();
   if (!pool.length) return;
+  if (typeof Plan !== "undefined" && !Plan.chanLuyen()) return; // hết quỹ câu/ngày của gói free
   // Ôn chỗ yếu: ưu tiên câu TỪNG SAI rồi mới tới câu chưa làm (xem skills.js)
-  const qs = (setupCfg.tab === "yeu" && setupCfg.weakTopic && typeof skillPickWeak === "function")
+  let qs = (setupCfg.tab === "yeu" && setupCfg.weakTopic && typeof skillPickWeak === "function")
     ? skillPickWeak(setupCfg.weakTopic, Math.min(setupCfg.count, pool.length))
     : pick(pool, Math.min(setupCfg.count, pool.length));
+  if (typeof Plan !== "undefined") qs = Plan.catQuota(qs);
   // Ôn đúng một bài -> ghi lessonId để tính sao thành thạo cho bài đó
   const bai = setupCfg.tab === "bai" ? LESSONS.find((x) => x.id === setupCfg.lesson) : null;
   State.quiz = newQuiz(qs, "practice", {
@@ -1370,12 +1385,16 @@ function startPractice() {
 }
 
 function startQuick() {
-  const qs = pick(QUESTION_BANK, Math.min(10, QUESTION_BANK.length));
+  if (typeof Plan !== "undefined" && !Plan.chanLuyen()) return; // hết quỹ câu/ngày của gói free
+  let qs = pick(QUESTION_BANK, Math.min(10, QUESTION_BANK.length));
+  if (typeof Plan !== "undefined") qs = Plan.catQuota(qs);
   State.quiz = newQuiz(qs, "practice", { title: "Luyện nhanh 10 câu" });
   go("quiz");
 }
 
 function startExam() {
+  // Đề ngẫu nhiên vô hạn là quyền lợi Premium; gói free có 3 đề cố định
+  if (typeof Plan !== "undefined" && !Plan.has("exam_random")) { Plan.upsell("exam"); return; }
   const mc = sampleByMatrix("mc", EXAM_MATRIX.mc, EXAM_CONFIG.mc);
   const tf = sampleByMatrix("tf", EXAM_MATRIX.tf, EXAM_CONFIG.tf);
   const qs = [...mc, ...tf]; // giữ thứ tự Phần I → Phần II
@@ -1933,6 +1952,10 @@ function doSubmit(timeUp) {
   State.history = State.history.slice(0, 50);
   save("history", State.history);
   if (typeof Gam !== "undefined") Gam.onQuizDone(record);
+  // Trừ quỹ câu luyện/ngày của gói free theo số câu ĐÃ trả lời (thi thử không tính)
+  if (typeof Plan !== "undefined" && Q.mode === "practice") {
+    Plan.dungCau(Q.answers.filter((a) => a != null).length);
+  }
 
   go("result", { result, record });
 }

@@ -172,9 +172,14 @@
 
   function veGoiY(ds) {
     const g = document.getElementById("ttGoiy");
-    g.innerHTML = ds.map((s) => `<button class="tt-chip${s === GOI_Y_TIEP[0] ? " sau" : ""}">${esc2(s)}</button>`).join("");
+    g.innerHTML = ds.map((s) => {
+      const sau = s === GOI_Y_TIEP[0];
+      // Nút model sâu là quyền lợi Premium — gói free thấy nút kèm nhãn, bấm thì mở giới thiệu
+      const khoa = sau && typeof Plan !== "undefined" && !Plan.has("deep");
+      return `<button class="tt-chip${sau ? " sau" : ""}" data-t="${esc2(s)}">${esc2(s)}${khoa ? " · Premium" : ""}</button>`;
+    }).join("");
     g.querySelectorAll(".tt-chip").forEach((b) =>
-      b.onclick = () => gui(b.textContent, b.classList.contains("sau")));
+      b.onclick = () => gui(b.dataset.t, b.classList.contains("sau")));
   }
 
   function capNhatSub() {
@@ -239,6 +244,7 @@
   async function gui(txt, sau) {
     const hoi = String(txt || "").trim();
     if (!hoi || dangChay) return;
+    if (sau && typeof Plan !== "undefined" && !Plan.has("deep")) { Plan.upsell("deep"); return; }
     const inp = document.getElementById("ttInput");
     inp.value = ""; inp.style.height = "auto";
     document.getElementById("ttGoiy").innerHTML = "";
