@@ -75,6 +75,30 @@
     </div>
 
     <div class="pg-card">
+      <h2>Chi phí gia sư AI</h2>
+      <div class="pg-row" style="align-items:flex-end; margin-bottom:14px">
+        <div style="flex:0 0 180px"><label>Khoảng thời gian</label>
+          <select class="pg-input" id="aiNgay">
+            <option value="7">7 ngày gần nhất</option>
+            <option value="30" selected>30 ngày gần nhất</option>
+            <option value="90">90 ngày gần nhất</option>
+          </select></div>
+      </div>
+      <div class="pg-err" id="aiErr"></div>
+      <div class="pg-stats" id="aiStats" style="margin-bottom:16px"></div>
+      <p class="pg-note" id="aiGia" style="margin-top:0"></p>
+
+      <div class="pg-table-wrap" style="margin-top:14px"><table class="ad-tbl" id="bangNgay"><thead>
+        <tr><th>Ngày</th><th>Lượt</th><th>Token vào</th><th>Đệm</th><th>Token ra</th><th>Tiền</th><th style="width:130px"></th></tr>
+      </thead><tbody></tbody></table></div>
+
+      <h2 style="margin:22px 0 12px; font-size:17px">Theo tài khoản</h2>
+      <div class="pg-table-wrap"><table class="ad-tbl" id="bangTk"><thead>
+        <tr><th>Email</th><th>Lượt</th><th>Token vào</th><th>Đệm</th><th>Token ra</th><th>Tiền</th></tr>
+      </thead><tbody></tbody></table></div>
+    </div>
+
+    <div class="pg-card">
       <h2>Người dùng</h2>
       <div class="pg-row" style="align-items:flex-end">
         <div style="flex:3"><label>Tìm theo email hoặc tên</label>
@@ -131,6 +155,47 @@
     return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
     });
+  }
+
+  function so(n) { return Number(n || 0).toLocaleString("vi-VN"); }
+  function tien(n) { return so(Math.round(n)) + "đ"; }
+
+  function veAiUsage() {
+    var n = document.getElementById("aiNgay").value;
+    var err = document.getElementById("aiErr");
+    err.textContent = "";
+    return api("/admin/ai-usage?ngay=" + n).then(function (d) {
+      var k = d.khoang, t = d.tuTruocToiNay;
+      var tbLuot = k.luot ? k.tien / k.luot : 0;
+      document.getElementById("aiStats").innerHTML =
+        '<div class="pg-stat"><b>' + tien(k.tien) + "</b><span>tiền AI " + d.soNgay + " ngày qua</span></div>" +
+        '<div class="pg-stat"><b>' + so(k.luot) + "</b><span>lượt hỏi trong kỳ</span></div>" +
+        '<div class="pg-stat"><b>' + tien(tbLuot) + "</b><span>trung bình mỗi lượt</span></div>" +
+        '<div class="pg-stat"><b>' + so(k.vao + k.ra) + "</b><span>token trong kỳ</span></div>" +
+        '<div class="pg-stat"><b>' + (k.vao ? Math.round(k.dem / k.vao * 100) : 0) + "%</b><span>token vào đọc từ đệm</span></div>" +
+        '<div class="pg-stat"><b>' + tien(t.tien) + "</b><span>tổng từ trước tới nay</span></div>";
+      document.getElementById("aiGia").textContent =
+        "Đơn giá đang dùng để quy ra tiền: " + d.gia.vao + " USD/1M token vào · " + d.gia.ra +
+        " USD/1M token ra · token đệm tính " + Math.round(d.gia.demTl * 100) + "% giá vào · tỉ giá " +
+        so(d.gia.tyGia) + "đ. Sửa bằng biến AI_GIA_VAO / AI_GIA_RA / AI_TY_GIA." +
+        (d.theoKieu && d.theoKieu.length
+          ? "  Lối vào: " + d.theoKieu.map(function (x) { return x.kieu + " " + x.luot; }).join(" · ")
+          : "");
+
+      var maxTien = Math.max.apply(null, d.theoNgay.map(function (x) { return x.tien; }).concat([1]));
+      document.querySelector("#bangNgay tbody").innerHTML = d.theoNgay.map(function (x) {
+        var pct = Math.round(x.tien / maxTien * 100);
+        return "<tr><td>" + x.ngay + "</td><td>" + so(x.luot) + "</td><td>" + so(x.vao) + "</td>" +
+          "<td>" + so(x.dem) + "</td><td>" + so(x.ra) + "</td><td><b>" + tien(x.tien) + "</b></td>" +
+          '<td><span style="display:block;height:8px;border-radius:4px;background:var(--brand);width:' +
+          Math.max(2, pct) + '%"></span></td></tr>';
+      }).join("") || '<tr><td colspan="7">Chưa có lượt hỏi nào trong kỳ.</td></tr>';
+
+      document.querySelector("#bangTk tbody").innerHTML = d.theoTaiKhoan.map(function (x) {
+        return "<tr><td>" + esc(x.email) + "</td><td>" + so(x.luot) + "</td><td>" + so(x.vao) + "</td>" +
+          "<td>" + so(x.dem) + "</td><td>" + so(x.ra) + "</td><td><b>" + tien(x.tien) + "</b></td></tr>";
+      }).join("") || '<tr><td colspan="6">Chưa có tài khoản nào hỏi gia sư trong kỳ.</td></tr>';
+    }).catch(function (e) { err.textContent = e.message; });
   }
 
   function veNguoiDung() {
@@ -191,9 +256,11 @@
     if (e.key === "Enter") veNguoiDung();
   });
 
+  document.getElementById("aiNgay").onchange = veAiUsage;
+
   api("/admin/stats").then(function () {
     document.getElementById("noiDung").hidden = false;
-    return Promise.all([veStats(), veBang(), veNguoiDung()]);
+    return Promise.all([veStats(), veBang(), veNguoiDung(), veAiUsage()]);
   }).catch(function (e) {
     var c = document.getElementById("chan");
     c.hidden = false;

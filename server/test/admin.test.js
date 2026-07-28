@@ -74,6 +74,50 @@ test("email trong ADMIN_EMAILS đăng nhập là thành admin, tạo được l�
   assert.equal(st.data.maDaKichHoat, 0);
 });
 
+test("thống kê chi phí AI: gộp theo ngày, theo tài khoản, quy ra tiền đúng đơn giá", async () => {
+  // gieo nhật ký gia sư: 2 lượt hôm nay của user 1, 1 lượt của user 2, 1 lượt cũ
+  const hnay = new Date(Date.now() + 7 * 3600 * 1000).toISOString().slice(0, 10);
+  const cu = new Date(Date.now() + 7 * 3600 * 1000 - 60 * 86400000).toISOString().slice(0, 10);
+  const them = (uid, ngay, vao, dem, ra, kieu) => pool.query(
+    `INSERT INTO tutor_log (user_id, kieu, cau_hoi, tra_loi, ngay, token_vao, token_dem, token_ra)
+     VALUES ($1,$2,'hỏi','đáp',$3,$4,$5,$6)`, [uid, kieu || "lesson", ngay, vao, dem, ra]);
+  await them(1, hnay, 3000, 1000, 300);
+  await them(1, hnay, 2000, 0, 200, "wrong");
+  await them(2, hnay, 1000, 0, 100);
+  await them(1, cu, 9999, 0, 999);           // ngoài khoảng 30 ngày
+
+  const r = await req("/api/admin/ai-usage?ngay=30");
+  assert.equal(r.status, 200);
+  const d = r.data;
+
+  assert.equal(d.khoang.luot, 3, "chỉ đếm lượt trong khoảng");
+  assert.equal(d.khoang.vao, 6000);
+  assert.equal(d.khoang.dem, 1000);
+  assert.equal(d.tuTruocToiNay.luot, 4, "tổng từ trước tới nay tính cả lượt cũ");
+
+  /* Tiền: (vào - đệm) * giá vào + đệm * giá vào * 25% + ra * giá ra, đổi ra VND.
+     Mặc định 0.3 / 2.5 USD mỗi triệu token, tỉ giá 26.000. */
+  const mong = ((5000 * 0.3 + 1000 * 0.3 * 0.25 + 600 * 2.5) / 1e6) * 26000;
+  assert.equal(d.khoang.tien, Math.round(mong), "tiền phải khớp công thức, đệm tính rẻ hơn");
+
+  const ngayNay = d.theoNgay.find((x) => x.ngay === hnay);
+  assert.ok(ngayNay && ngayNay.luot === 3, "gộp đúng theo ngày (giờ VN)");
+
+  const tk = d.theoTaiKhoan;
+  assert.equal(tk.length, 2);
+  assert.equal(tk[0].luot, 2, "sắp theo tiền giảm dần — tài khoản tốn nhất lên đầu");
+  assert.ok(tk[0].email.includes("@"));
+  assert.deepEqual(d.theoKieu.map((x) => x.kieu).sort(), ["lesson", "wrong"]);
+});
+
+test("thống kê AI: người thường không xem được", async () => {
+  await req("/api/auth/logout", { method: "POST" });
+  await req("/api/auth/login", { method: "POST", body: { email: "hs@test.vn", password: "123456" } });
+  assert.equal((await req("/api/admin/ai-usage")).status, 403);
+  await req("/api/auth/logout", { method: "POST" });
+  await req("/api/auth/login", { method: "POST", body: { email: "chu@shop.vn", password: "123456" } });
+});
+
 test("danh sách người dùng: thấy gói, lọc theo email", async () => {
   // đang đăng nhập admin (test trước để lại phiên chu@shop.vn)
   const ds = await req("/api/admin/users");

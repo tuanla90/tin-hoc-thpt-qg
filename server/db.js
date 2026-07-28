@@ -102,6 +102,13 @@ CREATE TABLE IF NOT EXISTS tutor_log (
 );
 CREATE INDEX IF NOT EXISTS tutor_log_profile_idx ON tutor_log (profile_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS tutor_log_sai_idx ON tutor_log (question_id);
+
+ALTER TABLE tutor_log ADD COLUMN IF NOT EXISTS ngay DATE;
+ALTER TABLE tutor_log ADD COLUMN IF NOT EXISTS token_vao INT NOT NULL DEFAULT 0;
+ALTER TABLE tutor_log ADD COLUMN IF NOT EXISTS token_dem INT NOT NULL DEFAULT 0;
+ALTER TABLE tutor_log ADD COLUMN IF NOT EXISTS token_ra INT NOT NULL DEFAULT 0;
+ALTER TABLE tutor_log ADD COLUMN IF NOT EXISTS model TEXT NOT NULL DEFAULT '';
+CREATE INDEX IF NOT EXISTS tutor_log_ngay_idx ON tutor_log (ngay);
 `;
 
 /* Tạo pool từ DATABASE_URL (hoặc nhận pool ngoài — dùng cho test pg-mem). */

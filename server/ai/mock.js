@@ -19,7 +19,7 @@ function loiGiaLap() {
   return e;
 }
 
-function chat({ system, messages, onText }) {
+function chat({ system, messages, onText, onUsage }) {
   _soLanGoi++;
   const gia = loiGiaLap();
   if (gia) return Promise.reject(gia);
@@ -39,11 +39,19 @@ function chat({ system, messages, onText }) {
     "2. Làm thử một câu luyện tập\n" +
     "3. Sai chỗ nào thì hỏi mình tiếp\n" +
     "\nLưu ý: 2 ** 3 = 8 (dấu ** ở đây là luỹ thừa, không phải chữ đậm).";
+  /* Ước lượng token từ độ dài thật (~2,8 ký tự/token với tiếng Việt) để trang
+     quản trị ở bản chạy thử vẫn ra số liệu giống thật, không phải toàn số 0. */
+  const soTok = (s) => Math.round(String(s || "").length / 2.8);
+  const vao = soTok(system) + messages.reduce((n, m) => n + soTok(m.content), 0);
+
   return new Promise((ok) => {
     const tu = cau.split(" ");
     let i = 0;
     const go = () => {
-      if (i >= tu.length) return ok();
+      if (i >= tu.length) {
+        if (onUsage) onUsage({ vao, dem: 0, ra: soTok(cau) });
+        return ok();
+      }
       onText((i ? " " : "") + tu[i++]);
       setTimeout(go, 12);
     };
