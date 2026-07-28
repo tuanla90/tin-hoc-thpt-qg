@@ -142,8 +142,11 @@ test("đối chiếu SGK: đủ mọi quyển, mỗi bài sách trỏ đúng m�
   assert.equal(soBai, 95);
   assert.equal(soCoDich, 95, "mọi bài SGK đều phải có đích");
 
-  /* Không được dùng <table> nữa — ba cột chữ dài luôn tràn ngang, phải cuộn. */
-  assert.ok(!/<table/.test(r.body), "trang đối chiếu không được dùng bảng");
+  /* Không được dùng <table> nữa — ba cột chữ dài luôn tràn ngang, phải cuộn.
+     Chỉ soi phần THÂN trang: chuỗi "<table" còn nằm trong chú thích của CSS
+     nội tuyến, bắt cả tệp là báo động giả. */
+  const than = r.body.slice(r.body.lastIndexOf("</style>"));
+  assert.ok(!/<table/.test(than), "trang đối chiếu không được dùng bảng");
   /* Ô lọc là thứ giúp khỏi cuộn qua 95 dòng: phải có ô nhập và dữ liệu để lọc. */
   assert.ok(r.body.includes('id="dcTim"'), "thiếu ô tìm nhanh");
   assert.equal((r.body.match(/data-tim="/g) || []).length, 95, "mỗi hàng phải có khoá tìm không dấu");

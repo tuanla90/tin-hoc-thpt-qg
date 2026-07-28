@@ -89,6 +89,11 @@ function napKho() {
     STAGES: box.STAGES || {},
     VOCAB_TERMS: box.VOCAB_TERMS || {},
     SGK_MAP: box.SGK_MAP || null,   // đối chiếu bài với SGK, cho trang công khai
+    /* Tên chủ đề THẬT của app (questions.js). TEN_CHU_DE dưới đây là bản viết
+       riêng cho prompt gia sư và đặt tên khác — trang công khai phải dùng bản
+       này, nếu không sẽ gắn nhãn sai (bài Học máy hiện thành "Khoa học máy
+       tính (chuyên sâu)"). */
+    TOPICS: box.TOPICS || null,
     BT: { python: box.EXERCISES || {}, sql: box.SQL_EXERCISES || {}, web: box.WEB_EXERCISES || {} },
   };
   console.log("[lessons] Đã nạp", KHO.soBai, "bài,", KHO.soCau, "câu hỏi cho gia sư AI.");

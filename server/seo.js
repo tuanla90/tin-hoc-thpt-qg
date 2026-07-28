@@ -699,8 +699,11 @@ const JS_LOC_BAI = "(function(){var o=document.getElementById('seoTim');if(!o)re
   "function bd(s){return s.normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').replace(/đ/g,'d')}" +
   "function loc(){var t=bd(o.value.toLowerCase().trim());var n=0;" +
   "a.forEach(function(x){var ok=(!t||x.dataset.tim.indexOf(t)>=0)&&(!cd||x.dataset.cd===cd);x.hidden=!ok;if(ok)n++;});" +
-  "g.forEach(function(x){var co=!!x.querySelector('a:not([hidden])');x.hidden=!co;" +
-  "var h=x.previousElementSibling;if(h&&h.classList.contains('seo-lop'))h.hidden=!co;});" +
+  /* Cập nhật luôn số bài ghi cạnh tên lớp — để nguyên số cũ khi đang lọc thì
+     đầu mục ghi "34 bài" mà bên dưới chỉ có 3, trông như hỏng. */
+  "g.forEach(function(x){var v=x.querySelectorAll('a:not([hidden])').length;x.hidden=!v;" +
+  "var h=x.previousElementSibling;if(h&&h.classList.contains('seo-lop')){h.hidden=!v;" +
+  "var s=h.querySelector('span');if(s)s.textContent=v+' bài';}});" +
   "chip.forEach(function(c){c.classList.toggle('on',(c.dataset.cd||'')===cd)});" +
   "if(d)d.textContent=(t||cd)?('Đang hiện '+n+' bài'):'';}" +
   "chip.forEach(function(c){c.addEventListener('click',function(){cd=c.dataset.cd||'';loc();" +

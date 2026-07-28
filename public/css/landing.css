@@ -1371,3 +1371,10 @@ details.faq .faq-a {
   .lp-head .brand .brand-mark { font-size: 15px; }
   .lp-head .head-actions .btn { padding: 7px 10px; font-size: 12.5px; }
 }
+
+/* Chip ở khối Lộ trình nay là LIÊN KẾT (mở danh sách bài đã lọc theo chủ đề),
+   nên phải bỏ gạch chân và có phản hồi khi rê chuột — nếu không, trông vẫn như
+   chữ chết và không ai bấm. */
+a.chip { text-decoration: none; transition: border-color .15s, color .15s, transform .1s; }
+a.chip:hover { border-color: var(--brand); color: var(--brand); transform: translateY(-1px); }
+.curr-cta { display: flex; flex-wrap: wrap; gap: 10px; margin: 22px 0 24px; }
