@@ -230,8 +230,20 @@
 
     layTrangThai(true).then((t) => {
       capNhatSub();
+      /* Khách chưa đăng nhập: máy chủ chặn hẳn (401) vì mỗi tài khoản có hạn mức
+         lượt hỏi riêng mỗi ngày — nói rõ lý do và mở sẵn lối đăng nhập, đừng để
+         người ta gõ câu hỏi xong mới báo lỗi. */
       if (!t.dangNhap) {
-        themBong("bot", "Bạn cần <b>đăng nhập</b> để hỏi gia sư nhé.");
+        var bong = themBong("bot",
+          "Phần <b>gia sư AI</b> cần đăng nhập mới dùng được — mỗi tài khoản có số lượt hỏi riêng mỗi ngày.<br>" +
+          "Tài khoản miễn phí, chỉ cần email. Các phần học, luyện tập và thi thử thì bạn cứ dùng thoải mái không cần đăng nhập.<br>" +
+          '<button class="tt-chip sau" id="ttDangNhap" style="margin-top:9px">Đăng nhập / Tạo tài khoản</button>');
+        var nutDn = bong.querySelector("#ttDangNhap");
+        if (nutDn) nutDn.onclick = function () {
+          dong();
+          if (typeof go === "function") go("account");
+          else location.hash = "#/account";
+        };
         khoaNhap(true);
         return;
       }

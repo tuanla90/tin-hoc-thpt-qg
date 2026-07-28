@@ -149,7 +149,7 @@ function toast(msg) {
 }
 
 /* Hộp thoại xác nhận trả về Promise<boolean> */
-function confirmBox(title, body, okText = "Đồng ý") {
+function confirmBox(title, body, okText = "Đồng ý", cancelText = "Hủy") {
   return new Promise((resolve) => {
     const modal = document.getElementById("modal");
     document.getElementById("modalTitle").textContent = title;
@@ -157,6 +157,7 @@ function confirmBox(title, body, okText = "Đồng ý") {
     const ok = document.getElementById("modalOk");
     const cancel = document.getElementById("modalCancel");
     ok.textContent = okText;
+    cancel.textContent = cancelText;
     modal.hidden = false;
     const close = (val) => { modal.hidden = true; ok.onclick = cancel.onclick = null; resolve(val); };
     ok.onclick = () => close(true);
@@ -300,8 +301,20 @@ function renderHome() {
       </div>`
     : `<div style="display:flex;align-items:center;justify-content:center;gap:8px;background:var(--success-soft);border:1px solid var(--success);border-radius:var(--radius);padding:14px 16px;margin:2px 0 18px;color:var(--success);font-weight:600;text-align:center">${typeof ICON === "function" ? ICON("trophy", 18) : "🎉"} Bạn đã hoàn thành cả lộ trình! Ôn lại bài hoặc thi thử nhé.</div>`;
 
+  /* Đang học ở chế độ khách: nói rõ tiến độ nằm ở đâu và mất khi nào — nói một
+     lần ngay trên trang chủ, tử tế hơn là chặn đường bằng form đăng nhập. */
+  const khachHtml = (window.Account && Account.laKhach && Account.laKhach())
+    ? `<div class="guest-bar" id="guestBar">
+        <span class="guest-ic">${aIco("bookmark", "#b45309", 18)}</span>
+        <span class="guest-txt"><b>Đang học ở chế độ khách</b>
+          <small>Tiến độ chỉ lưu trên máy này. Đăng nhập miễn phí để giữ lại và hỏi được gia sư AI.</small></span>
+        <button class="btn btn-primary" id="guestLogin">Đăng nhập</button>
+      </div>`
+    : "";
+
   app.innerHTML = `
     ${typeof profileGreeting === "function" ? profileGreeting() : ""}
+    ${khachHtml}
     <section class="hero">
       <div class="hero-ic">${ic("cap", "🎓")}</div>
       <h1>Học & Ôn thi Tin học THPT</h1>
@@ -382,6 +395,8 @@ function renderHome() {
   app.querySelectorAll(".topic-row").forEach((r) => r.onclick = () => go("practiceSetup", { topic: r.dataset.topic }));
   const cc = document.getElementById("continueCard");
   if (cc) { const goCur = () => go("lesson", { id: cc.dataset.id }); cc.onclick = goCur; cc.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); goCur(); } }; }
+  const gl = document.getElementById("guestLogin");
+  if (gl) gl.onclick = () => go("account");
   if (typeof Gam !== "undefined") Gam.renderDashboard(document.getElementById("gamDash"));
   if (typeof skillRenderCard === "function") skillRenderCard();
 }
@@ -428,6 +443,10 @@ function markLearned(id, val) {
   if (!val && has) State.learned = State.learned.filter((x) => x !== id);
   save("learned", State.learned);
   if (val && !has && typeof Gam !== "undefined") Gam.onLessonDone(id);
+  // Vừa học xong một bài là lúc tiến độ đáng giữ nhất -> mời đăng nhập (có tiết chế)
+  if (val && !has && window.Account && Account.moiDangNhap) {
+    setTimeout(function () { Account.moiDangNhap("hoc"); }, 700);
+  }
 }
 
 /* Chương (nhóm bài) của từng lớp — dùng chung cho lộ trình và trang luyện tập. */
@@ -1965,6 +1984,10 @@ function doSubmit(timeUp) {
   if (typeof Plan !== "undefined" && Q.mode === "practice") {
     Plan.dungCau(Q.answers.filter((a) => a != null).length);
   }
+  // Nộp xong bài là lúc có kết quả đáng lưu -> mời đăng nhập (chờ màn kết quả hiện ra)
+  if (window.Account && Account.moiDangNhap) {
+    setTimeout(function () { Account.moiDangNhap("lam"); }, 900);
+  }
 
   go("result", { result, record });
 }
@@ -2361,16 +2384,17 @@ function khoiDong() {
   }
   moKhoaGiaoDien(false);
   Account.boot().then(function () {
-    if (Account.available === false || Account.dbOff) {
-      app.innerHTML =
-        '<div class="gate"><div class="gate-logo">' + aIco("monitor", "#4f46e5", 30) + "</div>" +
-        "<h1>Cần kết nối máy chủ</h1>" +
-        '<p class="sub">Ứng dụng lưu tiến độ trên máy chủ nên cần mở qua địa chỉ web chính thức. ' +
-        (Account.dbOff ? "Máy chủ đang chạy nhưng chưa nối cơ sở dữ liệu." : "Bản đang mở là bản chạy trực tiếp từ tệp.") +
-        "</p></div>";
+    /* CHƯA ĐĂNG NHẬP vẫn học được đầy đủ phần miễn phí — tiến độ lưu trên máy,
+       khi nào đăng nhập thì được mang sang tài khoản (Account.gopDuLieuKhach).
+       Không đặt tường đăng nhập ở đây: khách từ Google vào trang /bai bấm "Mở
+       bài trong ứng dụng" mà gặp form đăng nhập là quay ra ngay.
+       Máy chủ chưa nối CSDL cũng vào chế độ này thay vì chặn cả app. */
+    if (!Account.user) {
+      moKhoaGiaoDien(true);
+      initFloatingMascot();
+      renderFromHash();
       return;
     }
-    if (!Account.user) { Account.renderGate("login"); return; }
     if (!Account.profileId) { Account.renderProfilePicker(); return; }
 
     moKhoaGiaoDien(true);

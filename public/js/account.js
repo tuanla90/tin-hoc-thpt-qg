@@ -184,9 +184,92 @@
   }
 
   function chonHoSo(id) {
+    gopDuLieuKhach(id);         // mang tiến độ học lúc chưa đăng nhập sang hồ sơ này
     Account.profileId = id;
     localStorage.setItem(KEY_PROFILE, String(id));
     location.reload();          // để mọi mô-đun đọc lại kho dữ liệu của hồ sơ này
+  }
+
+  /* ================== CHẾ ĐỘ KHÁCH (chưa đăng nhập) ==================
+     Người mới vào học được ngay, không bắt tạo tài khoản. Tiến độ lúc đó nằm ở
+     khoá localStorage KHÔNG có đuôi hồ sơ (xem session.js). Khi họ đăng nhập,
+     toàn bộ phần đã học phải theo sang hồ sơ vừa chọn — nếu không thì cảm giác
+     "đăng nhập xong mất sạch bài đã học", tệ hơn là không mời đăng nhập. */
+  var KEY_DATA = "tinhoc_thpt_v1", KEY_GAM = "tinhoc_gam_v1";
+  var KEY_MOI = "tinhoc_moi_dangnhap";
+
+  function docJson(k) {
+    try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; }
+  }
+  function laKhach() { return Account.available !== false && !Account.user; }
+
+  /* GỘP chứ không đè: hồ sơ đích có thể đã có tiến độ học từ máy khác. */
+  function gopDuLieuKhach(id) {
+    var khach = docJson(KEY_DATA), gamKhach = docJson(KEY_GAM);
+    if (!khach && !gamKhach) return;
+    var keyDich = KEY_DATA + ":" + id, keyGamDich = KEY_GAM + ":" + id;
+
+    if (khach) {
+      var dich = docJson(keyDich) || {};
+      var set = {};
+      (dich.learned || []).concat(khach.learned || []).forEach(function (x) { set[x] = 1; });
+      dich.learned = Object.keys(set);
+
+      var all = {};
+      (dich.history || []).concat(khach.history || []).forEach(function (r) { if (r && r.at) all[r.at] = r; });
+      dich.history = Object.keys(all).map(function (k) { return all[k]; })
+        .sort(function (a, b) { return b.at - a.at; }).slice(0, 50);
+
+      // Hồ sơ (tên/lớp/định hướng): chỉ lấy của khách khi hồ sơ đích còn trống
+      if (khach.profile && (!dich.profile || !dich.profile.grade)) dich.profile = khach.profile;
+      if (khach.settings && !dich.settings) dich.settings = khach.settings;
+      try { localStorage.setItem(keyDich, JSON.stringify(dich)); } catch (e) {}
+    }
+    if (gamKhach) {
+      var gamDich = docJson(keyGamDich);
+      if (!gamDich || (Number(gamKhach.xp) || 0) > (Number(gamDich.xp) || 0)) {
+        try { localStorage.setItem(keyGamDich, JSON.stringify(gamKhach)); } catch (e) {}
+      }
+    }
+    localStorage.removeItem(KEY_DATA);
+    localStorage.removeItem(KEY_GAM);
+  }
+
+  /* Mời đăng nhập — gọi SAU khi người học vừa làm xong việc gì đó (học xong một
+     bài, nộp xong một bài luyện), không bao giờ chặn giữa đường.
+     Tiết chế: bỏ qua mốc đầu (để họ trải nghiệm đã), sau đó thưa dần, tối thiểu
+     12 giờ một lần, và ai đã từ chối 5 lần thì thôi không mời nữa. */
+  function moiDangNhap(lyDo) {
+    if (!laKhach()) return;
+    var m = docJson(KEY_MOI) || { moc: 0, lanCuoi: 0, tuChoi: 0 };
+    m.moc++;
+    var duXa = Date.now() - (m.lanCuoi || 0) > 12 * 3600 * 1000;
+    var denLuot = m.moc === 2 || (m.moc > 2 && (m.moc - 2) % 5 === 0);
+    var hien = denLuot && duXa && (m.tuChoi || 0) < 5;
+    if (hien) m.lanCuoi = Date.now();
+    try { localStorage.setItem(KEY_MOI, JSON.stringify(m)); } catch (e) {}
+    if (!hien || typeof confirmBox !== "function") return;
+
+    var soBai = ((typeof State !== "undefined" && State.learned) || []).length;
+    var soLuot = ((typeof State !== "undefined" && State.history) || []).length;
+    var da = [];
+    if (soBai) da.push("học xong " + soBai + " bài");
+    if (soLuot) da.push("làm " + soLuot + " lượt luyện tập");
+    var xp = (docJson(KEY_GAM) || {}).xp || 0;
+    if (xp) da.push("gom được " + xp + " XP");
+
+    confirmBox(
+      lyDo === "hoc" ? "Giữ lại tiến độ học nhé?" : "Lưu kết quả này nhé?",
+      (da.length ? "Bạn đã " + da.join(", ") + ". " : "") +
+      "Tiến độ đang chỉ nằm trên máy này — xoá lịch sử trình duyệt hoặc đổi sang điện thoại là mất. " +
+      "Tạo tài khoản (miễn phí, chỉ cần email) để giữ lại và học tiếp ở bất kỳ máy nào.",
+      "Tạo tài khoản / Đăng nhập", "Để sau"
+    ).then(function (ok) {
+      if (ok) { if (typeof go === "function") go("account"); return; }
+      var m2 = docJson(KEY_MOI) || m;
+      m2.tuChoi = (m2.tuChoi || 0) + 1;
+      try { localStorage.setItem(KEY_MOI, JSON.stringify(m2)); } catch (e) {}
+    });
   }
 
   /* ---------------- CSS ---------------- */
@@ -542,6 +625,9 @@
   Account.hoSoHienTai = hoSoHienTai;
   Account.taoHoSo = taoHoSo;
   Account.themHoSo = themHoSo;
+  Account.laKhach = laKhach;
+  Account.moiDangNhap = moiDangNhap;
+  Account.gopDuLieuKhach = gopDuLieuKhach;
   window.Account = Account;
   window.renderAccount = renderAccount;
 })();
