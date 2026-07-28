@@ -479,19 +479,31 @@ const JS_THEME = "(function(){var b=document.getElementById('themeToggle');" +
   "b.innerHTML=t?T:S;try{localStorage.setItem('lpTheme',t?'light':'dark')}catch(e){}}})();";
 
 function khung(o) {
+  /* Ảnh chia sẻ và favicon phải là URL tuyệt đối thì Zalo/Facebook mới lấy được —
+     suy ra gốc miền từ canonical (canonical luôn tuyệt đối, xem goc(req)). */
+  const goc = String(o.canonical || "").replace(/^(https?:\/\/[^/]+).*$/, "$1");
+  /* Trang danh sách (/bai, /doi-chieu-sgk) là mục lục chứ không phải bài viết —
+     gắn article cho chúng là sai loại. */
+  const ogType = o.ogType || "article";
   return '<!DOCTYPE html>\n<html lang="vi">\n<head>\n' +
     '<meta charset="UTF-8">\n' +
     '<meta name="viewport" content="width=device-width,initial-scale=1">\n' +
     "<title>" + esc(o.title) + "</title>\n" +
     '<meta name="description" content="' + esc(o.desc) + '">\n' +
+    (o.noindex ? '<meta name="robots" content="noindex, follow">\n' : "") +
     '<link rel="canonical" href="' + esc(o.canonical) + '">\n' +
-    '<meta property="og:type" content="article">\n' +
+    '<link rel="icon" href="/asset/favicon.svg" type="image/svg+xml">\n' +
+    '<meta property="og:type" content="' + ogType + '">\n' +
     '<meta property="og:title" content="' + esc(o.title) + '">\n' +
     '<meta property="og:description" content="' + esc(o.desc) + '">\n' +
     '<meta property="og:url" content="' + esc(o.canonical) + '">\n' +
     '<meta property="og:site_name" content="Ôn thi Tin học THPT">\n' +
     '<meta property="og:locale" content="vi_VN">\n' +
-    '<meta name="twitter:card" content="summary">\n' +
+    '<meta property="og:image" content="' + esc(goc) + '/asset/og-cover.jpg">\n' +
+    '<meta property="og:image:width" content="1200">\n' +
+    '<meta property="og:image:height" content="630">\n' +
+    '<meta name="twitter:card" content="summary_large_image">\n' +
+    '<meta name="twitter:image" content="' + esc(goc) + '/asset/og-cover.jpg">\n' +
     '<link rel="preconnect" href="https://fonts.googleapis.com">\n' +
     '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n' +
     '<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@600;700;800;900&family=Lexend:wght@700;800&family=JetBrains+Mono:wght@600;700&family=Plus+Jakarta+Sans:wght@500;650;750;800&display=swap" rel="stylesheet">\n' +
@@ -737,6 +749,7 @@ ${khoi}
     title: `Ôn tập Tin học THPT — ${ds.length} bài lý thuyết & trắc nghiệm có đáp án`,
     desc: `Tổng hợp ${ds.length} bài Tin học lớp 10, 11, 12: tóm tắt lý thuyết, thuật ngữ tiếng Anh và câu trắc nghiệm có đáp án, bám cấu trúc đề thi tốt nghiệp THPT.`,
     canonical: base + "/bai",
+    ogType: "website",
     body,
     them: "<script>" + JS_LOC_BAI + "</script>",
     ld: {
@@ -941,12 +954,16 @@ ${bo.sach.map((s, i) => mucSach(s, theoId, i === 0)).join("")}
     title: `Đối chiếu SGK ${bo.tenNgan || bo.ten} — Tin học ${lop.join(", ")}`,
     desc: `Tra nhanh bài trong sách giáo khoa Tin học ${bo.tenNgan || bo.ten} tương ứng bài nào trong ứng dụng ôn thi, kèm số trang. Đủ lớp ${lop.join(", ")}.`,
     canonical: base + duong,
+    ogType: "website",
     body,
     them: "<script>" + JS_LOC + "</script>",
     ld: {
       "@context": "https://schema.org",
-      "@type": "Table",
+      "@type": "CollectionPage",
+      name: `Đối chiếu SGK ${bo.tenNgan || bo.ten} — Tin học ${lop.join(", ")}`,
+      inLanguage: "vi",
       about: "Đối chiếu chương trình Tin học THPT với sách giáo khoa " + bo.ten,
+      isPartOf: { "@type": "WebSite", name: "Ôn thi Tin học THPT", url: base + "/" },
     },
   });
   CACHE.set(khoaCache, html);
@@ -973,6 +990,32 @@ function createSeo() {
     res.set("Cache-Control", "public, max-age=3600");
     res.send(html);
   };
+
+  /* ---- Trang tĩnh: chèn gốc miền vào canonical/og ----
+     canonical và og:image bắt buộc là URL tuyệt đối (Zalo/Facebook không đọc
+     đường dẫn tương đối), nhưng tên miền thì tuỳ nơi deploy. Nên trong tệp HTML
+     ghi %%GOC%% rồi thay lúc phục vụ — khỏi phải đóng cứng tên miền vào repo và
+     bản chạy local vẫn đúng. */
+  const PUB_DIR = path.join(__dirname, "..", "public");
+  const boNhoTrang = new Map();
+  function docTrangTinh(ten) {
+    if (!boNhoTrang.has(ten)) {
+      boNhoTrang.set(ten, fs.readFileSync(path.join(PUB_DIR, ten), "utf8"));
+    }
+    return boNhoTrang.get(ten);
+  }
+  const TRANG_TINH = { "/": "index.html", "/index.html": "index.html",
+    "/landing": "landing.html", "/landing.html": "landing.html",
+    "/nang-cap": "nang-cap.html", "/nang-cap.html": "nang-cap.html",
+    "/quyen-rieng-tu": "quyen-rieng-tu.html", "/quyen-rieng-tu.html": "quyen-rieng-tu.html" };
+  r.get(Object.keys(TRANG_TINH), (req, res, next) => {
+    try {
+      const html = docTrangTinh(TRANG_TINH[req.path]).replace(/%%GOC%%/g, goc(req));
+      res.set("Content-Type", "text/html; charset=utf-8");
+      res.set("Cache-Control", "no-cache");
+      res.send(html);
+    } catch (e) { next(e); }
+  });
 
   r.get("/bai", (req, res, next) => {
     try { traHtml(res, trangDanhSach(goc(req))); } catch (e) { next(e); }
@@ -1014,6 +1057,7 @@ function createSeo() {
         title: "Không tìm thấy bài học",
         desc: "Đường dẫn không đúng.",
         canonical: goc(req) + "/bai",
+        noindex: true,
         body: '<div class="pg-hero left"><h1>Không tìm thấy bài học này</h1>' +
           '<p class="lead">Có thể đường dẫn đã đổi.</p></div>' +
           '<div class="pg-card" style="text-align:center"><p style="margin-bottom:12px">Xem danh sách đầy đủ để tìm đúng bài bạn cần.</p>' +
@@ -1064,7 +1108,12 @@ ${ds.map((m) => url(base + "/bai/" + m.slug, "0.7", lmBai)).join("\n")}
       "Allow: /\n" +
       "Disallow: /api/\n" +
       "Disallow: /admin.html\n" +
-      "Disallow: /admin\n\n" +
+      "Disallow: /admin\n" +
+      /* Ảnh scan và PDF sách giáo khoa: chỉ dùng để đối chiếu khi soạn nội dung,
+         không phải tài liệu của mình nên tuyệt đối không để Google lập chỉ mục.
+         Thư mục đã nằm trong .gitignore (không lên Railway) — dòng này là lớp
+         chặn thứ hai cho trường hợp chạy máy khác. */
+      "Disallow: /sach/\n\n" +
       "Sitemap: " + goc(req) + "/sitemap.xml\n"
     );
   });
