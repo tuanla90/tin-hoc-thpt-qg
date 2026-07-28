@@ -158,6 +158,8 @@
     var o = document.getElementById("planUpsell");
     if (o) o.remove();
   }
+  /* Có mua thẳng trong app được không (máy chủ đã bật thanh toán tự động chưa) */
+  function coTuDong() { return typeof Pay !== "undefined" && Pay.co(); }
   function upsell(lyDo) {
     dongUpsell();
     var ld = LY_DO[lyDo] || LY_DO.quota;
@@ -173,16 +175,25 @@
           return "<li>" + ico("check2", "#16a34a", 14) + " " + x + "</li>";
         }).join("") + "</ul>" +
         (quotaText() ? '<p class="plan-m-quota">' + quotaText() + "</p>" : "") +
+        /* Máy chủ đã bật thanh toán tự động thì mua ngay tại đây: quét QR, tiền
+           vào là mở gói trong vài giây. Chưa bật thì quay về đường cũ (mua mã,
+           nhận qua Zalo) — không để nút bấm vào không ra gì. */
         '<div class="plan-m-btns">' +
-          '<a class="btn btn-primary btn-lg" href="nang-cap.html" target="_blank" rel="noopener">Xem giá &amp; mua mã — 249.000đ/năm</a>' +
+          (coTuDong()
+            ? '<button class="btn btn-primary btn-lg" id="planMua">Mua ngay — quét mã là xong</button>'
+            : '<a class="btn btn-primary btn-lg" href="nang-cap.html" target="_blank" rel="noopener">Xem giá &amp; mua mã</a>') +
           '<button class="btn btn-ghost" id="planGoAcc">Nhập mã kích hoạt</button>' +
           '<button class="btn btn-ghost" id="planLater">Để sau</button>' +
         "</div>" +
-        '<p class="plan-m-note">Chuyển khoản QR → nhận mã qua Zalo trong ít phút → dán mã là lên Premium.</p>' +
+        '<p class="plan-m-note">' + (coTuDong()
+          ? "Quét mã bằng app ngân hàng — số tài khoản, số tiền và nội dung đã điền sẵn. Tiền vào là gói mở ngay, không phải chờ ai."
+          : "Chuyển khoản QR → nhận mã qua Zalo trong ít phút → dán mã là lên Premium.") + "</p>" +
       "</div>";
     document.body.appendChild(o);
     o.onclick = function (e) { if (e.target === o) dongUpsell(); };
     o.querySelector("#planLater").onclick = dongUpsell;
+    var nutMua = o.querySelector("#planMua");
+    if (nutMua) nutMua.onclick = function () { dongUpsell(); Pay.batDau("nam"); };
     o.querySelector("#planGoAcc").onclick = function () {
       dongUpsell();
       if (typeof go === "function") go("account");

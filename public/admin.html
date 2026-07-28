@@ -148,6 +148,21 @@
         <tr><th>Mã</th><th>Hạn (ngày)</th><th>Trạng thái</th><th>Người kích hoạt</th><th>Hết hạn</th><th>Ghi chú</th></tr>
       </thead><tbody></tbody></table></div>
     </div>
+
+    <div class="pg-card" id="theDon" hidden>
+      <h2>Đơn thanh toán tự động</h2>
+      <p class="pg-note" style="margin-top:0">Tiền vào là máy chủ tự mở gói — mục này chỉ để đối soát.</p>
+      <div class="pg-table-wrap"><table class="ad-tbl" id="bangDon"><thead>
+        <tr><th>Mã đơn</th><th>Email</th><th>Gói</th><th>Số tiền</th><th>Trạng thái</th><th>Tạo lúc</th><th>Trả lúc</th></tr>
+      </thead><tbody></tbody></table></div>
+
+      <h2 style="margin:22px 0 2px; font-size:17px">Giao dịch chưa khớp — cần xử lý tay</h2>
+      <p class="pg-note" style="margin-top:2px">Khách chuyển sai nội dung, chuyển thiếu, hoặc chuyển từ ATM.
+        Xử lý: tạo một mã kích hoạt ở trên rồi gửi cho họ.</p>
+      <div class="pg-table-wrap"><table class="ad-tbl" id="bangLe"><thead>
+        <tr><th>Lúc</th><th>Số tiền</th><th>Nội dung chuyển khoản</th><th>Vì sao chưa khớp</th></tr>
+      </thead><tbody></tbody></table></div>
+    </div>
   </div>
 </div>
 </main>
@@ -423,9 +438,35 @@
     }, 180);
   });
 
+  /* Đơn thanh toán tự động — chỉ hiện khi máy chủ đã bật SePay (chưa bật thì
+     mục này rỗng, để trống chỉ gây hoang mang). */
+  function veDon() {
+    return api("/pay/admin/orders").then(function (d) {
+      var don = d.orders || [], le = d.chuaKhop || [];
+      if (!don.length && !le.length) return;
+      document.getElementById("theDon").hidden = false;
+      document.querySelector("#bangDon tbody").innerHTML = don.map(function (x) {
+        var tt = x.trangThai === "da_tra"
+          ? '<span class="pg-yes">đã trả</span>'
+          : '<span class="pg-lim">đang chờ</span>';
+        return "<tr><td><code>" + esc(x.maDon) + "</code></td><td>" + esc(x.email || "") + "</td>" +
+          "<td>" + (x.goi === "nuocrut" ? "nước rút" : "1 năm") + "</td>" +
+          "<td>" + Number(x.soTien).toLocaleString("vi-VN") + "đ</td><td>" + tt + "</td>" +
+          "<td>" + ngay(x.taoLuc) + "</td><td>" + ngay(x.traLuc) + "</td></tr>";
+      }).join("");
+      document.querySelector("#bangLe tbody").innerHTML = le.length
+        ? le.map(function (x) {
+            return "<tr><td>" + ngay(x.luc) + "</td><td>" + Number(x.soTien || 0).toLocaleString("vi-VN") + "đ</td>" +
+              '<td class="ghi">' + esc(x.noiDung || "") + "</td>" +
+              '<td class="ghi">' + esc(x.ghiChu || "") + "</td></tr>";
+          }).join("")
+        : '<tr><td colspan="4" style="color:var(--ink-faint)">Không có giao dịch nào lỡ — mọi đồng đều vào đúng đơn.</td></tr>';
+    }).catch(function () { /* chưa bật thanh toán thì thôi, không phá trang */ });
+  }
+
   api("/admin/stats").then(function () {
     document.getElementById("noiDung").hidden = false;
-    return Promise.all([veStats(), veBang(), veNguoiDung(), veAiUsage()]);
+    return Promise.all([veStats(), veBang(), veNguoiDung(), veAiUsage(), veDon()]);
   }).catch(function (e) {
     var c = document.getElementById("chan");
     c.hidden = false;

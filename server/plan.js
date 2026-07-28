@@ -52,6 +52,27 @@ function maxProfiles(tier, role) {
   return tier === "paid" ? 3 : 1;
 }
 
+/* Cấp Premium thẳng cho một tài khoản (dùng cho THANH TOÁN TỰ ĐỘNG — tiền vào
+   là mở gói ngay, không qua mã). Vẫn ghi một dòng `licenses` để getPlan chỉ có
+   MỘT nguồn sự thật duy nhất, và để đối soát sau này thấy gói này từ đâu ra.
+   Cộng dồn từ hạn hiện có, giống hệt lúc nhập mã. */
+async function capPremium(pool, uid, soNgay, ghiChu) {
+  const hienTai = await getPlan(pool, uid);
+  const goc = hienTai.hetHan ? Math.max(Date.now(), new Date(hienTai.hetHan).getTime()) : Date.now();
+  const hetHan = new Date(goc + Number(soNgay || 365) * 86400000);
+  for (let thu = 0; thu < 5; thu++) {
+    const code = sinhMa();
+    try {
+      await pool.query(
+        `INSERT INTO licenses (code, duration_days, note, activated_by, activated_at, expires_at)
+         VALUES ($1, $2, $3, $4, now(), $5)`,
+        [code, Number(soNgay || 365), String(ghiChu || "").slice(0, 200), uid, hetHan.toISOString()]
+      );
+      return { ok: true, code, hetHan: hetHan.toISOString() };
+    } catch (e) { if (thu === 4) throw e; }   // trùng mã (xác suất ~0) thì sinh lại
+  }
+}
+
 /* Kích hoạt một mã cho tài khoản. Trả { ok, hetHan } hoặc ném Error có .status. */
 async function kichHoat(pool, uid, rawCode) {
   const code = chuanHoaMa(rawCode);
@@ -78,4 +99,4 @@ async function kichHoat(pool, uid, rawCode) {
   return { ok: true, hetHan: hetHan.toISOString() };
 }
 
-module.exports = { getPlan, maxProfiles, kichHoat, sinhMa, chuanHoaMa };
+module.exports = { getPlan, maxProfiles, kichHoat, capPremium, sinhMa, chuanHoaMa };

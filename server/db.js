@@ -82,6 +82,33 @@ CREATE TABLE IF NOT EXISTS licenses (
 );
 CREATE INDEX IF NOT EXISTS licenses_user_idx ON licenses (activated_by);
 
+CREATE TABLE IF NOT EXISTS orders (
+  id         SERIAL PRIMARY KEY,
+  ma_don     TEXT UNIQUE NOT NULL,
+  user_id    INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  goi        TEXT NOT NULL DEFAULT 'nam',
+  so_tien    INT NOT NULL,
+  so_ngay    INT NOT NULL DEFAULT 365,
+  trang_thai TEXT NOT NULL DEFAULT 'cho',
+  tx_id      TEXT,
+  tx_so_tien INT,
+  paid_at    TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS orders_user_idx ON orders (user_id, created_at DESC);
+
+CREATE TABLE IF NOT EXISTS pay_events (
+  id         SERIAL PRIMARY KEY,
+  tx_id      TEXT UNIQUE NOT NULL,
+  ma_don     TEXT,
+  so_tien    INT,
+  noi_dung   TEXT NOT NULL DEFAULT '',
+  khop       BOOLEAN NOT NULL DEFAULT false,
+  ghi_chu    TEXT NOT NULL DEFAULT '',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS pay_events_khop_idx ON pay_events (khop, created_at DESC);
+
 CREATE TABLE IF NOT EXISTS tutor_usage (
   user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   ngay    DATE NOT NULL,

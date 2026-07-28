@@ -31,10 +31,10 @@ function danhSachAdminEmail() {
     .split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
 }
 
-function createAdmin(pool) {
-  const r = express.Router();
-
-  r.use("/admin", async (req, res, next) => {
+/* Lớp chắn admin — tách riêng để mục đối soát thanh toán (server/pay.js) dùng
+   chung đúng một cách kiểm quyền, không chép lại logic bootstrap. */
+function chanAdmin(pool) {
+  return async function (req, res, next) {
     try {
       if (!pool) return res.status(503).json({ error: "Máy chủ chưa nối cơ sở dữ liệu." });
       if (!req.session || !req.session.uid) return res.status(401).json({ error: "Bạn chưa đăng nhập." });
@@ -49,7 +49,13 @@ function createAdmin(pool) {
       if (!laAdmin) return res.status(403).json({ error: "Trang này chỉ dành cho quản trị viên." });
       next();
     } catch (e) { next(e); }
-  });
+  };
+}
+
+function createAdmin(pool) {
+  const r = express.Router();
+
+  r.use("/admin", chanAdmin(pool));
 
   const q = (text, params) => pool.query(text, params);
 
@@ -243,4 +249,4 @@ function createAdmin(pool) {
   return r;
 }
 
-module.exports = { createAdmin };
+module.exports = { createAdmin, chanAdmin };

@@ -74,6 +74,17 @@
       </div>
     </div>
 
+    <!-- Máy chủ đã bật thanh toán tự động thì đây là đường nhanh nhất: mua ngay
+         trong ứng dụng, tiền vào là mở gói, khỏi chờ ai gửi mã. Khối này tự ẩn
+         khi chưa bật (xem /api/pay/config). -->
+    <div class="pg-card" id="tuDongCard" hidden>
+      <h2>Nhanh nhất: mua ngay trong ứng dụng</h2>
+      <p>Đăng nhập rồi bấm <b>Mua Premium</b> ở trang Tài khoản. Quét mã QR bằng app ngân hàng —
+        số tài khoản, số tiền và nội dung đã điền sẵn. <b>Tiền vào là gói mở ngay trong vài giây</b>,
+        không phải nhắn tin chờ mã.</p>
+      <p style="margin-top:14px"><a class="btn btn-primary" href="/#/account">Mua trong ứng dụng →</a></p>
+    </div>
+
     <div class="pg-card" id="muaCard">
       <h2>Cách mua — 3 bước, nhận mã qua Zalo</h2>
       <div class="pg-steps">
@@ -174,6 +185,18 @@
   var daCauHinh = SHOP.bank && SHOP.stk && SHOP.chuTk;
   $("chuaCauHinh").hidden = !!daCauHinh;
   $("thanhToan").hidden = !daCauHinh;
+
+  /* Máy chủ đã bật thanh toán tự động chưa (SePay)? Bật thì hiện lối mua nhanh
+     và hạ mục "nhận mã qua Zalo" xuống thành đường dự phòng. */
+  fetch("/api/pay/config", { credentials: "same-origin" })
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      if (!d || !d.on) return;
+      $("tuDongCard").hidden = false;
+      var h = $("muaCard").querySelector("h2");
+      if (h) h.textContent = "Cách khác: chuyển khoản tay, nhận mã qua Zalo";
+    })
+    .catch(function () {});
   if (!SHOP.zalo) $("zaloBtn").style.display = "none";
   else $("zaloBtn").href = "https://zalo.me/" + SHOP.zalo;
 

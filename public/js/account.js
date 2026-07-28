@@ -476,7 +476,19 @@
         (laPaid
           ? '<p class="ac-note" style="margin:4px 0 0">Nhập thêm mã sẽ <b>cộng dồn</b> vào hạn hiện có.</p>'
           : '<p class="ac-note" style="margin:4px 0 0">Premium mở: luyện tập không giới hạn · 13 đề thi thử + đề ngẫu nhiên · toàn bộ bài thực hành · tab Chỗ yếu · gia sư AI 25 lượt/ngày · 3 hồ sơ học tập.</p>') +
-        '<div class="pf-field" style="margin-top:12px"><label for="acLic">Mã kích hoạt (mẫu: TIN-XXXX-XXXX)</label>' +
+        /* Mua thẳng ở đây khi máy chủ đã bật thanh toán tự động: quét QR, tiền
+           vào là gói mở trong vài giây, không phải nhắn Zalo chờ mã.
+           Dựng sẵn nhưng ẩn: cấu hình thanh toán về sau lần vẽ đầu (fetch async),
+           nếu chờ nó rồi mới vẽ thì nút không bao giờ kịp xuất hiện. */
+        '<div id="acMuaBox" hidden>' +
+          '<div class="ac-actions" style="margin-top:14px">' +
+            '<button class="btn btn-primary" id="acMua">' + ico("crown", null, 15) + " " +
+            (laPaid ? "Gia hạn — quét mã là xong" : "Mua Premium — quét mã là xong") + "</button>" +
+          "</div>" +
+          '<p class="ac-note" style="margin:6px 0 0">Quét bằng app ngân hàng bất kỳ, nội dung chuyển khoản điền sẵn. ' +
+          "Tiền vào là gói mở ngay.</p>" +
+        "</div>" +
+        '<div class="pf-field" style="margin-top:12px"><label for="acLic">Hoặc nhập mã kích hoạt (mẫu: TIN-XXXX-XXXX)</label>' +
           '<div style="display:flex;gap:8px"><input class="pf-input" id="acLic" type="text" maxlength="16" placeholder="TIN-" style="flex:1;text-transform:uppercase" autocomplete="off">' +
           '<button class="btn btn-primary" id="acLicGo">Kích hoạt</button></div></div>' +
         '<div class="ac-err" id="acLicErr"></div>' +
@@ -528,6 +540,14 @@
       fullSync().then(function () { if (typeof toast === "function") toast("Đã đồng bộ ✓"); renderAccount(); });
     };
     document.getElementById("acOut").onclick = dangXuat;
+    var muaBtn = document.getElementById("acMua");
+    if (muaBtn && typeof Pay !== "undefined") {
+      muaBtn.onclick = function () { Pay.batDau("nam"); };
+      Pay.napCauHinh().then(function (cfg) {
+        var hop = document.getElementById("acMuaBox");
+        if (hop) hop.hidden = !cfg.on;
+      });
+    }
     var licGo = document.getElementById("acLicGo");
     if (licGo) licGo.onclick = function () {
       var inp = document.getElementById("acLic"), err = document.getElementById("acLicErr");
