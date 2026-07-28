@@ -669,6 +669,13 @@ select:focus, input[type="text"]:focus, input[type="number"]:focus {
   background: var(--info-soft); border-left: 4px solid var(--info); font-size: 14.5px;
 }
 .explain-box b { color: var(--info); }
+
+/* Lời giải câu Đúng/Sai tách thành từng ý (xem fmtGiaiThich trong app.js).
+   Không dùng chấm đầu dòng: mỗi ý đã mở đầu bằng (1)(2)(3)(4) rồi, thêm chấm là
+   thừa hai lớp đánh dấu. Gạch mảnh giữa các ý đủ để mắt tách dòng. */
+.gt-y { list-style: none; margin: 6px 0 0; padding: 0; }
+.gt-y li { padding: 4px 0; }
+.gt-y li + li { border-top: 1px dashed var(--border); }
 .result-flag { font-weight: 800; margin-bottom: 6px; }
 .result-flag.ok { color: var(--success); }
 .result-flag.no { color: var(--danger); }

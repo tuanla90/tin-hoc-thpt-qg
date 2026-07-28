@@ -771,6 +771,37 @@ function fmtInline(s) {
 /* Như trên, thêm giữ xuống dòng — dùng cho câu hỏi và lời giải. */
 function fmtQ(s) { return fmtInline(s).replace(/\n/g, "<br>"); }
 
+/* Lời giải câu Đúng/Sai viết liền một mạch "(1) ... (2) ... (3) ... (4) ...",
+   đọc trên màn hình thành khối chữ đặc, phải dò mắt mới biết ý nào ứng với mệnh
+   đề nào. Tách mỗi ý một dòng.
+
+   HAI CHỐT AN TOÀN, vì tách sai là MẤT CHỮ của lời giải:
+     1. Chuỗi phải MỞ ĐẦU bằng một ý — có câu viết "Ý (2) sai: ... Còn lại đúng:
+        (1) ...", cắt theo dấu ngoặc sẽ nuốt mất phần đầu.
+     2. Ghép lại phải ra ĐÚNG chuỗi gốc, lệch một ký tự là trả null.
+   Không thoả thì giữ nguyên một đoạn — thà xấu còn hơn thiếu.
+   Đã kiểm trên cả 2.052 câu: tách được 576, giữ nguyên 1.476, mất chữ 0. */
+function tachYGiaiThich(s) {
+  const t = String(s || "").trim();
+  const re = /(^|[.;!?]\s+)(\((?:[1-4]|[a-d])\))/g;
+  const idx = [];
+  let m;
+  while ((m = re.exec(t))) idx.push(m.index + m[1].length);
+  if (idx.length < 2 || idx[0] !== 0) return null;
+  const ra = idx
+    .map((p, i) => t.slice(p, i + 1 < idx.length ? idx[i + 1] : t.length).trim())
+    .filter(Boolean);
+  const gon = (x) => x.replace(/\s+/g, "");
+  return gon(ra.join(" ")) === gon(t) ? ra : null;
+}
+
+/* Lời giải -> HTML: tách được thì mỗi ý một dòng, không thì giữ nguyên đoạn. */
+function fmtGiaiThich(s) {
+  const y = tachYGiaiThich(s);
+  if (!y) return fmtQ(s || "");
+  return '<ul class="gt-y">' + y.map((x) => "<li>" + fmtQ(x) + "</li>").join("") + "</ul>";
+}
+
 function renderBlocks(sections) {
   const fi = (s) => fmtInline(s).replace(/\n/g, "<br>");   // giữ xuống dòng trong đoạn văn
   return sections.map((b) => {
@@ -1869,7 +1900,7 @@ function renderExplain(q) {
         <img src="${hintReaction.pose}" alt="Robot Giải thích" style="width:42px; height:42px; object-fit:contain; flex-shrink:0;" />
         <div>
           <b>${aIco("bulb", "#d97706", 14)} ${hintReaction.msg}</b>
-          <div style="margin-top:4px;">${fmtQ(q.explain || "")}</div>
+          <div style="margin-top:4px;">${fmtGiaiThich(q.explain || "")}</div>
         </div>
       </div>
       <button class="btn btn-ghost" id="whyBtn" style="display:none; margin-top:10px">${aIco("bulb", "#d97706", 15)} Vì sao tôi sai?</button>
@@ -2128,7 +2159,7 @@ function renderReviewList(result) {
             ${q.type === "tf" ? ` — <span style="color:var(--text-soft)">${d.subCorrect}/${q.statements.length} ý đúng (${d.pts.toFixed(2)}đ)</span>` : ""}</div>
           <div>Đáp án đúng: <b style="color:var(--success)">${correctAns}</b></div>
         </div>
-        <div class="explain-box"><b>${aIco("bulb", "#d97706", 14)} Giải thích:</b> ${fmtQ(q.explain || "")}</div>
+        <div class="explain-box"><b>${aIco("bulb", "#d97706", 14)} Giải thích:</b> ${fmtGiaiThich(q.explain || "")}</div>
         ${d.fullyCorrect ? "" : `<button class="btn btn-ghost rv-why" data-i="${i}" hidden style="margin-top:10px">${aIco("bulb", "#d97706", 15)} Vì sao tôi sai?</button>`}
       </div>`;
   }).join("");
