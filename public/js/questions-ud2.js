@@ -95,7 +95,7 @@
     "correct": true
    }
   ],
-  "explain": "(1) đúng vì đó là định nghĩa của hệ QTCSDL. (2) đúng vì báo cáo dùng để in dữ liệu. (3) sai vì chỉ bảng mới chứa dữ liệu thật, truy vấn và biểu mẫu chỉ là cách nhìn và làm việc với dữ liệu trong bảng. (4) đúng vì biểu mẫu dùng để nhập dữ liệu."
+  "explain": "(a) đúng vì đó là định nghĩa của hệ QTCSDL. (b) đúng vì báo cáo dùng để in dữ liệu. (c) sai vì chỉ bảng mới chứa dữ liệu thật, truy vấn và biểu mẫu chỉ là cách nhìn và làm việc với dữ liệu trong bảng. (d) đúng vì biểu mẫu dùng để nhập dữ liệu."
  },
  {
   "id": "UD2-tf-002",
@@ -122,7 +122,7 @@
     "correct": true
    }
   ],
-  "explain": "(1) sai vì phải tạo tệp CSDL rỗng trước rồi mới tạo bảng và nhập dữ liệu. (2) đúng vì truy vấn dùng để lọc, tìm dữ liệu. (3) sai vì chỉ bảng mới chứa dữ liệu thật, báo cáo chỉ dùng để in. (4) đúng vì quy trình kết thúc ở bước khai thác."
+  "explain": "(a) sai vì phải tạo tệp CSDL rỗng trước rồi mới tạo bảng và nhập dữ liệu. (b) đúng vì truy vấn dùng để lọc, tìm dữ liệu. (c) sai vì chỉ bảng mới chứa dữ liệu thật, báo cáo chỉ dùng để in. (d) đúng vì quy trình kết thúc ở bước khai thác."
  },
  {
   "id": "UD2-mc-005",
@@ -213,7 +213,7 @@
     "correct": false
    }
   ],
-  "explain": "(1) đúng vì mỗi trường có một tên và một kiểu dữ liệu. (2) đúng vì nên dùng mã riêng vì họ tên có thể trùng nhau. (3) sai vì phải thiết kế cấu trúc trước rồi mới nhập dữ liệu. (4) sai vì khoá chính không được trống ở bất kỳ bản ghi nào."
+  "explain": "(a) đúng vì mỗi trường có một tên và một kiểu dữ liệu. (b) đúng vì nên dùng mã riêng vì họ tên có thể trùng nhau. (c) sai vì phải thiết kế cấu trúc trước rồi mới nhập dữ liệu. (d) sai vì khoá chính không được trống ở bất kỳ bản ghi nào."
  },
  {
   "id": "UD2-tf-004",
@@ -240,7 +240,7 @@
     "correct": false
    }
   ],
-  "explain": "(1) đúng vì chế độ thiết kế dùng để dựng và sửa khung bảng. (2) đúng vì chế độ nhập dữ liệu dùng để điền bản ghi. (3) đúng vì hai chế độ là hai cách nhìn của cùng một bảng. (4) sai vì muốn tính toán phải chọn kiểu số, không phải kiểu văn bản."
+  "explain": "(a) đúng vì chế độ thiết kế dùng để dựng và sửa khung bảng. (b) đúng vì chế độ nhập dữ liệu dùng để điền bản ghi. (c) đúng vì hai chế độ là hai cách nhìn của cùng một bảng. (d) sai vì muốn tính toán phải chọn kiểu số, không phải kiểu văn bản."
  },
  {
   "id": "UD2-mc-009",
@@ -331,7 +331,7 @@
     "correct": true
    }
   ],
-  "explain": "(1) đúng vì nên đặt tên, chọn nơi lưu và lưu sớm. (2) sai vì phải tạo bảng trước rồi mới nhập bản ghi. (3) đúng vì đặt khoá chính là một bước khi thiết kế bảng. (4) đúng vì bản ghi mẫu giúp phát hiện sớm lỗi kiểu dữ liệu và khoá chính."
+  "explain": "(a) đúng vì nên đặt tên, chọn nơi lưu và lưu sớm. (b) sai vì phải tạo bảng trước rồi mới nhập bản ghi. (c) đúng vì đặt khoá chính là một bước khi thiết kế bảng. (d) đúng vì bản ghi mẫu giúp phát hiện sớm lỗi kiểu dữ liệu và khoá chính."
  },
  {
   "id": "UD2-tf-006",
@@ -358,7 +358,7 @@
     "correct": false
    }
   ],
-  "explain": "(1) đúng vì tạo cơ sở dữ liệu trước rồi mới tạo bảng. (2) đúng vì thiết kế bảng gồm khai báo trường và chọn kiểu dữ liệu. (3) sai vì phải lưu và đặt tên bảng sau khi thiết kế. (4) sai vì nhập bản ghi mẫu để kiểm tra cấu trúc, không thay thế việc đặt khoá chính."
+  "explain": "(a) đúng vì tạo cơ sở dữ liệu trước rồi mới tạo bảng. (b) đúng vì thiết kế bảng gồm khai báo trường và chọn kiểu dữ liệu. (c) sai vì phải lưu và đặt tên bảng sau khi thiết kế. (d) sai vì nhập bản ghi mẫu để kiểm tra cấu trúc, không thay thế việc đặt khoá chính."
  },
  {
   "id": "UD2-mc-013",
@@ -449,7 +449,7 @@
     "correct": true
    }
   ],
-  "explain": "(1) đúng vì khoá chính định danh duy nhất từng bản ghi. (2) đúng vì khoá ngoài được phép lặp do nhiều bản ghi con cùng trỏ về một bản ghi cha. (3) sai vì giá trị khoá ngoài phải đã tồn tại ở khoá chính của bảng cha. (4) đúng vì tách bảng để tránh trùng lặp, giữ nhất quán."
+  "explain": "(a) đúng vì khoá chính định danh duy nhất từng bản ghi. (b) đúng vì khoá ngoài được phép lặp do nhiều bản ghi con cùng trỏ về một bản ghi cha. (c) sai vì giá trị khoá ngoài phải đã tồn tại ở khoá chính của bảng cha. (d) đúng vì tách bảng để tránh trùng lặp, giữ nhất quán."
  },
  {
   "id": "UD2-tf-008",
@@ -476,7 +476,7 @@
     "correct": false
    }
   ],
-  "explain": "(1) đúng vì phía nhiều giữ khoá ngoài trỏ về phía một. (2) đúng vì khoá ngoài ở bảng con trỏ tới khoá chính của bảng cha. (3) sai vì mỗi thông tin gốc chỉ nên ghi đúng một chỗ để tránh trùng lặp. (4) sai vì bài không yêu cầu khoá phải là kiểu số; khoá có thể là mã dạng văn bản hoặc số tuỳ thiết kế."
+  "explain": "(a) đúng vì phía nhiều giữ khoá ngoài trỏ về phía một. (b) đúng vì khoá ngoài ở bảng con trỏ tới khoá chính của bảng cha. (c) sai vì mỗi thông tin gốc chỉ nên ghi đúng một chỗ để tránh trùng lặp. (d) sai vì bài không yêu cầu khoá phải là kiểu số; khoá có thể là mã dạng văn bản hoặc số tuỳ thiết kế."
  },
  {
   "id": "UD2-mc-017",
@@ -567,7 +567,7 @@
     "correct": false
    }
   ],
-  "explain": "(1) đúng vì ba thao tác cập nhật cơ bản là thêm, sửa, xoá bản ghi. (2) đúng vì các thao tác này làm trực quan ngay trên bảng. (3) sai vì sửa một ô chỉ thay đổi giá trị ô đó, không xoá cả bản ghi. (4) sai vì có thể cập nhật trực quan ngay trên bảng, không bắt buộc viết lệnh."
+  "explain": "(a) đúng vì ba thao tác cập nhật cơ bản là thêm, sửa, xoá bản ghi. (b) đúng vì các thao tác này làm trực quan ngay trên bảng. (c) sai vì sửa một ô chỉ thay đổi giá trị ô đó, không xoá cả bản ghi. (d) sai vì có thể cập nhật trực quan ngay trên bảng, không bắt buộc viết lệnh."
  },
  {
   "id": "UD2-tf-010",
@@ -594,7 +594,7 @@
     "correct": false
    }
   ],
-  "explain": "(1) đúng vì biểu mẫu hiện một bản ghi mỗi lần nên nhập gọn, ít nhầm. (2) đúng vì biểu mẫu chỉ là cách nhập, dữ liệu vẫn vào cùng bảng. (3) sai vì khi thêm, phần mềm tự kiểm để khoá chính không trùng. (4) sai vì xoá thường không hoàn tác được nên cần sao lưu trước."
+  "explain": "(a) đúng vì biểu mẫu hiện một bản ghi mỗi lần nên nhập gọn, ít nhầm. (b) đúng vì biểu mẫu chỉ là cách nhập, dữ liệu vẫn vào cùng bảng. (c) sai vì khi thêm, phần mềm tự kiểm để khoá chính không trùng. (d) sai vì xoá thường không hoàn tác được nên cần sao lưu trước."
  },
  {
   "id": "UD2-mc-021",
@@ -685,7 +685,7 @@
     "correct": false
    }
   ],
-  "explain": "(1) đúng vì ràng buộc để hệ QTCSDL tự kiểm mỗi khi thêm, sửa, xoá. (2) đúng vì toàn vẹn tham chiếu cấm bản ghi mồ côi. (3) sai vì ràng buộc tự động kiểm chứ không cần bấm thủ công. (4) sai vì ràng buộc chặn sai sót ngay lúc nhập, không cho lưu dữ liệu sai."
+  "explain": "(a) đúng vì ràng buộc để hệ QTCSDL tự kiểm mỗi khi thêm, sửa, xoá. (b) đúng vì toàn vẹn tham chiếu cấm bản ghi mồ côi. (c) sai vì ràng buộc tự động kiểm chứ không cần bấm thủ công. (d) sai vì ràng buộc chặn sai sót ngay lúc nhập, không cho lưu dữ liệu sai."
  },
  {
   "id": "UD2-tf-012",
@@ -712,7 +712,7 @@
     "correct": false
    }
   ],
-  "explain": "(1) đúng vì ràng buộc ngăn sai sót ngay khi nhập nên không tích tụ dữ liệu rác. (2) đúng vì dữ liệu sạch giúp báo cáo đáng tin. (3) sai vì toàn vẹn tham chiếu buộc khoá ngoài phải trỏ tới khoá chính có thật. (4) sai vì ràng buộc giữ cho hai bảng nhất quán chứ không mâu thuẫn."
+  "explain": "(a) đúng vì ràng buộc ngăn sai sót ngay khi nhập nên không tích tụ dữ liệu rác. (b) đúng vì dữ liệu sạch giúp báo cáo đáng tin. (c) sai vì toàn vẹn tham chiếu buộc khoá ngoài phải trỏ tới khoá chính có thật. (d) sai vì ràng buộc giữ cho hai bảng nhất quán chứ không mâu thuẫn."
  },
  {
   "id": "UD2-mc-025",
@@ -803,7 +803,7 @@
     "correct": false
    }
   ],
-  "explain": "(1) đúng vì truy vấn lấy dữ liệu từ một hoặc nhiều bảng. (2) đúng vì công cụ thiết kế trực quan cho kéo thả để chọn trường, lọc, sắp xếp. (3) sai vì có công cụ trực quan, không bắt buộc gõ lệnh. (4) sai vì truy vấn nhìn dữ liệu gốc chứ không sao chép ra tệp mới."
+  "explain": "(a) đúng vì truy vấn lấy dữ liệu từ một hoặc nhiều bảng. (b) đúng vì công cụ thiết kế trực quan cho kéo thả để chọn trường, lọc, sắp xếp. (c) sai vì có công cụ trực quan, không bắt buộc gõ lệnh. (d) sai vì truy vấn nhìn dữ liệu gốc chứ không sao chép ra tệp mới."
  },
  {
   "id": "UD2-tf-014",
@@ -830,7 +830,7 @@
     "correct": false
    }
   ],
-  "explain": "(1) đúng vì cặp khoá chung dùng để ghép đúng dòng. (2) đúng vì quên hoặc sai liên kết, điều kiện sẽ cho kết quả sai. (3) sai vì quên đường nối gây ghép chéo sai lệch. (4) sai vì truy vấn chỉ nhìn dữ liệu gốc, không ghi đè."
+  "explain": "(a) đúng vì cặp khoá chung dùng để ghép đúng dòng. (b) đúng vì quên hoặc sai liên kết, điều kiện sẽ cho kết quả sai. (c) sai vì quên đường nối gây ghép chéo sai lệch. (d) sai vì truy vấn chỉ nhìn dữ liệu gốc, không ghi đè."
  },
  {
   "id": "UD2-mc-029",
@@ -921,7 +921,7 @@
     "correct": false
    }
   ],
-  "explain": "(1) đúng vì sự cố không hoàn tác được nên phải sao lưu định kỳ. (2) đúng vì đặt tên theo ngày giúp nhận biết bản mới. (3) sai vì phải sao lưu định kỳ, một lần là không đủ. (4) sai vì theo nguyên tắc 3-2-1 nên có một bản để ở nơi khác, không dồn tất cả một chỗ."
+  "explain": "(a) đúng vì sự cố không hoàn tác được nên phải sao lưu định kỳ. (b) đúng vì đặt tên theo ngày giúp nhận biết bản mới. (c) sai vì phải sao lưu định kỳ, một lần là không đủ. (d) sai vì theo nguyên tắc 3-2-1 nên có một bản để ở nơi khác, không dồn tất cả một chỗ."
  },
  {
   "id": "UD2-tf-016",
@@ -948,7 +948,7 @@
     "correct": false
    }
   ],
-  "explain": "(1) đúng vì phục hồi dùng bản sao lưu gần nhất còn tốt. (2) đúng vì nguyên tắc 3-2-1 yêu cầu 2 loại phương tiện. (3) sai vì chỉ lấy lại dữ liệu tới thời điểm sao lưu, phần phát sinh sau đó bị mất. (4) sai vì nguyên tắc 3-2-1 khuyên để 1 bản ở nơi khác, không dồn tất cả vào một ổ."
+  "explain": "(a) đúng vì phục hồi dùng bản sao lưu gần nhất còn tốt. (b) đúng vì nguyên tắc 3-2-1 yêu cầu 2 loại phương tiện. (c) sai vì chỉ lấy lại dữ liệu tới thời điểm sao lưu, phần phát sinh sau đó bị mất. (d) sai vì nguyên tắc 3-2-1 khuyên để 1 bản ở nơi khác, không dồn tất cả vào một ổ."
  },
  {
   "id": "UD2-mc-033",
@@ -1039,7 +1039,7 @@
     "correct": false
    }
   ],
-  "explain": "(1) đúng: số điểm ảnh quyết định độ phân giải và độ nét. (2) sai: làm trên lớp là chỉnh sửa không phá huỷ, ảnh gốc được giữ nguyên. (3) đúng: mỗi nội dung một lớp giúp sửa riêng từng phần. (4) sai: vùng chọn chỉ giới hạn thao tác vào phần ảnh được khoanh chọn."
+  "explain": "(a) đúng: số điểm ảnh quyết định độ phân giải và độ nét. (b) sai: làm trên lớp là chỉnh sửa không phá huỷ, ảnh gốc được giữ nguyên. (c) đúng: mỗi nội dung một lớp giúp sửa riêng từng phần. (d) sai: vùng chọn chỉ giới hạn thao tác vào phần ảnh được khoanh chọn."
  },
  {
   "id": "UD2-tf-018",
@@ -1066,7 +1066,7 @@
     "correct": false
    }
   ],
-  "explain": "(1) đúng: lớp là các tầng trong suốt xếp chồng. (2) sai: số điểm ảnh quyết định độ phân giải và độ nét. (3) đúng: vùng chọn giới hạn thao tác vào phần được khoanh. (4) sai: có thể ẩn/hiện, sắp xếp và xoá từng lớp."
+  "explain": "(a) đúng: lớp là các tầng trong suốt xếp chồng. (b) sai: số điểm ảnh quyết định độ phân giải và độ nét. (c) đúng: vùng chọn giới hạn thao tác vào phần được khoanh. (d) sai: có thể ẩn/hiện, sắp xếp và xoá từng lớp."
  },
  {
   "id": "UD2-mc-037",
@@ -1157,7 +1157,7 @@
     "correct": false
    }
   ],
-  "explain": "(1) đúng: độ tương phản nới rộng chênh lệch sáng - tối. (2) sai: độ sáng làm cả ảnh sáng/tối đồng loạt. (3) đúng: nên chỉnh vừa đủ, tránh cháy sáng và ảnh bệt. (4) sai: bão hoà càng cao màu càng rực, bão hoà thấp mới nhạt."
+  "explain": "(a) đúng: độ tương phản nới rộng chênh lệch sáng - tối. (b) sai: độ sáng làm cả ảnh sáng/tối đồng loạt. (c) đúng: nên chỉnh vừa đủ, tránh cháy sáng và ảnh bệt. (d) sai: bão hoà càng cao màu càng rực, bão hoà thấp mới nhạt."
  },
  {
   "id": "UD2-tf-020",
@@ -1184,7 +1184,7 @@
     "correct": false
    }
   ],
-  "explain": "(1) đúng: histogram là đồ thị phân bố sáng - tối. (2) sai: dồn trái là thiếu sáng, dồn phải mới là thừa sáng. (3) đúng: nên làm trên bản sao và giữ lại ảnh gốc. (4) sai: cụm hẹp ở giữa là thiếu tương phản, không phải tương phản cao."
+  "explain": "(a) đúng: histogram là đồ thị phân bố sáng - tối. (b) sai: dồn trái là thiếu sáng, dồn phải mới là thừa sáng. (c) đúng: nên làm trên bản sao và giữ lại ảnh gốc. (d) sai: cụm hẹp ở giữa là thiếu tương phản, không phải tương phản cao."
  },
  {
   "id": "UD2-mc-041",
@@ -1275,7 +1275,7 @@
     "correct": false
    }
   ],
-  "explain": "(1) đúng: chọn hình học hợp với hình vuông vắn. (2) sai: chọn theo màu hợp khi nền một màu đồng nhất, không phải nền loang lổ. (3) đúng: có thể cộng thêm hoặc bớt khỏi vùng chọn. (4) sai: có thể phối hợp nhiều công cụ để chọn cho khớp."
+  "explain": "(a) đúng: chọn hình học hợp với hình vuông vắn. (b) sai: chọn theo màu hợp khi nền một màu đồng nhất, không phải nền loang lổ. (c) đúng: có thể cộng thêm hoặc bớt khỏi vùng chọn. (d) sai: có thể phối hợp nhiều công cụ để chọn cho khớp."
  },
  {
   "id": "UD2-tf-022",
@@ -1302,7 +1302,7 @@
     "correct": false
    }
   ],
-  "explain": "(1) đúng: vùng chọn là chìa khoá tách chủ thể khỏi nền. (2) đúng: làm mềm mép vừa phải giúp ghép tự nhiên. (3) sai: nên khoanh chọn rồi tách, không xoá trực tiếp phần nền. (4) sai: tăng dung sai sẽ mở rộng, không phải thu hẹp phạm vi màu được chọn."
+  "explain": "(a) đúng: vùng chọn là chìa khoá tách chủ thể khỏi nền. (b) đúng: làm mềm mép vừa phải giúp ghép tự nhiên. (c) sai: nên khoanh chọn rồi tách, không xoá trực tiếp phần nền. (d) sai: tăng dung sai sẽ mở rộng, không phải thu hẹp phạm vi màu được chọn."
  },
  {
   "id": "UD2-mc-045",
@@ -1393,7 +1393,7 @@
     "correct": false
    }
   ],
-  "explain": "(1) đúng: nên chọn màu vẽ trước khi vẽ. (2) đúng: dùng mã màu để lấy đúng màu. (3) sai: tạo lớp chữ là việc của công cụ văn bản, còn gôm tẩy dùng để xoá. (4) sai: có thể chỉnh cỡ nét và độ mờ của bút vẽ."
+  "explain": "(a) đúng: nên chọn màu vẽ trước khi vẽ. (b) đúng: dùng mã màu để lấy đúng màu. (c) sai: tạo lớp chữ là việc của công cụ văn bản, còn gôm tẩy dùng để xoá. (d) sai: có thể chỉnh cỡ nét và độ mờ của bút vẽ."
  },
  {
   "id": "UD2-tf-024",
@@ -1420,7 +1420,7 @@
     "correct": false
    }
   ],
-  "explain": "(1) đúng: công cụ văn bản tạo lớp chữ riêng. (2) đúng: thêm viền giúp chữ tương phản, đọc rõ. (3) sai: bản đã gộp phẳng không tách lại được từng lớp. (4) sai: nên giữ bản gốc có lớp để còn sửa về sau."
+  "explain": "(a) đúng: công cụ văn bản tạo lớp chữ riêng. (b) đúng: thêm viền giúp chữ tương phản, đọc rõ. (c) sai: bản đã gộp phẳng không tách lại được từng lớp. (d) sai: nên giữ bản gốc có lớp để còn sửa về sau."
  },
  {
   "id": "UD2-mc-049",
@@ -1511,7 +1511,7 @@
     "correct": false
    }
   ],
-  "explain": "(1) đúng vì bản chất ảnh động là chuỗi khung chiếu nối tiếp thật nhanh; (2) đúng vì thứ tự khung quyết định chiều chuyển động; (3) sai vì thời gian hiển thị của từng khung có thể khác nhau để chỉnh nhịp; (4) sai vì ảnh động cần nhiều khung, một ảnh tĩnh không tạo được chuyển động."
+  "explain": "(a) đúng vì bản chất ảnh động là chuỗi khung chiếu nối tiếp thật nhanh; (b) đúng vì thứ tự khung quyết định chiều chuyển động; (c) sai vì thời gian hiển thị của từng khung có thể khác nhau để chỉnh nhịp; (d) sai vì ảnh động cần nhiều khung, một ảnh tĩnh không tạo được chuyển động."
  },
  {
   "id": "UD2-tf-026",
@@ -1538,7 +1538,7 @@
     "correct": false
    }
   ],
-  "explain": "(1) đúng vì fps cao làm mượt hơn nhưng tăng dung lượng; (2) đúng vì mỗi khung thường đặt trên một lớp riêng để dễ quản lí; (3) sai vì fps cao khiến tệp nặng hơn chứ không nhẹ đi; (4) sai vì cần chọn fps vừa đủ tự nhiên, fps quá cao chỉ làm tệp nặng không cần thiết."
+  "explain": "(a) đúng vì fps cao làm mượt hơn nhưng tăng dung lượng; (b) đúng vì mỗi khung thường đặt trên một lớp riêng để dễ quản lí; (c) sai vì fps cao khiến tệp nặng hơn chứ không nhẹ đi; (d) sai vì cần chọn fps vừa đủ tự nhiên, fps quá cao chỉ làm tệp nặng không cần thiết."
  },
  {
   "id": "UD2-mc-053",
@@ -1629,7 +1629,7 @@
     "correct": false
    }
   ],
-  "explain": "(1) đúng vì mỗi tư liệu trên dòng thời gian là một clip; (2) đúng vì chiều dài clip chính là thời lượng; (3) sai vì các clip có thể nằm trên nhiều rãnh khác nhau; (4) sai vì phần mềm làm phim ghép được cả video, ảnh lẫn âm thanh."
+  "explain": "(a) đúng vì mỗi tư liệu trên dòng thời gian là một clip; (b) đúng vì chiều dài clip chính là thời lượng; (c) sai vì các clip có thể nằm trên nhiều rãnh khác nhau; (d) sai vì phần mềm làm phim ghép được cả video, ảnh lẫn âm thanh."
  },
  {
   "id": "UD2-tf-028",
@@ -1656,7 +1656,7 @@
     "correct": false
    }
   ],
-  "explain": "(1) đúng vì fps quyết định độ mượt, độ phân giải quyết định độ nét; (2) đúng vì cửa sổ xem trước giúp kiểm tra trong khi dựng; (3) sai vì xoá tệp gốc giữa chừng sẽ làm hỏng dự án, không được xoá; (4) sai vì fps và độ phân giải càng cao thì tệp càng nặng chứ không nhẹ đi."
+  "explain": "(a) đúng vì fps quyết định độ mượt, độ phân giải quyết định độ nét; (b) đúng vì cửa sổ xem trước giúp kiểm tra trong khi dựng; (c) sai vì xoá tệp gốc giữa chừng sẽ làm hỏng dự án, không được xoá; (d) sai vì fps và độ phân giải càng cao thì tệp càng nặng chứ không nhẹ đi."
  },
  {
   "id": "UD2-mc-057",
@@ -1747,7 +1747,7 @@
     "correct": false
    }
   ],
-  "explain": "(1) đúng vì thứ tự các khối clip chính là mạch kể chuyện; (2) đúng vì trim chỉ tác động trên clip, tệp quay gốc vẫn nguyên vẹn; (3) sai vì export gộp mọi rãnh thành một tệp duy nhất chứ không tách rời; (4) sai vì chuyển cảnh chỉ nên dùng có chừng mực, lạm dụng sẽ phản tác dụng."
+  "explain": "(a) đúng vì thứ tự các khối clip chính là mạch kể chuyện; (b) đúng vì trim chỉ tác động trên clip, tệp quay gốc vẫn nguyên vẹn; (c) sai vì export gộp mọi rãnh thành một tệp duy nhất chứ không tách rời; (d) sai vì chuyển cảnh chỉ nên dùng có chừng mực, lạm dụng sẽ phản tác dụng."
  },
  {
   "id": "UD2-tf-030",
@@ -1774,7 +1774,7 @@
     "correct": false
    }
   ],
-  "explain": "(1) đúng vì cần chỉnh âm lượng để nhạc nền không át lời nói; (2) đúng vì export gộp mọi rãnh thành một tệp video duy nhất; (3) sai vì chất lượng càng cao thì tệp càng nặng chứ không nhẹ; (4) sai vì cắt ghép chỉ tác động trên clip, tệp quay gốc vẫn nguyên vẹn."
+  "explain": "(a) đúng vì cần chỉnh âm lượng để nhạc nền không át lời nói; (b) đúng vì export gộp mọi rãnh thành một tệp video duy nhất; (c) sai vì chất lượng càng cao thì tệp càng nặng chứ không nhẹ; (d) sai vì cắt ghép chỉ tác động trên clip, tệp quay gốc vẫn nguyên vẹn."
  },
  {
   "id": "UD2-mc-061",
@@ -1865,7 +1865,7 @@
     "correct": true
    }
   ],
-  "explain": "(1) đúng: cáp ổn định, hợp khi chép nhiều dữ liệu. (2) đúng: Bluetooth dành cho tệp nhỏ, tầm gần. (3) sai: chia sẻ qua mạng chỉ cần cùng một mạng và bật cho phép thấy nhau, không cần nối chung cáp. (4) đúng: chia sẻ thư mục cho phép máy khác mở trực tiếp tệp, khỏi dùng USB."
+  "explain": "(a) đúng: cáp ổn định, hợp khi chép nhiều dữ liệu. (b) đúng: Bluetooth dành cho tệp nhỏ, tầm gần. (c) sai: chia sẻ qua mạng chỉ cần cùng một mạng và bật cho phép thấy nhau, không cần nối chung cáp. (d) đúng: chia sẻ thư mục cho phép máy khác mở trực tiếp tệp, khỏi dùng USB."
  },
  {
   "id": "UD2-tf-032",
@@ -1892,7 +1892,7 @@
     "correct": false
    }
   ],
-  "explain": "(1) đúng: chia sẻ màn hình để nhiều người cùng xem một màn hình. (2) sai: có thể đặt quyền chỉ xem hoặc cho sửa, không phải chỉ một mức. (3) đúng: tắt chia sẻ khi xong để giữ an toàn. (4) sai: chia sẻ máy in là cả nhóm dùng chung một máy in, không phải mỗi người một máy riêng."
+  "explain": "(a) đúng: chia sẻ màn hình để nhiều người cùng xem một màn hình. (b) sai: có thể đặt quyền chỉ xem hoặc cho sửa, không phải chỉ một mức. (c) đúng: tắt chia sẻ khi xong để giữ an toàn. (d) sai: chia sẻ máy in là cả nhóm dùng chung một máy in, không phải mỗi người một máy riêng."
  },
  {
   "id": "UD2-mc-065",
@@ -1983,7 +1983,7 @@
     "correct": true
    }
   ],
-  "explain": "(1) đúng: khởi đầu cần xác định mục đích và người xem. (2) đúng: wireframe là bản vẽ nháp khung trang. (3) sai: chuẩn bị và dựng trang diễn ra trước, đưa lên mạng là bước cuối nên thứ tự bị đảo ngược. (4) đúng: tổ chức thư mục gọn giúp tránh lạc tệp."
+  "explain": "(a) đúng: khởi đầu cần xác định mục đích và người xem. (b) đúng: wireframe là bản vẽ nháp khung trang. (c) sai: chuẩn bị và dựng trang diễn ra trước, đưa lên mạng là bước cuối nên thứ tự bị đảo ngược. (d) đúng: tổ chức thư mục gọn giúp tránh lạc tệp."
  },
  {
   "id": "UD2-tf-034",
@@ -2010,7 +2010,7 @@
     "correct": true
    }
   ],
-  "explain": "(1) đúng: wireframe phác các phần đầu trang, thân, chân trang và thanh điều hướng. (2) đúng: sơ đồ trang thể hiện số trang và các liên kết. (3) sai: wireframe chỉ là bản nháp khung, không cần màu sắc và ảnh thật hoàn chỉnh. (4) đúng: đó chính là ba câu hỏi khởi đầu dự án."
+  "explain": "(a) đúng: wireframe phác các phần đầu trang, thân, chân trang và thanh điều hướng. (b) đúng: sơ đồ trang thể hiện số trang và các liên kết. (c) sai: wireframe chỉ là bản nháp khung, không cần màu sắc và ảnh thật hoàn chỉnh. (d) đúng: đó chính là ba câu hỏi khởi đầu dự án."
  },
  {
   "id": "UD2-mc-069",
@@ -2101,7 +2101,7 @@
     "correct": true
    }
   ],
-  "explain": "(1) đúng: <header> chứa phần đầu trang. (2) đúng: logo thường được chèn dưới dạng ảnh. (3) sai: alt là mô tả thay cho ảnh khi ảnh không hiện, không phát âm thanh. (4) đúng: header là bộ mặt nhận diện của website."
+  "explain": "(a) đúng: <header> chứa phần đầu trang. (b) đúng: logo thường được chèn dưới dạng ảnh. (c) sai: alt là mô tả thay cho ảnh khi ảnh không hiện, không phát âm thanh. (d) đúng: header là bộ mặt nhận diện của website."
  },
  {
   "id": "UD2-tf-036",
@@ -2128,7 +2128,7 @@
     "correct": true
    }
   ],
-  "explain": "(1) đúng: giữ tỉ lệ bằng cách cố định một chiều nên ảnh không méo. (2) đúng: màu chữ tương phản với nền giúp dễ đọc. (3) sai: nên dùng chung một tệp CSS và một đường dẫn logo cố định để phần đầu nhất quán. (4) đúng: CSS dùng để tô màu nền và canh giữa logo với tiêu đề."
+  "explain": "(a) đúng: giữ tỉ lệ bằng cách cố định một chiều nên ảnh không méo. (b) đúng: màu chữ tương phản với nền giúp dễ đọc. (c) sai: nên dùng chung một tệp CSS và một đường dẫn logo cố định để phần đầu nhất quán. (d) đúng: CSS dùng để tô màu nền và canh giữa logo với tiêu đề."
  },
  {
   "id": "UD2-mc-073",
@@ -2219,7 +2219,7 @@
     "correct": true
    }
   ],
-  "explain": "(1) đúng: main chứa nội dung chính. (2) sai: footer khép lại trang, chứa liên hệ và bản quyền chứ không phải nội dung chính. (3) đúng: section hoặc div dùng để chia thân trang thành các khu vực. (4) đúng: mỗi khu một chủ đề, mở đầu bằng một tiêu đề."
+  "explain": "(a) đúng: main chứa nội dung chính. (b) sai: footer khép lại trang, chứa liên hệ và bản quyền chứ không phải nội dung chính. (c) đúng: section hoặc div dùng để chia thân trang thành các khu vực. (d) đúng: mỗi khu một chủ đề, mở đầu bằng một tiêu đề."
  },
  {
   "id": "UD2-tf-038",
@@ -2246,7 +2246,7 @@
     "correct": false
    }
   ],
-  "explain": "(1) đúng: chân trang chứa liên hệ và dòng bản quyền. (2) đúng: background-color đặt màu nền. (3) đúng: padding và margin tạo khoảng cách giúp trang thoáng. (4) sai: có thể dùng section hoặc div để chia khu vực, không chỉ riêng div."
+  "explain": "(a) đúng: chân trang chứa liên hệ và dòng bản quyền. (b) đúng: background-color đặt màu nền. (c) đúng: padding và margin tạo khoảng cách giúp trang thoáng. (d) sai: có thể dùng section hoặc div để chia khu vực, không chỉ riêng div."
  },
  {
   "id": "UD2-mc-077",
@@ -2337,7 +2337,7 @@
     "correct": false
    }
   ],
-  "explain": "(1) Đúng: thẻ <a> cùng thuộc tính href tạo liên kết. (2) Sai: chữ hiển thị bấm được là \"Liên hệ\" nằm giữa hai thẻ, còn \"lienhe.html\" là giá trị href, chỉ tên tệp đích chứ không hiển thị. (3) Đúng: trong cùng dự án dùng liên kết tương đối, chỉ ghi tên tệp. (4) Sai: liên kết được tạo bằng thẻ <a>; <nav> chỉ dùng để nhóm các liên kết thành thanh điều hướng."
+  "explain": "(a) Đúng: thẻ <a> cùng thuộc tính href tạo liên kết. (b) Sai: chữ hiển thị bấm được là \"Liên hệ\" nằm giữa hai thẻ, còn \"lienhe.html\" là giá trị href, chỉ tên tệp đích chứ không hiển thị. (c) Đúng: trong cùng dự án dùng liên kết tương đối, chỉ ghi tên tệp. (d) Sai: liên kết được tạo bằng thẻ <a>; <nav> chỉ dùng để nhóm các liên kết thành thanh điều hướng."
  },
  {
   "id": "UD2-tf-040",
@@ -2364,7 +2364,7 @@
     "correct": false
    }
   ],
-  "explain": "(1) Đúng: menu là nhóm thẻ <a> đặt trong <nav>. (2) Đúng: đánh dấu mục đang mở giúp người xem biết vị trí hiện tại. (3) Sai: menu phải nhất quán, giống nhau trên mọi trang để dễ định hướng, không nên mỗi trang một kiểu. (4) Sai: menu cần xuất hiện và giống nhau trên mọi trang, không chỉ riêng trang chủ."
+  "explain": "(a) Đúng: menu là nhóm thẻ <a> đặt trong <nav>. (b) Đúng: đánh dấu mục đang mở giúp người xem biết vị trí hiện tại. (c) Sai: menu phải nhất quán, giống nhau trên mọi trang để dễ định hướng, không nên mỗi trang một kiểu. (d) Sai: menu cần xuất hiện và giống nhau trên mọi trang, không chỉ riêng trang chủ."
  },
  {
   "id": "UD2-mc-081",
@@ -2455,7 +2455,7 @@
     "correct": false
    }
   ],
-  "explain": "(1) Đúng: form tạo luồng ngược để người xem gửi dữ liệu về cho chủ trang. (2) Đúng: form cần ô nhập và nút gửi, đặt trong thẻ <form>. (3) Sai: hiển thị một chiều là nội dung thường; form là để nhập và gửi thông tin. (4) Sai: các thành phần biểu mẫu gói trong thẻ <form>, còn <nav> dùng cho thanh điều hướng."
+  "explain": "(a) Đúng: form tạo luồng ngược để người xem gửi dữ liệu về cho chủ trang. (b) Đúng: form cần ô nhập và nút gửi, đặt trong thẻ <form>. (c) Sai: hiển thị một chiều là nội dung thường; form là để nhập và gửi thông tin. (d) Sai: các thành phần biểu mẫu gói trong thẻ <form>, còn <nav> dùng cho thanh điều hướng."
  },
  {
   "id": "UD2-tf-042",
@@ -2482,7 +2482,7 @@
     "correct": false
    }
   ],
-  "explain": "(1) Đúng: radio chọn một, checkbox chọn nhiều. (2) Đúng: cặp for–id liên kết nhãn với ô nhập, thân thiện với trợ năng. (3) Sai: chọn đúng một mục là radio hoặc select; checkbox cho phép chọn nhiều mục. (4) Sai: email là loại trường riêng dành cho địa chỉ email (có thể kiểm tra định dạng), khác với text là nhập chữ tự do."
+  "explain": "(a) Đúng: radio chọn một, checkbox chọn nhiều. (b) Đúng: cặp for–id liên kết nhãn với ô nhập, thân thiện với trợ năng. (c) Sai: chọn đúng một mục là radio hoặc select; checkbox cho phép chọn nhiều mục. (d) Sai: email là loại trường riêng dành cho địa chỉ email (có thể kiểm tra định dạng), khác với text là nhập chữ tự do."
  },
  {
   "id": "UD2-mc-085",
@@ -2573,7 +2573,7 @@
     "correct": false
    }
   ],
-  "explain": "(1) Đúng: CSS chung giúp nhất quán, sửa một nơi cả site đổi theo. (2) Đúng: cần bấm thử liên kết và cuộn xem ảnh để phát hiện lỗi. (3) Sai: trình duyệt không tự sửa; người làm phải tự sửa href/src bị sai. (4) Sai: liên kết gãy và ảnh mất là lỗi phải sửa cho hết trước khi phát hành."
+  "explain": "(a) Đúng: CSS chung giúp nhất quán, sửa một nơi cả site đổi theo. (b) Đúng: cần bấm thử liên kết và cuộn xem ảnh để phát hiện lỗi. (c) Sai: trình duyệt không tự sửa; người làm phải tự sửa href/src bị sai. (d) Sai: liên kết gãy và ảnh mất là lỗi phải sửa cho hết trước khi phát hành."
  },
  {
   "id": "UD2-tf-044",
@@ -2600,7 +2600,7 @@
     "correct": false
    }
   ],
-  "explain": "(1) Đúng: ảnh co giãn, khối tự xuống hàng giúp chỉ cần cuộn dọc, dễ xem trên điện thoại. (2) Sai: phải kéo ngang là dấu hiệu trang chưa tối ưu cho màn hình nhỏ. (3) Đúng: dùng đường dẫn tương đối và gom đủ tệp/ảnh để web không gãy khi chuyển chỗ. (4) Sai: lưu trên máy mình thì người khác không truy cập được; phải đưa lên dịch vụ lưu trữ web để có địa chỉ công khai."
+  "explain": "(a) Đúng: ảnh co giãn, khối tự xuống hàng giúp chỉ cần cuộn dọc, dễ xem trên điện thoại. (b) Sai: phải kéo ngang là dấu hiệu trang chưa tối ưu cho màn hình nhỏ. (c) Đúng: dùng đường dẫn tương đối và gom đủ tệp/ảnh để web không gãy khi chuyển chỗ. (d) Sai: lưu trên máy mình thì người khác không truy cập được; phải đưa lên dịch vụ lưu trữ web để có địa chỉ công khai."
  }
 ];
   QUESTION_BANK.push.apply(QUESTION_BANK, Q);
