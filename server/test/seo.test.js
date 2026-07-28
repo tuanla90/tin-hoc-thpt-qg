@@ -95,8 +95,12 @@ test("sitemap liệt kê mọi bài, robots chặn trang quản trị", async ()
      tự đúng, không phải đi sửa số. */
   const trangTinh = ["/", "/bai", "/doi-chieu-sgk", "/landing.html", "/nang-cap.html", "/quyen-rieng-tu.html"];
   trangTinh.forEach((p) => assert.ok(s.body.includes("<loc>http") && s.body.includes(p), "sitemap thiếu " + p));
+  /* Từ bộ sách thứ hai trở đi, mỗi bộ có thêm một trang đối chiếu riêng. */
+  const bo = (chiMuc().kho.SGK_MAP || {}).bo || [];
+  const soTrangBo = bo.length > 1 ? bo.length : 0;
+  if (soTrangBo) bo.forEach((b) => assert.ok(s.body.includes("/doi-chieu-sgk/" + b.ma), "sitemap thiếu bộ " + b.ma));
   const soUrl = (s.body.match(/<loc>/g) || []).length;
-  assert.equal(soUrl, ds.length + trangTinh.length);
+  assert.equal(soUrl, ds.length + trangTinh.length + soTrangBo);
   ds.forEach((m) => assert.ok(s.body.includes("/bai/" + m.slug), "sitemap thiếu " + m.slug));
 
   const loc = [...s.body.matchAll(/<loc>(.*?)<\/loc>/g)].map((m) => m[1]);
@@ -123,22 +127,36 @@ test("sitemap liệt kê mọi bài, robots chặn trang quản trị", async ()
 test("đối chiếu SGK: đủ mọi quyển, mỗi bài sách trỏ đúng một bài app", async () => {
   const { kho, theoId } = chiMuc();
   assert.ok(kho.SGK_MAP && Array.isArray(kho.SGK_MAP.bo), "phải nạp được bảng đối chiếu SGK");
+  const nhieuBo = kho.SGK_MAP.bo.length > 1;
   const r = await lay("/doi-chieu-sgk");
   assert.equal(r.status, 200);
   assert.match(r.body, /Kết nối tri thức/);
 
   let soBai = 0, soCoDich = 0;
-  kho.SGK_MAP.bo.forEach((bo) => (bo.sach || []).forEach((s) => {
-    assert.ok(r.body.includes('id="' + s.ma + '"'), "thiếu mục cho quyển " + s.ma);
-    (s.bai || []).forEach((b) => {
-      soBai++;
-      if (!b.cua) return;
-      soCoDich++;
-      const muc = theoId.get(b.cua);
-      assert.ok(muc, "bài SGK trỏ tới id không tồn tại: " + b.cua);
-      assert.ok(r.body.includes('href="/bai/' + muc.slug + '"'), "thiếu liên kết tới " + b.cua);
-    });
-  }));
+  for (const bo of kho.SGK_MAP.bo) {
+    /* Nhiều bộ thì mỗi bộ một trang riêng; một bộ thì tất cả nằm ở /doi-chieu-sgk */
+    const t = nhieuBo ? await lay("/doi-chieu-sgk/" + bo.ma) : r;
+    assert.equal(t.status, 200, "không mở được trang bộ " + bo.ma);
+    /* Ô lọc là thứ giúp khỏi cuộn qua cả trăm dòng: mỗi hàng phải có khoá tìm. */
+    const soBaiBo = (bo.sach || []).reduce((n, s) => n + (s.bai || []).length, 0);
+    assert.equal((t.body.match(/data-tim="/g) || []).length, soBaiBo,
+      "bộ " + bo.ma + ": số khoá tìm không khớp số bài");
+    for (const s of bo.sach || []) {
+      assert.ok(t.body.includes('id="' + s.ma + '"'), "thiếu mục cho quyển " + s.ma);
+      for (const b of s.bai || []) {
+        soBai++;
+        if (!b.cua) continue;
+        soCoDich++;
+        const muc = theoId.get(b.cua);
+        assert.ok(muc, "bài SGK trỏ tới id không tồn tại: " + b.cua);
+        assert.ok(t.body.includes('href="/bai/' + muc.slug + '"'), "thiếu liên kết tới " + b.cua);
+        /* Bộ đánh số theo chủ đề thì PHẢI hiện mã chủ đề, không thì hai bài
+           khác nhau cùng hiện "Bài 1" — người tra không phân biệt được. */
+        if (b.chuDe) assert.ok(t.body.includes("Chủ đề " + b.chuDe + " · Bài " + b.so),
+          "thiếu mã chủ đề cho " + s.ma + " chủ đề " + b.chuDe + " bài " + b.so);
+      }
+    }
+  }
   assert.equal(soBai, soCoDich, "mọi bài SGK trong bảng đều phải trỏ tới một bài của app");
   assert.ok(soBai >= 154, "hụt bài so với các quyển đã đối chiếu, hiện " + soBai);
 
@@ -149,7 +167,6 @@ test("đối chiếu SGK: đủ mọi quyển, mỗi bài sách trỏ đúng m�
   assert.ok(!/<table/.test(than), "trang đối chiếu không được dùng bảng");
   /* Ô lọc là thứ giúp khỏi cuộn qua 95 dòng: phải có ô nhập và dữ liệu để lọc. */
   assert.ok(r.body.includes('id="dcTim"'), "thiếu ô tìm nhanh");
-  assert.equal((r.body.match(/data-tim="/g) || []).length, soBai, "mỗi hàng phải có khoá tìm không dấu");
 
   /* Hai quyển cùng lớp của KNTT dùng chung phần lõi — bài lõi phải trỏ về CÙNG
      một bài của app ở cả hai quyển, nếu lệch là đối chiếu sai một bên. */

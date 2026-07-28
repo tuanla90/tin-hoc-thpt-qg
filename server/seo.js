@@ -309,7 +309,7 @@ const CSS_RIENG = `
 .dc-dau h2{margin:0;font-size:19px}
 .dc-dem{color:var(--ink-faint);font-size:13px;white-space:nowrap}
 .dc-bang{border-top:1px solid var(--line)}
-.dc-hang{display:grid;grid-template-columns:86px minmax(0,1fr) minmax(0,1.05fr);gap:6px 14px;align-items:baseline;
+.dc-hang{display:grid;grid-template-columns:126px minmax(0,1fr) minmax(0,1.05fr);gap:6px 14px;align-items:baseline;
   padding:11px 8px;border-bottom:1px solid var(--line);text-decoration:none;
   border-radius:8px;transition:background .12s}
 /* Cả hàng là một thẻ <a> nên nếu không nói rõ, chữ tên bài SGK bị tô màu link —
@@ -330,12 +330,23 @@ a.dc-hang .dc-toi::after{content:" →";color:var(--ink-faint);font-weight:400}
 .seo-loc-hop label{display:block;font-size:13.5px;font-weight:650;color:var(--ink-muted);margin-bottom:6px}
 .seo-loc-hop .pg-note{margin:8px 0 0;min-height:20px}
 .seo-chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:11px}
+/* KHÔNG dùng cú pháp rút gọn "font: 650 13px/1.2 inherit" — phần font-family của
+   shorthand không nhận giá trị inherit, cả khai báo bị vứt và nút rơi về font
+   mặc định của hệ thống (lệch hẳn so với phần còn lại của trang). Viết tách ra.
+   (Lưu ý: khối CSS này nằm trong chuỗi template của JS, tuyệt đối không dùng
+   dấu backtick trong chú thích — sẽ cắt đứt chuỗi.) */
 .seo-chip{border:1px solid var(--line-strong);background:var(--surface-card);color:var(--ink-muted);
-  border-radius:999px;padding:7px 13px;font:650 13px/1.2 inherit;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+  border-radius:999px;padding:7px 13px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;
+  font-family:inherit;font-size:13px;font-weight:650;line-height:1.2}
 .seo-chip span{font-size:11.5px;opacity:.6;font-family:var(--font-mono,monospace)}
 .seo-chip:hover{border-color:var(--brand);color:var(--brand)}
 .seo-chip.on{background:var(--brand);border-color:var(--brand);color:#fff}
 .seo-chip.on span{opacity:.8}
+/* Bộ lọc ẩn bằng thuộc tính hidden, nhưng các phần tử này đều có display riêng
+   (flex/grid) — mà khai báo display của tác giả THẮNG luật [hidden] mặc định của
+   trình duyệt. Thiếu dòng dưới đây thì JS chạy đúng, số đếm đổi đúng, mà danh
+   sách vẫn hiện nguyên — đúng kiểu lỗi khó lần nhất. */
+.seo-grid a[hidden],.seo-grid[hidden],.seo-lop-box[hidden],.seo-lop[hidden]{display:none}
 .dc-tim-hop label{display:block;font-size:13.5px;font-weight:650;color:var(--ink-muted);margin-bottom:6px}
 .dc-tim-hop .pg-note{margin:8px 0 0;min-height:20px}
 .dc-bo{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
@@ -482,8 +493,9 @@ function trangBai(muc, base) {
     (l.quiz || []).length ? ` · ${(l.quiz || []).length} câu luyện tập trong ứng dụng` : ""}</p>
 ${sgk.length ? `<div class="seo-sgk">
   <b>Tương ứng sách giáo khoa</b>
-  <span>${esc(sgk[0].bo)} · ${esc(tenQuyen(sgk[0].sach))} — ${sgk.map((b) =>
-    "Bài " + b.so + ". " + esc(b.ten) + (b.trang ? " <i>(trang " + esc(b.trang) + ")</i>" : "")).join("; ")}</span>
+  ${sgk.map((b) => `<span>${esc(b.bo)} · ${esc(tenQuyen(b.sach))} — ` +
+    (b.chuDe ? "Chủ đề " + esc(b.chuDe) + " · " : "") + "Bài " + b.so + ". " + esc(b.ten) +
+    (b.trang ? " <i>(trang " + esc(b.trang) + ")</i>" : "") + "</span>").join("")}
   <a href="/doi-chieu-sgk">Xem bảng đối chiếu cả bộ →</a>
 </div>` : ""}
 </div>
@@ -653,14 +665,20 @@ function danhSachBo(kho) {
 function mucSach(s, theoId) {
   const hang = (s.bai || []).map((b) => {
     const muc = b.cua ? theoId.get(b.cua) : null;
+    /* Cánh Diều đánh số bài lặp lại theo từng chủ đề, nên thiếu mã chủ đề là
+       "Bài 1" của chủ đề A và của chủ đề F trông y hệt nhau. */
+    const soTxt = (b.chuDe ? "Chủ đề " + esc(b.chuDe) + " · " : "") + "Bài " + b.so;
     const trai =
-      `<span class="dc-so">Bài ${b.so}${b.trang ? "<small>tr. " + esc(b.trang) + "</small>" : ""}</span>` +
+      `<span class="dc-so">${soTxt}${b.trang ? "<small>tr. " + esc(b.trang) + "</small>" : ""}</span>` +
       `<span class="dc-ten">${esc(b.ten)}</span>`;
     const phai = muc
       ? `<span class="dc-toi">Bài ${muc.bai.order}. ${esc(muc.bai.title)}</span>`
       : '<span class="dc-toi dc-trong">chưa có bài tương ứng</span>';
     /* data-tim: chuỗi không dấu để ô lọc tìm được cả khi gõ thiếu dấu. */
-    const tim = esc(boDau((b.so + " bài " + b.so + " " + b.ten + " " + (muc ? muc.bai.title : "")).toLowerCase()));
+    /* Gộp cả cách gõ tự nhiên ("chủ đề F") lẫn mã trần, và tên bài hai bên. */
+    const tim = esc(boDau((b.so + " bài " + b.so + " " +
+      (b.chuDe ? "chủ đề " + b.chuDe + " " : "") + (b.tenChuDe || "") + " " +
+      b.ten + " " + (muc ? muc.bai.title : "")).toLowerCase()));
     return muc
       ? `<a class="dc-hang" href="/bai/${muc.slug}" data-tim="${tim}">${trai}${phai}</a>`
       : `<div class="dc-hang dc-kho" data-tim="${tim}">${trai}${phai}</div>`;
@@ -701,8 +719,13 @@ const JS_LOC_BAI = "(function(){var o=document.getElementById('seoTim');if(!o)re
   "a.forEach(function(x){var ok=(!t||x.dataset.tim.indexOf(t)>=0)&&(!cd||x.dataset.cd===cd);x.hidden=!ok;if(ok)n++;});" +
   /* Cập nhật luôn số bài ghi cạnh tên lớp — để nguyên số cũ khi đang lọc thì
      đầu mục ghi "34 bài" mà bên dưới chỉ có 3, trông như hỏng. */
-  "g.forEach(function(x){var v=x.querySelectorAll('a:not([hidden])').length;x.hidden=!v;" +
-  "var h=x.previousElementSibling;if(h&&h.classList.contains('seo-lop')){h.hidden=!v;" +
+  /* Ẩn/hiện cả khối <details> của lớp, không ẩn riêng lưới và tiêu đề — ẩn lẻ
+     thì còn trơ lại mũi tên mở/thu của một mục rỗng. Và khi đang lọc thì MỞ
+     khối có kết quả, kẻo người dùng thu gọn lớp đó từ trước rồi tưởng không tìm
+     ra bài nào. */
+  "g.forEach(function(x){var v=x.querySelectorAll('a:not([hidden])').length;" +
+  "var box=x.closest('.seo-lop-box');if(box){box.hidden=!v;if(v&&(t||cd))box.open=true;}" +
+  "var h=x.previousElementSibling;if(h&&h.classList.contains('seo-lop')){" +
   "var s=h.querySelector('span');if(s)s.textContent=v+' bài';}});" +
   "chip.forEach(function(c){c.classList.toggle('on',(c.dataset.cd||'')===cd)});" +
   "if(d)d.textContent=(t||cd)?('Đang hiện '+n+' bài'):'';}" +
