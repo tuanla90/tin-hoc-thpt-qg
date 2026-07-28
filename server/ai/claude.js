@@ -3,7 +3,7 @@
      - `system` là tham số RIÊNG, không nằm trong messages
      - vai trò trợ lý gọi là "assistant"
      - luồng SSE có nhiều loại sự kiện, chữ nằm ở content_block_delta */
-const { docSSE, loiNhaCungCap } = require("./sse");
+const { docSSE, loiNhaCungCap, doiLaiMs } = require("./sse");
 
 async function chat({ key, model, system, messages, maxTokens, onText, signal }) {
   const res = await fetch("https://api.anthropic.com/v1/messages", {
@@ -27,6 +27,7 @@ async function chat({ key, model, system, messages, maxTokens, onText, signal })
     const e = new Error(loiNhaCungCap(res.status, tho));
     e.status = res.status;
     e.chiTiet = tho.slice(0, 300);
+    e.doiMs = doiLaiMs(res, tho);   // aiChat dùng để chờ đúng lời nhà cung cấp
     throw e;
   }
   await docSSE(res, (d) => {

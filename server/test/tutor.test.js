@@ -220,7 +220,34 @@ test("hỏi chung không cần mở bài: vẫn trả lời và ghi nhật ký k
   await req("/api/auth/login", { method: "POST", body: { email: "hs2@test.vn", password: "123456" } });
 });
 
+test("nhà cung cấp nghẽn 429 rồi thông: học sinh vẫn nhận trả lời, CHỈ trừ 1 lượt", async () => {
+  await req("/api/auth/logout", { method: "POST" });
+  await req("/api/auth/register", { method: "POST", body: { email: "hs4@test.vn", password: "123456", name: "Dũng" } });
+  const truoc = await req("/api/tutor/status");
+  assert.equal(truoc.data.conLai, 3);
+
+  const mock = require("../ai/mock");
+  mock.datLai();
+  process.env.AI_MOCK_LOI = "429:1";     // hỏng lượt đầu, lượt sau thông
+  process.env.AI_RETRY_MS = "5";         // khỏi chờ lâu trong test
+  try {
+    const r = await req("/api/tutor", { method: "POST", body: { lessonId: "C10-01", question: "Bit là gì?" } });
+    assert.equal(r.status, 200);
+    const { chu } = gomLuong(r.raw);
+    assert.ok(chu.length > 20, "vẫn phải nhận được câu trả lời sau khi thử lại");
+    assert.equal(mock.soLanGoi(), 2, "gọi nhà cung cấp 2 lần");
+  } finally {
+    delete process.env.AI_MOCK_LOI;
+    delete process.env.AI_RETRY_MS;
+  }
+
+  const sau = await req("/api/tutor/status");
+  assert.equal(sau.data.conLai, 2, "trừ đúng 1 lượt dù gọi nhà cung cấp 2 lần");
+});
+
 test("hồ sơ của tài khoản khác không ghi vào nhật ký được", async () => {
+  await req("/api/auth/logout", { method: "POST" });
+  await req("/api/auth/login", { method: "POST", body: { email: "hs2@test.vn", password: "123456" } });
   // hs2 đang đăng nhập; profileId dưới đây là của hs1 -> phải bị bỏ qua (ghi null)
   const cua1 = await pool.query("SELECT id FROM profiles WHERE user_id = 1 ORDER BY id LIMIT 1");
   const r = await req("/api/tutor", {

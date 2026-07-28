@@ -28,4 +28,21 @@ function loiNhaCungCap(status, body) {
   return "Không gọi được AI (mã " + status + ").";
 }
 
-module.exports = { docSSE, loiNhaCungCap };
+/* Nhà cung cấp bảo "chờ bao lâu rồi hãy gọi lại" -> số mili-giây, hoặc 0 nếu
+   không nói gì. Hai nguồn:
+     - header `retry-after`: số giây (cả hai nhà đều có thể trả)
+     - thân lỗi của Gemini: {"error":{"details":[{"retryDelay":"7s"}]}}
+   Chờ theo lời họ luôn đúng hơn tự đoán, nên aiChat ưu tiên giá trị này. */
+function doiLaiMs(res, body) {
+  const h = res && res.headers && res.headers.get && res.headers.get("retry-after");
+  if (h) {
+    const giay = Number(h);
+    if (Number.isFinite(giay) && giay > 0) return giay * 1000;
+    const moc = Date.parse(h);              // dạng HTTP-date
+    if (moc) return Math.max(0, moc - Date.now());
+  }
+  const m = /"retryDelay"\s*:\s*"(\d+(?:\.\d+)?)s"/.exec(String(body || ""));
+  return m ? Math.round(parseFloat(m[1]) * 1000) : 0;
+}
+
+module.exports = { docSSE, loiNhaCungCap, doiLaiMs };

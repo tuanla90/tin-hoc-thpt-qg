@@ -3,7 +3,7 @@
      - không có tham số `system` riêng -> đưa vào systemInstruction
      - vai trò trợ lý gọi là "model" (không phải "assistant")
      - chữ nằm ở candidates[0].content.parts[].text */
-const { docSSE, loiNhaCungCap } = require("./sse");
+const { docSSE, loiNhaCungCap, doiLaiMs } = require("./sse");
 
 async function chat({ key, model, system, messages, maxTokens, onText, signal }) {
   const url = "https://generativelanguage.googleapis.com/v1beta/models/" +
@@ -26,6 +26,7 @@ async function chat({ key, model, system, messages, maxTokens, onText, signal })
     const e = new Error(loiNhaCungCap(res.status, tho));
     e.status = res.status;
     e.chiTiet = tho.slice(0, 300);
+    e.doiMs = doiLaiMs(res, tho);   // aiChat dùng để chờ đúng lời nhà cung cấp
     throw e;
   }
   await docSSE(res, (d) => {
