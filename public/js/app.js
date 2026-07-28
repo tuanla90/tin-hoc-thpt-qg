@@ -2191,7 +2191,15 @@ function grade() {
     details.push({ q, ans, pts, max, fullyCorrect, subCorrect });
   });
 
-  return { score: Math.round(score * 100) / 100, correctCount, total: Q.questions.length, parts, details };
+  /* Đề thi thử THPT (24 TN + 4 Đ/S) cộng lại vừa đúng 10 điểm nên điểm thô CHÍNH
+     LÀ điểm thang 10. Đề kiểm tra 1 tiết ít câu hơn, tổng thô chỉ 8 điểm — thầy
+     cô ở lớp vẫn chấm thang 10, nên quy đổi lại cho học sinh đọc quen mắt.
+     Giữ luôn điểm thô để màn kết quả nói rõ đã quy đổi từ đâu. */
+  const maxRaw = Math.round((parts.mc.max + parts.tf.max + parts.sa.max) * 100) / 100;
+  const raw = Math.round(score * 100) / 100;
+  const score10 = maxRaw > 0 ? Math.round((raw / maxRaw) * 1000) / 100 : 0;
+
+  return { score: raw, score10, maxRaw, correctCount, total: Q.questions.length, parts, details };
 }
 
 /* ===========================================================================
@@ -2226,7 +2234,9 @@ function doSubmit(timeUp) {
     title: Q.title,
     code: Q.code || null,
     lessonId: Q.lessonId || null,
-    score: result.score,
+    /* Lịch sử, huy hiệu, "điểm cao nhất" đều hiểu score là THANG 10 — nên lưu
+       điểm đã quy đổi (đề thi thử đủ 28 câu thì hai số này bằng nhau). */
+    score: Q.mode === "exam" ? result.score10 : result.score,
     correctCount: result.correctCount,
     total: result.total,
     durationSec,
@@ -2262,9 +2272,12 @@ function renderResult(data) {
   const { result, record } = data;
   const Q = State.quiz;
   const isExam = Q.mode === "exam";
-  const scoreOn10 = isExam ? result.score : Math.round((result.correctCount / result.total) * 1000) / 100;
-  const pctScore = isExam ? (result.score / 10) : (result.correctCount / result.total);
-  const ring = ringSVG(pctScore, isExam ? result.score.toFixed(2) : `${result.correctCount}/${result.total}`, isExam ? "/ 10 điểm" : "câu đúng");
+  const scoreOn10 = isExam ? result.score10 : Math.round((result.correctCount / result.total) * 1000) / 100;
+  const pctScore = isExam ? (result.score10 / 10) : (result.correctCount / result.total);
+  const ring = ringSVG(pctScore, isExam ? result.score10.toFixed(2) : `${result.correctCount}/${result.total}`, isExam ? "/ 10 điểm" : "câu đúng");
+  /* Đề ít câu hơn đề thi thử thì tổng điểm thô không tới 10 -> đã quy đổi, phải
+     nói ra chứ đừng để học sinh tự cộng 0,25đ mỗi câu rồi thấy lệch. */
+  const coQuyDoi = isExam && Math.abs(result.maxRaw - 10) > 0.001;
 
   const msg = pctScore >= 0.9 ? aIco("trophy", "#eab308", 20) + " Xuất sắc!" : pctScore >= 0.7 ? aIco("star", "#f59e0b", 20) + " Tốt lắm!" : pctScore >= 0.5 ? aIco("flame", "#f97316", 20) + " Khá ổn, cố lên!" : aIco("book", "#3b82f6", 20) + " Cần ôn thêm nhé!";
   const mm = Math.floor(record.durationSec / 60), ss = record.durationSec % 60;
@@ -2289,7 +2302,7 @@ function renderResult(data) {
       <div class="stat-box g"><b>${result.correctCount}</b><small>Câu đúng hoàn toàn</small></div>
       <div class="stat-box r"><b>${result.total - result.correctCount}</b><small>Câu sai / thiếu</small></div>
       <div class="stat-box"><b>${mm}:${String(ss).padStart(2, "0")}</b><small>Thời gian làm</small></div>
-      <div class="stat-box"><b>${isExam ? result.score.toFixed(2) : scoreOn10.toFixed(2)}</b><small>Điểm (thang 10)</small></div>
+      <div class="stat-box"><b>${scoreOn10.toFixed(2)}</b><small>Điểm (thang 10)</small></div>
     </div>
 
     ${isExam ? `
@@ -2298,6 +2311,10 @@ function renderResult(data) {
       ${partRow("mc", "Phần I - Trắc nghiệm 4 lựa chọn")}
       ${partRow("tf", "Phần II - Đúng/Sai")}
       ${partRow("sa", "Phần III - Trả lời ngắn")}
+      ${coQuyDoi ? `<div class="config-row" style="border-top:1px solid var(--border);padding-top:10px">
+        <label>Điểm thô của đề này <small style="color:var(--text-soft);font-weight:400">(0,25đ mỗi câu trắc nghiệm, tối đa 1đ mỗi câu Đúng/Sai)</small></label>
+        <b>${result.score.toFixed(2)} / ${result.maxRaw.toFixed(2)} đ → quy về thang 10: ${result.score10.toFixed(2)}</b>
+      </div>` : ""}
     </div>` : ""}
 
     <div class="quiz-nav" style="margin-bottom:22px">

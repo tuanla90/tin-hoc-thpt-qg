@@ -6,7 +6,10 @@
  *   - Free = TOÀN BỘ phần học (bài, từ vựng, concept lab, gamify, playground).
  *   - Quỹ 30 câu luyện có chấm/ngày (quiz cuối bài + luyện tập + luyện nhanh
  *     + Đúng/Sai dùng CHUNG một quỹ). Thi thử không tính vào quỹ.
- *   - Thi thử free: đề TC1 + mã 101, 102. Random + các đề còn lại: Premium.
+ *   - Thi thử free: đề TC1 + mã 101, 102, và 3 đề kiểm tra 1 tiết (lớp 10/11/12).
+ *     Random, đề cuối kì và các đề còn lại: Premium.
+ *     (Phần đề kiểm tra 1 tiết/cuối kì thêm sau khi chốt Phase 4 — KE-HOACH-SAAS.md
+ *      chưa ghi mục này, xem lại khi cập nhật kế hoạch.)
  *   - Xưởng thực hành free ~15% bài đầu mỗi xưởng; tab "Chỗ yếu": Premium.
  *
  *  LƯU Ý: đây là KHOÁ GIAO DIỆN (đủ với người dùng bình thường). Hạn mức gia
@@ -15,7 +18,14 @@
  * ==========================================================================*/
 (function () {
   var QUOTA_NGAY = 30;                                   // câu luyện có chấm/ngày (free)
-  var DE_FREE = { TC1: 1, 101: 1, 102: 1 };              // đề thi thử mở cho free
+  /* Đề mở cho gói free. Đề kiểm tra 1 tiết mở cả 3 lớp vì đây là nhu cầu gấp và
+     thường xuyên nhất của học sinh (tuần nào cũng có thể kiểm tra) — cho dùng
+     thật rồi mới mời nâng cấp. Đề cuối kì để Premium. Muốn đổi ranh giới thì
+     sửa đúng bảng này, mọi lối vào đề đều hỏi qua deMo(). */
+  var DE_FREE = {
+    TC1: 1, 101: 1, 102: 1,
+    "KT-1tiet-10": 1, "KT-1tiet-11": 1, "KT-1tiet-12": 1,
+  };
   var XUONG_FREE = { python: 20, web: 8, sql: 6, gfx: 3 }; // số bài thực hành free mỗi xưởng
 
   function ico(n, c, s) { return (typeof ICON === "function") ? ICON(n, s || 16, c) : ""; }
@@ -139,7 +149,7 @@
   /* ----------------------------- modal upsell ----------------------------- */
   var LY_DO = {
     quota: { tit: "Hết quỹ luyện hôm nay", mo: "Bạn đã luyện đủ " + QUOTA_NGAY + " câu miễn phí của hôm nay — đúng nhịp học đều đấy! Muốn cày ôn kiểm tra hay ôn thi không giới hạn thì cần gói Premium." },
-    exam: { tit: "Đề này thuộc gói Premium", mo: "Gói Miễn phí làm được 3 đề cố định (Đề biên soạn 1 + Đề 01, 02) — làm lại bao nhiêu lần cũng được. Nâng cấp để mở cả 13 đề và đề ngẫu nhiên mỗi ngày." },
+    exam: { tit: "Đề này thuộc gói Premium", mo: "Gói Miễn phí làm được 3 đề thi thử cố định (Đề biên soạn 1 + Đề 01, 02) và cả 3 đề kiểm tra 1 tiết — làm lại bao nhiêu lần cũng được. Nâng cấp để mở 13 đề thi thử, 3 đề cuối kì và đề ngẫu nhiên mỗi ngày." },
     xuong: { tit: "Bài thực hành Premium", mo: "Các bài thực hành thuộc những chương đầu là miễn phí. Nâng cấp để mở toàn bộ hơn 250 bài Python, SQL, HTML/CSS và đồ hoạ có máy chấm." },
     yeu: { tit: "Luyện đúng chỗ yếu — Premium", mo: "Ứng dụng đã âm thầm chấm bạn mạnh/yếu chủ đề nào qua từng câu luyện. Gói Premium mở tab Chỗ yếu: ôn đúng chủ đề yếu, ưu tiên câu từng làm sai." },
     deep: { tit: "Giải thích kỹ hơn — Premium", mo: "Nút này gọi model AI mạnh hơn để giảng chậm và sâu hơn. Gói Premium được dùng model sâu và 25 lượt hỏi gia sư mỗi ngày (miễn phí: 5 lượt)." },
@@ -147,7 +157,7 @@
   };
   var QUYEN_LOI = [
     "Luyện tập không giới hạn (miễn phí: " + QUOTA_NGAY + " câu/ngày)",
-    "13 đề thi thử + đề ngẫu nhiên không giới hạn",
+    "13 đề thi thử + 3 đề cuối kì + đề ngẫu nhiên không giới hạn",
     "Toàn bộ 250+ bài thực hành Python · SQL · HTML/CSS · đồ hoạ",
     "Tab Chỗ yếu — ôn đúng chủ đề đang yếu",
     "Gia sư AI 25 lượt/ngày + nút “giải thích kỹ hơn”",
