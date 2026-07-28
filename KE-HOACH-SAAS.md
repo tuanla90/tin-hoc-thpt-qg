@@ -14,6 +14,8 @@
 > được: điền STK/Zalo vào `nang-cap.html`, chốt giá nước rút** và chuyển repo private.
 > Backup: có cơ chế TAY `npm run backup` (kéo qua public URL của Postgres) —
 > backup tự động của Railway chưa bật được. **Còn chờ user:** chuyển repo private.
+> **SEO (Phase 6) đã có bản đầu 28/07:** 119 trang công khai `/bai/<slug>` + sitemap
+> + robots, render ở máy chủ — chờ tên miền rồi nộp Search Console.
 
 ## 1. Hiện trạng (đã khảo sát)
 
@@ -234,7 +236,43 @@ này rất rõ, chỉ có gói năm sẽ mất nhóm đơn này.
   dùng song song, backup tay vẫn giữ vì file nằm ngoài Railway.
 - [ ] Uptime monitor miễn phí (UptimeRobot) trỏ `/api/health`.
 - [ ] Trang Điều khoản + Quyền riêng tư (HS vị thành niên → thu thập tối thiểu: tên hiển thị + email; tham chiếu NĐ 13/2023/NĐ-CP).
-- [ ] Domain riêng (~300k/năm) trỏ vào Railway.
+- [ ] Domain riêng (~300k/năm) trỏ vào Railway. **Đề xuất `tinhocthpt.com`** (28/07 tra RDAP: còn trống;
+  `luyentinhoc.com`, `onthitin.com`, `tinhocqg.com` cũng trống — `onthitinhoc.com/.vn`, `thitinhoc.com`,
+  `hoctin.com`, `baitaptinhoc.com` đã có người lấy). Mua `.com` trước (~250–350k/năm), `.vn` để sau.
+
+### Phase 6 — SEO: kênh miễn phí lớn nhất đang bỏ trống ✅ BẢN ĐẦU XONG (28/07/2026)
+
+**Vì sao làm:** khảo sát đối thủ `onthitinhoc.com` / `otth.vn` cho thấy họ thắng bằng
+SEO chứ không phải sản phẩm — mỗi bài một URL, tiêu đề trùng thứ học sinh gõ Google
+(user tự kiểm bằng điện thoại: bấm Học là bắt tạo tài khoản ngay, ~100 câu, thuần trắc
+nghiệm, không thực hành, không thu tiền — nội dung mỏng hơn ta nhiều). App của ta là
+SPA sau màn đăng nhập nên Google không đọc được chữ nào ⇒ kênh tìm kiếm bằng 0.
+
+- [x] `server/seo.js`: render **thẳng ở máy chủ** (KHÔNG sinh 119 tệp .html) — không thêm
+  build step, nội dung luôn khớp `public/js/clean-*.js`, sửa bài là trang tự đổi.
+  - `GET /bai` danh sách 119 bài gom theo lớp · `GET /bai/<slug>` trang bài
+  - Slug kiểu `tin-hoc-12-bai-22-hoc-may-...` (nhánh ICT thêm `-ung-dung`), 0 trùng;
+    gọi bằng mã bài `C12-16` → 301 sang URL chuẩn (tránh phạt trùng nội dung)
+  - `sitemap.xml` (123 URL) + `robots.txt` (chặn `/api/`, `/admin.html`)
+  - Mỗi trang: mở đầu kể chuyện + mục lục + ý chính + **bảng thuật ngữ Anh–Việt**
+    (thứ không đối thủ nào có) + **3 câu trắc nghiệm và 1 câu Đúng/Sai có đáp án**
+  - title dồn từ khoá lên đầu (~83 ký tự), meta description, canonical, Open Graph,
+    JSON-LD (LearningResource + BreadcrumbList + ItemList)
+  - Không JS, không cookie, không đăng nhập → tải nhanh 3G, crawler đọc ngay
+- [x] **Ranh giới lộ nội dung** (chỉnh ở đầu `server/seo.js`): `SO_MC_MAU=3`, `SO_TF_MAU=1`,
+  và **chỉ câu mức Nhận biết/Thông hiểu** — câu Vận dụng, luyện tập chấm điểm, thực hành
+  code, gia sư AI vẫn nằm trong app. Hiện lộ ~26% ngân hàng; muốn giảm thì hạ hai hằng số.
+- [x] Liên kết thường từ `index.html` + `landing.html` sang `/bai` để crawler bò sang.
+- [x] Test `server/test/seo.test.js` (7 ca) + đã soát 119/119 trang: 200, không lộ câu
+  Vận dụng, không tràn ngang ở 375px, 0 lỗi console.
+- [ ] **Việc user làm sau khi có tên miền**: Google Search Console → xác minh tên miền →
+  nộp `https://<domain>/sitemap.xml`. Đặt biến `SITE_URL` trên Railway (không đặt thì
+  canonical tự lấy theo host đang gọi — vẫn đúng, chỉ kém ổn định khi đổi domain).
+- [ ] **Quyết định còn treo**: SEO kéo người lạ về, nhưng app đang **bắt đăng nhập ngay**
+  — đúng cái user vừa chê ở đối thủ. Cân nhắc cho xem bài học không cần tài khoản, chỉ
+  bắt đăng nhập khi luyện tập/lưu tiến độ.
+- [ ] Sau khi có traffic: xem Search Console truy vấn nào lên, viết thêm trang tổng hợp
+  ("trắc nghiệm đúng sai Tin học 12", "đề thi thử Tin học tốt nghiệp") trỏ về các bài.
 
 ## 5. Chi phí ước tính
 
