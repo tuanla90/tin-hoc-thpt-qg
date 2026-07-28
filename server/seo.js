@@ -209,19 +209,30 @@ function tuVung(l, kho) {
  *  chuyện) và đều viết bằng biến màu của hệ thống chung.
  * ------------------------------------------------------------------- */
 const CSS_RIENG = `
-.seo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(265px,1fr));gap:12px;margin:14px 0 4px}
-.seo-grid a{display:block;background:var(--surface-card);border:1px solid var(--line);border-radius:14px;
-  padding:14px 16px;text-decoration:none;color:var(--ink-main);transition:border-color .15s,transform .1s}
-.seo-grid a:hover{border-color:var(--brand);transform:translateY(-2px)}
-.seo-grid b{display:block;font-size:15px;line-height:1.45;margin-bottom:4px}
-/* Giới thiệu để NGUYÊN CÂU (p90 ~235 ký tự), chỉ nhờ CSS thu về 3 dòng cho các
-   thẻ bằng nhau. Cắt bằng số ký tự cho ra mẩu cụt trông như lỗi; cắt bằng dòng
-   thì đứt ở mép thẻ, mắt đọc thấy tự nhiên. */
-.seo-grid small{display:block;color:var(--ink-muted);font-size:13px;line-height:1.55;
-  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
-.seo-lop{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:32px 0 0}
-.seo-lop h2{margin:0}
+/* Danh sách 119 bài: TRA CỨU chứ không phải đọc. Trước đây mỗi thẻ kèm 3 dòng
+   giới thiệu -> trang cao gần 10.000px, phải cuộn mãi mới tới lớp mình cần.
+   Nay mỗi thẻ chỉ còn số bài + tên (mượn cách app đánh số bài: mono, màu nhãn),
+   thêm thanh nhảy nhanh theo lớp ở đầu trang. Phần giới thiệu đã nằm sẵn ở
+   trang chi tiết — nơi người ta thật sự đọc. */
+.seo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(232px,1fr));gap:10px;margin:12px 0 4px}
+.seo-grid a{display:flex;gap:11px;align-items:flex-start;background:var(--surface-card);
+  border:1px solid var(--line);border-radius:12px;padding:11px 13px;text-decoration:none;
+  color:var(--ink-main);transition:border-color .15s,transform .1s,box-shadow .15s}
+.seo-grid a:hover{border-color:var(--brand);transform:translateY(-2px);box-shadow:var(--shadow-sm)}
+.seo-so{flex:none;min-width:26px;height:26px;padding:0 6px;border-radius:8px;display:flex;
+  align-items:center;justify-content:center;background:var(--brand-soft);color:var(--brand);
+  font-family:var(--font-mono);font-size:12.5px;font-weight:700}
+.seo-grid b{font-size:14.5px;font-weight:650;line-height:1.4;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.seo-lop{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:30px 0 0;
+  padding-top:14px;border-top:1px solid var(--line)}
+.seo-lop h2{margin:0;font-size:20px}
 .seo-lop span{color:var(--ink-faint);font-size:13.5px}
+/* Nhảy nhanh tới từng lớp — không phải cuộn qua cả trăm bài */
+.seo-jump{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 4px}
+.seo-jump a{font-size:13.5px;font-weight:650;text-decoration:none;color:var(--ink-muted);
+  background:var(--bg-subtle);border:1px solid var(--line);border-radius:999px;padding:6px 14px}
+.seo-jump a:hover{border-color:var(--brand);color:var(--brand)}
 .seo-meta{color:var(--ink-muted);font-size:14px;margin:0 0 18px}
 .seo-crumb{font-size:13px;color:var(--ink-faint);margin-bottom:10px}
 .seo-crumb a{color:var(--ink-muted);text-decoration:none}
@@ -232,11 +243,19 @@ const CSS_RIENG = `
    (#4f46e5) nằm trên nền --brand-soft (#1e1b4b) là hai màu chàm sát nhau, chữ
    chìm hẳn. Viền trái và nền nhạt đã đủ báo hiệu khối này rồi. */
 .seo-story h3{margin:0 0 6px;font-size:15.5px;color:var(--ink-main)}
-.seo-q{background:var(--surface-card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin:12px 0}
-.seo-q-no{font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:6px}
-.seo-q ol{margin:10px 0 10px 22px;padding:0}
-.seo-q li{margin:4px 0}
-.seo-dap{margin-top:11px;padding-top:11px;border-top:1px dashed var(--line);font-size:14.5px;color:var(--ink-muted)}
+/* Thẻ câu hỏi: siết mật độ (không bớt nội dung) để đọc liền mạch hơn — bốn câu
+   mẫu trước đây chiếm hơn 1.300px chỉ vì khoảng đệm rộng. */
+.seo-q{background:var(--surface-card);border:1px solid var(--line);border-radius:12px;padding:13px 15px;margin:9px 0}
+.seo-q-no{font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:4px}
+.seo-q ol{margin:7px 0 7px 20px;padding:0}
+.seo-q li{margin:2px 0}
+.seo-q p{margin:0}
+.seo-dap{margin-top:9px;padding-top:9px;border-top:1px dashed var(--line);font-size:14px;color:var(--ink-muted)}
+/* Bảng từ vựng: cột tiếng Anh không cần rộng bằng cột nghĩa, và dòng thưa quá
+   làm khối này dài gần bằng cả phần lý thuyết. */
+.pg-table.seo-tv td,.pg-table.seo-tv th{padding:7px 11px}
+.pg-table.seo-tv td:first-child{white-space:nowrap;font-weight:650;width:1%}
+.pg-table.seo-tv small{color:var(--ink-faint);line-height:1.5}
 .seo-dap b{color:var(--accent-green)}
 .seo-nav{display:flex;justify-content:space-between;gap:14px;margin-top:28px;font-size:14.5px;flex-wrap:wrap}
 .seo-nav a{text-decoration:none}
@@ -291,10 +310,17 @@ function khung(o) {
     '</head>\n<body class="lp">\n\n' +
     '<header class="lp-head"><div class="wrap">' +
       '<a class="brand" href="/landing.html"><span class="brand-mark" aria-hidden="true">' + LOGO_SVG + "</span>Tin Học KHMT</a>" +
+      /* Menu KHỚP với trang chủ: khách bấm từ Google vào thấy đúng thanh điều
+         hướng quen thuộc, không phải một bộ mục lạ. Lối vào /bai và
+         /doi-chieu-sgk vẫn còn ở chân trang và ở dấu vết đường dẫn, nên Google
+         lẫn người dùng đều không mất đường. */
       '<nav class="nav-links">' +
-        '<a href="/bai">Ôn tập theo bài</a>' +
-        '<a href="/doi-chieu-sgk">Đối chiếu SGK</a>' +
-        '<a href="/nang-cap.html">Bảng giá</a>' +
+        '<a href="/landing.html#cach-hoc">Cách học</a>' +
+        '<a href="/landing.html#tinh-nang">Tính năng</a>' +
+        '<a href="/landing.html#lo-trinh">Lộ trình</a>' +
+        '<a href="/landing.html#hoc-phi">Học phí</a>' +
+        '<a href="/landing.html#tac-gia">Tác giả</a>' +
+        '<a class="nav-opt" href="/landing.html#faq">Câu hỏi</a>' +
       "</nav>" +
       '<div class="head-actions">' +
         '<button class="btn btn-ghost btn-sm" id="themeToggle" title="Chuyển giao diện Sáng/Tối">' + IC_TRANG + "</button>" +
@@ -456,8 +482,14 @@ function trangDanhSach(base) {
      cho ra những mẩu cụt lủn kiểu "hiểu ba bước máy…" — trông như lỗi hiển thị. */
   const khoi = [...theoLop].map(([stage, ms]) => `
 <div class="seo-lop"><h2 id="stage${stage}">${esc(ms[0].lop)}</h2><span>${ms.length} bài</span></div>
-<div class="seo-grid">${ms.map((m) => `<a href="/bai/${m.slug}"><b>Bài ${m.bai.order}. ${esc(m.bai.title)}</b>
-  <small>${esc(cauDau(m.bai.intro, 280))}</small></a>`).join("")}</div>`).join("");
+<div class="seo-grid">${ms.map((m) => `<a href="/bai/${m.slug}" title="${esc(cauDau(m.bai.intro, 160))}">` +
+  `<span class="seo-so">${m.bai.order}</span><b>${esc(m.bai.title)}</b></a>`).join("")}</div>`).join("");
+
+  /* Thanh nhảy nhanh: 119 bài chia 5 lớp, không ai muốn cuộn tìm lớp của mình. */
+  const nhay = `<nav class="seo-jump" aria-label="Nhảy tới lớp">` +
+    [...theoLop].map(([stage, ms]) =>
+      `<a href="#stage${stage}">${esc(ms[0].lop)} <span style="opacity:.65">${ms.length}</span></a>`).join("") +
+    `</nav>`;
 
   const body = `
 <div class="pg-hero left">
@@ -469,14 +501,15 @@ function trangDanhSach(base) {
   ${kho.SGK_MAP ? '<p class="seo-meta">Đang học theo sách giáo khoa? <a href="/doi-chieu-sgk"><b>Tra bảng đối chiếu bài trong sách ' +
     esc(kho.SGK_MAP.ten) + "</b></a> để mở nhanh đúng bài bạn học trên lớp.</p>" : ""}
 </div>
+${nhay}
+${khoi}
 
-<div class="pg-card" style="text-align:center">
+<div class="pg-card" style="text-align:center;margin-top:34px">
   <h2>Học đầy đủ trong ứng dụng</h2>
-  <p class="pg-note">${ds.length} bài giảng, ${kho.soCau} câu hỏi, 13 đề thi thử, hơn 320 bài thực hành máy tự chấm
-  (Python, SQL, HTML/CSS, đồ hoạ) và gia sư AI kèm riêng.</p>
+  <p class="pg-note">${ds.length} bài giảng, ${kho.soCau} câu hỏi, 13 đề thi thử, 250+ bài thực hành máy tự chấm
+  (Python, SQL, HTML/CSS) và gia sư AI kèm riêng.</p>
   <p style="margin-top:14px"><a class="btn btn-primary btn-lg" href="/">Bắt đầu học miễn phí</a></p>
-</div>
-${khoi}`;
+</div>`;
 
   const html = khung({
     title: `Ôn tập Tin học THPT — ${ds.length} bài lý thuyết & trắc nghiệm có đáp án`,
