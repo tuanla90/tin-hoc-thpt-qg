@@ -685,6 +685,84 @@ select:focus, input[type="text"]:focus, input[type="number"]:focus {
 .palette-btn.current { outline: 3px solid var(--primary); outline-offset: 1px; }
 .palette-btn.correct { background: var(--success-soft); color: var(--success); border-color: var(--success); }
 .palette-btn.wrong { background: var(--danger-soft); color: var(--danger); border-color: var(--danger); }
+/* Câu đã đánh dấu để soát lại: gạch cờ vàng ở góc trên phải */
+.palette-btn.flagged { position: relative; border-color: var(--warning); }
+.palette-btn.flagged::after {
+  content: ""; position: absolute; top: -3px; right: -3px;
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--warning); border: 2px solid var(--bg-card);
+}
+
+/* ---------------------------------------------------------------------------
+ *  CHẾ ĐỘ CUỘN DỌC — cả đề trên một trang (thi thử)
+ *  Máy tính: bảng câu hỏi dính bên phải; điện thoại: thu thành thanh dính ở trên.
+ * ------------------------------------------------------------------------- */
+.quiz-scroll { display: grid; grid-template-columns: minmax(0, 1fr) 216px; gap: 22px; align-items: start; }
+.quiz-scroll-main { min-width: 0; display: grid; gap: 18px; }
+
+/* min-width:0 là bắt buộc: thẻ câu hỏi là ô của lưới, để mặc định (auto) thì nội
+   dung dài (đoạn mã, chuỗi không xuống dòng) sẽ nong thẻ ra và trang bị tràn ngang
+   trên điện thoại. Có nó thì đoạn mã tự cuộn ngang trong khung của nó. */
+.qs-card { margin-bottom: 0; min-width: 0; scroll-margin-top: calc(var(--topbar-h, 72px) + 16px); }
+.qs-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px; flex-wrap: wrap; margin-bottom: 10px;
+}
+.qs-head .q-number { margin-bottom: 0; font-size: 15px; }
+.qs-tags { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+.qs-tags .pill { font-size: 11.5px; padding: 4px 11px; }
+.flag-btn.flag-mini { padding: 5px 12px; font-size: 12.5px; gap: 5px; box-shadow: none; }
+
+.qs-end {
+  text-align: center; background: var(--bg-card); border: 1px dashed var(--border-strong);
+  border-radius: var(--radius); padding: 24px 20px;
+}
+.qs-end p { color: var(--text-soft); font-size: 14.5px; margin-bottom: 14px; }
+
+.palette-side {
+  position: sticky; top: calc(var(--topbar-h, 72px) + 16px); order: 2;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 14px; box-shadow: var(--shadow);
+}
+.palette-side-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.palette-side-title { font-size: 13.5px; font-weight: 800; color: var(--text-soft); }
+.palette-side .palette { margin: 12px 0 10px; gap: 7px; }
+.palette-side .palette-btn { width: 38px; height: 38px; }
+.palette-toggle {
+  display: none; align-items: center; gap: 6px;
+  border: 1.5px solid var(--border); background: var(--bg-soft); color: var(--text);
+  font-family: inherit; font-size: 13px; font-weight: 700;
+  padding: 7px 13px; border-radius: 999px; cursor: pointer;
+}
+.palette-side:not(.closed) .palette-toggle .ic { transform: rotate(180deg); }
+.palette-legend {
+  display: flex; flex-wrap: wrap; gap: 6px 12px;
+  font-size: 11.5px; color: var(--text-soft); font-weight: 650; margin-bottom: 12px;
+}
+.palette-legend i.lg {
+  display: inline-block; width: 10px; height: 10px; border-radius: 3px;
+  border: 1.5px solid var(--border); vertical-align: -1px; margin-right: 4px;
+}
+.palette-legend .lg-answered { background: var(--primary-soft); border-color: var(--primary); }
+.palette-legend .lg-flagged { background: var(--warning); border-color: var(--warning); }
+.palette-legend .lg-empty { background: var(--bg-card); }
+.palette-submit { font-size: 13.5px; padding: 10px 16px; }
+
+/* Một cột khi màn hẹp: bảng câu hỏi lên trên, thu gọn lại, bấm mới mở */
+@media (max-width: 860px) {
+  .quiz-scroll { grid-template-columns: 1fr; gap: 14px; }
+  .palette-side {
+    order: -1; top: var(--topbar-h, 72px); z-index: 20; padding: 10px 12px;
+    border-radius: var(--radius-sm);
+  }
+  .palette-toggle { display: inline-flex; }
+  .palette-side.closed .palette,
+  .palette-side.closed .palette-legend,
+  .palette-side.closed .palette-submit { display: none; }
+  .palette-side .palette { max-height: 42vh; overflow-y: auto; }
+  /* nhảy tới câu nào thì câu đó phải nằm dưới CẢ thanh tiêu đề lẫn thanh bảng câu */
+  .qs-card { scroll-margin-top: calc(var(--topbar-h, 72px) + var(--palbar-h, 54px) + 12px); }
+}
 
 /* Màn hình kết quả */
 .result-hero { text-align: center; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 36px 24px; box-shadow: var(--shadow); margin-bottom: 24px; }

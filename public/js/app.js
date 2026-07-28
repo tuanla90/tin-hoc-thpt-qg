@@ -63,7 +63,7 @@ const STORE_KEY = window.STORE_KEY || "tinhoc_thpt_v1";   /* theo hồ sơ đang
 const State = {
   view: "home",
   quiz: null,        // bài đang làm
-  settings: load("settings", { theme: "light" }),
+  settings: load("settings", { theme: "light", quizLayout: "scroll" }),
   history: load("history", []),
   learned: load("learned", []),   // danh sách id bài học đã hoàn thành
   profile: load("profile", {}),   // hồ sơ: tên, giới tính, lớp, định hướng
@@ -1602,7 +1602,43 @@ function quizRules(Q) {
   };
 }
 
+/* CÁCH HIỂN THỊ ĐỀ khi THI THỬ:
+   - "scroll" (mặc định): dồn TẤT CẢ câu vào một trang, học sinh cuộn một mạch
+     như làm đề giấy; bảng câu hỏi nằm bên cạnh, bấm số nào thì nhảy tới câu đó.
+   - "single": mỗi màn một câu, có nút Câu trước / Câu sau.
+   Luyện tập LUÔN dùng "single" vì chấm và hiện lời giải ngay sau từng câu —
+   cuộn dọc sẽ chen lời giải vào giữa dòng làm bài, rất rối. */
+function quizLayout(Q) {
+  if (!Q || Q.mode !== "exam") return "single";
+  return State.settings.quizLayout === "single" ? "single" : "scroll";
+}
+
+/* Nút đổi cách hiển thị — chỉ có ở thi thử */
+function nutDoiCachHienThi(Q) {
+  if (Q.mode !== "exam") return "";
+  const cuon = quizLayout(Q) === "scroll";
+  return `<button class="btn btn-ghost btn-layout" id="layoutBtn"
+    title="${cuon ? "Chuyển sang xem mỗi màn một câu" : "Chuyển sang cuộn dọc cả đề"}">
+    ${aIco(cuon ? "clipboard" : "layers", null, 14)} ${cuon ? "Từng câu" : "Cuộn dọc"}</button>`;
+}
+
+/* Sau khi đổi cách hiển thị thì đưa người học về đúng câu đang làm dở */
+let nhayToiCauHienTai = false;
+function doiCachHienThi() {
+  const Q = State.quiz;
+  State.settings.quizLayout = quizLayout(Q) === "scroll" ? "single" : "scroll";
+  save("settings", State.settings);
+  nhayToiCauHienTai = true;
+  goStay("quiz");   // tự cuộn tới đúng chỗ ở cuối hàm render, không giật về đầu
+}
+
 function renderQuiz() {
+  ngungTheoDoiCuon();
+  if (quizLayout(State.quiz) === "scroll") renderQuizScroll();
+  else renderQuizSingle();
+}
+
+function renderQuizSingle() {
   const Q = State.quiz;
   const q = Q.questions[Q.index];
   const revealed = Q.revealed[Q.index];
@@ -1637,6 +1673,7 @@ function renderQuiz() {
         <span class="pill pill-mode" title="${esc(luat.moTa)}">${esc(luat.nhan)}</span>
       </div>
       <div class="quiz-meta">
+        ${nutDoiCachHienThi(Q)}
         ${luat.tinhGio ? `<span class="timer" id="timer">--:--</span>` : ""}
         <button class="btn btn-ghost" id="quitBtn">Thoát</button>
       </div>
@@ -1679,12 +1716,13 @@ function renderQuiz() {
     </div>
   `;
 
-  renderAnswerArea(q, revealed);
+  renderAnswerArea(q, revealed, Q.index, null, { focus: true });
   renderPalette();
   if (revealed) renderExplain(q);
 
   // sự kiện
   const byId = (id) => document.getElementById(id);
+  byId("layoutBtn") && (byId("layoutBtn").onclick = doiCachHienThi);
   byId("prevBtn") && (byId("prevBtn").onclick = () => { Q.index--; go("quiz"); });
   byId("nextBtn") && (byId("nextBtn").onclick = () => { Q.index++; go("quiz"); });
   byId("flagBtn").onclick = () => {
@@ -1707,18 +1745,213 @@ function renderQuiz() {
 
   if (luat.tinhGio) startTimer();
 
+  // Từ "cuộn dọc" đổi sang "từng câu": trang mới ngắn hơn, đưa về đầu cho gọn
+  if (nhayToiCauHienTai) { nhayToiCauHienTai = false; setTimeout(() => window.scrollTo(0, 0), 0); }
+
   // Phản hồi sau khi chấm một câu -> đẩy xuống Robot trợ lý ở góc dưới phải
   if (phanHoiMoi) mascotSay(phanHoiMoi.msg, { pose: phanHoiMoi.pose, badge: phanHoiMoi.badge, tone: phanHoiMoi.typeClass });
 }
 
-/* --- Vùng nhập đáp án theo từng dạng --- */
-function renderAnswerArea(q, revealed) {
+/* ---------------------------------------------------------------------------
+ *  CHẾ ĐỘ CUỘN DỌC — cả đề trên một trang (thi thử)
+ *  Học sinh cuộn một mạch từ câu 1 tới câu cuối, soát lại câu bỏ qua chỉ bằng
+ *  cách cuộn ngược lên hoặc bấm số ở bảng câu hỏi bên cạnh.
+ * ------------------------------------------------------------------------- */
+function renderQuizScroll() {
   const Q = State.quiz;
-  const area = document.getElementById("answerArea");
+  const luat = quizRules(Q);
+
+  const theCauHoi = (q, i) => `
+    <div class="question-card qs-card" id="qs-${i}">
+      <div class="qs-head">
+        <div class="q-number">Câu ${i + 1} / ${Q.questions.length}</div>
+        <div class="qs-tags">
+          <span class="pill type-${q.type}">${TYPE_LABEL[q.type]}</span>
+          ${q.grade ? `<span class="pill">Lớp ${q.grade}</span>` : ""}
+          <span class="pill">${LEVEL_LABEL[q.level]}</span>
+          <button class="flag-btn flag-mini ${Q.flags[i] ? "on" : ""}" data-flag="${i}"
+                  title="Đánh dấu để soát lại" aria-pressed="${Q.flags[i] ? "true" : "false"}">
+            ${aIco("flag", null, 14)} <span>${Q.flags[i] ? "Đã đánh dấu" : "Đánh dấu"}</span>
+          </button>
+        </div>
+      </div>
+      <div class="q-text">${fmtQ(q.question)}</div>
+      ${q.code ? `<pre class="q-code">${esc(q.code)}</pre>` : ""}
+      <div id="answerArea-${i}"></div>
+      <div id="explainArea-${i}"></div>
+    </div>`;
+
+  app.innerHTML = `
+    <div class="quiz-header">
+      <div class="quiz-meta">
+        <span class="pill">${esc(Q.title)}</span>
+        <span class="pill pill-mode" title="${esc(luat.moTa)}">${esc(luat.nhan)}</span>
+      </div>
+      <div class="quiz-meta">
+        ${nutDoiCachHienThi(Q)}
+        ${luat.tinhGio ? `<span class="timer" id="timer">--:--</span>` : ""}
+        <button class="btn btn-ghost" id="quitBtn">Thoát</button>
+      </div>
+    </div>
+
+    <div class="progress-container">
+      <div class="progress-track-wrapper">
+        <div class="progress-fill" id="progFill" style="width:0%"></div>
+      </div>
+      <div class="progress-info-row">
+        <span id="progText">Đã làm 0 / ${Q.questions.length} câu</span>
+        <span>${esc(luat.moTa)}</span>
+      </div>
+    </div>
+
+    <div class="quiz-scroll">
+      <aside class="palette-side" id="paletteSide">
+        <div class="palette-side-head">
+          <b class="palette-side-title">Bảng câu hỏi</b>
+          <button class="palette-toggle" id="paletteToggle" aria-expanded="true" aria-controls="palette">
+            <span id="paletteToggleText">Đóng bảng câu</span> ${aIco("chevdown", null, 15)}
+          </button>
+        </div>
+        <div class="palette" id="palette"></div>
+        <div class="palette-legend">
+          <span><i class="lg lg-answered"></i> Đã làm</span>
+          <span><i class="lg lg-flagged"></i> Đánh dấu</span>
+          <span><i class="lg lg-empty"></i> Chưa làm</span>
+        </div>
+        <button class="btn btn-success btn-block palette-submit" data-submit>${aIco("check2", null, 15)} Nộp bài</button>
+      </aside>
+
+      <div class="quiz-scroll-main">
+        ${Q.questions.map(theCauHoi).join("")}
+        <div class="qs-end">
+          <p>Đã hết ${Q.questions.length} câu. Soát lại các câu đã đánh dấu rồi nộp bài nhé!</p>
+          <button class="btn btn-success btn-lg" data-submit>${aIco("check2", null, 16)} Nộp bài</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  Q.questions.forEach((q, i) => {
+    renderAnswerArea(q, Q.revealed[i], i, document.getElementById(`answerArea-${i}`));
+    if (Q.revealed[i]) renderExplain(q, i, document.getElementById(`explainArea-${i}`));
+  });
+  renderPalette();
+
+  const byId = (id) => document.getElementById(id);
+  byId("layoutBtn") && (byId("layoutBtn").onclick = doiCachHienThi);
+  app.querySelectorAll("[data-submit]").forEach((b) => b.onclick = trySubmit);
+  byId("quitBtn").onclick = async () => {
+    const ok = await confirmBox("Thoát bài làm?", "Bài làm hiện tại sẽ không được lưu. Bạn có chắc muốn thoát?", "Thoát");
+    if (ok) { stopTimer(); ngungTheoDoiCuon(); State.quiz = null; go("home"); }
+  };
+
+  // Đánh dấu cờ: đổi tại chỗ đúng 1 nút, không dựng lại cả trang
+  app.querySelectorAll("[data-flag]").forEach((b) => b.onclick = () => {
+    const i = +b.dataset.flag;
+    Q.flags[i] = !Q.flags[i];
+    b.classList.toggle("on", Q.flags[i]);
+    b.setAttribute("aria-pressed", Q.flags[i] ? "true" : "false");
+    b.querySelector("span").textContent = Q.flags[i] ? "Đã đánh dấu" : "Đánh dấu";
+    renderPalette();
+  });
+
+  // Điện thoại: bảng câu hỏi thu gọn thành một thanh dính ở trên, bấm mới mở.
+  // Máy tính vẫn hiện đủ bảng (CSS bỏ qua class "closed" khi màn rộng).
+  const side = byId("paletteSide"), tgl = byId("paletteToggle");
+  const datBang = (dong) => {
+    side.classList.toggle("closed", dong);
+    tgl.setAttribute("aria-expanded", dong ? "false" : "true");
+    byId("paletteToggleText").textContent = dong ? "Mở bảng câu" : "Đóng bảng câu";
+  };
+  datBang(window.matchMedia("(max-width: 860px)").matches);
+  tgl.onclick = () => datBang(!side.classList.contains("closed"));
+
+  updateQuizProgress();
+  doChieuCaoThanhDinh();
+  window.addEventListener("resize", doChieuCaoThanhDinh);   // xoay ngang máy thì đo lại
+  theoDoiCuon();
+  if (luat.tinhGio) startTimer();
+
+  /* Vừa đổi từ "từng câu" sang "cuộn dọc" -> đưa thẳng tới câu đang làm dở.
+     Phải đợi sang lượt sau vì go()/goStay() còn đặt lại vị trí cuộn sau khi render. */
+  if (nhayToiCauHienTai) {
+    nhayToiCauHienTai = false;
+    if (Q.index > 0) setTimeout(() => scrollToQuestion(Q.index, "auto"), 0);
+  }
+}
+
+/* Thanh tiêu đề (và trên điện thoại là cả thanh "Bảng câu hỏi") dính ở trên và
+   CAO THẤP KHÁC NHAU tùy bề ngang màn — màn hẹp thì chữ xuống dòng nên cao gấp
+   đôi. Đo chiều cao thật rồi ghi vào biến CSS để bảng câu hỏi dính đúng chỗ và
+   khi nhảy tới một câu thì câu đó không bị hai thanh kia che mất. */
+function doChieuCaoThanhDinh() {
+  const dat = (ten, el) => {   // không thấy phần tử thì giữ số đo cũ, đừng đặt về 0
+    if (el) document.documentElement.style.setProperty(ten, Math.round(el.getBoundingClientRect().height) + "px");
+  };
+  dat("--topbar-h", document.querySelector(".topbar"));
+  dat("--palbar-h", document.querySelector(".palette-side.closed"));   // chỉ có ở khổ điện thoại
+}
+
+/* Nhảy tới một câu (bảng câu hỏi / đổi cách hiển thị) */
+function scrollToQuestion(i, behavior = "smooth") {
+  const el = document.getElementById("qs-" + i);
+  if (el) el.scrollIntoView({ behavior, block: "start" });
+}
+
+/* Câu nào đang ở đầu khung nhìn thì tô sáng số đó trên bảng câu hỏi.
+   Chỉ đổi class của nút, không dựng lại DOM nên cuộn vẫn mượt. */
+let quizScrollObserver = null;
+function ngungTheoDoiCuon() {
+  if (quizScrollObserver) { quizScrollObserver.disconnect(); quizScrollObserver = null; }
+}
+function theoDoiCuon() {
+  ngungTheoDoiCuon();
+  if (!("IntersectionObserver" in window)) return;
+  const cards = Array.from(document.querySelectorAll(".qs-card"));
+  if (!cards.length) return;
+  quizScrollObserver = new IntersectionObserver((entries) => {
+    if (!State.quiz || State.view !== "quiz") { ngungTheoDoiCuon(); return; }
+    let top = null;
+    entries.forEach((e) => {
+      if (!e.isIntersecting) return;
+      const i = cards.indexOf(e.target);
+      if (i >= 0 && (top === null || i < top)) top = i;
+    });
+    if (top === null || top === State.quiz.index) return;
+    State.quiz.index = top;
+    danhDauCauHienTai();
+  }, { rootMargin: "-12% 0px -72% 0px" });   // dải "đang đọc" ở khoảng 1/8 trên màn hình
+  cards.forEach((c) => quizScrollObserver.observe(c));
+}
+function danhDauCauHienTai() {
+  document.querySelectorAll("#palette .palette-btn").forEach((b, i) => {
+    b.classList.toggle("current", i === State.quiz.index);
+  });
+}
+
+/* Thanh tiến độ ở chế độ cuộn dọc đếm SỐ CÂU ĐÃ LÀM (không phải câu thứ mấy) */
+function updateQuizProgress() {
+  const Q = State.quiz;
+  const fill = document.getElementById("progFill"), txt = document.getElementById("progText");
+  if (!Q || !fill || !txt) return;
+  const done = Q.answers.filter(daTraLoi).length;
+  const pct = Math.round((done / Q.questions.length) * 100);
+  fill.style.width = pct + "%";
+  txt.textContent = `Đã làm ${done} / ${Q.questions.length} câu (${pct}%)`;
+}
+
+/* --- Vùng nhập đáp án theo từng dạng ---
+   idx / area: chế độ cuộn dọc dựng cùng lúc nhiều câu nên phải nói rõ đang vẽ
+   câu số mấy và vẽ vào ô nào; bỏ trống thì hiểu là câu đang mở (chế độ từng câu). */
+function renderAnswerArea(q, revealed, idx, area, opts = {}) {
+  const Q = State.quiz;
+  if (idx == null) idx = Q.index;
+  area = area || document.getElementById("answerArea");
+  if (!area) return;
   const locked = revealed; // ở practice, sau khi kiểm tra thì khóa
 
   if (q.type === "mc") {
-    const cur = Q.answers[Q.index];
+    const cur = Q.answers[idx];
     area.innerHTML = `<div class="options">` + q.options.map((opt, i) => {
       let cls = "option";
       if (revealed) {
@@ -1732,14 +1965,14 @@ function renderAnswerArea(q, revealed) {
     /* Chọn đáp án chỉ đổi trạng thái 1 ô -> tô lại tại chỗ thay vì dựng lại cả
        màn hình (dựng lại sẽ kéo trang về đầu, mất chỗ đang đọc). */
     if (!locked) area.querySelectorAll(".option").forEach((o) => o.onclick = () => {
-      Q.answers[Q.index] = +o.dataset.i;
+      Q.answers[idx] = +o.dataset.i;
       area.querySelectorAll(".option").forEach((x) => x.classList.toggle("selected", x === o));
       renderPalette();
     });
 
   } else if (q.type === "tf") {
-    if (!Array.isArray(Q.answers[Q.index])) Q.answers[Q.index] = new Array(q.statements.length).fill(null);
-    const cur = Q.answers[Q.index];
+    if (!Array.isArray(Q.answers[idx])) Q.answers[idx] = new Array(q.statements.length).fill(null);
+    const cur = Q.answers[idx];
     const letters = ["a", "b", "c", "d", "e", "f"];
     area.innerHTML = `<div class="tf-table">` + q.statements.map((st, i) => {
       let rowCls = "tf-row";
@@ -1763,7 +1996,7 @@ function renderAnswerArea(q, revealed) {
       const i = +grp.dataset.i;
       grp.querySelectorAll("button").forEach((b) => b.onclick = () => {
         const v = b.dataset.v === "true";
-        Q.answers[Q.index][i] = v;
+        Q.answers[idx][i] = v;
         grp.querySelector('[data-v="true"]').classList.toggle("sel-true", v);
         grp.querySelector('[data-v="false"]').classList.toggle("sel-false", !v);
         renderPalette();
@@ -1771,26 +2004,35 @@ function renderAnswerArea(q, revealed) {
     });
 
   } else if (q.type === "sa") {
-    const cur = Q.answers[Q.index];
+    const cur = Q.answers[idx];
     let cls = "sa-input";
     if (revealed) cls += isSAcorrect(q, cur) ? " correct" : " wrong";
     area.innerHTML = `
-      <input type="text" class="${cls}" id="saInput" placeholder="Nhập đáp án..."
+      <input type="text" class="${cls}" id="saInput-${idx}" placeholder="Nhập đáp án..."
              value="${cur != null ? esc(cur) : ""}" ${locked ? "disabled" : ""} autocomplete="off" />`;
     if (!locked) {
-      const inp = document.getElementById("saInput");
-      inp.oninput = () => { Q.answers[Q.index] = inp.value; };
-      inp.onkeydown = (e) => { if (e.key === "Enter") { e.preventDefault(); document.getElementById("checkBtn")?.click() || document.getElementById("nextBtn")?.click(); } };
-      inp.focus();
+      const inp = area.querySelector("input");
+      inp.oninput = () => { Q.answers[idx] = inp.value; renderPalette(); };
+      /* Enter = bấm nút chính của câu: luyện tập thì "Kiểm tra", thi thử thì
+         "Câu sau". Không có nút nào (chế độ cuộn dọc) thì chỉ chặn submit form. */
+      inp.onkeydown = (e) => {
+        if (e.key !== "Enter") return;
+        e.preventDefault();
+        const nut = document.getElementById("checkBtn") || document.getElementById("nextBtn");
+        if (nut) nut.click();
+      };
+      if (opts.focus) inp.focus();
     }
   }
 }
 
-function renderExplain(q) {
+function renderExplain(q, idx, area) {
   const Q = State.quiz;
-  const cur = Q.answers[Q.index];
+  if (idx == null) idx = Q.index;
+  const cur = Q.answers[idx];
   const correct = isAnswerCorrect(q, cur);
-  const area = document.getElementById("explainArea");
+  area = area || document.getElementById("explainArea");
+  if (!area) return;
   let correctText = "";
   if (q.type === "mc") correctText = `Đáp án đúng: <b>${String.fromCharCode(65 + q.answer)}. ${fmtQ(q.options[q.answer])}</b>`;
   else if (q.type === "sa") correctText = `Đáp án đúng: <b>${fmtQ(q.answer)}</b>`;
@@ -1810,31 +2052,51 @@ function renderExplain(q) {
           <div style="margin-top:4px;">${fmtQ(q.explain || "")}</div>
         </div>
       </div>
-      <button class="btn btn-ghost" id="whyBtn" style="display:none; margin-top:10px">${aIco("bulb", "#d97706", 15)} Vì sao tôi sai?</button>
+      <button class="btn btn-ghost" id="whyBtn-${idx}" style="display:none; margin-top:10px">${aIco("bulb", "#d97706", 15)} Vì sao tôi sai?</button>
     </div>`;
 
   /* Chỉ mời hỏi gia sư khi làm SAI — làm đúng rồi thì đừng chen ngang, và cũng
      đỡ tốn lượt hỏi của người học. */
   if (!correct && typeof Tutor !== "undefined") {
-    Tutor.batNut(document.getElementById("whyBtn"), () => Tutor.moCauSai(q, cur, Q.lessonId || null));
+    Tutor.batNut(area.querySelector("[id^='whyBtn']"), () => Tutor.moCauSai(q, cur, Q.lessonId || null));
   }
 }
 
 /* --- Bảng câu hỏi (palette) --- */
+/* Coi là "đã làm": có chọn đáp án / gõ chữ; câu Đúng-Sai chỉ cần chọn được 1 ý */
+function daTraLoi(a) {
+  if (a === null || a === undefined || a === "") return false;
+  if (Array.isArray(a)) return a.some((x) => x !== null);
+  return true;
+}
+
 function renderPalette() {
   const Q = State.quiz;
   const pal = document.getElementById("palette");
+  if (!pal) return;
+  const cuon = quizLayout(Q) === "scroll";
   pal.innerHTML = Q.questions.map((q, i) => {
     let cls = "palette-btn";
     const a = Q.answers[i];
-    const isAnswered = a !== null && a !== undefined && !(Array.isArray(a) && a.every((x) => x === null)) && a !== "";
     if (Q.revealed[i]) cls += isAnswerCorrect(q, a) ? " correct" : " wrong";
-    else if (isAnswered) cls += " answered";
+    else if (daTraLoi(a)) cls += " answered";
     if (i === Q.index) cls += " current";
     if (Q.flags[i]) cls += " flagged";
     return `<button class="${cls}" data-i="${i}">${i + 1}</button>`;
   }).join("");
-  pal.querySelectorAll(".palette-btn").forEach((b) => b.onclick = () => { Q.index = +b.dataset.i; go("quiz"); });
+  pal.querySelectorAll(".palette-btn").forEach((b) => b.onclick = () => {
+    Q.index = +b.dataset.i;
+    if (!cuon) { go("quiz"); return; }
+    // Cuộn dọc: nhảy tới câu đó trong cùng trang, không dựng lại DOM.
+    // Đóng bảng TRƯỚC rồi mới cuộn, vì đóng xong trang co lại -> điểm dừng đổi chỗ.
+    const side = document.getElementById("paletteSide");   // điện thoại: đóng bảng cho thoáng
+    if (side && !side.classList.contains("closed") && window.matchMedia("(max-width: 860px)").matches) {
+      document.getElementById("paletteToggle").click();
+    }
+    danhDauCauHienTai();
+    scrollToQuestion(Q.index);
+  });
+  updateQuizProgress();
 }
 
 /* ===========================================================================
@@ -1935,6 +2197,7 @@ function doSubmit(timeUp) {
   if (Q.submitted) return;
   Q.submitted = true;
   stopTimer();
+  ngungTheoDoiCuon();
   const result = grade();
   const durationSec = Math.floor((Date.now() - Q.startTs) / 1000);
 
