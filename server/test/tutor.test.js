@@ -102,6 +102,20 @@ test("khoá ngữ cảnh phân biệt bài / câu / bài thực hành", () => {
   assert.equal(khoaNguCanh(null, null, null), "chung");
 });
 
+/* ĐỆM NGỮ CẢNH NGẦM (implicit caching) của nhà cung cấp chỉ ăn khi phần đầu
+   prompt GIỐNG HỆT lượt trước. Test này canh đúng điều kiện đó: cùng một bài thì
+   dù học sinh hỏi gì, system prompt phải không đổi một ký tự. Vỡ test = mất đệm
+   = hoá đơn AI tăng âm thầm mà không ai biết. */
+test("prompt của cùng một bài KHÔNG đổi theo câu hỏi (giữ đệm ngữ cảnh)", () => {
+  const bai = layBai("C11-33"); // bài dài nhất, nơi dễ lộ khác biệt nhất
+  const a = dungSystem(bai, null, null, null, "Thuật toán tham lam là gì?");
+  const b = dungSystem(bai, null, null, null, "Cho ví dụ về chia để trị");
+  const c = dungSystem(bai, null, null, null, "");
+  assert.equal(a, b, "hai câu hỏi khác nhau vẫn phải ra cùng một system prompt");
+  assert.equal(a, c, "không có câu hỏi cũng vậy");
+  assert.ok(!/\d{1,2}:\d{2}|\d{4}-\d{2}-\d{2}/.test(a), "prompt không được chứa ngày giờ — đệm sẽ trượt mỗi lượt");
+});
+
 test("mặc định KHÔNG bài nào bị cắt — gia sư luôn thấy trọn bài", () => {
   const { napKho } = require("../lessons");
   const thieu = [...napKho().baiTheoId.values()]

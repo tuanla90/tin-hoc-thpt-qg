@@ -10,6 +10,16 @@
 const express = require("express");
 const bcrypt = require("bcryptjs");
 const { sinhMa } = require("./plan");
+const { aiConfig } = require("./ai");
+
+/* Token -> tiền (VND). Token đọc từ đệm ngữ cảnh tính rẻ hơn (cfg.demTl), và
+   `vao` của nhà cung cấp ĐÃ BAO GỒM phần đệm nên phải trừ ra kẻo tính hai lần.
+   Đơn giá lấy từ biến môi trường AI_GIA_* — đổi model thì sửa biến. */
+function tienVND(vao, dem, ra, cfg) {
+  const sach = Math.max(0, (vao || 0) - (dem || 0));
+  const usd = (sach * cfg.giaVao + (dem || 0) * cfg.giaVao * cfg.demTl + (ra || 0) * cfg.giaRa) / 1e6;
+  return usd * cfg.tyGia;
+}
 
 /* Cùng cách tính "hôm nay" theo giờ VN như tutor.js — để số lượt AI khớp nhau. */
 function ngayVN() {
@@ -147,6 +157,71 @@ function createAdmin(pool) {
           };
         });
       res.json({ users: ds });
+    } catch (e) { next(e); }
+  });
+
+  /* ---------------------- CHI PHÍ GIA SƯ AI ---------------------- */
+  /* Tổng lượt / token / tiền, bổ theo NGÀY, theo TÀI KHOẢN và theo LỐI VÀO.
+     Nguồn: bảng tutor_log (mỗi lượt hỏi thành công là một dòng, có token thật
+     do nhà cung cấp trả về). Lượt hỏng giữa chừng không ghi — cũng không tốn
+     tiền đáng kể vì đã được hoàn lượt. */
+  r.get("/admin/ai-usage", async (req, res, next) => {
+    try {
+      const cfg = aiConfig();
+      const soNgay = Math.min(180, Math.max(1, Number(req.query.ngay) || 30));
+      const tu = new Date(Date.now() + 7 * 3600 * 1000 - (soNgay - 1) * 86400000)
+        .toISOString().slice(0, 10);
+
+      const [ngay, taiKhoan, kieu, tong] = await Promise.all([
+        q(`SELECT ngay, COUNT(*)::int AS luot,
+                  COALESCE(SUM(token_vao),0)::int AS vao,
+                  COALESCE(SUM(token_dem),0)::int AS dem,
+                  COALESCE(SUM(token_ra),0)::int AS ra
+           FROM tutor_log WHERE ngay >= $1 GROUP BY ngay ORDER BY ngay DESC`, [tu]),
+        q(`SELECT user_id, COUNT(*)::int AS luot,
+                  COALESCE(SUM(token_vao),0)::int AS vao,
+                  COALESCE(SUM(token_dem),0)::int AS dem,
+                  COALESCE(SUM(token_ra),0)::int AS ra
+           FROM tutor_log WHERE ngay >= $1 GROUP BY user_id`, [tu]),
+        q(`SELECT kieu, COUNT(*)::int AS luot FROM tutor_log WHERE ngay >= $1 GROUP BY kieu`, [tu]),
+        q(`SELECT COUNT(*)::int AS luot,
+                  COALESCE(SUM(token_vao),0)::int AS vao,
+                  COALESCE(SUM(token_dem),0)::int AS dem,
+                  COALESCE(SUM(token_ra),0)::int AS ra
+           FROM tutor_log`),
+      ]);
+
+      /* Email tra riêng thay vì JOIN — pg-mem (chế độ test/dev) hay vấp JOIN
+         kèm GROUP BY, mà số tài khoản ở đây cũng chỉ vài chục. */
+      const emails = {};
+      for (const x of taiKhoan.rows) {
+        const u = await q("SELECT email FROM users WHERE id = $1", [x.user_id]);
+        emails[x.user_id] = u.rows[0] ? u.rows[0].email : "user#" + x.user_id;
+      }
+      const themTien = (x) => Object.assign({}, x, { tien: Math.round(tienVND(x.vao, x.dem, x.ra, cfg)) });
+
+      const dsNgay = ngay.rows.map((x) => themTien({
+        ngay: typeof x.ngay === "string" ? x.ngay : new Date(x.ngay).toISOString().slice(0, 10),
+        luot: x.luot, vao: x.vao, dem: x.dem, ra: x.ra,
+      }));
+      const dsTk = taiKhoan.rows
+        .map((x) => themTien({ email: emails[x.user_id], luot: x.luot, vao: x.vao, dem: x.dem, ra: x.ra }))
+        .sort((a, b) => b.tien - a.tien || b.luot - a.luot)
+        .slice(0, 100);
+
+      const t = tong.rows[0];
+      res.json({
+        soNgay,
+        tuNgay: tu,
+        khoang: themTien(dsNgay.reduce((n, x) => ({
+          luot: n.luot + x.luot, vao: n.vao + x.vao, dem: n.dem + x.dem, ra: n.ra + x.ra,
+        }), { luot: 0, vao: 0, dem: 0, ra: 0 })),
+        tuTruocToiNay: themTien({ luot: t.luot, vao: t.vao, dem: t.dem, ra: t.ra }),
+        theoNgay: dsNgay,
+        theoTaiKhoan: dsTk,
+        theoKieu: kieu.rows,
+        gia: { vao: cfg.giaVao, ra: cfg.giaRa, demTl: cfg.demTl, tyGia: cfg.tyGia, model: cfg.model },
+      });
     } catch (e) { next(e); }
   });
 

@@ -5,7 +5,7 @@
      - chữ nằm ở candidates[0].content.parts[].text */
 const { docSSE, loiNhaCungCap, doiLaiMs } = require("./sse");
 
-async function chat({ key, model, system, messages, maxTokens, onText, signal }) {
+async function chat({ key, model, system, messages, maxTokens, onText, onUsage, signal }) {
   const url = "https://generativelanguage.googleapis.com/v1beta/models/" +
     encodeURIComponent(model) + ":streamGenerateContent?alt=sse&key=" + encodeURIComponent(key);
   const res = await fetch(url, {
@@ -32,6 +32,16 @@ async function chat({ key, model, system, messages, maxTokens, onText, signal })
   await docSSE(res, (d) => {
     const parts = d && d.candidates && d.candidates[0] && d.candidates[0].content && d.candidates[0].content.parts;
     (parts || []).forEach((p) => { if (typeof p.text === "string") onText(p.text); });
+    /* Mẩu cuối luồng kèm số token đã dùng. `cachedContentTokenCount` > 0 nghĩa là
+       ĐỆM NGỮ CẢNH ngầm đã ăn — phần prompt trùng với lượt trước được tính rẻ. */
+    const u = d && d.usageMetadata;
+    if (u && onUsage) {
+      onUsage({
+        vao: u.promptTokenCount || 0,
+        dem: u.cachedContentTokenCount || 0,
+        ra: u.candidatesTokenCount || 0,
+      });
+    }
   });
 }
 

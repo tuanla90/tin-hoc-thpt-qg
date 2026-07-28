@@ -249,6 +249,7 @@ function createTutor(pool) {
       req.on("close", () => { if (!res.writableEnded) huy.abort(); });
 
       let traLoi = "";
+      const dung1 = { vao: 0, dem: 0, ra: 0 };   // token của lượt này, để ghi nhật ký
       try {
         /* Model sâu ("giải thích kỹ hơn") chỉ dành gói paid — free bấm vẫn được
            trả lời nhưng bằng model thường, không lộ lỗi khó hiểu. */
@@ -260,6 +261,16 @@ function createTutor(pool) {
             traLoi += t;
             if (!res.writableEnded) res.write(JSON.stringify({ t }) + "\n");
           },
+          /* Ghi số token thật của từng lượt để soi hoá đơn mà không phải mở
+             bảng điều khiển nhà cung cấp. `đệm` > 0 nghĩa là ĐỆM NGỮ CẢNH ngầm
+             đang ăn — phần prompt trùng lượt trước được tính rẻ. Đệm chỉ ăn khi
+             prompt GIỐNG HỆT từ đầu, nên đừng nhét ngày giờ hay số ngẫu nhiên
+             vào dungSystem. */
+          onUsage(u) {
+            dung1.vao = u.vao; dung1.dem = u.dem; dung1.ra = u.ra;
+            console.log("[tutor] token vào=" + u.vao + (u.dem ? " (đệm=" + u.dem + ")" : "") +
+              " ra=" + u.ra + " · " + khoaNguCanh(bai, cau, bt));
+          },
         });
       } catch (e) {
         if (!traLoi) await themLuot(req.session.uid, -1); // chưa nói được chữ nào thì hoàn lượt
@@ -269,11 +280,16 @@ function createTutor(pool) {
 
       if (traLoi) {
         try {
+          const duocDeep = !!b.deep && goi.tier === "paid";
           await q(
-            `INSERT INTO tutor_log (user_id, profile_id, kieu, lesson_id, question_id, cau_hoi, tra_loi)
-             VALUES ($1,$2,$3,$4,$5,$6,$7)`,
+            `INSERT INTO tutor_log (user_id, profile_id, kieu, lesson_id, question_id, cau_hoi, tra_loi,
+                                    ngay, token_vao, token_dem, token_ra, model)
+             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`,
             [req.session.uid, profileId, bt ? "exercise" : cau ? "wrong" : bai ? "lesson" : "general", bai ? bai.id : null,
-             cau ? cau.id : null, hoi, traLoi.slice(0, TOI_DA_LUU)]
+             cau ? cau.id : null, hoi, traLoi.slice(0, TOI_DA_LUU),
+             /* `ngay` tính theo giờ VN giống hạn mức, để số liệu quản trị khớp
+                với "còn mấy lượt hôm nay" mà học sinh nhìn thấy. */
+             ngayHomNay(), dung1.vao, dung1.dem, dung1.ra, duocDeep ? cfg.modelDeep : cfg.model]
           );
         } catch (e) { console.error("[tutor] Không ghi được nhật ký:", e.message); }
       }

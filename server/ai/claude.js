@@ -5,7 +5,7 @@
      - luồng SSE có nhiều loại sự kiện, chữ nằm ở content_block_delta */
 const { docSSE, loiNhaCungCap, doiLaiMs } = require("./sse");
 
-async function chat({ key, model, system, messages, maxTokens, onText, signal }) {
+async function chat({ key, model, system, messages, maxTokens, onText, onUsage, signal }) {
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
@@ -30,9 +30,20 @@ async function chat({ key, model, system, messages, maxTokens, onText, signal })
     e.doiMs = doiLaiMs(res, tho);   // aiChat dùng để chờ đúng lời nhà cung cấp
     throw e;
   }
+  /* Anthropic báo token làm hai nhịp: `message_start` có token vào (kèm phần đọc
+     từ đệm), `message_delta` cuối luồng có token ra. Gom lại rồi báo một lần. */
+  const dem = { vao: 0, dem: 0, ra: 0 };
   await docSSE(res, (d) => {
     if (d.type === "content_block_delta" && d.delta && typeof d.delta.text === "string") onText(d.delta.text);
+    const u = (d.type === "message_start" && d.message && d.message.usage) ||
+      (d.type === "message_delta" && d.usage) || null;
+    if (u) {
+      if (u.input_tokens) dem.vao = u.input_tokens;
+      if (u.cache_read_input_tokens) dem.dem = u.cache_read_input_tokens;
+      if (u.output_tokens) dem.ra = u.output_tokens;
+    }
   });
+  if (onUsage && (dem.vao || dem.ra)) onUsage(dem);
 }
 
 module.exports = { chat };

@@ -276,9 +276,19 @@ SPA sau màn đăng nhập nên Google không đọc được chữ nào ⇒ kê
 - [ ] **Việc user làm sau khi có tên miền**: Google Search Console → xác minh tên miền →
   nộp `https://<domain>/sitemap.xml`. Đặt biến `SITE_URL` trên Railway (không đặt thì
   canonical tự lấy theo host đang gọi — vẫn đúng, chỉ kém ổn định khi đổi domain).
-- [ ] **Quyết định còn treo**: SEO kéo người lạ về, nhưng app đang **bắt đăng nhập ngay**
-  — đúng cái user vừa chê ở đối thủ. Cân nhắc cho xem bài học không cần tài khoản, chỉ
-  bắt đăng nhập khi luyện tập/lưu tiến độ.
+- [x] **Bỏ tường đăng nhập ✅ XONG (28/07/2026)** — SEO kéo người lạ về mà gặp form đăng
+  nhập là quay ra ngay. Nay **chế độ khách**: chưa đăng nhập vẫn học đủ phần miễn phí
+  (bài, luyện tập, thi thử free, xưởng free, từ vựng, gamify), tiến độ lưu localStorage
+  ở khoá KHÔNG có đuôi hồ sơ.
+  - **Chặn có chủ đích khi chưa đăng nhập: gia sư AI** (máy chủ trả 401, giao diện khoá ô
+    nhập và nêu rõ lý do + lối đăng nhập) — mỗi tài khoản có hạn mức lượt riêng mỗi ngày.
+  - **Mời đăng nhập** (`Account.moiDangNhap`) sau khi HỌC XONG một bài hoặc NỘP XONG bài
+    luyện, nêu rõ đang có gì để mất. Tiết chế: bỏ qua mốc đầu, sau đó thưa dần, tối thiểu
+    12 giờ/lần, từ chối 5 lần thì thôi mời.
+  - **Đăng nhập là gộp dữ liệu** (`Account.gopDuLieuKhach`): learned hợp, history gộp theo
+    mốc thời gian, XP lấy bên cao hơn — GỘP chứ không đè vì hồ sơ có thể đã có tiến độ từ
+    máy khác; xong thì dọn kho khách. Đã kiểm cả hai chiều trên trình duyệt.
+  - Máy chủ chưa nối CSDL nay cũng vào chế độ khách thay vì chặn cả app.
 - [ ] Sau khi có traffic: xem Search Console truy vấn nào lên, viết thêm trang tổng hợp
   ("trắc nghiệm đúng sai Tin học 12", "đề thi thử Tin học tốt nghiệp") trỏ về các bài.
 

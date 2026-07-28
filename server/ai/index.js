@@ -28,6 +28,13 @@ function aiConfig() {
     modelDeep: process.env.AI_MODEL_DEEP || model,
     freePerDay: Number(process.env.AI_FREE_PER_DAY || 5),
     paidPerDay: Number(process.env.AI_PAID_PER_DAY || 25),
+    /* Đơn giá để trang quản trị quy token ra tiền. Mặc định theo Flash-class;
+       đổi model thì sửa biến, KHÔNG sửa mã. `demTl` = phần giá của token đọc
+       từ đệm ngữ cảnh (đệm ngầm giảm ~75% nên còn ~0.25). */
+    giaVao: Number(process.env.AI_GIA_VAO || 0.3),   // USD / 1 triệu token vào
+    giaRa: Number(process.env.AI_GIA_RA || 2.5),     // USD / 1 triệu token ra
+    demTl: Number(process.env.AI_GIA_DEM_TL || 0.25),
+    tyGia: Number(process.env.AI_TY_GIA || 26000),   // VND / USD
     /* mock không cần khoá; hai nhà cung cấp thật thì thiếu khoá hoặc thiếu model
        là coi như chưa bật, để giao diện tự ẩn nút gia sư thay vì lỗi khi bấm */
     ready: provider === "mock" ? true : !!(NHA_CC[provider] && key && model),
@@ -109,6 +116,7 @@ async function aiChat(opts) {
         messages: opts.messages,
         maxTokens: opts.maxTokens,
         onText: doiChu,
+        onUsage: opts.onUsage,
         signal: opts.signal,
       });
     } catch (e) {
