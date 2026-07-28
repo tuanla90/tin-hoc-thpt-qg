@@ -432,7 +432,9 @@ a { text-decoration: none; color: inherit; }
   margin: 0 0 20px;
 }
 
-.hero h1 .hl {
+/* Chữ tô gradient — dùng ở tiêu đề hero VÀ tiêu đề từng mục (.sec-title). */
+.hero h1 .hl,
+.sec-title .hl {
   background: var(--grad-hero);
   -webkit-background-clip: text;
   background-clip: text;
