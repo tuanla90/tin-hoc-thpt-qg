@@ -133,7 +133,45 @@ Quyền premium của 1 user = tồn tại license `activated_by = user.id` (ho�
 - **Xong khi**: 1 GV + 2 HS demo trọn luồng giao–làm–xem.
 
 ### Phase 4 — Thu tiền (1–2 buổi cho bản thủ công)
-- [ ] Chốt ranh giới **free vs premium** (đề xuất: lớp 10–11 + một phần lớp 12 free; toàn bộ lớp 12 + đề thi thử không giới hạn + xưởng thực hành = premium — chốt cùng `business-onepager.html`).
+- [x] Chốt ranh giới **free vs premium** (28/07/2026) — xem bảng ngay dưới. Nguyên tắc đã chốt: **Free = toàn bộ phần HỌC; mọi nhóm luyện/ôn đều có hạn mức.** (Bỏ hướng cũ "khoá theo lớp" — khách chính là HS 12, khoá lớp 12 là chặn đúng người mua ngay ngày đầu; khoá phần luyện thì cả HS 10–11 ôn kiểm tra trên lớp cũng có lý do nâng cấp.)
+
+#### Ranh giới Free/Premium (chốt 28/07/2026)
+
+Tư tưởng: **free là sản phẩm hoàn chỉnh để HỌC, premium là bộ tăng tốc để LUYỆN & THI.**
+Một HS học đều mỗi ngày (đọc bài + quiz cuối bài) gần như không chạm trần; cứ chuyển
+sang chế độ "cày" (ôn kiểm tra giữa/cuối kì lớp 10–11, ôn thi TN lớp 12) là chạm — upsell
+đúng lúc người dùng đang cần nhất.
+
+| Nhóm | Free | Premium |
+|---|---|---|
+| **Phần HỌC**: 119 bài lý thuyết + concept lab trong trang bài + từ vựng/flashcard (325 thuật ngữ) + gamify (XP/huy hiệu/streak) + đồng bộ thiết bị | Toàn bộ, không giới hạn | Toàn bộ |
+| Sân chơi tự do (playground Python/HTML/SQL/đồ hoạ — không chấm) | Toàn bộ (không tốn gì, là mồi trải nghiệm; có thể siết sau nếu thấy cần) | Toàn bộ |
+| **Quỹ câu luyện có chấm/ngày** — gồm: quiz cuối bài, trung tâm Luyện tập (theo bài/chương/chủ đề/lớp), Luyện nhanh 10 câu, Luyện Đúng/Sai | **30 câu/ngày** (đủ nhịp học hằng ngày + đạt mục tiêu 80 XP; cày ôn kiểm tra là hết) | Không giới hạn |
+| Tab **"Chỗ yếu"** + luyện theo chỗ yếu | Khoá (radar năng lực vẫn XEM được — làm teaser) | Đầy đủ |
+| **Thi thử** (không tính vào quỹ câu) | 3 đề cố định: TC1 + mã 101, 102 (làm lại thoải mái) | 13 đề + đề random không giới hạn |
+| **Xưởng thực hành có chấm** (327 bài) | ~15% bài đầu mỗi xưởng: Python 20/151 · Web 8/49 · SQL 6/40 · Đồ hoạ 3/13 (concept lab thuộc phần học, free hết) | Toàn bộ |
+| **Gia sư AI** (cả "Vì sao tôi sai?") | 5 lượt/ngày (`AI_FREE_PER_DAY`, đã enforce server) | 50 lượt/ngày + nút "giải thích kỹ hơn" (model sâu) CHỈ premium |
+| Hồ sơ học tập trong 1 tài khoản | 1 hồ sơ | 3 hồ sơ (nhà 2 con, GV dùng thử) |
+
+Điểm chạm bán hàng (chỉ hiện khi user vừa cảm nhận giá trị, **không bao giờ chặn giữa một bài đang làm**):
+1. Hết quỹ 30 câu/ngày → modal "Nâng cấp để luyện không giới hạn" (kèm số câu đã làm hôm nay).
+2. Bấm đề khoá ở màn Thi thử → hiện điểm các đề đã làm + "mở 10 đề còn lại".
+3. Bấm bài thực hành khoá / tab Chỗ yếu → modal upsell chung.
+4. Hết 5 lượt AI → "Nạp để hỏi tiếp 50 lượt/ngày".
+
+Ghi chú thực thi (độ kín):
+- **AI**: enforce server-side sẵn rồi — chỉ cần `hanMuc()` (`server/tutor.js`) đọc plan từ `licenses` thay vì mặc định free. Kín 100%.
+- **Quỹ câu/ngày**: đếm client theo hồ sơ (localStorage) + đối chiếu server qua `attempts` đã sync (app đã bắt buộc đăng nhập). Kín ~95%, đủ dùng.
+- **Đề cố định / xưởng / Chỗ yếu**: nội dung đang nằm trong JS public → giai đoạn đầu chỉ **khoá UI** (đủ với tuyệt đại đa số HS); chuyển nội dung premium sang API có auth ở bước "chống copy dần" bên dưới.
+- **Rủi ro cần theo dõi**: quỹ câu/ngày cắt vào vòng lặp giữ chân (XP/streak) — sau khi bật, theo dõi tỉ lệ quay lại; nếu rớt thì nới 30 → 50 câu/ngày TRƯỚC khi nghĩ cách khác.
+
+Thứ tự triển khai gate (sau khi có bảng `licenses`):
+1. Hàm chung `getPlan(userId)` server + `GET /api/me` trả thêm `plan`.
+2. Nối `hanMuc()` của tutor vào đó (xoá TODO có sẵn).
+3. Frontend: helper `Plan.has(...)` + khoá 4 điểm móc có sẵn: `EXAM_CODES`/`MOCK_EXAMS` (exam-modes.js), quỹ câu trong `newQuiz`/`doSubmit` (app.js), cụm `injectExercises/injectSqlExercises/injectWebExercises/injectGraphicsLab` (app.js), tab Chỗ yếu (`PRACTICE_TABS`). 1 modal upsell dùng chung.
+4. Màn nhập mã kích hoạt trong trang Tài khoản + trang admin mini tạo mã (mục dưới).
+
+Giá: theo khung `business-onepager.html` (~249k/năm học); cân nhắc thêm **gói nước rút 2–3 tháng** giá thấp cho HS 12 vào muộn (tháng 4–6) — mùa vụ môn này rất rõ, chỉ có gói năm sẽ mất nhóm đơn này.
 - [ ] Bán **mã kích hoạt**: khách chuyển khoản VietQR/Momo cá nhân → gửi mã qua Zalo → nhập mã trong app (`POST /api/licenses/activate`). Chưa cần cổng thanh toán, chưa cần pháp nhân.
 - [ ] Trang admin mini (role `admin`): tạo lô mã, xem user/doanh số.
 - [ ] Sau khi có doanh thu đều: tích hợp xác nhận chuyển khoản tự động (SePay/Casso webhook — phí thấp, hợp cá nhân) hoặc PayOS.
@@ -165,5 +203,5 @@ Quyền premium của 1 user = tồn tại license `activated_by = user.id` (ho�
 ## 7. Cần anh/chị chốt (không chặn Phase 0–1)
 
 1. **Bán cho ai trước?** Đề xuất: HS tự học trước (Phase 2 xong là bán được), gói GV theo lớp sau (Phase 3).
-2. **Ranh giới free/premium** cụ thể (mục Phase 4).
-3. **Giá** — theo khung trong `business-onepager.html`.
+2. ~~Ranh giới free/premium~~ ✅ **đã chốt 28/07/2026** — bảng chi tiết trong Phase 4 (free = toàn bộ phần học; luyện/thi/thực hành/AI có hạn mức).
+3. **Giá** — theo khung trong `business-onepager.html`; còn cần chốt giá gói nước rút (nếu làm).
