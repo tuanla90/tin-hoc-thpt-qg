@@ -304,9 +304,16 @@ const CSS_RIENG = `
 /* ---- Trang đối chiếu SGK: hàng bấm được, KHÔNG dùng bảng ----
    Bảng ba cột chữ dài luôn tràn ngang, đọc phải kéo qua kéo lại. Lưới này co
    thành một cột trên điện thoại nên không bao giờ phải cuộn ngang. */
-.dc-muc{padding-top:16px}
-.dc-dau{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:10px}
-.dc-dau h2{margin:0;font-size:19px}
+.dc-muc{padding-top:14px}
+.dc-dau{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:10px;
+  cursor:pointer;list-style:none}
+.dc-dau::-webkit-details-marker{display:none}
+/* Mũi tên tự vẽ: mặc định của trình duyệt canh lệch với tiêu đề nhiều cỡ chữ. */
+.dc-dau h2{margin:0;font-size:19px;display:flex;align-items:center;gap:9px}
+.dc-dau h2::before{content:"";width:8px;height:8px;flex:none;border-right:2px solid var(--ink-faint);
+  border-bottom:2px solid var(--ink-faint);transform:rotate(-45deg);transition:transform .15s}
+.dc-muc[open] .dc-dau h2::before{transform:rotate(45deg)}
+.dc-dau:hover h2::before{border-color:var(--brand)}
 .dc-dem{color:var(--ink-faint);font-size:13px;white-space:nowrap}
 .dc-bang{border-top:1px solid var(--line)}
 .dc-hang{display:grid;grid-template-columns:126px minmax(0,1fr) minmax(0,1.05fr);gap:6px 14px;align-items:baseline;
@@ -662,7 +669,7 @@ function danhSachBo(kho) {
 /* Một quyển sách = một mục, mỗi bài một HÀNG BẤM ĐƯỢC.
    Không dùng <table> nữa: ba cột chữ dài luôn tràn ngang ở mọi khổ máy, đọc
    phải kéo qua kéo lại. Lưới CSS co lại thành một cột trên điện thoại. */
-function mucSach(s, theoId) {
+function mucSach(s, theoId, mo) {
   const hang = (s.bai || []).map((b) => {
     const muc = b.cua ? theoId.get(b.cua) : null;
     /* Cánh Diều đánh số bài lặp lại theo từng chủ đề, nên thiếu mã chủ đề là
@@ -684,13 +691,16 @@ function mucSach(s, theoId) {
       : `<div class="dc-hang dc-kho" data-tim="${tim}">${trai}${phai}</div>`;
   }).join("");
 
-  return `<section class="pg-card dc-muc" id="${esc(s.ma)}">
-    <div class="dc-dau">
+  /* Mỗi quyển là một khối THU/MỞ: một bộ có tới 5 quyển, để mở hết thì trang dài
+     cả nghìn dòng. Dùng <details> của HTML nên không cần thư viện, và nội dung
+     vẫn nằm trong DOM để Google đọc được đủ. */
+  return `<details class="pg-card dc-muc" id="${esc(s.ma)}"${mo ? " open" : ""}>
+    <summary class="dc-dau">
       <h2>${esc(tenQuyen(s))}</h2>
       <span class="dc-dem">${(s.bai || []).length} bài</span>
-    </div>
+    </summary>
     <div class="dc-bang">${hang}</div>
-  </section>`;
+  </details>`;
 }
 
 /* Ô lọc + thanh nhảy: hai thứ này để KHÔNG PHẢI CUỘN qua cả trăm dòng.
@@ -702,9 +712,18 @@ const JS_LOC = "(function(){var o=document.getElementById('dcTim');if(!o)return;
   "function bd(s){return s.normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').replace(/đ/g,'d')}" +
   "function loc(){var t=bd(o.value.toLowerCase().trim());var n=0;" +
   "h.forEach(function(x){var ok=!t||x.dataset.tim.indexOf(t)>=0;x.hidden=!ok;if(ok)n++;});" +
-  "m.forEach(function(s){s.hidden=!s.querySelector('.dc-hang:not([hidden])');});" +
+  /* Quyển nào còn kết quả thì MỞ RA luôn — đang lọc mà vẫn phải bấm mở từng
+     quyển thì ô lọc mất tác dụng. Xoá ô lọc thì thu về như cũ (mở quyển đầu). */
+  "m.forEach(function(s,i){var v=s.querySelector('.dc-hang:not([hidden])');s.hidden=!v;" +
+  "if(t)s.open=!!v;else s.open=(i===0);});" +
   "if(d)d.textContent=t?('Đang hiện '+n+' bài khớp \"'+o.value.trim()+'\"'):'';}" +
-  "o.addEventListener('input',loc);})();";
+  "o.addEventListener('input',loc);" +
+  /* Bấm ở thanh nhảy: mở quyển đó ra rồi mới cuộn tới, không thì nhảy vào một
+     khối đang đóng và người dùng tưởng hỏng. */
+  "[].forEach.call(document.querySelectorAll('.seo-jump a'),function(a){" +
+  "a.addEventListener('click',function(){var el=document.getElementById(a.hash.slice(1));" +
+  "if(el){el.open=true;}});});" +
+  "})();";
 
 /* Lọc danh sách bài: ô gõ + chip chủ đề. Đọc luôn #cd-<mã> trên URL để các chip
    ở trang chủ ("Lập trình Python"…) mở thẳng đúng mạch kiến thức đó. Chạy ở
@@ -732,8 +751,15 @@ const JS_LOC_BAI = "(function(){var o=document.getElementById('seoTim');if(!o)re
   "chip.forEach(function(c){c.addEventListener('click',function(){cd=c.dataset.cd||'';loc();" +
   "history.replaceState(null,'',cd?('#cd-'+cd):location.pathname);})});" +
   "o.addEventListener('input',loc);" +
-  "var m=(location.hash||'').match(/^#cd-([A-G])$/);if(m){cd=m[1];loc();" +
-  "var k=document.querySelector('.seo-loc-hop');if(k)k.scrollIntoView({block:'start'});}" +
+  /* Đọc chủ đề từ phần neo, và đọc LẠI mỗi khi neo đổi: đổi mỗi phần neo trên
+     trang đã tải sẵn thì trình duyệt KHÔNG chạy lại script, nên link dạng
+     /bai#cd-G bấm từ trong trang (hoặc sửa tay trên thanh địa chỉ) sẽ không áp
+     được bộ lọc — nhìn y như hỏng. */
+  "function theoNeo(cuon){var m=(location.hash||'').match(/^#cd-([A-G])$/);" +
+  "cd=m?m[1]:'';loc();" +
+  "if(m&&cuon){var k=document.querySelector('.seo-loc-hop');if(k)k.scrollIntoView({block:'start'});}}" +
+  "if(/^#cd-/.test(location.hash||''))theoNeo(true);" +
+  "window.addEventListener('hashchange',function(){if(/^#cd-/.test(location.hash||''))theoNeo(false);});" +
   "})();";
 
 function trangDoiChieu(base, boMa) {
@@ -758,8 +784,11 @@ function trangDoiChieu(base, boMa) {
           : '<a href="/doi-chieu-sgk/' + esc(b.ma) + '">' + esc(b.tenNgan || b.ten) + "</a>").join("") + "</nav>"
     : "";
 
-  const nhay = '<nav class="seo-nhay">' + bo.sach.map((s) =>
-    '<a href="#' + esc(s.ma) + '">' + esc(tenQuyen(s)) + "</a>").join("") + "</nav>";
+  /* Dùng chung lớp .seo-jump với trang /bai — lớp .seo-nhay trước đây không có
+     CSS nào nên các liên kết dính sát vào nhau thành một khối chữ. */
+  const nhay = '<nav class="seo-jump" aria-label="Nhảy tới quyển sách">' + bo.sach.map((s) =>
+    '<a href="#' + esc(s.ma) + '">' + esc(tenQuyen(s)) +
+    ' <span style="opacity:.65">' + (s.bai || []).length + "</span></a>").join("") + "</nav>";
 
   const body = `
 <div class="pg-hero left">
@@ -776,7 +805,7 @@ ${chonBo}
   <p class="pg-note" id="dcDem"></p>
   ${nhay}
 </div>
-${bo.sach.map((s) => mucSach(s, theoId)).join("")}
+${bo.sach.map((s, i) => mucSach(s, theoId, i === 0)).join("")}
 <div class="pg-card">
   <p class="pg-note" style="margin:0">Đang có ${bo.sach.length} quyển của bộ <b>${esc(bo.ten)}</b>${
     lop.length ? " (lớp " + lop.join(", ") + ")" : ""}.
