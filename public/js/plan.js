@@ -142,7 +142,7 @@
     exam: { tit: "Đề này thuộc gói Premium", mo: "Gói Miễn phí làm được 3 đề cố định (Đề biên soạn 1 + Đề 01, 02) — làm lại bao nhiêu lần cũng được. Nâng cấp để mở cả 13 đề và đề ngẫu nhiên mỗi ngày." },
     xuong: { tit: "Bài thực hành Premium", mo: "Các bài thực hành thuộc những chương đầu là miễn phí. Nâng cấp để mở toàn bộ hơn 250 bài Python, SQL, HTML/CSS và đồ hoạ có máy chấm." },
     yeu: { tit: "Luyện đúng chỗ yếu — Premium", mo: "Ứng dụng đã âm thầm chấm bạn mạnh/yếu chủ đề nào qua từng câu luyện. Gói Premium mở tab Chỗ yếu: ôn đúng chủ đề yếu, ưu tiên câu từng làm sai." },
-    deep: { tit: "Giải thích kỹ hơn — Premium", mo: "Nút này gọi model AI mạnh hơn để giảng chậm và sâu hơn. Gói Premium được dùng model sâu và 50 lượt hỏi gia sư mỗi ngày (miễn phí: 5 lượt)." },
+    deep: { tit: "Giải thích kỹ hơn — Premium", mo: "Nút này gọi model AI mạnh hơn để giảng chậm và sâu hơn. Gói Premium được dùng model sâu và 25 lượt hỏi gia sư mỗi ngày (miễn phí: 5 lượt)." },
     hoso: { tit: "Thêm hồ sơ — Premium", mo: "Gói Miễn phí dùng 1 hồ sơ học tập. Premium mở 3 hồ sơ — nhà có anh chị em dùng chung một tài khoản, tiến độ vẫn riêng." },
   };
   var QUYEN_LOI = [
@@ -150,7 +150,7 @@
     "13 đề thi thử + đề ngẫu nhiên không giới hạn",
     "Toàn bộ 250+ bài thực hành Python · SQL · HTML/CSS · đồ hoạ",
     "Tab Chỗ yếu — ôn đúng chủ đề đang yếu",
-    "Gia sư AI 50 lượt/ngày + nút “giải thích kỹ hơn”",
+    "Gia sư AI 25 lượt/ngày + nút “giải thích kỹ hơn”",
     "3 hồ sơ học tập trong một tài khoản",
   ];
 

@@ -25,7 +25,7 @@ function aiConfig() {
     model,
     modelDeep: process.env.AI_MODEL_DEEP || model,
     freePerDay: Number(process.env.AI_FREE_PER_DAY || 5),
-    paidPerDay: Number(process.env.AI_PAID_PER_DAY || 50),
+    paidPerDay: Number(process.env.AI_PAID_PER_DAY || 25),
     /* mock không cần khoá; hai nhà cung cấp thật thì thiếu khoá hoặc thiếu model
        là coi như chưa bật, để giao diện tự ẩn nút gia sư thay vì lỗi khi bấm */
     ready: provider === "mock" ? true : !!(NHA_CC[provider] && key && model),

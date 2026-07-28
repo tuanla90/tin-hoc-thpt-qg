@@ -153,14 +153,14 @@ sang chế độ "cày" (ôn kiểm tra giữa/cuối kì lớp 10–11, ôn thi
 | Tab **"Chỗ yếu"** + luyện theo chỗ yếu | Khoá (radar năng lực vẫn XEM được — làm teaser) | Đầy đủ |
 | **Thi thử** (không tính vào quỹ câu) | 3 đề cố định: TC1 + mã 101, 102 (làm lại thoải mái) | 13 đề + đề random không giới hạn |
 | **Xưởng thực hành có chấm** (327 bài) | ~15% bài đầu mỗi xưởng: Python 20/151 · Web 8/49 · SQL 6/40 · Đồ hoạ 3/13 (concept lab thuộc phần học, free hết) | Toàn bộ |
-| **Gia sư AI** (cả "Vì sao tôi sai?") | 5 lượt/ngày (`AI_FREE_PER_DAY`, đã enforce server) | 50 lượt/ngày + nút "giải thích kỹ hơn" (model sâu) CHỈ premium |
+| **Gia sư AI** (cả "Vì sao tôi sai?") | 5 lượt/ngày (`AI_FREE_PER_DAY`, đã enforce server) | 25 lượt/ngày + nút "giải thích kỹ hơn" (model sâu) CHỈ premium |
 | Hồ sơ học tập trong 1 tài khoản | 1 hồ sơ | 3 hồ sơ (nhà 2 con, GV dùng thử) |
 
 Điểm chạm bán hàng (chỉ hiện khi user vừa cảm nhận giá trị, **không bao giờ chặn giữa một bài đang làm**):
 1. Hết quỹ 30 câu/ngày → modal "Nâng cấp để luyện không giới hạn" (kèm số câu đã làm hôm nay).
 2. Bấm đề khoá ở màn Thi thử → hiện điểm các đề đã làm + "mở 10 đề còn lại".
 3. Bấm bài thực hành khoá / tab Chỗ yếu → modal upsell chung.
-4. Hết 5 lượt AI → "Nạp để hỏi tiếp 50 lượt/ngày".
+4. Hết 5 lượt AI → "Nạp để hỏi tiếp 25 lượt/ngày".
 
 Ghi chú thực thi (độ kín):
 - **AI**: enforce server-side sẵn rồi — chỉ cần `hanMuc()` (`server/tutor.js`) đọc plan từ `licenses` thay vì mặc định free. Kín 100%.
@@ -174,7 +174,30 @@ Thứ tự triển khai gate (sau khi có bảng `licenses`):
 3. [x] Frontend `public/js/plan.js` (`window.Plan`): quỹ câu/ngày + modal upsell dùng chung; đã khoá đủ 4 điểm: đề thi (`startExamCode` + thẻ khoá, 3 đề biên soạn TC1-3 nay hiện luôn ở màn Thi thử), quỹ câu (practiceLesson/startPractice/startQuick/tfStart chặn + cắt, `doSubmit` trừ theo số câu ĐÃ trả lời), xưởng (cụm `inject*` trong renderLesson → hộp khoá đứng đúng chỗ), tab Chỗ yếu. Nút "giải thích kỹ hơn" của gia sư gắn nhãn Premium (server tự hạ model nếu free cố gọi). (28/07, e2e pass)
 4. [x] Màn "Gói của bạn" + ô nhập mã trong trang Tài khoản (mã cộng dồn hạn khi còn hạn); trang admin `public/admin.html` (tạo lô mã theo thời hạn 365/90/30 ngày, xem mã + doanh số; admin bootstrap bằng biến `ADMIN_EMAILS` — **cần đặt biến này trên Railway**). (28/07, e2e pass; 38/38 test)
 
-Giá: theo khung `business-onepager.html` (~249k/năm học); cân nhắc thêm **gói nước rút 2–3 tháng** giá thấp cho HS 12 vào muộn (tháng 4–6) — mùa vụ môn này rất rõ, chỉ có gói năm sẽ mất nhóm đơn này.
+**Giá (chốt 28/07/2026):** niêm yết **349.000đ/năm học**, mở bán **249.000đ "giá sáng lập"
+cho 50 tài khoản đầu** (landing + `nang-cap.html` đã hiện giá gạch 349k → 249k). Lý do tăng
+niêm yết: chi phí gia sư AI trên mỗi khách trả tiền ăn khoảng một nửa doanh thu 249k nếu
+dùng model Pro-class — xem "Giá vốn AI" ngay dưới. Cùng lúc **hạ `AI_PAID_PER_DAY` 50 → 25**
+(vẫn gấp 5 lần free) để cắt đuôi rủi ro khách dùng cực mạnh.
+
+#### Giá vốn AI mỗi lượt hỏi (ước tính, tỉ giá ~26.000đ/USD)
+
+Một lượt gửi lên ~3.500–4.000 token vào (nội dung bài tối đa 7.000 ký tự + luật + 6 lượt
+lịch sử) và ~300 token ra (deep ~700).
+
+| Model chạy hằng ngày | Giá/1M token (vào/ra) | ~đ mỗi lượt | 900 lượt/năm |
+|---|---|---|---|
+| Flash-class (Gemini 2.5 Flash) | $0.30 / $2.50 | ~50đ | ~45.000đ |
+| Gemini 3 Pro | ~$2 / ~$12 | ~290đ | ~260.000đ ⚠️ |
+| Haiku-class | ~$1 / ~$5 | ~130đ | ~120.000đ |
+
+→ **Không đặt model Pro-class làm `AI_MODEL` hằng ngày** — riêng tiền AI đã ăn hết giá bán.
+Đặt Flash/Haiku-class cho `AI_MODEL`, để Pro-class cho `AI_MODEL_DEEP` (nút "giải thích kỹ
+hơn", chỉ Premium, tần suất thấp). Cách giảm thêm khi cần: cắt nội dung bài gửi kèm từ
+7.000 → 4.000 ký tự và lịch sử 6 → 4 lượt (`server/tutor.js`, `noiDungBai`).
+
+Còn treo: **gói nước rút 2–3 tháng** giá thấp cho HS 12 vào muộn (tháng 4–6) — mùa vụ môn
+này rất rõ, chỉ có gói năm sẽ mất nhóm đơn này.
 - [x] Bán **mã kích hoạt** — phần app ĐÃ XONG (28/07): admin tạo mã → khách nhập trong Tài khoản (`POST /api/licenses/activate`, gõ thường/thiếu gạch vẫn nhận, mã 1 lần, cộng dồn hạn). Còn lại là việc TAY: nhận chuyển khoản VietQR/Momo → gửi mã qua Zalo.
 - [x] **Trang Nâng cấp `public/nang-cap.html`** (28/07) — đứng riêng, gửi link qua Zalo được,
   khách chưa đăng nhập vẫn xem: giá 249k/năm + bảng Free/Premium + 3 bước mua +

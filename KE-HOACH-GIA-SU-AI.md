@@ -70,7 +70,7 @@ Biến môi trường đặt trên Railway:
 | `AI_MODEL` | `claude-haiku-4-5-20251001` / `gemini-2.5-flash` | Model dùng hằng ngày |
 | `AI_MODEL_DEEP` | model mạnh hơn | Dùng khi bấm “giải thích kỹ hơn” |
 | `AI_FREE_PER_DAY` | `5` | Hạn mức bản miễn phí |
-| `AI_PAID_PER_DAY` | `50` | Hạn mức bản trả phí |
+| `AI_PAID_PER_DAY` | `25` | Hạn mức bản trả phí |
 | `AI_IP_PER_HOUR` | `60` | Trần lượt/giờ theo IP (lớp chắn thứ hai) |
 
 Khác biệt phải xử lý trong lớp bọc (không để lộ ra ngoài):
@@ -124,7 +124,7 @@ Mỗi lượt hỏi ≈ 2 000 token vào (nội dung bài) + 300 token ra.
 | Hạng | Hạn mức | Ước tính chi phí/tháng |
 |---|---|---|
 | Miễn phí | 5 lượt/ngày | rất nhỏ, coi như chi phí tiếp thị |
-| Trả phí | 50 lượt/ngày | vài nghìn đồng/học sinh/tháng |
+| Trả phí | 25 lượt/ngày | vài nghìn đồng/học sinh/tháng |
 
 Việc cần làm: bảng `tutor_usage(user_id, ngay, so_luot)`, kiểm trước khi gọi;
 hết hạn mức thì trả 429 kèm thông điệp mời nâng cấp. Dùng model rẻ (Haiku) cho

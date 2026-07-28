@@ -392,7 +392,7 @@
           (laPaid ? "Premium" + (hanTxt ? " — đến " + hanTxt : "") : "Miễn phí") + "</b></div>" +
         (laPaid
           ? '<p class="ac-note" style="margin:4px 0 0">Nhập thêm mã sẽ <b>cộng dồn</b> vào hạn hiện có.</p>'
-          : '<p class="ac-note" style="margin:4px 0 0">Premium mở: luyện tập không giới hạn · 13 đề thi thử + đề ngẫu nhiên · toàn bộ bài thực hành · tab Chỗ yếu · gia sư AI 50 lượt/ngày · 3 hồ sơ học tập.</p>') +
+          : '<p class="ac-note" style="margin:4px 0 0">Premium mở: luyện tập không giới hạn · 13 đề thi thử + đề ngẫu nhiên · toàn bộ bài thực hành · tab Chỗ yếu · gia sư AI 25 lượt/ngày · 3 hồ sơ học tập.</p>') +
         '<div class="pf-field" style="margin-top:12px"><label for="acLic">Mã kích hoạt (mẫu: TIN-XXXX-XXXX)</label>' +
           '<div style="display:flex;gap:8px"><input class="pf-input" id="acLic" type="text" maxlength="16" placeholder="TIN-" style="flex:1;text-transform:uppercase" autocomplete="off">' +
           '<button class="btn btn-primary" id="acLicGo">Kích hoạt</button></div></div>' +

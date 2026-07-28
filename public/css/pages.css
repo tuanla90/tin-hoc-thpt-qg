@@ -82,6 +82,31 @@
   color: transparent;
 }
 .pg-price span { color: var(--ink-muted); font-size: 15px; }
+.pg-price-old {
+  font-family: var(--font-display);
+  font-size: clamp(20px, 2.6vw, 26px);
+  font-weight: 750;
+  color: var(--ink-faint);
+  text-decoration-thickness: 2px;
+}
+
+/* Nhãn ưu đãi có hạn — đặt trên khối giá. */
+.pg-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--accent-amber);
+  background: var(--accent-amber-soft);
+  border: 1px solid color-mix(in srgb, var(--accent-amber) 35%, transparent);
+  padding: 5px 12px;
+  border-radius: var(--radius-full);
+  margin-bottom: 12px;
+}
 .pg-price-note { color: var(--ink-faint); font-size: 13.5px; font-family: var(--font-mono); margin-top: 6px; }
 
 /* ----------------------------- bảng so sánh ------------------------------ */
