@@ -554,6 +554,31 @@ function khung(o) {
 /* ------------------------------ trang một bài ------------------------------ */
 const CACHE = new Map(); // slug|__ds -> html (nội dung chỉ đổi khi deploy lại)
 
+/* Bài cùng mạch kiến thức.
+   Trước đây 119 trang bài chỉ nối nhau bằng trước/sau, nên mỗi mạch kiến thức là
+   một chuỗi thẳng: Google khó thấy các bài cùng chủ đề thuộc về nhau, và người
+   đọc muốn tìm bài liên quan phải quay ra danh sách. Ưu tiên bài cùng lớp để
+   không đẩy học sinh lớp 12 sang bài lớp 10 giữa chừng. */
+function lienQuanHtml(muc) {
+  const { ds, kho } = chiMuc();
+  const cd = muc.bai.topic;
+  if (!cd) return "";
+  const bo = new Set([muc.slug, muc.truoc && muc.truoc.slug, muc.sau && muc.sau.slug]);
+  const hop = ds.filter((m) => m.bai.topic === cd && !bo.has(m.slug));
+  if (hop.length < 2) return "";
+  hop.sort((a, b) => (a.bai.grade === muc.bai.grade ? 0 : 1) - (b.bai.grade === muc.bai.grade ? 0 : 1));
+  const chon = hop.slice(0, 6);
+  const ten = tenChuDe(kho)[cd] || "cùng chủ đề";
+  return `
+<div class="pg-card">
+  <h2 style="margin-top:0">Bài liên quan — ${esc(ten)}</h2>
+  <p class="pg-note">Cùng mạch kiến thức với bài này, học nối tiếp cho chắc phần lí thuyết.</p>
+  <div class="seo-ds">${chon.map((m) =>
+    `<a class="seo-item" href="/bai/${m.slug}"><span class="seo-so">${m.bai.order}</span>` +
+    `<b>${esc(m.bai.title)}</b> <span style="opacity:.6">· ${esc(m.lop)}</span></a>`).join("")}</div>
+</div>`;
+}
+
 function trangBai(muc, base) {
   const khoaCache = muc.slug + "|" + base;
   if (CACHE.has(khoaCache)) return CACHE.get(khoaCache);
@@ -643,6 +668,8 @@ ${cauMcHtml}${cauTfHtml}</div>` : ""}
   <p style="margin-top:14px"><a class="btn btn-primary btn-lg" href="/#/lesson/${esc(l.id)}">Mở bài ${l.order} trong ứng dụng</a></p>
   <p class="pg-note" style="margin-top:10px">Phần học miễn phí, không cần tạo tài khoản.</p>
 </div>
+
+${lienQuanHtml(muc)}
 
 <div class="seo-nav">
   <span>${muc.truoc ? '<a href="/bai/' + muc.truoc.slug + '">← Bài ' + muc.truoc.bai.order + ". " + esc(muc.truoc.bai.title) + "</a>" : ""}</span>
