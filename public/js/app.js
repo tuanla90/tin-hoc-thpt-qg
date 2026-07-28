@@ -2192,19 +2192,31 @@ function initFloatingMascot() {
     mascotBubbleOpen = false;
   };
 
-  /* Robot kiêm gia sư: đang mở bài -> hỏi về bài đó; đang làm bài luyện của một
-     bài -> hỏi về bài gốc; còn lại -> hỏi chung (máy chủ rào phạm vi môn học).
+  /* Robot kiêm gia sư — dò ngữ cảnh từ hẹp tới rộng, trùng khớp với các nút
+     gắn tại chỗ để hai lối vào không nói hai chuyện khác nhau:
+       1. câu đang xem đã chấm và SAI -> "vì sao tôi sai" đúng câu đó
+       2. đang mở bài học / luyện bài  -> hỏi về bài đó
+       3. còn lại                      -> hỏi chung (máy chủ rào phạm vi môn học)
      Nút chỉ hiện khi máy chủ đã bật AI. */
   const askBtn = document.getElementById("mascotAsk");
   if (typeof Tutor !== "undefined") {
     Tutor.trangThai().then((t) => { if (t.on) askBtn.hidden = false; });
     askBtn.onclick = (e) => {
       e.stopPropagation();
-      let l = LESSON_DANG_MO;
-      if (!l && State.view === "quiz" && State.quiz && State.quiz.lessonId) {
-        l = LESSONS.find((x) => x.id === State.quiz.lessonId) || null;
+      const Q = State.quiz;
+      if (State.view === "quiz" && Q) {
+        const q = Q.questions[Q.index], ans = Q.answers[Q.index];
+        // chỉ khi ĐÃ bấm Kiểm tra (revealed) — đang thi thử thì chưa lộ đáp án
+        if (Q.revealed[Q.index] && q && !isAnswerCorrect(q, ans)) {
+          Tutor.moCauSai(q, ans, Q.lessonId || null);
+          return;
+        }
+        if (Q.lessonId) {
+          const l = LESSONS.find((x) => x.id === Q.lessonId);
+          if (l) { Tutor.moBai(l); return; }
+        }
       }
-      if (l) Tutor.moBai(l); else Tutor.moChung();
+      if (LESSON_DANG_MO) Tutor.moBai(LESSON_DANG_MO); else Tutor.moChung();
     };
   }
 
