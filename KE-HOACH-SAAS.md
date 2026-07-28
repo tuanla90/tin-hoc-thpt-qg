@@ -302,6 +302,17 @@ SPA sau màn đăng nhập nên Google không đọc được chữ nào ⇒ kê
     mốc thời gian, XP lấy bên cao hơn — GỘP chứ không đè vì hồ sơ có thể đã có tiến độ từ
     máy khác; xong thì dọn kho khách. Đã kiểm cả hai chiều trên trình duyệt.
   - Máy chủ chưa nối CSDL nay cũng vào chế độ khách thay vì chặn cả app.
+- [x] **Đối chiếu SGK ✅ vòng 1 XONG (28/07/2026)** — `public/js/sgk-map.js` + trang
+  `/doi-chieu-sgk`. Đủ **95 bài bộ Kết nối tri thức** (Tin 10, Tin 11 KHMT, Tin 12 KHMT)
+  kèm tên bài và số trang; mỗi trang bài hiện khối "Tương ứng sách giáo khoa".
+  Bắt đúng nhóm truy vấn "tin học 12 bài 16 kết nối tri thức" mà trước đây mất trắng.
+  - Dữ liệu **lấy lại từ lịch sử git** (tệp `sgk-*.js` bị xoá ở commit `0670bcb`, vốn
+    chép tay từ sách) ghép với `LEGACY_LESSON_MAP` — không phải đọc lại PDF.
+  - **Còn thiếu**: nhánh Tin học ứng dụng (U11-*, U12-*) vì chưa có sách; bộ **Cánh Diều
+    và Chân trời sáng tạo lớp 10, 11** (user đang tìm sách). Riêng **Tin 12 đã có sẵn cả
+    ba bộ trong `public/sach/`** → làm được ngay khi cần.
+  - Nguyên tắc giữ: bài chưa có trong bảng thì **không hiện gì**, tuyệt đối không gắn
+    nhãn "ngoài SGK" (phần lớn là nửa sau của một bài SGK bị tách đôi).
 - [ ] Sau khi có traffic: xem Search Console truy vấn nào lên, viết thêm trang tổng hợp
   ("trắc nghiệm đúng sai Tin học 12", "đề thi thử Tin học tốt nghiệp") trỏ về các bài.
 
