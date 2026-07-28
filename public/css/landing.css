@@ -1054,9 +1054,19 @@ a { text-decoration: none; color: inherit; }
   align-items: center;
   flex-wrap: wrap;
   background: var(--surface-card);
-  border: 1px dashed var(--line-strong);
+  border: 1px solid var(--line-strong);
   border-radius: var(--radius-lg);
   padding: clamp(24px, 3vw, 36px);
+}
+
+.author-photo-img {
+  width: 132px;
+  height: 132px;
+  border-radius: 22px;
+  object-fit: cover;
+  object-position: top;
+  flex-shrink: 0;
+  background: var(--brand-soft);
 }
 
 .author-photo {

@@ -8,8 +8,10 @@
 > **✅ TRẠNG THÁI (28/07/2026): Phase 0 + 1 + 2 XONG; ĐÃ CHẠY THẬT TRÊN RAILWAY.**
 > Railway đã nối (web + Postgres), **AI thật đã bật**. Đã chốt ranh giới
 > Free/Premium (bảng ở Phase 4); plan/licenses + gate client + màn kích hoạt +
-> trang admin + trang Nâng cấp ĐÃ XONG — **còn lại để bán được: điền STK/Zalo
-> vào `nang-cap.html`, landing public, chốt giá nước rút** và chuyển repo private.
+> trang admin + trang Nâng cấp + landing ĐÃ XONG (landing 28/07: chân dung thật
+> Lê Anh Tuấn + ảnh, giá 249k, ranh giới Free/Premium mới, thẻ Gia sư AI, hết
+> link chết; cảm nhận học sinh còn để trống chờ người thật) — **còn lại để bán
+> được: điền STK/Zalo vào `nang-cap.html`, chốt giá nước rút** và chuyển repo private.
 > Backup: có cơ chế TAY `npm run backup` (kéo qua public URL của Postgres) —
 > backup tự động của Railway chưa bật được. **Còn chờ user:** chuyển repo private.
 
