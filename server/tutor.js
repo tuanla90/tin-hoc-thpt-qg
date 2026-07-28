@@ -260,6 +260,15 @@ function createTutor(pool) {
             traLoi += t;
             if (!res.writableEnded) res.write(JSON.stringify({ t }) + "\n");
           },
+          /* Ghi số token thật của từng lượt để soi hoá đơn mà không phải mở
+             bảng điều khiển nhà cung cấp. `đệm` > 0 nghĩa là ĐỆM NGỮ CẢNH ngầm
+             đang ăn — phần prompt trùng lượt trước được tính rẻ. Đệm chỉ ăn khi
+             prompt GIỐNG HỆT từ đầu, nên đừng nhét ngày giờ hay số ngẫu nhiên
+             vào dungSystem. */
+          onUsage(u) {
+            console.log("[tutor] token vào=" + u.vao + (u.dem ? " (đệm=" + u.dem + ")" : "") +
+              " ra=" + u.ra + " · " + khoaNguCanh(bai, cau, bt));
+          },
         });
       } catch (e) {
         if (!traLoi) await themLuot(req.session.uid, -1); // chưa nói được chữ nào thì hoàn lượt

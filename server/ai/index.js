@@ -109,6 +109,7 @@ async function aiChat(opts) {
         messages: opts.messages,
         maxTokens: opts.maxTokens,
         onText: doiChu,
+        onUsage: opts.onUsage,
         signal: opts.signal,
       });
     } catch (e) {
