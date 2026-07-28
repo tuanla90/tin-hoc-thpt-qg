@@ -348,6 +348,79 @@ a { text-decoration: none; color: inherit; }
 /* Mục phụ: chỉ hiện khi màn hình đủ rộng, để thanh nav không bao giờ vỡ dòng. */
 .nav-links .nav-opt { display: none; }
 
+/* --- Nhãn nhóm trong lưới tính năng: 12 thẻ mà không chia nhóm thì người đọc
+       phải tự đoán mạch. Nhãn chiếm trọn một hàng của lưới. --- */
+.feat-group {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 10px 0 -6px;
+}
+.feat-group:first-child { margin-top: 0; }
+.feat-group b {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  white-space: nowrap;
+}
+.feat-group i { flex: 1; height: 1px; background: var(--line); }
+
+/* --- Khối giá: giá gốc phải ĐỌC RA NGAY, không chìm thành chữ xám mờ --- */
+.p-old {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 14px 0 2px;
+  font-size: 15px;
+  color: var(--ink-muted);
+}
+.p-old s { font-size: 19px; font-weight: 750; color: var(--ink-faint); text-decoration-thickness: 2px; }
+.p-save {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  font-weight: 800;
+  color: #fff;
+  background: var(--accent-green);
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  white-space: nowrap;
+}
+
+/* --- Bảng so sánh hai gói: đối chiếu theo TỪNG DÒNG, hai cột cùng thước đo --- */
+.so-sanh-wrap { overflow-x: auto; margin-top: 34px; }
+.so-sanh {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 15px;
+  min-width: 520px;
+  background: var(--surface-card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+.so-sanh th, .so-sanh td { padding: 13px 16px; border-bottom: 1px solid var(--line); text-align: left; }
+.so-sanh thead th {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  background: var(--bg-subtle);
+}
+.so-sanh th:nth-child(2), .so-sanh td:nth-child(2),
+.so-sanh th:nth-child(3), .so-sanh td:nth-child(3) { text-align: center; white-space: nowrap; width: 25%; }
+.so-sanh thead th:nth-child(3) { color: var(--brand); }
+.so-sanh tbody tr:last-child td { border-bottom: 0; }
+.so-sanh td:first-child { color: var(--ink-main); font-weight: 600; }
+.ss-co { color: var(--accent-green); font-weight: 800; }
+.ss-han { color: var(--ink-faint); }
+.ss-khong { color: var(--ink-faint); font-weight: 700; }
+
 /* Hero Section Gaming Visuals */
 .hero {
   position: relative;
