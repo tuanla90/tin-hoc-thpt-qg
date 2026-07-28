@@ -160,6 +160,9 @@ a { text-decoration: none; color: inherit; }
   position: relative;
 }
 
+/* Thuộc tính hidden phải thắng, kẻo mục đã tắt vẫn chiếm chỗ vì .section có padding. */
+.section[hidden] { display: none; }
+
 /* Eyebrows & Section Headers */
 .eyebrow {
   font-family: var(--font-mono);
