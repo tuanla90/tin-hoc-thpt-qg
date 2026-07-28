@@ -102,7 +102,16 @@ test("khoá ngữ cảnh phân biệt bài / câu / bài thực hành", () => {
   assert.equal(khoaNguCanh(null, null, null), "chung");
 });
 
-test("cắt nội dung bài: vừa hạn mức nhưng KHÔNG cụt giữa chừng", () => {
+test("mặc định KHÔNG bài nào bị cắt — gia sư luôn thấy trọn bài", () => {
+  const { napKho } = require("../lessons");
+  const thieu = [...napKho().baiTheoId.values()]
+    .filter((b) => /đã lược/.test(dungSystem(b, null, null, null, "câu hỏi bất kỳ")))
+    .map((b) => b.id);
+  assert.deepEqual(thieu, [], "bài bị cắt: " + thieu.join(", ") +
+    " — nới TOI_DA_BAI trong tutor.js, đừng để gia sư mù nửa bài");
+});
+
+test("van an toàn: bài quá khổ thì cắt theo khối, vừa hạn mức nhưng KHÔNG cụt giữa chừng", () => {
   const bai = layBai("C11-33"); // bài dài nhất kho (~13k ký tự)
   const vb = noiDungBai(bai, 4000);
   assert.ok(vb.length <= 4000, "phải vừa hạn mức, thực tế " + vb.length);

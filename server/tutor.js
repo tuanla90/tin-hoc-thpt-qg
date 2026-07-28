@@ -23,8 +23,16 @@ const { layBai, layCau, layBaiTap, noiDungBai, noiDungCau, noiDungBaiTap, danhMu
 const TOI_DA_HOI = 500;      // ký tự một câu hỏi
 const TOI_DA_LICH_SU = 4;    // lượt hội thoại gửi kèm
 const TOI_DA_MOI_LUOT = 800; // ký tự mỗi lượt trong lịch sử (trả lời vốn dưới 200 chữ)
-const TOI_DA_BAI = 4000;     // ký tự nội dung bài nhét vào prompt
-const TOI_DA_BAI_BT = 2500;  // ...khi còn phải nhét cả đề + bài làm của học sinh
+/* Hạn mức nội dung bài — đặt RỘNG có chủ đích: bài dài nhất kho ~13.400 ký tự
+   nên thực tế KHÔNG bài nào bị cắt. Cắt cho tiết kiệm token là lợi bất cập hại:
+   gia sư không thấy nửa sau bài thì phải hỏi ngược lại, học sinh mất thêm MỘT
+   LƯỢT trong hạn mức 5/25 mỗi ngày của chính mình — tiết kiệm ~5đ để tiêu vào
+   quota người dùng và một vòng hỏi đáp thừa. Gửi trọn bài chỉ đắt hơn ~5đ/lượt
+   (42đ so với 37đ ở Flash), tức ~4.500đ mỗi khách cả năm.
+   Con số dưới đây là VAN AN TOÀN cho bài quá khổ trong tương lai: chạm trần thì
+   noiDungBai tự chọn phần liên quan câu hỏi thay vì cắt cụt. */
+const TOI_DA_BAI = 15000;    // ký tự nội dung bài nhét vào prompt
+const TOI_DA_BAI_BT = 9000;  // ...khi còn phải nhét cả đề + bài làm của học sinh
 const TOI_DA_LUU = 4000;     // ký tự câu trả lời lưu vào nhật ký
 const TOI_DA_CODE = 3000;    // ký tự bài làm gửi kèm
 const TOI_DA_KETQUA = 800;   // ký tự kết quả chạy / thông báo lỗi

@@ -184,32 +184,40 @@ dùng model Pro-class — xem "Giá vốn AI" ngay dưới. Cùng lúc **hạ `A
 
 #### Giá vốn AI mỗi lượt hỏi (ước tính, tỉ giá ~26.000đ/USD)
 
-Sau đợt cắt ngữ cảnh 28/07, một lượt gửi lên **~2.300 token vào** (nội dung bài ≤4.000 ký
-tự + luật + 4 lượt lịch sử) và ~300 token ra (deep ~700). Trước đó là ~3.800 token vào.
+Một lượt gửi **TRỌN nội dung bài** + luật + 4 lượt lịch sử ≈ **~2.950 token vào** (bài dài
+nhất ~5.100), ~300 token ra (deep ~700).
 
 | Model chạy hằng ngày | Giá/1M token (vào/ra) | ~đ mỗi lượt | 900 lượt/năm |
 |---|---|---|---|
-| Flash-class (Gemini 2.5 Flash) | $0.30 / $2.50 | ~37đ (trước: 50đ) | ~34.000đ |
-| Haiku-class | ~$1 / ~$5 | ~95đ (trước: 130đ) | ~85.000đ |
-| Gemini 3 Pro | ~$2 / ~$12 | ~215đ (trước: 290đ) | ~195.000đ ⚠️ |
+| Flash-class (Gemini 2.5 Flash) | $0.30 / $2.50 | ~42đ | ~38.000đ |
+| Haiku-class | ~$1 / ~$5 | ~115đ | ~104.000đ |
+| Gemini 3 Pro | ~$2 / ~$12 | ~270đ | ~243.000đ ⚠️ |
 
 → **Không đặt model Pro-class làm `AI_MODEL` hằng ngày** — riêng tiền AI đã ăn gần hết giá
 bán. Đặt Flash/Haiku-class cho `AI_MODEL`, để Pro-class cho `AI_MODEL_DEEP` (nút "giải thích
 kỹ hơn", chỉ Premium, tần suất thấp).
 
-**Đã làm để giảm (28/07):**
-- Nội dung bài 7.000 → **4.000** ký tự, kèm bài thực hành thì 2.500 (`TOI_DA_BAI` trong
-  `server/tutor.js`). Nhưng **mọi bài trong kho đều dài hơn 4.000** (trung vị 6.765), nên
-  `noiDungBai` không cắt cụt mà **chia bài thành khối theo tiêu đề mục, luôn giữ tên bài +
-  "Ý chính cần nhớ", rồi chọn khối liên quan nhất tới câu hỏi** của học sinh, ghép lại theo
-  thứ tự gốc và ghi rõ đã lược mấy mục.
-- Lịch sử hội thoại 6 → **4 lượt**, mỗi lượt cắt 2.000 → **800 ký tự**.
+**Quyết định 28/07 — KHÔNG cắt nội dung bài (đã thử rồi trả lại):**
+Bản thử cắt còn 4.000 ký tự tiết kiệm được ~5đ/lượt (37đ so với 42đ), tức ~4.500đ mỗi khách
+cả năm. Nhưng cắt thì gia sư không thấy nửa sau bài, phải hỏi ngược lại — và **mỗi lần hỏi
+lại là học sinh mất thêm MỘT LƯỢT** trong hạn mức 5/25 mỗi ngày của chính họ, cộng một vòng
+hỏi đáp thừa. Chỉ cần ~30% câu hỏi rơi vào phần bị lược là khoản tiết kiệm bay sạch, chưa kể
+trải nghiệm xấu. Nên `TOI_DA_BAI = 15.000` — rộng hơn bài dài nhất kho (~13.400), thực tế
+**không bài nào bị cắt** (có test `npm test` canh: bài nào bị lược là test đỏ).
+
+Cơ chế cắt theo khối vẫn giữ làm **van an toàn** cho bài quá khổ về sau: chia bài thành khối
+theo tiêu đề mục, luôn giữ tên bài + "Ý chính cần nhớ", chọn khối liên quan nhất tới câu hỏi,
+ghép theo thứ tự gốc và ghi rõ đã lược mấy mục.
+
+**Vẫn giữ (không đánh đổi chất lượng):**
+- Lịch sử hội thoại 6 → **4 lượt**, mỗi lượt cắt 2.000 → **800 ký tự** (trả lời vốn dưới 200 chữ).
 - **Đổi bài / đổi câu là bỏ lịch sử cũ**: mỗi lượt được đóng dấu khoá ngữ cảnh
   (`bai:<id>` / `cau:<id>` / `bt:<loại>:<bài>:<số>`), máy chủ tự tính khoá từ ngữ cảnh nó tra
   được và loại lượt mang dấu khác — không tin theo lời trình duyệt.
 
 Còn dư địa nếu cần: bật **context caching** của Gemini (system prompt lặp lại y hệt trong
-cùng một phiên chat, các lượt sau được giảm mạnh).
+cùng một phiên chat, các lượt sau được giảm mạnh) — đây mới là đòn bẩy đúng, không đánh đổi
+chất lượng và không thêm gì để bảo trì.
 
 Còn treo: **gói nước rút 2–3 tháng** giá thấp cho HS 12 vào muộn (tháng 4–6) — mùa vụ môn
 này rất rõ, chỉ có gói năm sẽ mất nhóm đơn này.

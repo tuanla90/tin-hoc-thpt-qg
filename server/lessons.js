@@ -130,9 +130,12 @@ function danhMucBai() {
 }
 
 /* --------------------- CẮT NỘI DUNG BÀI CHO VỪA PROMPT ---------------------
- *  Mọi bài trong kho đều dài hơn hạn mức (trung vị ~6.700 ký tự), nên KHÔNG
- *  cắt cụt ở giữa câu: làm vậy là gia sư mù hẳn nửa sau bài, học sinh hỏi phần
- *  cuối thì nó bảo "bài này không bàn tới" — sai và mất lòng tin.
+ *  Mặc định hạn mức đặt RỘNG hơn bài dài nhất kho, nên bình thường bài được gửi
+ *  TRỌN VẸN — xem lý do ở TOI_DA_BAI trong tutor.js.
+ *
+ *  Phần dưới đây chỉ chạy khi gặp bài quá khổ (van an toàn). Khi đó KHÔNG cắt
+ *  cụt ở giữa câu: làm vậy là gia sư mù hẳn nửa sau bài, học sinh hỏi phần cuối
+ *  thì nó bảo "bài này không bàn tới" — sai và mất lòng tin.
  *
  *  Cách làm: chia thân bài thành KHỐI theo tiêu đề mục, rồi
  *    - luôn giữ: tên bài + giới thiệu + "Ý chính cần nhớ" (ngắn mà giá trị nhất);
@@ -191,7 +194,7 @@ function chiaKhoi(sections) {
   }));
 }
 
-function noiDungBai(bai, gioiHan = 4000, hoi) {
+function noiDungBai(bai, gioiHan = 15000, hoi) {
   const dau = ["BÀI ĐANG HỌC: " + bai.title,
     "Lớp " + bai.grade + " — chủ đề " + bai.topic + " (" + (TEN_CHU_DE[bai.topic] || "") + ")"];
   if (bai.intro) dau.push("Giới thiệu: " + bai.intro);
