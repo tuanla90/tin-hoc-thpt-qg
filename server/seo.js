@@ -14,8 +14,39 @@
  *  3. Trang tự chứa (CSS nội tuyến), không JavaScript, không cookie, không đăng
  *     nhập -> tải nhanh trên 3G và crawler đọc được ngay.
  * ==========================================================================*/
+const fs = require("fs");
+const path = require("path");
+const vm = require("vm");
 const express = require("express");
 const { napKho, TEN_CHU_DE } = require("./lessons");
+
+/* Nhãn lớp và từ điển thuật ngữ nằm trong các tệp dữ liệu của trình duyệt.
+   lessons.js có trả về nếu đã cập nhật, nhưng tệp đó đang được sửa song song ở
+   việc khác — nên ở đây tự lo phần dự phòng để trang công khai không bao giờ
+   rơi mất mục Từ vựng chỉ vì một thay đổi ở chỗ khác. */
+const NHAN_LOP_DP = {
+  20: "Tin học 10",
+  21: "Tin học 11 — Khoa học máy tính",
+  22: "Tin học 12 — Khoa học máy tính",
+  23: "Tin học 11 — Tin học ứng dụng",
+  24: "Tin học 12 — Tin học ứng dụng",
+};
+
+let TU_DIEN_DP = null;
+function tuDien(kho) {
+  if (kho.VOCAB_TERMS && Object.keys(kho.VOCAB_TERMS).length) return kho.VOCAB_TERMS;
+  if (TU_DIEN_DP) return TU_DIEN_DP;
+  TU_DIEN_DP = {};
+  try {
+    const f = path.join(__dirname, "..", "public", "js", "vocab-terms.js");
+    const box = { window: {} };
+    vm.runInNewContext(fs.readFileSync(f, "utf8"), box, { timeout: 5000 });
+    TU_DIEN_DP = box.VOCAB_TERMS || (box.window && box.window.VOCAB_TERMS) || {};
+  } catch (e) {
+    console.warn("[seo] Không đọc được từ điển thuật ngữ:", e.message);
+  }
+  return TU_DIEN_DP;
+}
 
 /* Số câu mẫu công khai MỖI BÀI. 3 + 1 ≈ 26% ngân hàng lộ ra, đủ để trang xếp
    hạng với truy vấn "trắc nghiệm ... có đáp án" mà vẫn giữ phần lớn kho câu.
@@ -79,7 +110,7 @@ function chiMuc() {
       "-bai-" + l.order + "-" + slugHoa(l.title);
     const muc = {
       bai: l, slug,
-      lop: kho.STAGES[l.stage] || "Tin học " + l.grade,
+      lop: (kho.STAGES || {})[l.stage] || NHAN_LOP_DP[l.stage] || "Tin học " + l.grade,
       truoc: null, sau: null, i,
     };
     theoSlug.set(slug, muc);
@@ -110,8 +141,8 @@ function cauMau(l, kho) {
 
 function tuVung(l, kho) {
   const khoa = (kho.VOCAB || {})[l.id] || [];
-  return khoa.map((k) => (typeof k === "string" ? (kho.VOCAB_TERMS || {})[k] : k))
-    .filter((t) => t && t.en && t.vi);
+  const td = tuDien(kho);
+  return khoa.map((k) => (typeof k === "string" ? td[k] : k)).filter((t) => t && t.en && t.vi);
 }
 
 /* --------------------------------- CSS --------------------------------- */
@@ -321,7 +352,7 @@ function trangDanhSach(base) {
   });
 
   const khoi = [...theoLop].map(([stage, ms]) => `
-<h2 id="stage${stage}">${esc(kho.STAGES[stage] || "Tin học")} <small style="color:var(--soft);font-weight:400">(${ms.length} bài)</small></h2>
+<h2 id="stage${stage}">${esc(ms[0].lop)} <small style="color:var(--soft);font-weight:400">(${ms.length} bài)</small></h2>
 <div class="grid">${ms.map((m) => `<a href="/bai/${m.slug}"><b>Bài ${m.bai.order}. ${esc(m.bai.title)}</b>
   <small>${esc(moTa(m.bai.intro, 70))}</small></a>`).join("")}</div>`).join("");
 
