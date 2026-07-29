@@ -276,6 +276,9 @@ const CSS_RIENG = `
    phẩm số và khung pháp lí…" cụt mất phần quan trọng nhất — người tra cứu không
    biết đó có phải bài mình cần không. Thẻ cứ cao thấp khác nhau, lưới vẫn đều. */
 .seo-grid b{font-size:14.5px;font-weight:650;line-height:1.4}
+/* Nhãn lớp trong khối "Bài liên quan": xuống dòng riêng cho khỏi dính vào tên
+   bài, và nhạt hơn để tên bài vẫn là thứ đọc trước. */
+.seo-lq-lop{display:block;margin-top:3px;font-weight:600;font-size:12.5px;color:var(--ink-faint)}
 .seo-lop{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:30px 0 0;
   padding-top:14px;border-top:1px solid var(--line)}
 .seo-lop h2{margin:0;font-size:20px}
@@ -573,9 +576,9 @@ function lienQuanHtml(muc) {
 <div class="pg-card">
   <h2 style="margin-top:0">Bài liên quan — ${esc(ten)}</h2>
   <p class="pg-note">Cùng mạch kiến thức với bài này, học nối tiếp cho chắc phần lí thuyết.</p>
-  <div class="seo-ds">${chon.map((m) =>
-    `<a class="seo-item" href="/bai/${m.slug}"><span class="seo-so">${m.bai.order}</span>` +
-    `<b>${esc(m.bai.title)}</b> <span style="opacity:.6">· ${esc(m.lop)}</span></a>`).join("")}</div>
+  <div class="seo-grid">${chon.map((m) =>
+    `<a href="/bai/${m.slug}"><span class="seo-so">${m.bai.order}</span>` +
+    `<b>${esc(m.bai.title)}<span class="seo-lq-lop">${esc(m.lop)}</span></b></a>`).join("")}</div>
 </div>`;
 }
 
