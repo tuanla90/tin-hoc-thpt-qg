@@ -381,7 +381,11 @@ function gamCheckBadges() {
 /* --- Vẽ lại bảng điều khiển nếu đang ở trang chủ --- */
 function gamRefreshDash() {
   var m = document.getElementById("gamDash");
-  if (m) Gam.renderDashboard(m);
+  if (!m) return;
+  /* Chấm nhiệm vụ tuần TRƯỚC khi vẽ, để nhiệm vụ vừa xong hiện ngay ✓ và cộng
+     XP trong cùng một nhịp. NhiemVu tự chặn gọi lồng nhau — xem js/nhiem-vu.js. */
+  if (window.NhiemVu) NhiemVu.kiemTra();
+  Gam.renderDashboard(m);
 }
 
 /* ==========================================================================
@@ -441,7 +445,8 @@ var Gam = {
           '<div class="gam-chip" id="gamChipStreak" title="' + esc(gamMoTaLich()) + '">' + gIco("flame", "#f97316", "🔥") + "<b>" + s.streak + "</b> " + gamDonViChuoi() + (gamLaBuoiHoc(new Date()) && GAM.lastSession !== gamDayStr(new Date()) ? " · hôm nay có lịch" : "") + "</div>" +
           '<div class="gam-chip" id="gamChipBadge">' + gIco("medal", "#f59e0b", "🏅") + "<b>" + s.badges + "/" + GAM_BADGES.length + "</b> huy hiệu</div>" +
         "</div>" +
-      "</div>";
+      "</div>" +
+      (window.NhiemVu ? NhiemVu.html() : "");
     var toAch = function () { if (typeof go === "function") go("achievements"); };
     var cb = mount.querySelector("#gamChipBadge"); if (cb) cb.onclick = toAch;
     var cs = mount.querySelector("#gamChipStreak"); if (cs) cs.onclick = toAch;
