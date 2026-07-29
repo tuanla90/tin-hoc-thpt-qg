@@ -1024,12 +1024,18 @@ function createSeo() {
      ghi %%GOC%% rồi thay lúc phục vụ — khỏi phải đóng cứng tên miền vào repo và
      bản chạy local vẫn đúng. */
   const PUB_DIR = path.join(__dirname, "..", "public");
+  /* Nhớ theo mtime chứ không nhớ vĩnh viễn: nếu chỉ nhớ một lần thì sửa tệp HTML
+     xong phải khởi động lại máy chủ mới thấy — rất dễ tưởng là sửa không ăn.
+     statSync rẻ hơn đọc cả tệp nhiều lần. */
   const boNhoTrang = new Map();
   function docTrangTinh(ten) {
-    if (!boNhoTrang.has(ten)) {
-      boNhoTrang.set(ten, fs.readFileSync(path.join(PUB_DIR, ten), "utf8"));
-    }
-    return boNhoTrang.get(ten);
+    const duong = path.join(PUB_DIR, ten);
+    const mtime = fs.statSync(duong).mtimeMs;
+    const cu = boNhoTrang.get(ten);
+    if (cu && cu.mtime === mtime) return cu.html;
+    const html = fs.readFileSync(duong, "utf8");
+    boNhoTrang.set(ten, { mtime, html });
+    return html;
   }
   const TRANG_TINH = { "/": "index.html", "/index.html": "index.html",
     "/landing": "landing.html", "/landing.html": "landing.html",

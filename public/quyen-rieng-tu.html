@@ -12,16 +12,6 @@
   <link rel="stylesheet" href="css/landing.css" />
   <link rel="stylesheet" href="css/pages.css" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='25' fill='%234f46e5'/><path d='M30 40h40M30 60h40M30 50h25' stroke='%23fff' stroke-width='8' stroke-linecap='round'/></svg>" />
-  <style>
-    /* Nền kẻ sọc cảnh báo: chỗ chủ sở hữu bắt buộc điền trước khi mở bán. */
-    .pv-todo {
-      background: repeating-linear-gradient(45deg, var(--accent-rose-soft), var(--accent-rose-soft) 10px, transparent 10px, transparent 20px);
-      border: 1px dashed var(--accent-rose);
-      border-radius: var(--radius-md);
-      padding: 14px 16px; margin: 18px 0; font-size: 14.5px;
-      color: var(--ink-main);
-    }
-  </style>
 </head>
 <body class="lp">
 
@@ -55,16 +45,8 @@
     <div class="pg-hero left">
       <span class="eyebrow">Minh bạch</span>
       <h1>Quyền riêng tư &amp; Điều khoản sử dụng</h1>
-      <p class="pg-cap">Cập nhật lần cuối: 28/07/2026. Trang này áp dụng cho phần mềm ôn thi Tin học THPT
+      <p class="pg-cap">Cập nhật lần cuối: 29/07/2026. Trang này áp dụng cho phần mềm ôn thi Tin học THPT
         (dưới đây gọi là “ứng dụng”).</p>
-    </div>
-
-    <div class="pv-todo">
-      <b>Chỗ chủ sở hữu phải điền trước khi mở bán:</b> tên đơn vị/cá nhân vận hành, địa chỉ,
-      email liên hệ và số điện thoại — thay vào những chỗ ghi <code>[…]</code> bên dưới. Nếu bán
-      cho học sinh dưới 18 tuổi ở Việt Nam, hãy nhờ người có chuyên môn pháp lý soát lại bản này
-      theo Nghị định 13/2023/NĐ-CP về bảo vệ dữ liệu cá nhân và Luật Trẻ em — bản này viết theo
-      đúng những gì phần mềm thực sự làm, nhưng <b>không phải là tư vấn pháp lý</b>.
     </div>
 
     <div class="pg-toc">
@@ -114,8 +96,10 @@
       <tr>
         <td><b>Kỹ thuật</b></td>
         <td>Địa chỉ IP tạm giữ trong bộ nhớ máy chủ để chặn spam (mất khi máy chủ khởi động lại);
-            nhật ký lỗi máy chủ.</td>
-        <td>Để chống lạm dụng và sửa lỗi.</td>
+            nhật ký lỗi máy chủ; và <b>số đếm lượt xem theo ngày cho từng nhóm trang</b>
+            (ví dụ &ldquo;hôm nay có 40 lượt mở trang bài học&rdquo;) — chỉ là con số cộng dồn,
+            không kèm IP, không kèm tài khoản, không lần ra được ai.</td>
+        <td>Để chống lạm dụng, sửa lỗi và biết trang nào có người đọc.</td>
       </tr>
     </table>
     <p><b>Không thu thập:</b> số điện thoại, địa chỉ nhà, ảnh chân dung, danh bạ, vị trí,
@@ -203,7 +187,7 @@
     <p>Đây là tài liệu ôn luyện độc lập, bám sát Chương trình GDPT 2018 và cấu trúc đề tham khảo của
       Bộ GD&amp;ĐT. <b>Không</b> phải sản phẩm do Bộ GD&amp;ĐT hay bất kỳ nhà xuất bản nào phát hành,
       và không đại diện cho cơ quan, nhà xuất bản hay nhà trường nào. Nội dung bài học do
-      [<i>tên đơn vị vận hành</i>] tự biên soạn.</p>
+      Lê Anh Tuấn tự biên soạn.</p>
 
     <h3>9.2. Tài khoản</h3>
     <ul>
@@ -223,12 +207,17 @@
       <li>Số lượt hỏi mỗi ngày có giới hạn và có thể thay đổi.</li>
     </ul>
 
-    <h3>9.4. Thanh toán (khi có bản trả phí)</h3>
-    <p>Giá, thời hạn và chính sách hoàn tiền sẽ ghi rõ tại trang thanh toán trước khi bạn trả tiền.
-      [<i>Chủ sở hữu điền chính sách hoàn tiền cụ thể tại đây trước khi mở bán.</i>]</p>
+    <h3 id="hoan-tien">9.4. Thanh toán và hoàn tiền</h3>
+    <p>Giá và thời hạn được ghi rõ tại trang Nâng cấp trước khi bạn trả tiền. Gói Premium là
+      khoản thanh toán một lần cho 1 năm, <b>không tự động gia hạn</b>.</p>
+    <p><b>Hoàn tiền trong 7 ngày:</b> trong vòng 7 ngày kể từ ngày thanh toán, nếu bạn thấy ứng dụng
+      không phù hợp, hãy gửi email tới địa chỉ ở mục 10 kèm nội dung chuyển khoản — chúng tôi hoàn
+      lại đủ số tiền và không hỏi lý do. Tiền được chuyển trả trong vòng 7 ngày làm việc kể từ khi
+      nhận yêu cầu; mã kích hoạt tương ứng sẽ ngừng hiệu lực. Sau 7 ngày, gói đã mua không hoàn lại,
+      nhưng phần Học vẫn miễn phí như trước nên việc ôn tập của bạn không bị gián đoạn.</p>
 
     <h3>9.5. Sở hữu trí tuệ</h3>
-    <p>Bài học, câu hỏi, hình minh hoạ và mã nguồn giao diện thuộc về [<i>tên đơn vị vận hành</i>].
+    <p>Bài học, câu hỏi, hình minh hoạ và mã nguồn giao diện thuộc về Lê Anh Tuấn.
       Bạn được dùng cho việc học cá nhân. Không sao chép, bán lại hoặc phát hành lại ngân hàng câu hỏi
       khi chưa có văn bản đồng ý.</p>
 
@@ -243,9 +232,9 @@
     <h2 id="lien-he">10. Liên hệ</h2>
     <p>Mọi câu hỏi về quyền riêng tư, yêu cầu xem/sửa/xoá dữ liệu, hoặc khiếu nại:</p>
     <ul>
-      <li>Đơn vị vận hành: [<i>tên cá nhân/công ty</i>]</li>
-      <li>Email: [<i>email liên hệ</i>]</li>
-      <li>Địa chỉ: [<i>địa chỉ</i>]</li>
+      <li>Đơn vị vận hành: Lê Anh Tuấn (cá nhân)</li>
+      <li>Email: <a href="mailto:tuanla.company@gmail.com">tuanla.company@gmail.com</a></li>
+      <li>Địa chỉ: Hà Nội, Việt Nam</li>
     </ul>
     <p class="pg-cap">Chúng tôi cố gắng trả lời trong vòng 7 ngày làm việc.</p>
 
