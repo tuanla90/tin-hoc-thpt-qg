@@ -18,6 +18,14 @@
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:image" content="%%GOC%%/asset/og-cover.jpg" />
 
+  <!-- Cài ra màn hình chính cũng phải làm được từ trang giới thiệu: đây là URL
+       người ta được gửi cho, không phải /hoc. start_url trong manifest trỏ
+       thẳng vào ứng dụng nên cài ở đây, mở ra vẫn đúng chỗ học. -->
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <meta name="theme-color" content="#4f46e5" />
+  <link rel="apple-touch-icon" href="/asset/icon/apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-title" content="Tin học THPT" />
+
   <!-- Dữ liệu có cấu trúc: Google hiểu đây là trang chủ của một sản phẩm học
        tập, và 6 câu hỏi dưới trang có thể hiện thành mục hỏi–đáp trong kết quả
        tìm kiếm. Nội dung phải TRÙNG với chữ hiển thị thật ở phần FAQ bên dưới. -->
@@ -59,7 +67,7 @@
           { "@type": "Question", "name": "Học trên điện thoại được không?",
             "acceptedAnswer": { "@type": "Answer", "text": "Được. Giao diện chạy tốt trên điện thoại, máy tính bảng và máy tính. Trên điện thoại nội dung tự xếp thành một cột cho dễ đọc." } },
           { "@type": "Question", "name": "Có phải cài app không? Máy yếu dùng được không?",
-            "acceptedAnswer": { "@type": "Answer", "text": "Không cài gì cả — mở bằng trình duyệt trên điện thoại, máy tính hay máy bảng là học được ngay. Code Python chạy thẳng trong trình duyệt nên máy cấu hình thấp vẫn thực hành bình thường. Ứng dụng chạy trên mạng, nên bạn cần kết nối Internet trong lúc học." } },
+            "acceptedAnswer": { "@type": "Answer", "text": "Không bắt buộc — mở bằng trình duyệt trên điện thoại, máy tính hay máy bảng là học được ngay. Code Python chạy thẳng trong trình duyệt nên máy cấu hình thấp vẫn thực hành bình thường. Nếu muốn, bạn có thể thêm app ra màn hình chính để mở một chạm như app thường; khi đó những bài đã mở vẫn xem lại được lúc mất mạng, còn phần chấm điểm và gia sư AI thì vẫn cần Internet." } },
           { "@type": "Question", "name": "Mua rồi dùng được bao lâu?",
             "acceptedAnswer": { "@type": "Answer", "text": "Mã Premium có hạn 1 năm kể từ ngày kích hoạt, gồm mọi cập nhật nội dung trong thời gian đó. Nhập thêm mã khi còn hạn thì thời gian được cộng dồn. Phần Học thì miễn phí mãi, không phụ thuộc gói." } },
           { "@type": "Question", "name": "Mua thế nào? Chuyển khoản rồi mà chưa nhận được mã?",
@@ -252,7 +260,9 @@
         <p class="sec-sub">Python, thuật toán, cấu trúc dữ liệu, cơ sở dữ liệu — nhiều khái niệm trừu tượng. Nhất là với bạn tự học ở nhà, không có ai giảng lại từng bước.</p>
       </div>
 
-      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:24px;">
+      <!-- min(300px,100%) chứ không phải 300px cứng: màn 320px chỉ còn 272px cho
+           khung này nên cột 300px làm tràn ngang, mà body có overflow-x:hidden. -->
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(min(300px, 100%), 1fr)); gap:24px;">
         <div class="feat-card" style="--c: var(--accent-rose)">
           <div class="feat-icon-badge">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
@@ -672,9 +682,10 @@
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             </span>
           </summary>
-          <div class="faq-a">Không cài gì cả — mở bằng trình duyệt trên điện thoại, máy tính hay máy bảng là học được ngay.
+          <div class="faq-a">Không bắt buộc — mở bằng trình duyệt trên điện thoại, máy tính hay máy bảng là học được ngay.
             Code Python chạy thẳng trong trình duyệt nên máy cấu hình thấp vẫn thực hành bình thường.
-            Ứng dụng chạy trên mạng, nên bạn cần kết nối Internet trong lúc học.</div>
+            Nếu muốn, bạn có thể thêm app ra màn hình chính để mở một chạm như app thường; khi đó những bài đã mở
+            vẫn xem lại được lúc mất mạng, còn phần chấm điểm và gia sư AI thì vẫn cần Internet.</div>
         </details>
 
         <!-- 5 -->

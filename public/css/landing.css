@@ -464,7 +464,7 @@ a { text-decoration: none; color: inherit; }
 
 .hero-grid {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
   gap: 48px;
   align-items: center;
   position: relative;
@@ -592,7 +592,12 @@ a { text-decoration: none; color: inherit; }
   font-size: 13px;
   font-weight: 750;
   color: var(--ink-main);
-  white-space: nowrap;
+  /* Câu chào dài ~385px với Nunito 13px, mà .hero-stage trên màn 320–375px chỉ
+     rộng 272–328px và .hero có overflow:hidden — để nowrap là bị xén cụt cả hai
+     đầu, đúng thứ học sinh nhìn thấy đầu tiên. */
+  white-space: normal;
+  max-width: min(300px, calc(100vw - 48px));
+  text-align: center;
   box-shadow: 0 8px 20px rgba(168, 85, 247, 0.3);
   animation: bouncePopup 3s ease-in-out infinite;
 }
@@ -764,7 +769,7 @@ a { text-decoration: none; color: inherit; }
 /* Stats Display Grid */
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
   margin-top: 44px;
 }
@@ -807,7 +812,7 @@ a { text-decoration: none; color: inherit; }
 /* Feature Grid (8 Features) */
 .feat-grid {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
   gap: 20px;
 }
 
@@ -866,7 +871,7 @@ a { text-decoration: none; color: inherit; }
 /* 3 Step Section Gaming Quest Design */
 .steps-grid {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
   gap: 24px;
 }
 
@@ -984,11 +989,19 @@ a { text-decoration: none; color: inherit; }
 /* Pricing Section Gaming Edition */
 .pricing-grid {
   display: grid;
-  grid-template-columns: 1fr;
+  /* minmax(0,1fr) chứ KHÔNG phải 1fr: track "1fr" có mức tối thiểu ngầm là
+     min-content, nên thẻ giá không co được dưới bề rộng nút CTA và đẩy cả trang
+     rộng ra 388px. Màn 320px vì thế bị tràn 68px, mà body có overflow-x:hidden
+     nên phần thừa bị CẮT MẤT chứ không cuộn lại được. */
+  grid-template-columns: minmax(0, 1fr);
   gap: 24px;
   max-width: 840px;
   margin: 0 auto;
 }
+
+/* Nút CTA trong thẻ giá phải xuống dòng được: nhãn dài ("Xem cách mua — nhận mã
+   qua Zalo") mà giữ nowrap thì nó quyết định luôn bề rộng tối thiểu của cả thẻ. */
+.price-card .btn { white-space: normal; }
 
 .price-card {
   background: var(--surface-card);
@@ -1090,7 +1103,7 @@ a { text-decoration: none; color: inherit; }
 /* Testimonials Cards */
 .tcards {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
   gap: 20px;
 }
 
@@ -1334,17 +1347,17 @@ details.faq .faq-a {
 
 /* Responsive Media Queries */
 @media (min-width: 680px) {
-  .stats-grid { grid-template-columns: repeat(4, 1fr); }
-  .feat-grid { grid-template-columns: repeat(2, 1fr); }
-  .pricing-grid { grid-template-columns: repeat(2, 1fr); }
-  .tcards { grid-template-columns: repeat(3, 1fr); }
-  .steps-grid { grid-template-columns: repeat(3, 1fr); }
+  .stats-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .feat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pricing-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .tcards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .steps-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
 @media (min-width: 960px) {
   .nav-links { display: flex; }
   .hero-grid { grid-template-columns: 1.1fr 0.9fr; gap: 60px; }
-  .feat-grid { grid-template-columns: repeat(4, 1fr); }
+  .feat-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
 
 @media (min-width: 1120px) {
