@@ -107,6 +107,8 @@ function createApi(pool) {
       const p = await q("INSERT INTO profiles (user_id, name) VALUES ($1, $2) RETURNING *",
         [user.id, name || "Hồ sơ 1"]);
       req.session.uid = user.id;
+      const tk = req.app.locals.thongKe;
+      if (tk) tk.ghi("tao-tai-khoan", "");   // mốc phễu, xem server/thongke.js
       res.json({ user: publicUser(user), profiles: [publicProfile(p.rows[0])] });
     } catch (e) { next(e); }
   });

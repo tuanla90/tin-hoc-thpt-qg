@@ -136,6 +136,19 @@ ALTER TABLE tutor_log ADD COLUMN IF NOT EXISTS token_dem INT NOT NULL DEFAULT 0;
 ALTER TABLE tutor_log ADD COLUMN IF NOT EXISTS token_ra INT NOT NULL DEFAULT 0;
 ALTER TABLE tutor_log ADD COLUMN IF NOT EXISTS model TEXT NOT NULL DEFAULT '';
 CREATE INDEX IF NOT EXISTS tutor_log_ngay_idx ON tutor_log (ngay);
+
+-- Đếm lượt truy cập theo NGÀY + LOẠI TRANG: không lưu IP, không đặt cookie theo
+-- dõi, không gọi dịch vụ bên thứ ba — đủ để biết phễu chuyển đổi (vào landing ->
+-- vào bài -> mở trang giá -> tạo tài khoản -> trả tiền) mà vẫn giữ đúng cam kết
+-- ở trang quyền riêng tư. Một dòng cho mỗi (ngày, loại, đường dẫn).
+CREATE TABLE IF NOT EXISTS luot_xem (
+  ngay      DATE NOT NULL,
+  loai      TEXT NOT NULL,
+  duong_dan TEXT NOT NULL DEFAULT '',
+  so_luot   INT  NOT NULL DEFAULT 0,
+  PRIMARY KEY (ngay, loai, duong_dan)
+);
+CREATE INDEX IF NOT EXISTS luot_xem_ngay_idx ON luot_xem (ngay DESC);
 `;
 
 /* Tạo pool từ DATABASE_URL (hoặc nhận pool ngoài — dùng cho test pg-mem). */

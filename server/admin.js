@@ -127,6 +127,18 @@ function createAdmin(pool) {
     } catch (e) { next(e); }
   });
 
+  /* Phễu chuyển đổi: đọc bảng đếm ở server/thongke.js. Không có Google Analytics
+     nên đây là chỗ duy nhất xem được bao nhiêu người vào landing/bài học, bao
+     nhiêu mở trang giá và bao nhiêu thực sự trả tiền. */
+  r.get("/admin/luot-xem", async (req, res, next) => {
+    try {
+      const tk = req.app.locals.thongKe;
+      if (!tk) return res.json({ ngay: [], tong: {} });
+      const soNgay = Math.min(Math.max(Number(req.query.ngay) || 30, 1), 180);
+      res.json(await tk.tongHop(soNgay));
+    } catch (e) { next(e); }
+  });
+
   /* ------------------------------ NGƯỜI DÙNG ------------------------------ */
   /* Danh sách để đối soát/hỗ trợ: gói hiện tại, số hồ sơ, số lượt làm bài.
      ?q= lọc theo email/tên (lọc bằng JS trên 500 tài khoản mới nhất — chưa cần

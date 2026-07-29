@@ -14,6 +14,7 @@ const { createTutor } = require("./tutor");
 const { createAdmin } = require("./admin");
 const { createSeo } = require("./seo");
 const { createPay } = require("./pay");
+const { createThongKe } = require("./thongke");
 
 const PUBLIC_DIR = path.join(__dirname, "..", "public");
 
@@ -46,6 +47,22 @@ function createApp({ pool, sessionStore } = {}) {
       maxAge: 180 * 24 * 3600 * 1000, // 180 ngày
     },
   }));
+
+  /* Đếm lượt xem theo nhóm trang, ngay tại máy chủ (xem server/thongke.js).
+     Đặt trước mọi tuyến để không sót, và trước static để tính cả trang tĩnh. */
+  const thongKe = createThongKe(pool);
+  app.locals.thongKe = thongKe;   // pay.js / api.js ghi mốc phễu qua đây
+  app.use((req, res, next) => {
+    if (req.method !== "GET") return next();
+    const p = req.path;
+    if (p.startsWith("/api") || p.startsWith("/css") || p.startsWith("/js") || p.startsWith("/asset")) return next();
+    if (p === "/" || p === "/index.html") thongKe.ghi("app", p);
+    else if (p.startsWith("/bai")) thongKe.ghi("bai", p);
+    else if (p.startsWith("/landing")) thongKe.ghi("landing", p);
+    else if (p.startsWith("/nang-cap")) thongKe.ghi("trang-gia", p);
+    else if (p.startsWith("/doi-chieu")) thongKe.ghi("doi-chieu", p);
+    next();
+  });
 
   app.use("/api", createTutor(pool)); // đặt trước createApi để /tutor/status trả được cả khi chưa có DB
   app.use("/api", createAdmin(pool));

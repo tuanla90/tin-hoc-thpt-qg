@@ -256,6 +256,8 @@ function createPay(pool) {
         [gd.txId, gd.soTien, don.id]
       );
       await ghiSuKien(gd.maDon, true, "Đã mở Premium tới " + kq.hetHan);
+      const tk = req.app.locals.thongKe;
+      if (tk) tk.ghi("tra-tien", "");   // mốc cuối của phễu, xem server/thongke.js
       console.log("[pay] Đơn", don.ma_don, "đã thanh toán -> Premium tới", kq.hetHan);
       res.json({ success: true, khop: true });
     } catch (e) {
