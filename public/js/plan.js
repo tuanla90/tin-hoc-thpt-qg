@@ -181,7 +181,7 @@
         '<div class="plan-m-btns">' +
           (coTuDong()
             ? '<button class="btn btn-primary btn-lg" id="planMua">Mua ngay — quét mã là xong</button>'
-            : '<a class="btn btn-primary btn-lg" href="nang-cap.html" target="_blank" rel="noopener">Xem giá &amp; mua mã</a>') +
+            : '<a class="btn btn-primary btn-lg" href="/nang-cap" target="_blank" rel="noopener">Xem giá &amp; mua mã</a>') +
           '<button class="btn btn-ghost" id="planGoAcc">Nhập mã kích hoạt</button>' +
           '<button class="btn btn-ghost" id="planLater">Để sau</button>' +
         "</div>" +

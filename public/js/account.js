@@ -349,8 +349,8 @@
         "</div>" +
         '<p class="ac-note" style="margin-top:14px;text-align:center">' +
           (isReg ? "Tạo tài khoản nghĩa là bạn đồng ý với " : "") +
-          '<a href="quyen-rieng-tu.html#dieu-khoan" target="_blank" rel="noopener">Điều khoản sử dụng</a> và ' +
-          '<a href="quyen-rieng-tu.html" target="_blank" rel="noopener">Quyền riêng tư</a>.' +
+          '<a href="/quyen-rieng-tu#dieu-khoan" target="_blank" rel="noopener">Điều khoản sử dụng</a> và ' +
+          '<a href="/quyen-rieng-tu" target="_blank" rel="noopener">Quyền riêng tư</a>.' +
           (isReg ? " Người học dưới 18 tuổi nên nhờ cha mẹ tạo tài khoản." : "") +
         "</p>" +
       "</div>";
@@ -512,7 +512,7 @@
           '<button class="btn btn-primary" id="acLicGo">Kích hoạt</button></div></div>' +
         '<div class="ac-err" id="acLicErr"></div>' +
         (laPaid ? "" : '<p class="ac-note" style="margin:6px 0 0">Chưa có mã? ' +
-          '<a href="nang-cap.html" target="_blank" rel="noopener"><b>Xem giá &amp; cách mua</b> — 249.000đ/năm học</a>, ' +
+          '<a href="/nang-cap" target="_blank" rel="noopener"><b>Xem giá &amp; cách mua</b> — 249.000đ/năm học</a>, ' +
           'hoặc nhận mã từ giáo viên của bạn.</p>') +
       "</div>";
     app.innerHTML =
@@ -546,8 +546,8 @@
       '<div class="section-title" style="margin-top:22px">' + ico("bookmark", "#64748b", 17) + " Dữ liệu của bạn</div>" +
       '<div class="pf-card">' +
         '<p class="ac-note" style="margin:0 0 10px">Xem ứng dụng lưu những gì và vì sao: ' +
-          '<a href="quyen-rieng-tu.html" target="_blank" rel="noopener">Quyền riêng tư</a> · ' +
-          '<a href="quyen-rieng-tu.html#dieu-khoan" target="_blank" rel="noopener">Điều khoản sử dụng</a></p>' +
+          '<a href="/quyen-rieng-tu" target="_blank" rel="noopener">Quyền riêng tư</a> · ' +
+          '<a href="/quyen-rieng-tu#dieu-khoan" target="_blank" rel="noopener">Điều khoản sử dụng</a></p>' +
         '<div class="ac-actions"><button class="btn btn-ghost danger-text" id="acDelAcc">Xoá tài khoản</button></div>' +
         '<p class="ac-note" style="margin:8px 0 0">Xoá tài khoản là xoá hẳn mọi hồ sơ, kết quả học và nhật ký hỏi gia sư — <b>không lấy lại được</b>.</p>' +
       "</div>";

@@ -24,10 +24,10 @@ after(() => srv && srv.close());
 
 test("đếm đúng nhóm trang, gộp mọi bài học về một dòng", async () => {
   const tk = app.locals.thongKe;
-  await fetch(base + "/");
-  await fetch(base + "/landing.html");
+  await fetch(base + "/hoc");     // ứng dụng
+  await fetch(base + "/");        // trang giới thiệu
   await fetch(base + "/bai");
-  await fetch(base + "/nang-cap.html");
+  await fetch(base + "/nang-cap");
   await fetch(base + "/bai/tin-hoc-10-bai-1-thong-tin-du-lieu-va-cach-may-tinh-xu-li");
   await fetch(base + "/bai/tin-hoc-10-bai-2-may-tinh-bieu-dien-du-lieu-the-nao");
 

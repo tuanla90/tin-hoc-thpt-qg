@@ -56,9 +56,9 @@ function createApp({ pool, sessionStore } = {}) {
     if (req.method !== "GET") return next();
     const p = req.path;
     if (p.startsWith("/api") || p.startsWith("/css") || p.startsWith("/js") || p.startsWith("/asset")) return next();
-    if (p === "/" || p === "/index.html") thongKe.ghi("app", p);
+    if (p === "/hoc" || p === "/index.html") thongKe.ghi("app", p);
     else if (p.startsWith("/bai")) thongKe.ghi("bai", p);
-    else if (p.startsWith("/landing")) thongKe.ghi("landing", p);
+    else if (p === "/" || p.startsWith("/landing")) thongKe.ghi("landing", p);
     else if (p.startsWith("/nang-cap")) thongKe.ghi("trang-gia", p);
     else if (p.startsWith("/doi-chieu")) thongKe.ghi("doi-chieu", p);
     next();

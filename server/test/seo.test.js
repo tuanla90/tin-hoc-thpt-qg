@@ -27,6 +27,31 @@ before(() => {
 
 after(() => srv && srv.close());
 
+test("bố cục URL: / là trang giới thiệu, /hoc là ứng dụng", async () => {
+  const goc = await lay("/");
+  assert.equal(goc.status, 200);
+  assert.ok(goc.body.includes("Ôn thi Tin học tốt nghiệp"), "/ phải là trang giới thiệu");
+  assert.ok(goc.body.includes('rel="canonical"'), "/ phải có canonical");
+  assert.ok(!/name="robots"[^>]*noindex/.test(goc.body), "/ KHÔNG được noindex");
+
+  const hoc = await lay("/hoc");
+  assert.equal(hoc.status, 200);
+  assert.ok(hoc.body.includes('id="app"'), "/hoc phải là vỏ ứng dụng");
+  /* Vỏ ứng dụng không có nội dung cho Google: để index sẽ thành trang mỏng
+     tranh chỗ với chính trang giới thiệu ở "/". */
+  assert.match(hoc.body, /name="robots"[^>]*noindex/, "/hoc phải noindex");
+});
+
+test("URL cũ chuyển 301 để link đã chia sẻ không chết", async () => {
+  const mong = { "/landing.html": "/", "/landing": "/", "/index.html": "/hoc",
+    "/nang-cap.html": "/nang-cap", "/quyen-rieng-tu.html": "/quyen-rieng-tu" };
+  for (const [cu, moi] of Object.entries(mong)) {
+    const r = await lay(cu);
+    assert.equal(r.status, 301, cu + " phải trả 301");
+    assert.equal(r.loc, moi, cu + " phải trỏ tới " + moi);
+  }
+});
+
 test("trang danh sách liệt kê đủ mọi bài học", async () => {
   const { ds } = chiMuc();
   const r = await lay("/bai");
@@ -53,7 +78,7 @@ test("trang một bài có đủ phần cần cho SEO", async () => {
   assert.match(r.body, /Tóm tắt lý thuyết cần nhớ/);
   assert.match(r.body, /Đáp án: [A-D]/);
   assert.match(r.body, /Thuật ngữ tiếng Anh/);
-  assert.ok(r.body.includes('href="/#/lesson/C12-16"'), "phải có lối vào ứng dụng");
+  assert.ok(r.body.includes('href="/hoc#/lesson/C12-16"'), "phải có lối vào ứng dụng");
   assert.ok(!r.body.includes("<script src"), "trang public không nạp JS của app");
 });
 
@@ -93,7 +118,9 @@ test("sitemap liệt kê mọi bài, robots chặn trang quản trị", async ()
   assert.match(s.kieu, /xml/);
   /* Đếm theo DANH SÁCH thật thay vì một con số ma: thêm trang tĩnh mới là test
      tự đúng, không phải đi sửa số. */
-  const trangTinh = ["/", "/bai", "/doi-chieu-sgk", "/landing.html", "/nang-cap.html", "/quyen-rieng-tu.html"];
+  /* "/" là trang giới thiệu; "/hoc" (vỏ ứng dụng) CỐ Ý không nằm trong sitemap
+     vì nó noindex — nội dung của nó do JS dựng, Google đọc ra trang trống. */
+  const trangTinh = ["/", "/bai", "/doi-chieu-sgk", "/nang-cap", "/quyen-rieng-tu"];
   trangTinh.forEach((p) => assert.ok(s.body.includes("<loc>http") && s.body.includes(p), "sitemap thiếu " + p));
   /* Từ bộ sách thứ hai trở đi, mỗi bộ có thêm một trang đối chiếu riêng. */
   const bo = (chiMuc().kho.SGK_MAP || {}).bo || [];

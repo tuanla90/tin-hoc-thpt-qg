@@ -3,13 +3,16 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Vỏ ứng dụng: nội dung do JS dựng nên Google đọc ra trang trống. Để index
+       sẽ thành trang mỏng tranh chỗ với chính trang giới thiệu ở "/". -->
+  <meta name="robots" content="noindex, follow" />
   <title>Ôn thi Tin học THPT — học, luyện tập và thi thử online</title>
   <meta name="description" content="Ứng dụng ôn thi tốt nghiệp THPT môn Tin học: 119 bài lý thuyết, 2000+ câu trắc nghiệm có lời giải, thi thử bám cấu trúc đề và trình chạy Python ngay trên trình duyệt." />
-  <link rel="canonical" href="%%GOC%%/" />
+  <link rel="canonical" href="%%GOC%%/hoc" />
   <meta property="og:type" content="website" />
   <meta property="og:title" content="Ôn thi Tin học THPT — học, luyện tập và thi thử online" />
   <meta property="og:description" content="119 bài lý thuyết, 2000+ câu trắc nghiệm có lời giải và đề thi thử bám cấu trúc đề tốt nghiệp THPT môn Tin học." />
-  <meta property="og:url" content="%%GOC%%/" />
+  <meta property="og:url" content="%%GOC%%/hoc" />
   <meta property="og:site_name" content="Ôn thi Tin học THPT" />
   <meta property="og:locale" content="vi_VN" />
   <meta property="og:image" content="%%GOC%%/asset/og-cover.jpg" />
@@ -57,7 +60,7 @@
     <span>Phần mềm ôn thi Tin học • Chương trình GDPT 2018 • Cấu trúc đề 2025</span>
     <!-- Liên kết thường (không qua JS) để Google bò sang khu trang công khai:
          ứng dụng là SPA sau màn đăng nhập nên tự nó không có gì cho công cụ tìm kiếm. -->
-    <span> • <a href="/bai">Ôn tập theo bài</a> • <a href="/landing.html">Giới thiệu</a></span>
+    <span> • <a href="/bai">Ôn tập theo bài</a> • <a href="/">Giới thiệu</a></span>
   </footer>
 
   <!-- ===================== HỘP THOẠI XÁC NHẬN ===================== -->

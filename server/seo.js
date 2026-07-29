@@ -513,36 +513,36 @@ function khung(o) {
     (o.ld ? '<script type="application/ld+json">' + JSON.stringify(o.ld) + "</script>\n" : "") +
     '</head>\n<body class="lp">\n\n' +
     '<header class="lp-head"><div class="wrap">' +
-      '<a class="brand" href="/landing.html"><span class="brand-mark" aria-hidden="true">' + LOGO_SVG + "</span>Tin Học KHMT</a>" +
+      '<a class="brand" href="/"><span class="brand-mark" aria-hidden="true">' + LOGO_SVG + "</span>Tin Học KHMT</a>" +
       /* Menu KHỚP với trang chủ: khách bấm từ Google vào thấy đúng thanh điều
          hướng quen thuộc, không phải một bộ mục lạ. Lối vào /bai và
          /doi-chieu-sgk vẫn còn ở chân trang và ở dấu vết đường dẫn, nên Google
          lẫn người dùng đều không mất đường. */
       '<nav class="nav-links">' +
-        '<a href="/landing.html#cach-hoc">Cách học</a>' +
-        '<a href="/landing.html#tinh-nang">Tính năng</a>' +
-        '<a href="/landing.html#lo-trinh">Lộ trình</a>' +
-        '<a href="/landing.html#hoc-phi">Học phí</a>' +
-        '<a href="/landing.html#tac-gia">Tác giả</a>' +
-        '<a class="nav-opt" href="/landing.html#faq">Câu hỏi</a>' +
+        '<a href="/#cach-hoc">Cách học</a>' +
+        '<a href="/#tinh-nang">Tính năng</a>' +
+        '<a href="/#lo-trinh">Lộ trình</a>' +
+        '<a href="/#hoc-phi">Học phí</a>' +
+        '<a href="/#tac-gia">Tác giả</a>' +
+        '<a class="nav-opt" href="/#faq">Câu hỏi</a>' +
       "</nav>" +
       '<div class="head-actions">' +
         '<button class="btn btn-ghost btn-sm" id="themeToggle" title="Chuyển giao diện Sáng/Tối">' + IC_TRANG + "</button>" +
-        '<a class="btn btn-primary btn-sm" href="/">Học thử miễn phí</a>' +
+        '<a class="btn btn-primary btn-sm" href="/hoc">Học thử miễn phí</a>' +
       "</div>" +
     "</div></header>\n\n" +
     '<main class="pg-main"><div class="wrap pg-narrow">\n' + o.body + "\n</div></main>\n\n" +
     '<footer class="foot"><div class="wrap">' +
       '<div class="foot-top"><div>' +
-        '<a class="brand" href="/landing.html"><span class="brand-mark" aria-hidden="true">' + LOGO_SVG + "</span>Tin học KHMT</a>" +
+        '<a class="brand" href="/"><span class="brand-mark" aria-hidden="true">' + LOGO_SVG + "</span>Tin học KHMT</a>" +
         '<p class="tagline">Ôn thi Tin học tốt nghiệp, định hướng Khoa học máy tính — dễ hiểu, thực hành thật.</p>' +
       "</div>" +
       '<nav class="foot-links">' +
         '<a href="/bai">Tất cả bài học</a>' +
         '<a href="/doi-chieu-sgk">Đối chiếu SGK</a>' +
-        '<a href="/landing.html">Giới thiệu</a>' +
-        '<a href="/nang-cap.html">Bảng giá &amp; nâng cấp</a>' +
-        '<a href="/quyen-rieng-tu.html">Quyền riêng tư</a>' +
+        '<a href="/">Giới thiệu</a>' +
+        '<a href="/nang-cap">Bảng giá &amp; nâng cấp</a>' +
+        '<a href="/quyen-rieng-tu">Quyền riêng tư</a>' +
       "</nav></div>" +
       '<p class="copy">Nội dung do người dạy tự biên soạn theo Chương trình GDPT 2018 — không sao chép sách giáo khoa. ' +
       "© 2026 Ôn thi Tin học THPT · Lê Anh Tuấn (Tuấn LA Lab).</p>" +
@@ -665,7 +665,7 @@ ${cauMcHtml}${cauTfHtml}</div>` : ""}
   <h2>Học trọn bài này trong ứng dụng</h2>
   <p class="pg-note">Bài giảng đầy đủ, ${(l.quiz || []).length} câu luyện tập chấm tự động, thi thử đúng cấu trúc đề tốt nghiệp
   (24 trắc nghiệm + 4 Đúng/Sai), bài thực hành máy tự chấm và gia sư AI giải thích chỗ sai.</p>
-  <p style="margin-top:14px"><a class="btn btn-primary btn-lg" href="/#/lesson/${esc(l.id)}">Mở bài ${l.order} trong ứng dụng</a></p>
+  <p style="margin-top:14px"><a class="btn btn-primary btn-lg" href="/hoc#/lesson/${esc(l.id)}">Mở bài ${l.order} trong ứng dụng</a></p>
   <p class="pg-note" style="margin-top:10px">Phần học miễn phí, không cần tạo tài khoản.</p>
 </div>
 
@@ -769,7 +769,7 @@ ${khoi}
   <h2>Học đầy đủ trong ứng dụng</h2>
   <p class="pg-note">${ds.length} bài giảng, ${kho.soCau} câu hỏi, 13 đề thi thử, 250+ bài thực hành máy tự chấm
   (Python, SQL, HTML/CSS) và gia sư AI kèm riêng.</p>
-  <p style="margin-top:14px"><a class="btn btn-primary btn-lg" href="/">Bắt đầu học miễn phí</a></p>
+  <p style="margin-top:14px"><a class="btn btn-primary btn-lg" href="/hoc">Bắt đầu học miễn phí</a></p>
 </div>`;
 
   const html = khung({
@@ -1037,10 +1037,18 @@ function createSeo() {
     boNhoTrang.set(ten, { mtime, html });
     return html;
   }
-  const TRANG_TINH = { "/": "index.html", "/index.html": "index.html",
-    "/landing": "landing.html", "/landing.html": "landing.html",
-    "/nang-cap": "nang-cap.html", "/nang-cap.html": "nang-cap.html",
-    "/quyen-rieng-tu": "quyen-rieng-tu.html", "/quyen-rieng-tu.html": "quyen-rieng-tu.html" };
+  /* BỐ CỤC URL
+     "/"    -> trang giới thiệu (landing.html): đây là URL mà người ta dẫn link
+               tới và Google coi trọng nhất, nên phải là trang CÓ nội dung đọc
+               được. Trước đây "/" là vỏ ứng dụng rỗng, phí toàn bộ backlink.
+     "/hoc" -> ứng dụng (index.html).
+     Các URL cũ chuyển 301 để link đã chia sẻ và dấu trang không chết. */
+  const TRANG_TINH = { "/": "landing.html", "/hoc": "index.html",
+    "/nang-cap": "nang-cap.html", "/quyen-rieng-tu": "quyen-rieng-tu.html" };
+  const CHUYEN_301 = { "/index.html": "/hoc", "/landing": "/", "/landing.html": "/",
+    "/nang-cap.html": "/nang-cap", "/quyen-rieng-tu.html": "/quyen-rieng-tu" };
+  r.get(Object.keys(CHUYEN_301), (req, res) => res.redirect(301, CHUYEN_301[req.path]));
+
   r.get(Object.keys(TRANG_TINH), (req, res, next) => {
     try {
       const html = docTrangTinh(TRANG_TINH[req.path]).replace(/%%GOC%%/g, goc(req));
@@ -1117,7 +1125,7 @@ function createSeo() {
       res.set("Cache-Control", "public, max-age=86400");
       res.send(`<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${url(base + "/", "1.0", lmTinh("index.html"))}
+${url(base + "/", "1.0", lmTinh("landing.html"))}
 ${url(base + "/bai", "0.9", lmBai)}
 ${(() => {
         const ds = danhSachBo(chiMuc().kho);
@@ -1127,9 +1135,8 @@ ${(() => {
           .concat(ds.length > 1 ? ds.map((b) => url(base + "/doi-chieu-sgk/" + b.ma, "0.8", lmBai)) : [])
           .join("\n");
       })()}
-${url(base + "/landing.html", "0.8", lmTinh("landing.html"))}
-${url(base + "/nang-cap.html", "0.6", lmTinh("nang-cap.html"))}
-${url(base + "/quyen-rieng-tu.html", "0.3", lmTinh("quyen-rieng-tu.html"))}
+${url(base + "/nang-cap", "0.6", lmTinh("nang-cap.html"))}
+${url(base + "/quyen-rieng-tu", "0.3", lmTinh("quyen-rieng-tu.html"))}
 ${ds.map((m) => url(base + "/bai/" + m.slug, "0.7", lmBai)).join("\n")}
 </urlset>`);
     } catch (e) { next(e); }
