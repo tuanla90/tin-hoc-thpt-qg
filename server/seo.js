@@ -506,7 +506,7 @@ function khung(o) {
     '<meta name="twitter:image" content="' + esc(goc) + '/asset/og-cover.jpg">\n' +
     '<link rel="preconnect" href="https://fonts.googleapis.com">\n' +
     '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n' +
-    '<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@600;700;800;900&family=Lexend:wght@700;800&family=JetBrains+Mono:wght@600;700&family=Plus+Jakarta+Sans:wght@500;650;750;800&display=swap" rel="stylesheet">\n' +
+    '<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400..800&family=Nunito:wght@300..900&family=JetBrains+Mono:wght@400..700&display=swap" rel="stylesheet">\n' +
     '<link rel="stylesheet" href="/css/landing.css">\n' +
     '<link rel="stylesheet" href="/css/pages.css">\n' +
     "<style>" + CSS_RIENG + "</style>\n" +
