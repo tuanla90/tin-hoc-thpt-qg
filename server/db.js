@@ -137,6 +137,27 @@ ALTER TABLE tutor_log ADD COLUMN IF NOT EXISTS token_ra INT NOT NULL DEFAULT 0;
 ALTER TABLE tutor_log ADD COLUMN IF NOT EXISTS model TEXT NOT NULL DEFAULT '';
 CREATE INDEX IF NOT EXISTS tutor_log_ngay_idx ON tutor_log (ngay);
 
+-- Đăng ký nhận nhắc học (Web Push). Mỗi THIẾT BỊ một dòng: một học sinh có thể
+-- vừa cài trên điện thoại vừa mở trên máy tính, tắt máy này không tắt máy kia.
+-- endpoint là URL do trình duyệt cấp, dài và duy nhất -> dùng luôn làm khoá.
+-- gio = giờ muốn được nhắc (0-23, giờ Việt Nam). lan_cuoi = ngày đã gửi gần
+-- nhất, để một ngày chỉ nhắc đúng một lần dù bộ đếm giờ chạy 5 phút một lượt.
+CREATE TABLE IF NOT EXISTS push_subs (
+  id         SERIAL PRIMARY KEY,
+  user_id    INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  profile_id INT REFERENCES profiles(id) ON DELETE CASCADE,
+  endpoint   TEXT UNIQUE NOT NULL,
+  p256dh     TEXT NOT NULL DEFAULT '',
+  auth       TEXT NOT NULL DEFAULT '',
+  gio        INT NOT NULL DEFAULT 19,
+  bat        BOOLEAN NOT NULL DEFAULT true,
+  lan_cuoi   DATE,
+  loi        INT NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS push_subs_user_idx ON push_subs (user_id);
+CREATE INDEX IF NOT EXISTS push_subs_gio_idx ON push_subs (bat, gio);
+
 -- Đếm lượt truy cập theo NGÀY + LOẠI TRANG: không lưu IP, không đặt cookie theo
 -- dõi, không gọi dịch vụ bên thứ ba — đủ để biết phễu chuyển đổi (vào landing ->
 -- vào bài -> mở trang giá -> tạo tài khoản -> trả tiền) mà vẫn giữ đúng cam kết

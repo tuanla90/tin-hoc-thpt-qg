@@ -166,6 +166,14 @@
       Account.available = false; Account.user = null;
       return Promise.resolve();
     }
+    /* Mất mạng thì đừng chờ /me: cả giao diện đứng im tới 8 giây (API_TIMEOUT)
+       rồi mới hiện, người dùng tưởng app hỏng. App đã cài ra màn hình chính
+       (service worker) nên vẫn mở được — vào thẳng chế độ khách, có mạng lại
+       thì lần mở sau tự đăng nhập lại. */
+    if (navigator.onLine === false) {
+      Account.available = false; Account.user = null; Account.offline = true;
+      return Promise.resolve();
+    }
     return api("/me").then(function (d) {
       Account.available = true;
       Account.user = d.user || null;
@@ -543,6 +551,10 @@
             : '<p class="ac-note">Đã đủ ' + toiDa + " hồ sơ — xoá bớt nếu muốn thêm người học mới.</p>")) +
       "</div>" +
 
+      /* Thẻ "Nhắc học" dựng sau (js/nhac.js phải hỏi máy chủ + trình duyệt mới
+         biết hiện gì), nên chừa sẵn chỗ đúng vị trí rồi điền vào. */
+      '<div id="nhacHop"></div>' +
+
       '<div class="section-title" style="margin-top:22px">' + ico("bookmark", "#64748b", 17) + " Dữ liệu của bạn</div>" +
       '<div class="pf-card">' +
         '<p class="ac-note" style="margin:0 0 10px">Xem ứng dụng lưu những gì và vì sao: ' +
@@ -553,6 +565,16 @@
       "</div>";
 
     if (typeof iconify === "function") iconify(app);
+    /* Nhắc học: trạng thái phụ thuộc quyền thông báo + cấu hình máy chủ nên chỉ
+       biết được sau một lượt hỏi bất đồng bộ. Vẽ xong mới điền vào ô đã chừa. */
+    if (window.Nhac) {
+      Nhac.trangThai().then(function (tt) {
+        var hop = document.getElementById("nhacHop");
+        if (!hop) return;                       // người dùng đã rời trang
+        hop.innerHTML = Nhac.theHtml(tt);
+        Nhac.ganSuKien(renderAccount);
+      });
+    }
     document.getElementById("acBack").onclick = function () { if (typeof go === "function") go("home"); };
     document.getElementById("acSync").onclick = function () {
       var b = document.getElementById("acSync"); b.disabled = true;

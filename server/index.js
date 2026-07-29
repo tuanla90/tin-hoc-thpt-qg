@@ -7,6 +7,7 @@
  * ==========================================================================*/
 const { initDb } = require("./db");
 const { createApp } = require("./app");
+const { batDauLich } = require("./nhac");
 
 const PORT = Number(process.env.PORT) || 3000;
 
@@ -22,5 +23,8 @@ const PORT = Number(process.env.PORT) || 3000;
     console.warn("[session] THIẾU SESSION_SECRET — hãy đặt biến này trên Railway (secret dev không an toàn).");
   }
   const app = createApp({ pool });
+  /* Bộ đếm giờ gửi nhắc học chỉ chạy ở tiến trình thật, KHÔNG chạy trong test
+     (test gọi thẳng quet() với mốc thời gian tự đặt). */
+  batDauLich(pool);
   app.listen(PORT, () => console.log(`[web] Đang chạy: http://localhost:${PORT} (db: ${pool ? "OK" : "chưa nối"})`));
 })();

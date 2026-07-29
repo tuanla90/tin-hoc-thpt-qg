@@ -1,0 +1,25 @@
+{
+  "name": "Ôn thi Tin học THPT",
+  "short_name": "Tin học THPT",
+  "description": "Học, luyện tập và thi thử môn Tin học THPT — 119 bài, 2000+ câu có lời giải, chạy Python ngay trên máy.",
+  "lang": "vi",
+  "dir": "ltr",
+  "start_url": "/hoc",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#ffffff",
+  "theme_color": "#4f46e5",
+  "categories": ["education"],
+  "icons": [
+    { "src": "/asset/icon/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/asset/icon/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/asset/icon/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Thi thử", "short_name": "Thi thử", "url": "/hoc#/exam",
+      "icons": [{ "src": "/asset/icon/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Luyện tập", "short_name": "Luyện tập", "url": "/hoc#/practice",
+      "icons": [{ "src": "/asset/icon/icon-192.png", "sizes": "192x192" }] }
+  ]
+}

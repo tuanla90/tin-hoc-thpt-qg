@@ -14,6 +14,7 @@ const { createTutor } = require("./tutor");
 const { createAdmin } = require("./admin");
 const { createSeo } = require("./seo");
 const { createPay } = require("./pay");
+const { createNhac } = require("./nhac");
 const { createThongKe } = require("./thongke");
 
 const PUBLIC_DIR = path.join(__dirname, "..", "public");
@@ -67,6 +68,7 @@ function createApp({ pool, sessionStore } = {}) {
   app.use("/api", createTutor(pool)); // đặt trước createApi để /tutor/status trả được cả khi chưa có DB
   app.use("/api", createAdmin(pool));
   app.use("/api", createPay(pool));
+  app.use("/api", createNhac(pool)); // đặt trước createApi: /nhac/config và /nhac/noidung không cần đăng nhập
   app.use("/api", createApi(pool));
 
   /* Trang công khai cho Google (/bai, /sitemap.xml, /robots.txt) — không cần DB,

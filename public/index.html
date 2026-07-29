@@ -28,6 +28,15 @@
 
   <link rel="stylesheet" href="css/styles.css" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💻</text></svg>" />
+
+  <!-- Cài ra màn hình chính. apple-touch-icon phải là PNG và nền tràn kín khung
+       (iOS tự bo góc); iPhone cũng chỉ cho nhận thông báo đẩy khi đã cài. -->
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <meta name="theme-color" content="#4f46e5" />
+  <link rel="apple-touch-icon" href="/asset/icon/apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Tin học THPT" />
 </head>
 <body>
   <!-- ===================== THANH TIÊU ĐỀ ===================== -->
@@ -75,6 +84,7 @@
     </div>
   </div>
 
+  <script src="js/pwa.js"></script>
   <script src="js/session.js"></script>
   <!-- Trình chạy Python offline (Skulpt, ~948KB): nạp lười khi bấm Chạy, xem js/skulpt-lazy.js -->
   <script src="js/skulpt-lazy.js"></script>
@@ -119,6 +129,7 @@
   <script src="js/profile.js"></script>
   <script src="js/account.js"></script>
   <script src="js/pay.js"></script>
+  <script src="js/nhac.js"></script>
   <script src="js/plan.js"></script>
   <script src="js/app.js"></script>
   <script src="js/tutor.js"></script>

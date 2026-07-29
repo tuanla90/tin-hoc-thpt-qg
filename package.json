@@ -7,7 +7,7 @@
     "start": "node --env-file-if-exists=.env server/index.js",
     "dev": "node --watch --env-file-if-exists=.env server/index.js",
     "backup": "node --env-file-if-exists=.env scripts/backup.js",
-    "test": "node --test server/test/api.test.js server/test/tutor.test.js server/test/admin.test.js server/test/backup.test.js server/test/ai-retry.test.js server/test/seo.test.js server/test/pay.test.js server/test/thongke.test.js"
+    "test": "node --test server/test/api.test.js server/test/tutor.test.js server/test/admin.test.js server/test/backup.test.js server/test/ai-retry.test.js server/test/seo.test.js server/test/pay.test.js server/test/thongke.test.js server/test/nhac.test.js"
   },
   "engines": {
     "node": ">=22"
