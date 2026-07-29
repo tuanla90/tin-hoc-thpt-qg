@@ -917,6 +917,7 @@ function renderLesson(data) {
   if (typeof injectWebExercises === "function" && !xuongBiKhoa("web", (window.WEB_EXERCISES || {})[l.id])) injectWebExercises(l);
   if (typeof injectGraphicsLab === "function" && !xuongBiKhoa("gfx", (window.GLAB || {})[l.id])) injectGraphicsLab(l);
   if (typeof injectConceptLab === "function") injectConceptLab(l);
+  if (typeof injectMinhHoa === "function") injectMinhHoa(l);
   if (typeof injectVocab === "function") injectVocab(l);
   const sgkT = document.getElementById("sgkToggle");
   if (sgkT) sgkT.onclick = () => {
