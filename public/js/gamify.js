@@ -190,6 +190,10 @@ function gamShowNextCele() {
   if (!gamCeleQueue.length) { gamCeleShowing = false; return; }
   gamCeleShowing = true;
   var it = gamCeleQueue.shift();
+  /* Đặt tiếng reo mừng ở ĐÂY, chỗ duy nhất mọi hộp chúc mừng đi qua (lên cấp,
+     đạt mục tiêu ngày, mở huy hiệu). Hàng đợi đã giãn các hộp ra nên mở một lúc
+     ba huy hiệu cũng không thành một mớ tiếng chồng lên nhau. */
+  if (window.Am) Am.chucMung();
   var ov = document.createElement("div");
   ov.className = "gam-cele" + (it.rare ? " gam-cele-rare" : "");
   ov.innerHTML =
@@ -406,6 +410,7 @@ var Gam = {
     gamCheckBadges();
   },
   onExercisePass: function (ex) {
+    if (window.Am) Am.dung();               // code chạy đúng cũng đáng một tiếng khen
     var sig = "ex:" + ((ex && (ex.prompt || ex.expected)) || Math.random());
     if (GAM.exDone.indexOf(sig) >= 0) return; // đã làm đúng trước đó
     GAM.exDone.push(sig); gamSave();

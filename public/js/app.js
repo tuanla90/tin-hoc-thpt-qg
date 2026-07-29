@@ -1446,6 +1446,7 @@ function filterPool() {
  *  TẠO & BẮT ĐẦU BÀI LÀM
  * ========================================================================= */
 function newQuiz(questions, mode, opts = {}) {
+  if (window.Am) Am.xoaCombo();          // bài mới thì chuỗi đúng liên tiếp tính lại từ đầu
   return {
     mode,                                  // "exam" | "practice"
     questions,
@@ -1847,6 +1848,9 @@ function renderQuiz() {
   };
   byId("checkBtn") && (byId("checkBtn").onclick = () => {
     Q.revealed[Q.index] = true;
+    /* Tiếng phát ở ĐÂY chứ không phải trong renderExplain: lời giải còn được vẽ
+       lại mỗi lần quay về câu cũ, đặt ở đó thì đi tới đi lui là kêu suốt. */
+    if (window.Am) (isAnswerCorrect(q, Q.answers[Q.index]) ? Am.dung() : Am.sai());
     goStay("quiz");   // hiện lời giải ngay dưới câu hỏi, giữ nguyên chỗ đang đọc
   });
   byId("submitBtn") && (byId("submitBtn").onclick = trySubmit);
@@ -1882,6 +1886,9 @@ function renderAnswerArea(q, revealed) {
     /* Chọn đáp án chỉ đổi trạng thái 1 ô -> tô lại tại chỗ thay vì dựng lại cả
        màn hình (dựng lại sẽ kéo trang về đầu, mất chỗ đang đọc). */
     if (!locked) area.querySelectorAll(".option").forEach((o) => o.onclick = () => {
+      /* Tiếng chạm rất khẽ (0,12s) và chỉ khi ĐỔI lựa chọn: bấm đi bấm lại cùng
+         một ô mà cứ kêu thì thành ồn chứ không phải phản hồi. */
+      if (window.Am && Q.answers[Q.index] !== +o.dataset.i) Am.cham();
       Q.answers[Q.index] = +o.dataset.i;
       area.querySelectorAll(".option").forEach((x) => x.classList.toggle("selected", x === o));
       renderPalette();
@@ -2121,6 +2128,9 @@ function doSubmit(timeUp) {
   }
   if (window.Pwa) Pwa.dungThat();
   if (window.Nhac) Nhac.dungThat();
+  /* Điểm khá thì reo mừng; điểm thấp thì để yên. Nộp bài 2 điểm mà máy vẫn kêu
+     một tràng vui vẻ nghe như đang trêu. Màn kết quả đã nói đủ rồi. */
+  if (window.Am && result.score >= 5) setTimeout(function () { Am.chucMung(); }, 260);
 
   go("result", { result, record });
 }
