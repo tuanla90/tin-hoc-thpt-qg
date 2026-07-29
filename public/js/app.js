@@ -381,7 +381,7 @@ function renderHome() {
       <div class="mode-card" data-mode="quick">
         <div class="m-icon">${ic("zap", "⚡")}</div>
         <h3>Luyện nhanh 10 câu</h3>
-        <p>Bộ 10 câu ngẫu nhiên từ mọi chủ đề để khởi động, có lời giải tức thì.</p>
+        <p>10 câu rút từ những bài em đã học, để khởi động và ôn lại, có lời giải tức thì.</p>
       </div>
       <div class="mode-card" data-mode="tfdrill">
         <div class="m-badge">Phần II</div>
@@ -475,6 +475,9 @@ function markLearned(id, val) {
   if (val && !has && window.Account && Account.moiDangNhap) {
     setTimeout(function () { Account.moiDangNhap("hoc"); }, 700);
   }
+  // Đếm lần "dùng thật" cho lời mời cài app / bật nhắc học (js/pwa.js, js/nhac.js)
+  if (val && !has && window.Pwa) Pwa.dungThat();
+  if (val && !has && window.Nhac) Nhac.dungThat();
 }
 
 /* Chương (nhóm bài) của từng lớp — dùng chung cho lộ trình và trang luyện tập. */
@@ -1480,9 +1483,26 @@ function startPractice() {
   go("quiz");
 }
 
+/* Kho câu cho "Luyện nhanh": ưu tiên những bài EM ẤY ĐÃ HỌC.
+   Trước đây bốc thẳng từ cả 2052 câu, nên người mới học 2 bài lớp 10 vẫn gặp câu
+   về bộ chọn CSS của bài 17 lớp 12 — sai 8/10 câu ngay buổi đầu thì bỏ app.
+   Chưa học bài nào thì lấy vài bài đầu của lộ trình để vẫn có cái mà luyện. */
+function khoLuyenNhanh() {
+  if (typeof LESSONS === "undefined") return QUESTION_BANK;
+  const daHoc = new Set(State.learned || []);
+  let bai = LESSONS.filter((l) => daHoc.has(l.id));
+  if (bai.length < 2) bai = LESSONS.slice(0, 3);      // người mới: 3 bài đầu lộ trình
+  const ids = new Set();
+  bai.forEach((l) => (l.quiz || []).forEach((id) => ids.add(id)));
+  const pool = QUESTION_BANK.filter((q) => ids.has(q.id));
+  /* Bài đã học chưa đủ 10 câu thì bù thêm từ kho chung, đừng để nút bấm ra 3 câu. */
+  return pool.length >= 10 ? pool : QUESTION_BANK;
+}
+
 function startQuick() {
   if (typeof Plan !== "undefined" && !Plan.chanLuyen()) return; // hết quỹ câu/ngày của gói free
-  let qs = pick(QUESTION_BANK, Math.min(10, QUESTION_BANK.length));
+  const kho = khoLuyenNhanh();
+  let qs = pick(kho, Math.min(10, kho.length));
   if (typeof Plan !== "undefined") qs = Plan.catQuota(qs);
   State.quiz = newQuiz(qs, "practice", { title: "Luyện nhanh 10 câu" });
   go("quiz");
@@ -2099,6 +2119,8 @@ function doSubmit(timeUp) {
   if (window.Account && Account.moiDangNhap) {
     setTimeout(function () { Account.moiDangNhap("lam"); }, 900);
   }
+  if (window.Pwa) Pwa.dungThat();
+  if (window.Nhac) Nhac.dungThat();
 
   go("result", { result, record });
 }
@@ -2491,6 +2513,7 @@ function khoiDong() {
   initNav();
 
   if (!window.Account) {           // không có account.js -> chạy như bản cũ
+    if (window.NhiemVu) NhiemVu.moKhoa();
     moKhoaGiaoDien(true); initFloatingMascot(); renderFromHash(); return;
   }
   moKhoaGiaoDien(false);
@@ -2501,6 +2524,9 @@ function khoiDong() {
        bài trong ứng dụng" mà gặp form đăng nhập là quay ra ngay.
        Máy chủ chưa nối CSDL cũng vào chế độ này thay vì chặn cả app. */
     if (!Account.user) {
+      /* Khách: State đã nạp xong từ localStorage, đây CHÍNH LÀ dữ liệu thật của
+         em ấy — chụp mốc nhiệm vụ tuần được ngay. */
+      if (window.NhiemVu) NhiemVu.moKhoa();
       moKhoaGiaoDien(true);
       initFloatingMascot();
       renderFromHash();
@@ -2512,6 +2538,10 @@ function khoiDong() {
     initFloatingMascot();
     renderFromHash();
     Account.fullSync().then(function () {
+      /* CHỈ mở khoá nhiệm vụ tuần SAU khi đồng bộ xong. Chụp mốc lúc State còn
+         rỗng thì người đã học 2 tháng mở app trên máy mới sẽ thấy cả 3 nhiệm vụ
+         tự xanh và được tặng 190 XP khống. */
+      if (window.NhiemVu) NhiemVu.moKhoa();
       if (State.view === "home" || State.view === "history") renderFromHash();
     });
   });

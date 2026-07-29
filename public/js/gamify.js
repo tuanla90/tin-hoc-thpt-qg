@@ -381,11 +381,7 @@ function gamCheckBadges() {
 /* --- Vẽ lại bảng điều khiển nếu đang ở trang chủ --- */
 function gamRefreshDash() {
   var m = document.getElementById("gamDash");
-  if (!m) return;
-  /* Chấm nhiệm vụ tuần TRƯỚC khi vẽ, để nhiệm vụ vừa xong hiện ngay ✓ và cộng
-     XP trong cùng một nhịp. NhiemVu tự chặn gọi lồng nhau — xem js/nhiem-vu.js. */
-  if (window.NhiemVu) NhiemVu.kiemTra();
-  Gam.renderDashboard(m);
+  if (m) Gam.renderDashboard(m);   // renderDashboard tự chấm nhiệm vụ tuần
 }
 
 /* ==========================================================================
@@ -427,6 +423,11 @@ var Gam = {
   /* --- Bảng điều khiển ở trang chủ --- */
   renderDashboard: function (mount) {
     if (!mount) return;
+    /* Chấm nhiệm vụ tuần ở ĐÂY chứ không ở gamRefreshDash: trang chủ gọi thẳng
+       renderDashboard (app.js), còn gamRefreshDash thì thoát sớm khi không có
+       #gamDash — mà XP luôn được cộng từ màn hình khác (bài học, kết quả, bài
+       tập). Đặt nhầm chỗ là nhiệm vụ hiện ✓ mà không bao giờ được thưởng. */
+    if (window.NhiemVu) NhiemVu.kiemTra();
     var s = gamStats(), lv = gamLevel(s.xp);
     var pct = Math.round(lv.progress * 100);
     var xpTxt = lv.nextMin != null ? (s.xp + " / " + lv.nextMin + " XP") : (s.xp + " XP · tối đa");
