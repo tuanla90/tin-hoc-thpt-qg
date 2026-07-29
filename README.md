@@ -33,6 +33,10 @@ Sau đó truy cập: <http://localhost:8000>
 `DATABASE_URL = ${{Postgres.DATABASE_URL}}` và `SESSION_SECRET` trên service
 web. Chi tiết trong `KE-HOACH-SAAS.md`.
 
+**Cài ra màn hình chính & nhắc học:** cần thêm ba biến `VAPID_*` (sinh bằng
+`node scripts/vapid.js`). Các bước bật, cách kiểm trên điện thoại thật và bảng
+khắc phục sự cố nằm trong `HUONG-DAN-NHAC-HOC.md`.
+
 ---
 
 ## ✨ Tính năng
