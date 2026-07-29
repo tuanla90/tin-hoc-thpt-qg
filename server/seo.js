@@ -286,7 +286,8 @@ const CSS_RIENG = `
 /* Nhảy nhanh tới từng lớp — không phải cuộn qua cả trăm bài */
 .seo-jump{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 4px}
 .seo-jump a{font-size:13.5px;font-weight:650;text-decoration:none;color:var(--ink-muted);
-  background:var(--bg-subtle);border:1px solid var(--line);border-radius:999px;padding:6px 14px}
+  background:var(--bg-subtle);border:1px solid var(--line);border-radius:999px;padding:10px 15px;
+  display:inline-flex;align-items:center;min-height:40px}
 .seo-jump a:hover{border-color:var(--brand);color:var(--brand)}
 /* Câu dẫn ở đầu trang: .pg-hero .lead bị kẹp 620px nên ở khổ rộng chữ dồn thành
    cột hẹp, chừa một mảng trống lớn bên phải trông như lỗi dựng trang. */
@@ -316,7 +317,7 @@ const CSS_RIENG = `
 /* Thẻ câu hỏi: siết mật độ (không bớt nội dung) để đọc liền mạch hơn — bốn câu
    mẫu trước đây chiếm hơn 1.300px chỉ vì khoảng đệm rộng. */
 .seo-q{background:var(--surface-card);border:1px solid var(--line);border-radius:12px;padding:13px 15px;margin:9px 0}
-.seo-q-no{font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:4px}
+.seo-q-no{font-size:12.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:4px}
 .seo-q ol{margin:7px 0 7px 20px;padding:0}
 .seo-q li{margin:2px 0}
 .seo-q p{margin:0}
@@ -372,7 +373,7 @@ const CSS_RIENG = `
 .seo-sgk-ds li{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px;padding:6px 0;
   border-top:1px solid color-mix(in srgb, var(--accent-teal) 22%, transparent)}
 .seo-sgk-ds li:first-child{border-top:0}
-.seo-sgk-bo{flex:none;font-size:11.5px;font-weight:750;letter-spacing:.03em;text-transform:uppercase;
+.seo-sgk-bo{flex:none;font-size:12.5px;font-weight:750;letter-spacing:.02em;text-transform:uppercase;
   color:var(--sgk-nhan);background:var(--surface-card);border-radius:999px;padding:2px 9px}
 .seo-sgk-noi{flex:1;min-width:190px;line-height:1.5}
 .seo-sgk-them summary{cursor:pointer;padding:7px 0 0;font-size:13px;font-weight:650;color:var(--sgk-nhan)}
@@ -421,7 +422,7 @@ const CSS_RIENG = `
 .dc-bang a.dc-hang .dc-toi{color:var(--brand)}
 a.dc-hang:hover{background:var(--brand-soft)}
 .dc-so{font-size:13px;font-weight:750;color:var(--ink-muted);white-space:nowrap}
-.dc-so small{display:block;font-weight:500;font-size:11.5px;color:var(--ink-faint)}
+.dc-so small{display:block;font-weight:500;font-size:12.5px;color:var(--ink-faint)}
 .dc-ten{font-size:14.5px;line-height:1.5}
 .dc-toi{font-size:14.5px;line-height:1.5;color:var(--brand);font-weight:650}
 a.dc-hang .dc-toi::after{content:" →";color:var(--ink-faint);font-weight:400}
@@ -437,9 +438,9 @@ a.dc-hang .dc-toi::after{content:" →";color:var(--ink-faint);font-weight:400}
    (Lưu ý: khối CSS này nằm trong chuỗi template của JS, tuyệt đối không dùng
    dấu backtick trong chú thích — sẽ cắt đứt chuỗi.) */
 .seo-chip{border:1px solid var(--line-strong);background:var(--surface-card);color:var(--ink-muted);
-  border-radius:999px;padding:7px 13px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;
-  font-family:inherit;font-size:13px;font-weight:650;line-height:1.2}
-.seo-chip span{font-size:11.5px;opacity:.6;font-family:var(--font-mono,monospace)}
+  border-radius:999px;padding:10px 14px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;
+  font-family:inherit;font-size:13.5px;font-weight:650;line-height:1.2;min-height:40px}
+.seo-chip span{font-size:12.5px;opacity:.65;font-family:var(--font-mono,monospace)}
 .seo-chip:hover{border-color:var(--brand);color:var(--brand)}
 .seo-chip.on{background:var(--brand);border-color:var(--brand);color:#fff}
 .seo-chip.on span{opacity:.8}

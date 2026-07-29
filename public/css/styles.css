@@ -72,6 +72,8 @@
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
+img { max-width: 100%; height: auto; }
+
 body {
   font-family: var(--font-sans);
   background: var(--bg);
@@ -92,7 +94,9 @@ body {
   background: var(--bg-card);
   border-bottom: 1px solid var(--border);
   box-shadow: var(--shadow);
-  backdrop-filter: blur(12px);
+  /* Bỏ backdrop-filter: nền --bg-card đục hoàn toàn nên chẳng có gì để làm
+     mờ, mà vẫn bắt trình duyệt dựng layer và composite lại mỗi khung hình
+     lúc cuộn — nguyên nhân giật rất hay gặp trên Android tầm thấp. */
 }
 
 .brand { display: flex; align-items: center; gap: 12px; cursor: pointer; user-select: none; }
@@ -1249,4 +1253,41 @@ code.ic {
   .guest-bar { padding: 10px 12px; gap: 9px; }
   .guest-bar .btn { width: 100%; padding: 9px 14px; font-size: 14px; }
   .guest-txt small { font-size: 12px; }
+}
+
+/* ===========================================================================
+ *  VÙNG BẤM & CHUYỂN ĐỘNG
+ *  Đối tượng dùng chủ yếu là điện thoại. Chuẩn tối thiểu cho ngón tay là 44px;
+ *  đo được nhiều nút cốt lõi chỉ 14–40px. Đặt cuối tệp để thắng luật phía trên
+ *  mà không phải sửa rải rác.
+ * ========================================================================= */
+@media (max-width: 640px) {
+  /* Thanh điều hướng chính của app */
+  .nav-btn { min-height: 44px; }
+
+  /* Hai nút Đúng/Sai là thao tác cốt lõi của Phần II đề thi: trước đây cao 38px
+     và không giãn, dồn về trái chừa một mảng trống. */
+  .tf-choices { display: flex; gap: 10px; }
+  .tf-choices button { flex: 1; min-height: 44px; }
+
+  /* Lưới nhảy câu: bấm nhầm là nhảy sai câu giữa lúc tính giờ. */
+  .palette-btn { min-width: 44px; min-height: 44px; font-size: 13px; }
+}
+
+/* Nút của linh vật nổi — nhỏ nhất toàn site (đo được 14px và 27px).
+   .floating-mascot-bubble có transform:scale(.8) nên kích thước NHÌN THẤY chỉ
+   bằng 80% số đặt ở đây — đặt 44/52 để lúc hiện ra vẫn đạt ~35/42px thật. */
+.floating-mascot-close { min-width: 44px; min-height: 44px; }
+.floating-mascot-ask { min-height: 52px; }
+
+/* Bốn animation chạy infinite repaint không ngừng kể cả lúc học sinh đang đọc
+   đề — tốn pin và giật trên máy yếu. Tôn trọng lựa chọn giảm chuyển động của
+   hệ điều hành. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

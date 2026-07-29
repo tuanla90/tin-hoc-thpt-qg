@@ -111,7 +111,11 @@
 
 /* ----------------------------- bảng so sánh ------------------------------ */
 .pg-table-wrap { overflow-x: auto; }
-.pg-table { width: 100%; border-collapse: collapse; font-size: 14.5px; min-width: 480px; }
+.pg-table { width: 100%; border-collapse: collapse; font-size: 14.5px; }
+/* Chỉ bảng SO SÁNH GÓI mới cần bề rộng tối thiểu. Trước đây đặt trên .pg-table
+   nên bảng thuật ngữ 3 cột ở trang bài cũng bị ép 480px -> mọi điện thoại đều
+   phải kéo ngang mới đọc được cột nghĩa. */
+.pg-table-ss { min-width: 480px; }
 .pg-table th, .pg-table td {
   padding: 11px 12px;
   border-bottom: 1px solid var(--line);
@@ -177,7 +181,7 @@
   background: #fff;
   padding: 8px;
 }
-.pg-bank { flex: 1; min-width: 250px; }
+.pg-bank { flex: 1; min-width: min(250px, 100%); }
 .pg-bank-row {
   display: flex; justify-content: space-between; align-items: center; gap: 10px;
   padding: 9px 0;
@@ -193,8 +197,11 @@
   background: var(--bg-subtle);
   color: var(--ink-muted);
   border-radius: 8px;
-  font: 700 12px var(--font-sans);
-  padding: 4px 10px;
+  font: 700 13px var(--font-sans);
+  /* Nút chép số tài khoản: trước cao ~22px, chưa bằng nửa chuẩn ngón tay 44px
+     mà lại nằm đúng bước thanh toán. */
+  padding: 10px 14px;
+  min-height: 40px;
   cursor: pointer;
 }
 .pg-copy:hover { border-color: var(--brand); color: var(--brand); }
@@ -294,3 +301,32 @@
   min-height: 90px; resize: vertical;
 }
 select.pg-input { cursor: pointer; }
+
+/* ===========================================================================
+ *  MÀN HẸP
+ *  Tệp này trước đây KHÔNG có một @media nào và ăn nhờ hoàn toàn breakpoint của
+ *  landing.css, nên mọi lỗi của nó chỉ lộ ra ở /nang-cap và /quyen-rieng-tu.
+ * ========================================================================= */
+@media (max-width: 640px) {
+  /* iOS Safari tự phóng to trang khi chạm ô nhập có cỡ chữ dưới 16px, phóng rồi
+     thì trang kẹt ở trạng thái trượt ngang. */
+  .pg-input { font-size: 16px; }
+
+  /* Bảng trong văn bản (trang quyền riêng tư) không có khung cuộn: ở 320px mỗi
+     cột còn ~64px chữ, thành cột chữ dựng đứng. Xếp mỗi hàng thành một khối. */
+  .pg-prose table, .pg-prose tbody, .pg-prose tr, .pg-prose td, .pg-prose th {
+    display: block;
+    width: auto;
+  }
+  .pg-prose thead { display: none; }
+  .pg-prose tr {
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    margin-bottom: 10px;
+  }
+  .pg-prose td { border: 0; padding: 4px 0; }
+
+  .pg-bank-row { flex-wrap: wrap; }
+  .pg-main { padding: 28px 0 56px; }
+}
