@@ -95,24 +95,37 @@
       ".on-in-y li i{font-style:normal;color:var(--text-soft);font-weight:700}" +
 
       /* ---- IN RA GIẤY ----
-         Chỉ bật khi <body> đang mang lớp "in-nhanh" (đặt lúc dựng màn Bản in, gỡ
-         khi rời đi). Để luật in ở ngoài thì mọi trang khác in ra cũng bị cắt mất
-         thanh trên và chân trang, mà đó không phải việc của tệp này. */
+         CHIA LÀM HAI NHÓM, và ranh giới này là chỗ bản đầu làm sai:
+
+         (a) ẨN PHẦN VỎ — áp dụng cho MỌI trang, không cần lớp nào.
+             Bản đầu khoá cả nhóm này sau "body.in-nhanh", tức là chỉ chạy ở màn
+             Bản in. Nhưng người ta in cả màn Tổng kết chương (rất tự nhiên, nó
+             chính là bản tóm tắt), và lúc đó không có lớp nào nên nút trợ lý AI
+             in đè lên chữ. Mà thật ra ẩn thanh trên, chân trang và mấy nút nổi là
+             việc ĐÚNG cho mọi trang của app: chẳng ai muốn in ra tờ giấy có nút
+             chat AI ở góc.
+
+         (b) ÉP MÀU VÀ BỎ LỀ — chỉ ở màn Bản in (lớp "in-nhanh").
+             Luật "* { color:#000 }" quá mạnh để bật ở mọi trang: in một bài học
+             có code tô màu thì mất hết phân biệt. */
+
+      /* (a) */
       "@media print{" +
-        "body.in-nhanh .topbar,body.in-nhanh .footer,body.in-nhanh .on-khong-in{display:none!important}" +
-        /* Mọi thứ NỔI trên trang đều phải biến mất: trợ lý AI ở góc phải từng in
-           đè lên chữ. Hai lớp phòng thủ, vì liệt kê tay thì lần sau thêm nút nổi
-           mới lại sót:
+        ".topbar,.footer,.on-khong-in{display:none!important}" +
+        /* Mọi thứ NỔI đều phải biến mất. Hai lớp phòng thủ, vì liệt kê tay thì
+           lần sau thêm nút nổi mới lại sót:
              · danh sách dưới đây bắt những cái đã biết;
              · lớp .on-an-khi-in do beforeprint quét động, bắt cả những thứ chưa
                có tên ở đây và những hộp mới hiện ra ngay trước lúc in. */
-        "body.in-nhanh .floating-mascot-container," +
-        "body.in-nhanh .toast," +
-        "body.in-nhanh #nhacBar,body.in-nhanh #pwaBar," +
-        "body.in-nhanh .tt-nen,body.in-nhanh .tt-panel,body.in-nhanh .tt-fab," +
-        "body.in-nhanh .modal-overlay,body.in-nhanh .pay-nen,body.in-nhanh .plan-nen," +
-        "body.in-nhanh .gam-xpfloat,body.in-nhanh .gam-cele,body.in-nhanh .gam-confetti," +
-        "body.in-nhanh .on-an-khi-in{display:none!important}" +
+        ".floating-mascot-container,.toast,#nhacBar,#pwaBar," +
+        ".tt-nen,.tt-panel,.tt-fab," +
+        ".modal-overlay,.pay-nen,.plan-nen," +
+        ".gam-xpfloat,.gam-cele,.gam-confetti," +
+        ".on-an-khi-in{display:none!important}" +
+        "@page{margin:14mm}" +
+      "}" +
+      /* (b) */
+      "@media print{" +
         /* Nền trang phải đặt trên <html>, KHÔNG phải <body>: nền của body được lan
            lên canvas, nên luật nhắm vào body không đổi được màu nền trang dù có
            !important (đã đo: đặt gì trên body cũng vẫn ra #f8fafc, đặt trên html
@@ -125,7 +138,6 @@
         "body.in-nhanh *{color:#000!important;background:transparent!important;box-shadow:none!important}" +
         "body.in-nhanh .on-in-chuong h3{border-bottom:1.5px solid #000!important}" +
         "body.in-nhanh .on-in-y li i{color:#444!important}" +
-        "@page{margin:14mm}" +
       "}" +
       "@media (max-width:560px){.on-luoi{grid-template-columns:1fr}.on-song{padding-left:24px}" +
         ".on-nut::before{left:-19px}}";
@@ -430,7 +442,8 @@
      index.html cái thì chèn lúc chạy — liệt kê tay chắc chắn sẽ sót về sau.
      beforeprint chạy cả khi người dùng bấm Ctrl+P chứ không riêng nút In của ta. */
   function quetNoi() {
-    if (!document.body.classList.contains("in-nhanh")) return;
+    /* KHÔNG kiểm lớp "in-nhanh" ở đây. Bản đầu có kiểm, nên in bất kỳ trang nào
+       ngoài màn Bản in là hàm này thoát ngay và nút trợ lý AI in đè lên chữ. */
     var app = document.getElementById("app");
     document.querySelectorAll("body *").forEach(function (e) {
       if (app && (e === app || app.contains(e))) return;   // nội dung cần in thì bỏ qua
@@ -445,6 +458,11 @@
   }
   window.addEventListener("beforeprint", quetNoi);
   window.addEventListener("afterprint", boQuet);
+
+  /* Nạp CSS ngay lúc tệp chạy, KHÔNG chờ ai mở màn Ôn nhanh: nhóm luật ẩn phần vỏ
+     phải có sẵn để in trang nào cũng sạch. Trước đây napCss() chỉ chạy trong
+     renderOnNhanh, nên ai chưa từng vào Ôn nhanh thì in ra vẫn dính nút AI. */
+  napCss();
 
   function renderOnNhanh(d) {
     napCss();
