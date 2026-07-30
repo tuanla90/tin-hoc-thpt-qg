@@ -618,7 +618,7 @@ let MH_CO = null;
 function baiCoMinhHoa() {
   if (MH_CO) return MH_CO;
   MH_CO = new Set();
-  ["minh-hoa.js", "minh-hoa-2.js"].forEach((ten) => {
+  ["minh-hoa.js", "minh-hoa-2.js", "minh-hoa-3.js"].forEach((ten) => {
     try {
       const src = fs.readFileSync(path.join(__dirname, "..", "public", "js", ten), "utf8");
       // khớp cả 'dangKy("C10-22"' lẫn '"C10-23": nhiPhan' trong bảng THEO_BAI
@@ -630,9 +630,9 @@ function baiCoMinhHoa() {
 }
 
 /* Khối minh hoạ trên trang công khai.
-   Trang này CỐ Ý không nạp bundle của app (nặng ~1,2MB). Hai tệp minh hoạ thì
+   Trang này CỐ Ý không nạp bundle của app (nặng ~1,2MB). Ba tệp minh hoạ thì
    độc lập hoàn toàn — không đụng State, LESSONS hay QUESTION_BANK — nên nạp
-   riêng được, tổng ~62KB và chỉ nạp ở 11 bài thật có minh hoạ. */
+   riêng được, tổng ~130KB và chỉ nạp ở những bài thật có minh hoạ (hiện 22 bài). */
 function minhHoaHtml(muc) {
   const id = muc.bai.id;
   if (!baiCoMinhHoa().has(id)) return { than: "", them: "" };
@@ -647,6 +647,7 @@ function minhHoaHtml(muc) {
 </div>`;
   const them = `<script src="/js/minh-hoa.js" defer></script>
 <script src="/js/minh-hoa-2.js" defer></script>
+<script src="/js/minh-hoa-3.js" defer></script>
 <script>window.addEventListener("load",function(){var h=document.getElementById("mhMount");` +
     `if(h&&window.MinhHoa)window.MinhHoa.veVao(h,h.dataset.bai)});</script>`;
   return { than, them };

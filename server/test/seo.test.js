@@ -66,7 +66,11 @@ test("trang danh sách liệt kê đủ mọi bài học", async () => {
 
 test("trang một bài có đủ phần cần cho SEO", async () => {
   const { theoId } = chiMuc();
-  const m = theoId.get("C12-16");
+  /* Bài hướng nghiệp: không có cơ chế nào để mô phỏng nên sẽ không bao giờ được
+     gắn minh hoạ — chọn bài này thì luật "không nạp script" không bị vỡ mỗi lần
+     thêm một đợt minh hoạ mới (C12-16 trước đây nằm đây, rồi có minh hoạ thật). */
+  const ID = "C12-14";
+  const m = theoId.get(ID);
   const r = await lay("/bai/" + m.slug);
   assert.equal(r.status, 200);
   assert.match(r.body, /<h1>Bài \d+\. /);
@@ -78,19 +82,20 @@ test("trang một bài có đủ phần cần cho SEO", async () => {
   assert.match(r.body, /Tóm tắt lý thuyết cần nhớ/);
   assert.match(r.body, /Đáp án: [A-D]/);
   assert.match(r.body, /Thuật ngữ tiếng Anh/);
-  assert.ok(r.body.includes('href="/hoc#/lesson/C12-16"'), "phải có lối vào ứng dụng");
+  assert.ok(r.body.includes('href="/hoc#/lesson/' + ID + '"'), "phải có lối vào ứng dụng");
   /* Ý định của luật này là KHÔNG kéo bundle ứng dụng (~1,2MB) vào trang công khai,
      chứ không phải cấm mọi thẻ script. Bài này không có minh hoạ nên phải sạch trơn. */
   assert.ok(!r.body.includes("<script src"), "bài không có minh hoạ thì không nạp script nào");
 });
 
-test("bài có minh hoạ: kèm khối riêng + 2 tệp minh hoạ, KHÔNG kéo bundle app", async () => {
+test("bài có minh hoạ: kèm khối riêng + các tệp minh hoạ, KHÔNG kéo bundle app", async () => {
   const r = await lay("/bai/tin-hoc-11-bai-22-thuat-toan-tim-kiem-nhi-phan");
   assert.equal(r.status, 200);
   assert.match(r.body, /Thử ngay: minh hoạ từng bước/, "phải có khối minh hoạ riêng");
   assert.match(r.body, /id="mhMount" data-bai="C11-14"/, "phải gắn đúng ID bài");
   assert.ok(r.body.includes('src="/js/minh-hoa.js"'), "nạp minh-hoa.js");
   assert.ok(r.body.includes('src="/js/minh-hoa-2.js"'), "nạp minh-hoa-2.js");
+  assert.ok(r.body.includes('src="/js/minh-hoa-3.js"'), "nạp minh-hoa-3.js");
   assert.match(r.body, /<noscript>/, "tắt JS thì phải có lối vào ứng dụng");
   /* Chốt quan trọng: tuyệt đối không được kéo theo bundle nặng của ứng dụng. */
   ["app.js", "questions.js", "clean-tin10.js", "gamify.js", "account.js", "skulpt"].forEach((t) => {
