@@ -15,6 +15,7 @@
  *   3. Đăng ký gắn với TÀI KHOẢN ở máy chủ nên phải đăng nhập trước.
  * ==========================================================================*/
 (function () {
+  function ico(n, s) { return typeof ICON === "function" ? ICON(n, s) : ""; }
   var KEY = "tinhoc_nhac_v1";     /* {moc, tuChoi, lanCuoi, gio} */
   var MOC_MOI = 3;                /* học thật 3 lần rồi mới mời — sau lời mời cài app */
   var HOI_LAI = 10 * 24 * 3600 * 1000;
@@ -180,7 +181,7 @@
     var bar = document.createElement("div");
     bar.id = "nhacBar";
     bar.innerHTML =
-      '<span class="nhac-ic">🔔</span>' +
+      '<span class="nhac-ic">' + ico("bell", 26) + "</span>" +
       '<div class="nhac-txt"><b>Nhắc bạn học mỗi tối?</b>' +
       "<small>Một lời nhắc lúc 19h vào đúng ngày có lịch học — để chuỗi không đứt vì quên.</small></div>" +
       '<div class="nhac-nut"><button class="nhac-ok" id="nhacBat">Bật</button><button id="nhacThoi">Để sau</button></div>';
@@ -241,7 +242,7 @@
         "</div>" +
         '<p class="ac-note" style="margin:8px 0 0">Một lời nhắc mỗi ngày có lịch học. Tắt lúc nào cũng được.</p>';
     }
-    return '<div class="section-title" style="margin-top:22px">🔔 Nhắc học</div>' +
+    return '<div class="section-title" style="margin-top:22px">' + ico("bell", 17) + " Nhắc học</div>" +
       '<div class="pf-card" id="nhacThe">' + than + '<div class="ac-err" id="nhacErr"></div></div>';
   }
 

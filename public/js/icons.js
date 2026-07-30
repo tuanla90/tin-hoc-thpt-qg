@@ -24,6 +24,7 @@
     lightning: '<path d="M13 2 3 14h7l-1 8 10-12h-7l1-8Z"/>',
     play: '<path d="M7 4v16l13-8z"/>',
     pause: '<rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/>',
+    stop: '<rect x="6" y="6" width="12" height="12" rx="2"/>',
     lock: '<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
     flame: '<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.4-.5-2-1-3-1.07-2.14-.22-4.05 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.15.43-2.29 1-3a2.5 2.5 0 0 0 2.5 2.5Z"/>',
     medal: '<path d="m15.5 12.9 1.5 8.6-5-3-5 3 1.5-8.6"/><circle cx="12" cy="8" r="6"/>',
@@ -34,6 +35,7 @@
     volume: '<path d="M11 5 6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/>',
     volumeoff: '<path d="M11 5 6 9H2v6h4l5 4z"/><path d="m16 9 5 6"/><path d="m21 9-5 6"/>',
     calendar: '<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18"/><path d="M8 2v4"/><path d="M16 2v4"/>',
+    bell: '<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a1.9 1.9 0 0 1-3.4 0"/>',
     letters: '<path d="m3 16 4-10 4 10"/><path d="M4.4 13h5.2"/><path d="M14 10.5a3 3 0 1 1 0 5.2V17"/><path d="M14 8.2V17"/>',
     mic: '<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/>',
     aright: '<path d="M5 12h14"/><path d="m13 6 6 6-6 6"/>',
@@ -52,6 +54,10 @@
     refresh: '<path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/>',
     chevdown: '<path d="m6 9 6 6 6-6"/>',
     x: '<circle cx="12" cy="12" r="9"/><path d="m15 9-6 6M9 9l6 6"/>',
+    /* "x" ở trên đã mang nghĩa RIÊNG "đáp án sai" (luôn đi kèm check2, tô đỏ) — dùng
+       lại cho nút đóng modal/bong bóng sẽ lẫn nghĩa. "close" là dấu X trần, không
+       vòng tròn, dành riêng cho nút đóng. */
+    close: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
     eye: '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>',
     clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
     dice: '<rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8" cy="8" r="1.2"/><circle cx="16" cy="16" r="1.2"/><circle cx="16" cy="8" r="1.2"/><circle cx="8" cy="16" r="1.2"/><circle cx="12" cy="12" r="1.2"/>',

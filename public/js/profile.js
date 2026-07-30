@@ -178,7 +178,7 @@
           '<div class="pf-opts">' + opt(TRACKS, "track", p.track) + "</div></div>" +
 
         '<div class="pf-field"><label>' + ico("clock", "#ea580c") + "Lịch học trong tuần</label>" +
-          '<p class="pf-hint">Chuỗi 🔥 chỉ tính trên các buổi này. Lỡ một buổi vẫn học bù được trong ngày hôm sau.</p>' +
+          '<p class="pf-hint">Chuỗi ' + ico("flame", "#f97316", 13) + ' chỉ tính trên các buổi này. Lỡ một buổi vẫn học bù được trong ngày hôm sau.</p>' +
           '<div class="pf-week" id="pfWeek">' + DAYS.map(function (d) {
             return '<button type="button" class="pf-day' + (ngay.indexOf(String(d[0])) >= 0 ? " on" : "") + '" data-day="' + d[0] + '">' + d[1] + "</button>";
           }).join("") + "</div>" +
@@ -266,7 +266,9 @@
     app.querySelector("#pfBack").onclick = function () { if (typeof go === "function") go("home"); };
     wireForm(app, p, function (data) {
       setProfile(data);
-      if (typeof toast === "function") toast("Đã lưu hồ sơ " + ((typeof ICON === "function") ? ICON("check2", 15) : "✓"));
+      /* toast() gán textContent (chữ thuần) — nhét thẳng ICON() vào đây từng khiến
+         toast hiện nguyên chuỗi mã "<svg ...>" ra màn hình thay vì icon. */
+      if (typeof toast === "function") toast("Đã lưu hồ sơ ✓");
       if (typeof go === "function") go("home");
     });
   }

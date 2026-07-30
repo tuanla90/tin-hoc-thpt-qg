@@ -16,6 +16,7 @@
   let dangChay = null;    // AbortController của lượt hỏi đang chảy
   let NGU = null;         // ngữ cảnh hiện tại { lessonId, questionId, daChon, tieuDe }
   let LICH = [];          // hội thoại của lượt mở này
+  function ico(n, s) { return typeof ICON === "function" ? ICON(n, s) : ""; }
 
   const GOI_Y_BAI = [
     "Giải thích lại mục này dễ hiểu hơn",
@@ -143,13 +144,13 @@
           <b>Gia sư AI</b>
           <div class="tt-sub" id="ttSub"></div>
         </div>
-        <button class="tt-x" id="ttClose" title="Đóng">&times;</button>
+        <button class="tt-x" id="ttClose" title="Đóng">${ico("close", 18)}</button>
       </div>
       <div class="tt-body" id="ttBody"></div>
       <div class="tt-goiy" id="ttGoiy"></div>
       <div class="tt-foot">
         <textarea id="ttInput" rows="1" maxlength="500" placeholder="Hỏi về bài này…"></textarea>
-        <button class="tt-send" id="ttSend" title="Gửi">${"➤"}</button>
+        <button class="tt-send" id="ttSend" title="Gửi">${ico("aright", 16)}</button>
       </div>`;
     document.body.appendChild(el);
 
@@ -364,7 +365,7 @@
   function napNutDung(dang) {
     const s = document.getElementById("ttSend");
     if (!s) return;
-    s.innerHTML = dang ? "■" : "➤";
+    s.innerHTML = dang ? ico("stop", 16) : ico("aright", 16);
     s.title = dang ? "Dừng" : "Gửi";
     s.classList.toggle("dung", dang);
     s.onclick = dang

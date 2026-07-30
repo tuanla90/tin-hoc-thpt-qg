@@ -127,7 +127,7 @@
 
     o.innerHTML =
       '<div class="pay-box" role="dialog" aria-modal="true">' +
-        '<button class="pay-x" id="payX" title="Đóng">&times;</button>' +
+        '<button class="pay-x" id="payX" title="Đóng">' + ico("close", null, 16) + "</button>" +
         (don ? "<h3>Quét mã để mở Premium</h3><p class=\"pay-goi\">" +
           esc2(don.goi === "nuocrut" ? "Gói nước rút 3 tháng" : "Gói 1 năm học") + " · " + tien(don.soTien) + "</p>" : "<h3>Mua Premium</h3>") +
         than +

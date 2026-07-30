@@ -113,12 +113,16 @@
   }
 
   function el(html) { var d = document.createElement("div"); d.innerHTML = html; return d.firstElementChild; }
+  /* icons.js nạp SAU tệp này trong index.html, nhưng khung()/ganTuChay() chỉ
+     chạy khi có người mở một bài — luôn sau khi mọi tệp đã nạp xong, nên ICON
+     luôn sẵn sàng. Vẫn kiểm phòng khi thiếu, để lỗ hổng mạng không làm nổ trang. */
+  function mhIco(n, s) { return typeof ICON === "function" ? ICON(n, s) : ""; }
   function khung(tieuDe, moTa, than, nhap) {
     return '<div class="mh"><h4>' + tieuDe + "</h4><p class=\"mh-mo\">" + moTa + "</p>" +
       (nhap ? '<div class="mh-nhap">' + nhap + "</div>" : "") +
       '<div class="mh-khung">' + than + "</div>" +
       '<div class="mh-thanh"><button class="mh-btn chinh" data-mh="tien">Bước tiếp →</button>' +
-      '<button class="mh-btn" data-mh="auto">' + ICON("play", 14) + ' Tự chạy</button>' +
+      '<button class="mh-btn" data-mh="auto">' + mhIco("play", 14) + ' Tự chạy</button>' +
       '<button class="mh-btn" data-mh="lai">Làm lại</button>' +
       '<span class="mh-loi" data-mh="loi"></span></div></div>';
   }
@@ -142,11 +146,11 @@
     function anh() { return oKhung.innerHTML + "\u0000" + oLoi.innerHTML; }
     function dung() {
       if (hen) { clearInterval(hen); hen = null; }
-      btn.textContent = "▶ Tự chạy";
+      btn.innerHTML = mhIco("play", 14) + " Tự chạy";
       btn.classList.remove("dang");
     }
     function chay() {
-      btn.textContent = "⏸ Tạm dừng";
+      btn.innerHTML = mhIco("pause", 14) + " Tạm dừng";
       btn.classList.add("dang");
       hen = setInterval(function () {
         /* Đổi bài là trang bị dựng lại, node này rời khỏi DOM. Không kiểm thì bộ

@@ -212,8 +212,15 @@
       if (tronBo && moi.length && typeof gamAward === "function") {
         gamAward(XP_TRON_BO, true);
         if (typeof gamEnqueueCele === "function") {
-          gamEnqueueCele({ ic: "🏆", title: "Xong nhiệm vụ tuần!",
-                           desc: "Cả ba nhiệm vụ tuần này đều hoàn thành. +" + XP_TRON_BO + " XP." });
+          /* Tên trường phải khớp ĐÚNG với gamShowNextCele đọc (icon/body, không
+             phải ic/desc) — sai tên thì hộp chúc mừng hiện chữ "undefined" thay
+             vì icon và mô tả, lỗi im lặng vì không ai gặp cả ba nhiệm vụ mỗi
+             tuần để thấy. */
+          gamEnqueueCele({
+            icon: (typeof ICON === "function" ? ICON("trophy", 56, "#eab308") : "🏆"),
+            title: "Xong nhiệm vụ tuần!",
+            body: "Cả ba nhiệm vụ tuần này đều hoàn thành. +" + XP_TRON_BO + " XP.",
+          });
         }
       }
     } finally { dangChay = false; }

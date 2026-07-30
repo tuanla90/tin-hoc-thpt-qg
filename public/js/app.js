@@ -2905,7 +2905,7 @@ function initFloatingMascot() {
       <div class="floating-mascot-bubble" id="mascotBubble" ${mascotBubbleOpen ? "" : "hidden"}>
         <div class="floating-mascot-bubble-header">
           <span class="floating-mascot-badge">ROBOT TRỢ LÝ</span>
-          <button class="floating-mascot-close" id="closeMascotBubble" title="Đóng bóng thoại">&times;</button>
+          <button class="floating-mascot-close" id="closeMascotBubble" title="Đóng bóng thoại">${aIco("close", null, 15)}</button>
         </div>
         <div class="floating-mascot-text" id="mascotTipText">${randomTip}</div>
         <button class="floating-mascot-ask" id="mascotAsk" hidden>${aIco("bulb", "#d97706", 14)} Hỏi gia sư</button>

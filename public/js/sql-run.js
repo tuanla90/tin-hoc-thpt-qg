@@ -330,7 +330,7 @@
         var actual, err = null;
         try { actual = runSeq(SQLmod, ex.schema, ta.value, ex.check); }
         catch (e) { err = String(e && e.message ? e.message : e); }
-        if (err) { verdict.className = "sqx-verdict err"; verdict.textContent = "❌ Lỗi SQL: " + err; moiGiaSu(err); restore(); return; }
+        if (err) { verdict.className = "sqx-verdict err"; verdict.innerHTML = (typeof ICON === "function" ? ICON("x", 15, "#dc2626") : "") + " Lỗi SQL: " + esc(err); moiGiaSu(err); restore(); return; }
         var expected = runSeq(SQLmod, ex.schema, ex.solution, ex.check);
         var showRes = ex.check ? actual : actual;
         res.innerHTML = (ex.check ? '<div class="sqx-cap">Bảng sau khi chạy:</div>' : '<div class="sqx-cap">Kết quả truy vấn của bạn:</div>') +
@@ -343,7 +343,7 @@
           ? (typeof ICON === "function" ? ICON("check2", 15, "#16a34a") : "") + " <b>Chính xác!</b> Truy vấn cho đúng kết quả mong đợi."
           : (typeof ICON === "function" ? ICON("x", 15, "#dc2626") : "") + " <b>Chưa đúng.</b> Kết quả chưa khớp đáp án. Xem lại điều kiện lọc/nối bảng rồi thử lại nhé.";
         restore();
-      }, function (e) { verdict.className = "sqx-verdict err"; verdict.textContent = "❌ Không nạp được SQLite: " + (e && e.message ? e.message : e); restore(); });
+      }, function (e) { verdict.className = "sqx-verdict err"; verdict.innerHTML = (typeof ICON === "function" ? ICON("x", 15, "#dc2626") : "") + " Không nạp được SQLite: " + esc(String(e && e.message ? e.message : e)); restore(); });
     };
   }
 
@@ -403,7 +403,7 @@
       resEl.innerHTML = ""; msg.hidden = false; msg.className = "sqx-verdict"; msg.textContent = "Đang khởi động SQLite…";
       sqlReady().then(function (SQLmod) {
         var db;
-        try { db = labGetDb(SQLmod); } catch (e) { msg.className = "sqx-verdict err"; msg.textContent = "❌ " + e.message; return; }
+        try { db = labGetDb(SQLmod); } catch (e) { msg.className = "sqx-verdict err"; msg.innerHTML = (typeof ICON === "function" ? ICON("x", 15, "#dc2626") : "") + " " + esc(String(e.message)); return; }
         try {
           var out = db.exec(ta.value);
           if (!out.length) {
@@ -415,8 +415,8 @@
               return (out.length > 1 ? '<div class="sqx-cap">Kết quả ' + (k + 1) + "</div>" : '<div class="sqx-cap">Kết quả (' + r.values.length + " dòng)</div>") + tableHTML(r.columns, r.values);
             }).join("");
           }
-        } catch (e) { msg.className = "sqx-verdict err"; msg.textContent = "❌ Lỗi SQL: " + (e && e.message ? e.message : e); }
-      }, function (e) { msg.className = "sqx-verdict err"; msg.textContent = "❌ Không nạp được SQLite: " + (e && e.message ? e.message : e); });
+        } catch (e) { msg.className = "sqx-verdict err"; msg.innerHTML = (typeof ICON === "function" ? ICON("x", 15, "#dc2626") : "") + " Lỗi SQL: " + esc(String(e && e.message ? e.message : e)); }
+      }, function (e) { msg.className = "sqx-verdict err"; msg.innerHTML = (typeof ICON === "function" ? ICON("x", 15, "#dc2626") : "") + " Không nạp được SQLite: " + esc(String(e && e.message ? e.message : e)); });
     };
 
     app.querySelector("#labResetDb").onclick = function () {
@@ -447,7 +447,7 @@
       resEl.innerHTML = ""; msg.hidden = false; msg.className = "sqx-verdict"; msg.textContent = "Đang khởi động SQLite…";
       sqlReady().then(function (SQLmod) {
         var db;
-        try { db = labGetDb(SQLmod); } catch (e) { msg.className = "sqx-verdict err"; msg.textContent = "❌ " + e.message; return; }
+        try { db = labGetDb(SQLmod); } catch (e) { msg.className = "sqx-verdict err"; msg.innerHTML = (typeof ICON === "function" ? ICON("x", 15, "#dc2626") : "") + " " + esc(String(e.message)); return; }
         try {
           var out = db.exec(ta.value);
           if (!out.length) {
@@ -459,8 +459,8 @@
               return (out.length > 1 ? '<div class="sqx-cap">Kết quả ' + (k + 1) + "</div>" : '<div class="sqx-cap">Kết quả (' + r.values.length + " dòng)</div>") + tableHTML(r.columns, r.values);
             }).join("");
           }
-        } catch (e) { msg.className = "sqx-verdict err"; msg.textContent = "❌ Lỗi SQL: " + (e && e.message ? e.message : e); }
-      }, function (e) { msg.className = "sqx-verdict err"; msg.textContent = "❌ Không nạp được SQLite: " + (e && e.message ? e.message : e); });
+        } catch (e) { msg.className = "sqx-verdict err"; msg.innerHTML = (typeof ICON === "function" ? ICON("x", 15, "#dc2626") : "") + " Lỗi SQL: " + esc(String(e && e.message ? e.message : e)); }
+      }, function (e) { msg.className = "sqx-verdict err"; msg.innerHTML = (typeof ICON === "function" ? ICON("x", 15, "#dc2626") : "") + " Không nạp được SQLite: " + esc(String(e && e.message ? e.message : e)); });
     };
 
     host.querySelector("#labResetDb").onclick = function () {

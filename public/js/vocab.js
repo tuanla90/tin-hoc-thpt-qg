@@ -17,7 +17,7 @@
     ".voc-box{border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin:18px 0;background:var(--bg-card)}" +
     ".voc-head{display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--primary-soft);cursor:pointer;font-weight:700;font-size:15px;color:var(--primary-d)}" +
     ".voc-head small{color:var(--text-soft);font-weight:500;font-size:12.5px;flex:1;min-width:140px}" +
-    ".voc-chev{color:var(--text-soft);font-size:12px}" +
+    ".voc-chev{color:var(--text-soft);font-size:12px;display:inline-flex}" +
     ".voc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(235px,1fr));gap:12px;padding:14px;background:var(--bg-soft)}" +
     ".voc-grid[hidden]{display:none}" +
     ".voc-card{background:var(--bg-card);border:1px solid var(--border);border-left:4px solid var(--info);border-radius:var(--radius-sm);padding:11px 13px}" +
@@ -76,7 +76,7 @@ function vocabVoices() {
 function vocabSpeak(text, btn) {
   try {
     if (!("speechSynthesis" in window)) {
-      if (btn) { btn.textContent = "🔇"; btn.title = "Trình duyệt không hỗ trợ đọc"; }
+      if (btn) { btn.innerHTML = vIco("volumeoff", null, 16); btn.title = "Trình duyệt không hỗ trợ đọc"; }
       return;
     }
     window.speechSynthesis.cancel();
@@ -137,10 +137,13 @@ function injectVocab(lesson) {
   var head = box.querySelector(".voc-head");
   var grid = box.querySelector(".voc-grid");
   var chev = box.querySelector(".voc-chev");
+  /* Đổi HẲN icon (chevdown mở / aright đóng) thay vì xoay một icon bằng CSS
+     transform: trước đây gán textContent "▼"/"▶" — vừa không nhận màu theo giao
+     diện, vừa lệch phông chữ mũi tên so với icon "chevdown" lúc mới dựng. */
   head.onclick = function () {
     var hidden = grid.hasAttribute("hidden");
-    if (hidden) { grid.removeAttribute("hidden"); chev.textContent = "▼"; }
-    else { grid.setAttribute("hidden", ""); chev.textContent = "▶"; }
+    if (hidden) { grid.removeAttribute("hidden"); chev.innerHTML = vIco("chevdown", null, 14); }
+    else { grid.setAttribute("hidden", ""); chev.innerHTML = vIco("aright", null, 14); }
   };
   box.querySelectorAll(".voc-say").forEach(function (b) {
     b.onclick = function () { vocabSpeak(b.getAttribute("data-say"), b); };
@@ -261,14 +264,14 @@ function renderVocabPage() {
   if (!all.length) {
     app.innerHTML =
       '<button class="back-link" id="vback">' + vIco("aleft", null, 15) + " Trang chủ</button>" +
-      '<div class="voc-empty">📕 Chưa có từ vựng nào. Hãy thêm <code>VOCAB["mã-bài"]</code> cho các bài học.</div>';
+      '<div class="voc-empty">' + vIco("book", null, 16) + ' Chưa có từ vựng nào. Hãy thêm <code>VOCAB["mã-bài"]</code> cho các bài học.</div>';
     document.getElementById("vback").onclick = function () { go("home"); };
     return;
   }
   app.innerHTML =
-    '<button class="back-link" id="vback">← Trang chủ</button>' +
+    '<button class="back-link" id="vback">' + vIco("aleft", null, 15) + " Trang chủ</button>" +
     '<h2 class="voc-h2" style="margin-bottom:6px">' + vIco("book", "#ec4899", 22) + " Từ vựng thuật ngữ</h2>" +
-    '<p style="color:var(--text-soft);font-size:14.5px;margin-bottom:14px">Tất cả <b>' + all.length + '</b> từ tiếng Anh gặp trong các bài. Học như học từ vựng tiếng Anh — bấm 🔊 để nghe đọc nhé!</p>' +
+    '<p style="color:var(--text-soft);font-size:14.5px;margin-bottom:14px">Tất cả <b>' + all.length + '</b> từ tiếng Anh gặp trong các bài. Học như học từ vựng tiếng Anh — bấm ' + vIco("volume", null, 13) + ' để nghe đọc nhé!</p>' +
     '<div class="voc-voicebar" id="vocVoiceBar"></div>' +
     '<div class="voc-modes"><button class="voc-mode" data-m="cards">' + vIco("layers", null, 15) + " Lật thẻ</button><button class=\"voc-mode\" data-m=\"list\">" + vIco("clipboard", null, 15) + " Tra cứu</button></div>" +
     '<div id="vocPane"></div>';
@@ -296,7 +299,7 @@ function vocRenderList(all) {
     return a.en.toLowerCase() < b.en.toLowerCase() ? -1 : 1;
   });
   pane.innerHTML =
-    '<input id="vocSearch" class="voc-search" placeholder="🔎 Tìm từ (tiếng Anh hoặc nghĩa tiếng Việt)...">' +
+    '<input id="vocSearch" class="voc-search" placeholder="Tìm từ (tiếng Anh hoặc nghĩa tiếng Việt)...">' +
     '<div class="voc-count" id="vocCount"></div>' +
     '<div class="voc-grid" id="vocPageGrid">' +
       sorted.map(function (v) { return vocabCardHTML(v, v._lesson); }).join("") +
@@ -334,7 +337,7 @@ function vocRenderCards(all) {
         '<div class="flash-face flash-front">' +
           '<div class="flash-en" id="flashEn"></div>' +
           '<button class="voc-say flash-say" id="flashSay" type="button" title="Nghe đọc">' + vIco("volume", null, 20) + "</button>" +
-          '<div class="flash-hint">👆 Bấm vào thẻ để xem nghĩa</div>' +
+          '<div class="flash-hint">' + vIco("aright", null, 13) + ' Bấm vào thẻ để xem nghĩa</div>' +
         "</div>" +
         '<div class="flash-face flash-back">' +
           '<div class="flash-pron" id="flashPron"></div>' +
@@ -348,7 +351,7 @@ function vocRenderCards(all) {
         '<span class="flash-prog" id="flProg"></span>' +
         '<button class="btn btn-ghost" id="flNext">Tiếp ' + vIco("aright", null, 14) + "</button>" +
       "</div>" +
-      '<div class="flash-ctrl2"><button class="btn btn-success" id="flKnow">✓ Đánh dấu đã thuộc</button> <button class="btn btn-ghost" id="flShuffle">' + vIco("refresh", null, 14) + " Xáo trộn lại</button></div>" +
+      '<div class="flash-ctrl2"><button class="btn btn-success" id="flKnow">' + vIco("check2", null, 14) + ' Đánh dấu đã thuộc</button> <button class="btn btn-ghost" id="flShuffle">' + vIco("refresh", null, 14) + " Xáo trộn lại</button></div>" +
     "</div>";
 
   var card = pane.querySelector("#flashCard");
@@ -365,7 +368,7 @@ function vocRenderCards(all) {
     var kb = pane.querySelector("#flKnow");
     if (kb) {
       var mastered = (typeof Gam !== "undefined" && Gam.isVocabMastered && Gam.isVocabMastered(v.en));
-      kb.textContent = mastered ? "✓ Đã thuộc rồi" : "✓ Đánh dấu đã thuộc";
+      kb.innerHTML = vIco("check2", null, 14) + (mastered ? " Đã thuộc rồi" : " Đánh dấu đã thuộc");
     }
   }
   card.onclick = function () { vocPageState.flipped = !vocPageState.flipped; paint(); };
@@ -388,7 +391,7 @@ function vocRenderCards(all) {
   pane.querySelector("#flKnow").onclick = function () {
     var v = all[vocPageState.order[vocPageState.pos]];
     if (typeof Gam !== "undefined" && Gam.onVocabMastered) Gam.onVocabMastered(v.en);
-    this.textContent = "✓ Đã thuộc rồi";
+    this.innerHTML = vIco("check2", null, 14) + " Đã thuộc rồi";
     // tự chuyển sang từ tiếp theo cho mạch học
     setTimeout(function () { vocPageState.pos = (vocPageState.pos + 1) % all.length; vocPageState.flipped = false; paint(); }, 650);
   };
