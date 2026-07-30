@@ -552,21 +552,28 @@ function renderLessons() {
     c.items.push({ l, gi: i });
   });
 
-  /* Hình học bản đồ. Mỗi bậc phải chứa TRỌN: vòng tròn 68px + 9px bóng nổi 3D +
-     14px vành nhấp nháy của bài đang học + dòng "Bài N" + hai dòng tên bài (~47px).
-     STEP 110 cũ chỉ đủ cho vòng tròn nên dòng chữ của bài này đè lên vòng tròn
-     bài sau. Biên độ A hạ 95 -> 78 để khối chữ rộng 170px không tràn khung 340px,
-     đồng thời đường nối bớt gấp khúc. */
-  const IW = 340, CX = 170, A = 78, R = 32, STEP = 158, PADTOP = 68;
-  const CAP_DY = 22;      // hở từ đáy vòng tròn xuống dòng chữ
-  const CAP_DY_CHEST = 28; // rương to hơn nên cần hở nhiều hơn
-  const CAP_H = 118;      // chỗ chừa dưới điểm cuối cho dòng chữ bài cuối
-  const BUBBLE_H = 28;    // bong bóng "BẮT ĐẦU" nhô lên trên vòng tròn
-  const CAP_W = 170;
-  const pat = [0, 0.72, 0.34, -0.62, -0.9, -0.28, 0.58, 0.88, 0.1, -0.78];
+  /* Hình học bản đồ.
+     ĐẶT CHỮ BÊN CẠNH NODE, KHÔNG ĐẶT BÊN DƯỚI. Đặt bên dưới thì đường nối luôn
+     cắt qua chữ, không cách nào tránh: đường xuất phát từ đúng tâm node đi xuống,
+     nên ở khoảng y của dòng chữ nó đã chạy tới giữa hai node. Muốn khối chữ rộng
+     170px thoát được thì hai node liền nhau phải lệch ngang hơn 170px, mà ngay cả
+     khi lệch đủ thì đoạn đầu đường vẫn đi sát tâm node và vẫn cắt dòng đầu.
+     Đặt ngang tầm node thì sạch: quanh y của node đường gần như thẳng đứng tại
+     x của node, nên chừa 12px khỏi mép vòng tròn là đủ.
+     Node so le hẳn hai bên (biên độ 88) để bên trong luôn còn 160px cho chữ. */
+  const IW = 340, CX = 170, A = 88, R = 32, STEP = 152, PADTOP = 78;
+  /* 190px vì mép TRONG của khối chữ bị node ghim ở x=126, nới rộng chỉ ăn về phía
+     lề ngoài nên không đổi khoảng hở với đường nối. Đo trên 119 bài: 160px/2 dòng
+     cắt mất 23 tên bài, 190px/3 dòng không cắt cái nào. */
+  const CAP_W = 190;
+  const CAP_DX = 12;      // hở từ mép vòng tròn sang khối chữ
+  const CAP_BOT = 62;     // chỗ chừa dưới node cuối (bóng nổi + vành nhấp nháy)
   const ic = (name) => (typeof ICON === "function" ? ICON(name) : "");
-  /* Giữ khối chữ nằm trong khung: canh giữa dưới node, nhưng không cho vượt lề. */
-  const capL = (x) => Math.max(4, Math.min(IW - CAP_W - 4, x - CAP_W / 2)).toFixed(1);
+
+  /* So le hẳn hai bên, biên độ dao động nhẹ cho đỡ máy móc nhưng vẫn là một
+     làn sóng: mỗi nhịp là một nửa cô-sin nên tiếp tuyến tại node luôn thẳng đứng. */
+  const bienDo = [1, 0.94, 1, 0.9, 0.97, 1, 0.92, 0.98];
+  const lech = (k) => (k % 2 ? 1 : -1) * bienDo[k % bienDo.length];
 
   /* Linh vật rải vào khoảng trống bên đối diện node cho bản đồ đỡ trống trải. */
   const MASCOT_BANDO = [
@@ -581,44 +588,51 @@ function renderLessons() {
   const chapHtml = (c, chapIdx, bookIdx) => {
     const n = c.items.length;
     const C = c.color || "var(--primary)";
-    /* Cộng dồn y thay vì k * STEP: bài đang học cần chừa thêm chỗ phía trên cho
-       bong bóng "BẮT ĐẦU", nếu không nó đè lên tên bài liền trước. */
-    let yy = PADTOP;
-    const pts = c.items.map((it, k) => {
-      if (k > 0) yy += STEP + (it.gi === currentIdx ? BUBBLE_H : 0);
-      return { x: CX + pat[k % pat.length] * A, y: yy, it, chest: (k + 1) % 4 === 0 };
-    });
-    const H = pts[pts.length - 1].y + CAP_H;
+    const pts = c.items.map((it, k) => ({
+      x: CX + lech(k) * A, y: PADTOP + k * STEP, it, chest: (k + 1) % 4 === 0,
+    }));
+    const H = pts[pts.length - 1].y + CAP_BOT;
 
-    /* Đường nối mềm kiểu Duolingo: hai điểm điều khiển đặt cùng ở giữa quãng nên
-       tiếp tuyến tại mỗi node THẲNG ĐỨNG, hai nhịp cong nối nhau liền mạch.
-       Cái làm đường trông mềm hơn hẳn không phải công thức này (bản cũ 0.55/0.45
-       cũng đã liền tại node) mà là tỉ lệ dốc: biên độ hẹp lại còn bậc cao lên nên
-       chỗ dốc nhất giảm từ 62° xuống 43° so với trục dọc, dốc trung bình 28° -> 16°. */
-    let pathD = pts.length ? `M ${pts[0].x.toFixed(1)} ${pts[0].y}` : "";
+    /* MỘT đường duy nhất, node đặt lên trên — không phải nối từng đoạn.
+       Mỗi nhịp là nửa cô-sin thật: x(t) = giữa + biên·cos(πt) với t chạy 0→1 theo
+       y. Nửa cô-sin có đạo hàm ngang bằng 0 ở cả hai đầu nên tiếp tuyến tại mọi
+       node đều thẳng đứng, hai nhịp khớp nhau liền mạch thành một làn sóng.
+       Mỗi nhịp viết bằng HAI đoạn Bézier tách ở điểm uốn (giữa quãng) — dùng một
+       đoạn thì phải kéo điểm điều khiển ra giữa, sinh ra một khúc gần như thẳng ở
+       giữa nhịp, chính là cái làm đường trông như ghép từng mẩu.
+       Hệ số π/6 ≈ 0.5236 là tiếp tuyến của cô-sin tại điểm uốn quy về tham số
+       Bézier; đặt đúng nó thì đường cong khít với cô-sin. */
+    const P6 = Math.PI / 6;
+    const f1 = (v) => v.toFixed(1);
+    let pathD = pts.length ? `M ${f1(pts[0].x)} ${f1(pts[0].y)}` : "";
     for (let k = 1; k < pts.length; k++) {
-      const p = pts[k - 1], q = pts[k], gy = (q.y - p.y) / 2;
-      pathD += ` C ${p.x.toFixed(1)} ${(p.y + gy).toFixed(1)}, ${q.x.toFixed(1)} ${(q.y - gy).toFixed(1)}, ${q.x.toFixed(1)} ${q.y}`;
+      const p = pts[k - 1], q = pts[k];
+      const dy = q.y - p.y, gi = (p.x + q.x) / 2, bi = (p.x - q.x) / 2;
+      // nhịp 1: từ node trên xuống điểm uốn ở giữa
+      pathD += ` C ${f1(p.x)} ${f1(p.y + dy / 6)}, ${f1(gi + bi * P6)} ${f1(p.y + dy / 3)}, ${f1(gi)} ${f1(p.y + dy / 2)}`;
+      // nhịp 2: từ điểm uốn xuống node dưới (đối xứng)
+      pathD += ` C ${f1(gi - bi * P6)} ${f1(p.y + (2 * dy) / 3)}, ${f1(q.x)} ${f1(q.y - dy / 6)}, ${f1(q.x)} ${f1(q.y)}`;
     }
 
     const segs = `<path d="${pathD}" fill="none" stroke="var(--border)" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" />` +
       `<path d="${pathD}" fill="none" stroke="${C}" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" opacity="0.85" />`;
 
-    /* Đặt linh vật ở phía ĐỐI DIỆN node, bỏ bậc đầu và bậc cuối, tối đa 3 con và
-       cách nhau ít nhất 3 bậc cho đỡ rối.
-       Ngưỡng 14px là chỗ dễ đặt sai: linh vật bên phải chiếm x 248-322 nên lề
-       phải khối chữ (rộng 170, canh giữa dưới node) phải ≤ 248, tức node lệch
-       trái ít nhất 7px; bên trái đối xứng. Lấy 14px cho có dư. */
+    /* Linh vật nằm ở LỀ NGOÀI, phía đối diện node, trong khoảng trống giữa khối
+       chữ bậc này và node bậc sau. Đường nối chỉ chạy trong dải x 82–258 (cộng
+       7px nửa nét) nên lề ngoài 4px là vùng đường không bao giờ tới.
+       +42px và chỉ cao 64px là khe hẹp nhất còn lại, phải lách hai bên: trên là
+       khối chữ lúc tràn 3 dòng (nửa chiều cao 34px), dưới là node bậc sau — mà
+       node đó có thể là RƯƠNG, rương rộng 76px nên hộp cao hơn node thường 4px
+       mỗi phía và đã từng chạm đáy linh vật. */
     const macs = (() => {
       const ra = [];
       let truoc = -99;
       pts.forEach((p, k) => {
-        if (ra.length >= 3 || k < 1 || k > n - 2) return;
-        if (Math.abs(p.x - CX) < 14 || k - truoc < 3) return;
+        if (ra.length >= 3 || k < 0 || k > n - 2 || k - truoc < 3) return;
         truoc = k;
-        const ben = p.x < CX ? "right:18px" : "left:18px";
+        const ben = p.x < CX ? "right:4px" : "left:4px";
         const img = MASCOT_BANDO[(bookIdx + chapIdx + ra.length) % MASCOT_BANDO.length];
-        ra.push(`<div class="pmascot" style="${ben};top:${(p.y - 30).toFixed(1)}px">
+        ra.push(`<div class="pmascot" style="${ben};top:${f1(p.y + 42)}px">
             <img src="${mascotSrc(img)}" alt="" aria-hidden="true" draggable="false" loading="lazy" />
           </div>`);
       });
@@ -637,23 +651,33 @@ function renderLessons() {
 
       // Cứ 4 bài lại có 1 Rương Kho Báu / Boss Stage Candy Crush
       const chestIcon = done ? "🏆" : "🎁";
+      const bk = p.chest ? R + 6 : R;   // nửa bề ngang node (rương to hơn 6px)
+
+      /* Khối chữ nằm ngang tầm node, ở phía TRONG (hướng về giữa) vì phía ngoài
+         chỉ còn ~48px. Canh giữa theo trục dọc bằng translateY(-50%) để cao 1 hay
+         2 dòng đều đúng tâm, khỏi phải đoán chiều cao. */
+      const trai = p.x < CX;
+      const capPos = trai
+        ? `left:${f1(p.x + bk + CAP_DX)}px`
+        : `right:${f1(IW - (p.x - bk - CAP_DX))}px`;
+      const capStyle = `${capPos};top:${f1(p.y)}px`;
 
       if (p.chest) {
-        return `<button class="pnode chest ${cls}${cur ? " cur" : ""}" data-id="${l.id}" data-lock="${open ? 0 : 1}" style="left:${(p.x - R - 6).toFixed(1)}px;top:${p.y - R - 6}px;--cc:${C}" title="${esc(l.title)}">
+        return `<button class="pnode chest ${cls}${cur ? " cur" : ""}" data-id="${l.id}" data-lock="${open ? 0 : 1}" style="left:${f1(p.x - bk)}px;top:${f1(p.y - bk)}px;--cc:${C}" title="${esc(l.title)}">
             ${cur ? '<span class="pn-bubble">RƯƠNG THƯỞNG 🎁</span>' : ""}
             <span class="chest-emoji">${chestIcon}</span>
           </button>
-          <div class="pn-cap" style="left:${capL(p.x)}px;top:${p.y + R + CAP_DY_CHEST}px">
+          <div class="pn-cap ${trai ? "tl" : "tr"}" style="${capStyle}">
             <span class="pn-top"><span class="pn-num" style="color:#eab308">Cửa ải kho báu</span>${starsHtml}</span>
             <span class="pn-name">${name}</span>
           </div>`;
       }
 
-      return `<button class="pnode ${cls}${cur ? " cur" : ""}" data-id="${l.id}" data-lock="${open ? 0 : 1}" style="left:${(p.x - R).toFixed(1)}px;top:${p.y - R}px;--cc:${C}" title="${esc(l.title)}" aria-label="Bài ${l.order}: ${name} — ${stTxt}">
+      return `<button class="pnode ${cls}${cur ? " cur" : ""}" data-id="${l.id}" data-lock="${open ? 0 : 1}" style="left:${f1(p.x - bk)}px;top:${f1(p.y - bk)}px;--cc:${C}" title="${esc(l.title)}" aria-label="Bài ${l.order}: ${name} — ${stTxt}">
           ${cur ? '<span class="pn-bubble">BẮT ĐẦU 🔥</span>' : ""}
           <span class="pnode-inner-icon">${glyph}</span>
         </button>
-        <div class="pn-cap" style="left:${capL(p.x)}px;top:${p.y + R + CAP_DY}px">
+        <div class="pn-cap ${trai ? "tl" : "tr"}" style="${capStyle}">
           <span class="pn-top"><span class="pn-num">Bài ${l.order}</span>${starsHtml}</span>
           <span class="pn-name">${name}</span>
         </div>`;
@@ -805,7 +829,7 @@ function injectPathCss() {
     /* Khung CỐ ĐỊNH, không để ảnh tự quyết chiều cao: bộ ảnh linh vật có tỉ lệ
        khác nhau (đo được 79px tới 153px cùng bề rộng 74px), thả tự do thì không
        tính trước được nó có chạm vào dòng chữ bậc dưới hay không. */
-    ".pmascot { position: absolute; width: 74px; height: 96px; z-index: 0; pointer-events: none; user-select: none; filter: drop-shadow(0 8px 16px rgba(0,0,0,.16)); animation: pmFloat 5s ease-in-out infinite; }" +
+    ".pmascot { position: absolute; width: 66px; height: 64px; z-index: 0; pointer-events: none; user-select: none; filter: drop-shadow(0 8px 16px rgba(0,0,0,.16)); animation: pmFloat 5s ease-in-out infinite; }" +
     ".pmascot img { width: 100%; height: 100%; display: block; object-fit: contain; object-position: bottom; }" +
     "@keyframes pmFloat { 0%,100% { transform: translateY(0) rotate(-2.5deg); } 50% { transform: translateY(-10px) rotate(2.5deg); } }" +
 
@@ -828,10 +852,16 @@ function injectPathCss() {
     
     ".pn-bubble { position: absolute; top: -38px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #ff9800, #ff5722); color: #fff; font-family: var(--font-display); font-size: 11.5px; font-weight: 900; padding: 5px 14px; border-radius: 16px; white-space: nowrap; z-index: 4; box-shadow: 0 6px 18px rgba(255, 87, 34, 0.5); border: 2px solid #fff; animation: bounceNav 2s infinite; letter-spacing: 0.03em; }" +
     "@keyframes bounceNav { 0%,100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(-5px); } }" +
-    ".pn-cap { position: absolute; width: 170px; text-align: center; pointer-events: none; z-index: 2; line-height: 1.25; }" +
+    /* Khối chữ nằm ngang tầm node: translateY(-50%) canh tâm bất kể cao 1 hay 2
+       dòng. .tl = chữ ở bên phải node (canh lề trái), .tr = ngược lại. */
+    ".pn-cap { position: absolute; width: 190px; pointer-events: none; z-index: 2; line-height: 1.25; transform: translateY(-50%); }" +
+    ".pn-cap.tl { text-align: left; }" +
+    ".pn-cap.tr { text-align: right; }" +
     ".pn-num { display: block; font-size: 12px; font-weight: 900; color: var(--primary); font-family: var(--font-mono); }" +
-    ".pn-name { font-size: 12.5px; font-weight: 800; color: var(--text); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; margin-top: 3px; font-family: var(--font-sans); }" +
-    ".pn-top { display: flex; align-items: center; justify-content: center; gap: 6px; line-height: 1; margin-bottom: 2px; }" +
+    ".pn-name { font-size: 12.5px; font-weight: 800; color: var(--text); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; margin-top: 3px; font-family: var(--font-sans); }" +
+    ".pn-top { display: flex; align-items: center; gap: 6px; line-height: 1; margin-bottom: 2px; }" +
+    ".pn-cap.tl .pn-top { justify-content: flex-start; }" +
+    ".pn-cap.tr .pn-top { justify-content: flex-end; }" +
     ".pn-stars { display: inline-flex; gap: 3px; }" +
     ".pn-star { width: 14px; height: 14px; fill: var(--border); }" +
     ".pn-star.on { fill: #ffc107; filter: drop-shadow(0 2px 4px rgba(255, 193, 7, 0.6)); }" +
