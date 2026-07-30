@@ -26,16 +26,34 @@
     "#gamDash .gam-card{gap:8px;padding:10px 12px}" +
     /* Chip cấp bo 14px chứ không 99px như chip tròn khác: nó cao gấp đôi vì có
        vạch tiến độ bên trong, bo 99px thì hai đầu phình thành hình viên thuốc. */
-    "#gamDash .gam-chip-cap{border-radius:14px;padding:6px 12px 6px 6px;gap:9px;flex:1 1 auto;min-width:230px;max-width:340px}" +
+    "#gamDash .gam-chip-cap{border-radius:14px;padding:6px 12px 8px 6px;gap:4px 9px;flex-wrap:wrap;flex:1 1 auto;min-width:230px;max-width:340px}" +
+    ".gam-ngan{display:none}" +
     "#gamDash .gam-ring{width:34px;height:34px;border-width:2px}" +
     "#gamDash .gam-ring .ic{width:19px;height:19px}" +
     "#gamDash .gam-cap-txt{flex:1;min-width:0;display:block;line-height:1.15}" +
     "#gamDash .gam-cap-txt b{font-size:13.5px;color:var(--text)}" +
     "#gamDash .gam-cap-txt small{color:var(--text-soft);font-size:11.5px;margin-left:5px}" +
     "#gamDash .gam-cap-xp{flex:none;font-size:11px;font-weight:800;color:var(--primary-d);font-family:var(--font-mono)}" +
-    "#gamDash .gam-xp-bar{display:block;height:5px;margin-top:4px}" +
+    /* flex 1 1 100%: thanh XP luôn tự xuống một dòng riêng và chiếm hết bề ngang
+       chip cấp, kể cả phần dưới vòng tròn cấp và dưới số XP. */
+    "#gamDash .gam-xp-bar{display:block;height:5px;margin:0;flex:1 1 100%}" +
     "#gamDash .gam-xp-fill{display:block}" +
     "#gamDash .gam-chip{font-size:13px}" +
+
+    /* Dưới 900px cho chip cấp chiếm trọn một hàng, nhường CẢ hàng dưới cho ba chip
+       chuỗi / XP hôm nay / huy hiệu. Nếu để chip cấp đứng cùng hàng thì nó ăn tới
+       340px, ba chip còn khoảng 360px trong khi cần ~460px -> rớt xuống hai hàng
+       (đo ở 778px đúng ra hai hàng). Chip cấp chiếm trọn hàng cũng chính là thứ
+       làm thanh XP full width. */
+    "@media (max-width:900px){#gamDash .gam-chip-cap{flex:1 1 100%;max-width:none;min-width:0}}" +
+
+    /* Dưới 560px thì ngay cả một hàng riêng cũng không đủ cho chữ đầy đủ (mỗi chip
+       còn ~100px), nên đổi sang bản chữ rút. */
+    "@media (max-width:560px){" +
+      "#gamDash .gam-chip:not(.gam-chip-cap){flex:1 1 0;min-width:0;justify-content:center;padding:7px 6px;gap:4px}" +
+      "#gamDash .gam-nhan{display:none}" +
+      "#gamDash .gam-ngan{display:inline}" +
+    "}" +
     ".gam-chip:hover{border-color:var(--primary)}" +
     ".gam-chip b{color:var(--primary-d)}" +
     /* +XP float */
@@ -460,18 +478,34 @@ var Gam = {
        là thứ cho biết còn bao nhiêu XP nữa lên cấp, mất hẳn thì XP thành con số
        trơ không biết để làm gì. */
     var coLich = gamLaBuoiHoc(new Date()) && GAM.lastSession !== gamDayStr(new Date());
+    var xong = gamDailyXp() >= GAM_DAILY_GOAL;
+    /* Chữ để trong hai span đối nhau: .gam-nhan là bản đủ (màn rộng), .gam-ngan là
+       bản rút (màn hẹp) — CSS bật một cái tắt một cái. Ở 375px mỗi chip chỉ được
+       khoảng 97px, để nguyên "0 ngày · hôm nay có lịch" là ba chip không thể nào
+       nằm cùng hàng. Rút chữ chứ không bỏ chip nào, và title vẫn giữ câu đầy đủ.
+       Thanh XP là con TRỰC TIẾP của chip (không nằm trong .gam-cap-txt) để
+       flex-wrap đẩy được nó xuống một dòng riêng chiếm hết bề ngang chip. */
     mount.innerHTML =
       '<div class="gam-card">' +
         '<div class="gam-chip gam-chip-cap" id="gamChipCap" title="' + esc(xpTxt) + '">' +
           '<span class="gam-ring">' + gRingIcon(lv) + "</span>" +
-          '<span class="gam-cap-txt"><b>Cấp ' + lv.lvl + "</b><small>" + esc(lv.name) + "</small>" +
-            '<span class="gam-xp-bar"><span class="gam-xp-fill" style="width:' + pct + '%"></span></span>' +
-          "</span>" +
+          '<span class="gam-cap-txt"><b>Cấp ' + lv.lvl + "</b><small>" + esc(lv.name) + "</small></span>" +
           '<span class="gam-cap-xp">' + esc(xpTxt) + "</span>" +
+          '<span class="gam-xp-bar"><span class="gam-xp-fill" style="width:' + pct + '%"></span></span>' +
         "</div>" +
-        '<div class="gam-chip" id="gamChipStreak" title="' + esc(gamMoTaLich()) + '">' + gIco("flame", "#f97316", "🔥") + "<b>" + s.streak + "</b> " + gamDonViChuoi() + (coLich ? " · hôm nay có lịch" : "") + "</div>" +
-        '<div class="gam-chip' + (gamDailyXp() >= GAM_DAILY_GOAL ? " gam-chip-done" : "") + '">' + gIco("target", "#ef4444", "🎯") + "Hôm nay <b>" + Math.min(gamDailyXp(), GAM_DAILY_GOAL) + "/" + GAM_DAILY_GOAL + "</b> XP" + (gamDailyXp() >= GAM_DAILY_GOAL ? " ✓" : "") + "</div>" +
-        '<div class="gam-chip" id="gamChipBadge">' + gIco("medal", "#f59e0b", "🏅") + "<b>" + s.badges + "/" + GAM_BADGES.length + "</b> huy hiệu</div>" +
+        '<div class="gam-chip" id="gamChipStreak" title="' + esc(gamMoTaLich()) + '">' + gIco("flame", "#f97316", "🔥") +
+          "<b>" + s.streak + "</b>" +
+          '<span class="gam-nhan"> ' + gamDonViChuoi() + (coLich ? " · có lịch" : "") + "</span>" +
+          (coLich ? '<span class="gam-ngan"> · có lịch</span>' : "") +
+        "</div>" +
+        '<div class="gam-chip' + (xong ? " gam-chip-done" : "") + '" title="Mục tiêu XP hôm nay">' + gIco("target", "#ef4444", "🎯") +
+          '<span class="gam-nhan">Hôm nay </span><b>' + Math.min(gamDailyXp(), GAM_DAILY_GOAL) + "/" + GAM_DAILY_GOAL + "</b>" +
+          '<span class="gam-nhan"> XP</span>' + (xong ? " ✓" : "") +
+        "</div>" +
+        '<div class="gam-chip" id="gamChipBadge" title="Huy hiệu đã mở">' + gIco("medal", "#f59e0b", "🏅") +
+          "<b>" + s.badges + "/" + GAM_BADGES.length + "</b>" +
+          '<span class="gam-nhan"> huy hiệu</span>' +
+        "</div>" +
       "</div>" +
       (window.NhiemVu ? NhiemVu.html() : "");
     var toAch = function () { if (typeof go === "function") go("achievements"); };
