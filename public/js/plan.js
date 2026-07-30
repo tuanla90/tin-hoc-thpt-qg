@@ -15,7 +15,11 @@
  * ==========================================================================*/
 (function () {
   var QUOTA_NGAY = 30;                                   // câu luyện có chấm/ngày (free)
-  var DE_FREE = { TC1: 1, 101: 1, 102: 1 };              // đề thi thử mở cho free
+  /* Mở MỘT đề cho free: đủ để học sinh biết đề thi thử ra sao rồi mới quyết định
+     mua, nhưng không đủ để ôn cả kỳ bằng gói miễn phí.
+     ĐỔI SỐ NÀY PHẢI SỬA LUÔN bảng so sánh ở nang-cap.html và landing.html, kẻo
+     trang bán hàng công bố sai. */
+  var DE_FREE = { TC1: 1 };
   var XUONG_FREE = { python: 20, web: 8, sql: 6, gfx: 3 }; // số bài thực hành free mỗi xưởng
 
   function ico(n, c, s) { return (typeof ICON === "function") ? ICON(n, s || 16, c) : ""; }
@@ -139,7 +143,7 @@
   /* ----------------------------- modal upsell ----------------------------- */
   var LY_DO = {
     quota: { tit: "Hết quỹ luyện hôm nay", mo: "Bạn đã luyện đủ " + QUOTA_NGAY + " câu miễn phí của hôm nay — đúng nhịp học đều đấy! Muốn cày ôn kiểm tra hay ôn thi không giới hạn thì cần gói Premium." },
-    exam: { tit: "Đề này thuộc gói Premium", mo: "Gói Miễn phí làm được 3 đề cố định (Đề biên soạn 1 + Đề 01, 02) — làm lại bao nhiêu lần cũng được. Nâng cấp để mở cả 13 đề và đề ngẫu nhiên mỗi ngày." },
+    exam: { tit: "Đề này thuộc gói Premium", mo: "Gói Miễn phí thi thử được 1 đề (Đề biên soạn 1) — làm lại bao nhiêu lần cũng được. Nâng cấp để mở cả 13 đề và đề ngẫu nhiên mỗi ngày." },
     xuong: { tit: "Bài thực hành Premium", mo: "Các bài thực hành thuộc những chương đầu là miễn phí. Nâng cấp để mở toàn bộ 250+ bài Python, SQL, HTML/CSS có máy chấm." },
     yeu: { tit: "Luyện đúng chỗ yếu — Premium", mo: "Ứng dụng đã âm thầm chấm bạn mạnh/yếu chủ đề nào qua từng câu luyện. Gói Premium mở tab Chỗ yếu: ôn đúng chủ đề yếu, ưu tiên câu từng làm sai." },
     deep: { tit: "Giải thích kỹ hơn — Premium", mo: "Nút này gọi model AI mạnh hơn để giảng chậm và sâu hơn. Gói Premium được dùng model sâu và 25 lượt hỏi gia sư mỗi ngày (miễn phí: 5 lượt)." },
