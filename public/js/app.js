@@ -741,7 +741,7 @@ function renderLessons(data) {
       const stars = done && hasQuiz ? starsFor(scoreByLesson[l.id]) : -1;
       const starsHtml = stars >= 0 ? `<span class="pn-stars" title="Mastery: ${stars}/3 sao">${[0, 1, 2].map((i) => starSvg(i < stars)).join("")}</span>` : "";
 
-      // Cứ 4 bài lại có 1 Rương Kho Báu / Boss Stage Candy Crush
+      // Cứ 4 bài lại có 1 ô rương thưởng
       const chestIcon = done ? "🏆" : "🎁";
       const bk = p.chest ? R + 6 : R;   // nửa bề ngang node (rương to hơn 6px)
 
@@ -872,7 +872,7 @@ function renderLessons(data) {
   if (curEl && doneCount > 0) requestAnimationFrame(() => curEl.scrollIntoView({ block: "center" }));
 }
 
-/* Chèn CSS chuẩn phong cách Duolingo & Candy Crush Accordion Map */
+/* CSS cho màn chọn chặng và bản đồ lộ trình (kiểu Duolingo) */
 function injectPathCss() {
   if (document.getElementById("pl-css")) return;
   const s = document.createElement("style");
@@ -948,7 +948,7 @@ function injectPathCss() {
     ".pmascot img { width: 100%; height: 100%; display: block; object-fit: contain; object-position: bottom; }" +
     "@keyframes pmFloat { 0%,100% { transform: translateY(0) rotate(-2.5deg); } 50% { transform: translateY(-10px) rotate(2.5deg); } }" +
 
-    /* 3D Duolingo Candy Button Nodes — z-index phải CAO HƠN .pn-cap để vòng tròn
+    /* Ô bài học nổi khối — z-index phải CAO HƠN .pn-cap để vòng tròn
        không bao giờ bị dòng chữ vẽ chồng lên (khoảng cách đã đủ, đây là chốt hạ) */
     ".pnode { position: absolute; width: 68px; height: 68px; border-radius: 50%; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 3; padding: 0; transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1); outline: none; }" +
     ".pnode-inner-icon svg { width: 32px; height: 32px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.25)); }" +
