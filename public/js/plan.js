@@ -124,18 +124,42 @@
     web: "Thực hành HTML/CSS (xem trước & máy chấm)",
     gfx: "Thử thao tác đồ hoạ (mô phỏng)",
   };
-  /* Hộp thay thế khu bài tập bị khoá — chèn đúng vị trí khu bài tập lẽ ra đứng. */
-  function khoaXuongBox(loai, lesson, soBai) {
+  /* Khu bài tập bị khoá — CHO XEM ĐỀ, chỉ khoá phần gõ code và máy chấm.
+     Trước đây chỉ hiện một hộp "cần Premium", học sinh không biết mình đang bỏ lỡ
+     cái gì nên cũng chẳng có lý do nâng cấp; mà đề bài thì đọc xong vẫn học được
+     (nghĩ cách giải trên giấy). Nhận cả mảng bài tập lẫn số lượng để lời gọi cũ
+     truyền số vẫn chạy. */
+  function khoaXuongBox(loai, lesson, ds) {
     var anchor = document.querySelector(".ls-actions");
     if (!anchor || !anchor.parentNode) return;
+    var ds2 = Array.isArray(ds) ? ds : [];
+    var soBai = Array.isArray(ds) ? ds.length : (ds || 0);
+    var chu = function (s) {
+      return typeof fmtInline === "function" ? fmtInline(String(s || "")) : esc(String(s || ""));
+    };
+    var deHtml = ds2.length
+      ? '<ol class="plan-de-ds">' + ds2.map(function (bt, i) {
+          var p = (bt && bt.prompt) || "(chưa có đề)";
+          return '<li class="plan-de"><span class="plan-de-so">Bài ' + (i + 1) + "</span>" +
+                 '<span class="plan-de-txt">' + chu(String(p).split("\n")[0]) + "</span></li>";
+        }).join("") + "</ol>"
+      : "";
     var d = document.createElement("div");
-    d.className = "plan-lockbox";
+    d.className = "plan-xuong-khoa";
     d.innerHTML =
-      '<span class="plan-lock-ic">' + ico("lock", "#b45309", 20) + "</span>" +
-      '<span class="plan-lock-txt"><b>' + (TEN_XUONG[loai] || "Bài thực hành") + "</b>" +
-      "<small>Bài này có " + soBai + " bài thực hành — dành cho gói Premium. " +
-      "Các bài thuộc những chương đầu vẫn miễn phí để bạn thử.</small></span>" +
-      '<button class="btn btn-primary plan-lock-btn">Tìm hiểu Premium</button>';
+      '<div class="section-title" style="margin-top:24px">' + ico("code", "#0891b2", 17) + " " +
+        (TEN_XUONG[loai] || "Bài thực hành") + ' <span class="plan-tag">Premium</span></div>' +
+      '<p class="plan-de-mo">Đề của cả ' + soBai + " bài dưới đây em đọc được hết — cứ thử nghĩ cách giải. " +
+        "Phần gõ code trực tiếp và máy chấm tự động thuộc gói Premium.</p>" +
+      deHtml +
+      '<div class="plan-lockbox">' +
+        '<span class="plan-lock-ic">' + ico("lock", "#b45309", 20) + "</span>" +
+        '<span class="plan-lock-txt"><b>Vì sao chưa gõ code ở đây được?</b>' +
+        "<small>Gói Miễn phí mở phần thực hành của những chương ĐẦU mỗi xưởng, và em đã dùng hết " +
+        "phần đó — bài này thuộc chương sau. Nâng cấp Premium là mở khung code, nút Chạy &amp; Kiểm tra, " +
+        "Gợi ý và Đáp án mẫu của cả " + soBai + " bài này.</small></span>" +
+        '<button class="btn btn-primary plan-lock-btn">Tìm hiểu Premium</button>' +
+      "</div>";
     anchor.parentNode.insertBefore(d, anchor);
     d.querySelector(".plan-lock-btn").onclick = function () { upsell("xuong"); };
   }
@@ -230,6 +254,18 @@
     ".plan-m-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}" +
     ".plan-m-btns a.btn{text-decoration:none}" +
     ".plan-m-note{font-size:12.5px;color:var(--text-soft);margin:10px 0 0}" +
+    /* Xem đề của khu bài tập bị khoá */
+    ".plan-tag{display:inline-block;vertical-align:middle;margin-left:6px;background:#fef3c7;color:#92400e;" +
+      "border:1px solid #f59e0b;border-radius:8px;padding:1px 7px;font-family:var(--font-mono);font-size:10.5px;font-weight:900}" +
+    ".plan-de-mo{color:var(--text-soft);font-size:13.5px;line-height:1.6;margin:0 0 12px}" +
+    ".plan-de-ds{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}" +
+    ".plan-de{display:flex;gap:10px;align-items:flex-start;background:var(--bg-soft);border:1px solid var(--border);" +
+      "border-radius:12px;padding:10px 13px}" +
+    ".plan-de-so{flex:none;font-family:var(--font-mono);font-size:11.5px;font-weight:900;color:var(--primary);" +
+      "background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:2px 7px;margin-top:1px}" +
+    ".plan-de-txt{font-size:13.5px;line-height:1.55;color:var(--text)}" +
+    ".plan-de-txt code{font-family:var(--font-mono);font-size:12.5px;background:var(--bg-card);border:1px solid var(--border);" +
+      "border-radius:6px;padding:1px 5px}" +
     ".plan-lockbox{display:flex;align-items:center;gap:12px;margin:24px 0 0;padding:14px 16px;flex-wrap:wrap;" +
       "background:var(--bg-soft);border:1px dashed var(--border-strong);border-radius:14px}" +
     ".plan-lock-ic{flex:none;display:flex}" +

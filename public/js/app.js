@@ -886,7 +886,13 @@ function renderLessons(data) {
         const hasQuiz = l.quiz && l.quiz.length;
         const stars = done && hasQuiz ? starsFor(scoreByLesson[l.id]) : -1;
         const starsHtml = stars >= 0 ? `<span class="pn-stars" title="Mastery: ${stars}/3 sao">${[0, 1, 2].map((i) => starSvg(i < stars)).join("")}</span>` : "";
-        return `<button class="pnode ${cls}${cur ? " cur" : ""}" data-key="${esc(o.key)}" data-lock="${open ? 0 : 1}" style="${dat(CELL / 2)}" title="${esc(l.title)}" aria-label="Bài ${l.order}: ${name} — ${stTxt}">
+        /* Bài khoá phải nói RÕ phải học xong bài nào mới mở, chứ "hãy hoàn thành bài
+           trước" thì học sinh còn phải tự đi tìm bài trước là bài nào. */
+        const truoc = open ? null : sorted[gi - 1];
+        const khoaBai = truoc
+          ? `Học xong Bài ${truoc.order} — ${(truoc.title || "").replace(/^Bài\s*\d+[.\s]*/, "")} thì bài này mở`
+          : "Bài này chưa mở khoá trong lộ trình tuần tự";
+        return `<button class="pnode ${cls}${cur ? " cur" : ""}" data-key="${esc(o.key)}" data-lock="${open ? 0 : 1}" data-khoa="${esc(khoaBai)}" style="${dat(CELL / 2)}" title="${esc(l.title)}" aria-label="Bài ${l.order}: ${name} — ${stTxt}">
             ${cur ? '<span class="pn-bubble">BẮT ĐẦU 🔥</span>' : ""}
             <span class="pnode-inner-icon">${glyph}</span>
           </button>
@@ -898,13 +904,19 @@ function renderLessons(data) {
       let open = true, ten = "", nhan = dang.nhan, khoaTxt = "";
       let starsHtml = "", pre = false;
 
+      /* Ô phụ nằm trong trang bài học nên bài chưa mở thì nó cũng chưa mở — nói rõ
+         như vậy, đừng để học sinh đoán tại sao bấm không vào được. */
+      const vBai = o.l ? `Ô này nằm trong Bài ${o.l.order}, mà bài đó chưa mở khoá — học xong bài trước nó là mở cả hai` : "";
+
       if (o.loai === "mophong") {
         open = unlocked[o.gi];
         // Nhãn trên đã ghi "Mô phỏng" nên dòng dưới chỉ cần nói mô phỏng CÁI GÌ
-        ten = "Bấm từng bước, xem máy làm gì";
+        ten = open ? "Bấm từng bước, xem máy làm gì" : "Chưa mở — bài học chưa tới";
+        khoaTxt = vBai;
       } else if (o.loai === "thuchanh") {
         open = unlocked[o.gi];
         ten = `${o.soBt} bài ${TEN_XUONG_NGAN[o.xuong] || "code"} — máy chấm`;
+        khoaTxt = vBai;
         pre = typeof Plan !== "undefined" && !Plan.xuongMo(o.xuong, o.l);
       } else if (o.loai === "luyen") {
         const daHoc = c.items.filter((it) => learned[it.gi]).length;
@@ -929,7 +941,7 @@ function renderLessons(data) {
       const mota = `${dang.nhan}${cuaBai}: ${ten}` + (pre ? " (gói Premium)" : "") + (open ? "" : " (chưa mở)");
       return `<button class="pnode ophu o-${o.loai} ${open ? "open" : "locked"}${pre ? " o-pre" : ""}" data-key="${esc(o.key)}" data-lock="${open ? 0 : 1}" data-khoa="${esc(khoaTxt)}" style="${dat(38)}" title="${esc(mota)}" aria-label="${esc(mota)}">
           <span class="ophu-ic">${ic(open ? dang.icon : "lock")}</span>
-          ${pre ? '<span class="ophu-pre">PRO</span>' : ""}
+          ${pre ? '<span class="ophu-pre">Premium</span>' : ""}
         </button>
         ${capHtml(nhan, dang.mau, ten, starsHtml)}`;
     }).join("");
@@ -1036,8 +1048,11 @@ function renderLessons(data) {
       e.stopPropagation();
       const o = cellByKey.get(btn.dataset.key);
       if (!o) return;
+      /* Ô nào khoá cũng phải nói ĐÚNG lý do vì sao chưa vào học được — mỗi loại ô
+         khoá vì một lẽ khác nhau (chưa tới bài, chưa học bài nào trong chương, chưa
+         đủ 2/3 chặng), nói chung một câu thì học sinh không biết phải làm gì. */
       if (btn.dataset.lock === "1") {
-        toast("🔒 " + (btn.dataset.khoa || "Hãy hoàn thành bài trước để mở khóa cửa ải này"));
+        toast("🔒 " + (btn.dataset.khoa || "Ô này chưa mở khoá — hãy học tiếp lộ trình nhé"));
         return;
       }
       /* Ô mô phỏng / thực hành đưa về đúng bài rồi cuộn tới khối đó — nội dung đã
@@ -1178,7 +1193,9 @@ function injectPathCss() {
     "@keyframes oThiTho { 0%,100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-3px) scale(1.03); } }" +
     /* Nhãn PRO: ô vẫn bấm được (bấm ra lời mời nâng cấp), chỉ nhạt đi cho biết */
     ".pnode.o-pre { opacity: .82; }" +
-    ".ophu-pre { position: absolute; top: -8px; right: -10px; background: #b45309; color: #fff; font-family: var(--font-mono); font-size: 9.5px; font-weight: 900; padding: 2px 6px; border-radius: 8px; border: 2px solid #fff; letter-spacing: .04em; box-shadow: 0 3px 8px rgba(0,0,0,.28); }" +
+    /* Chữ "Premium" chứ không phải "PRO": trang chủ và bảng giá đều gọi là Premium,
+       hai tên cho cùng một gói là mời người ta hỏi "PRO với Premium khác gì nhau". */
+    ".ophu-pre { position: absolute; top: -9px; left: 50%; transform: translateX(-50%); background: #b45309; color: #fff; font-family: var(--font-mono); font-size: 9.5px; font-weight: 900; padding: 2px 7px; border-radius: 8px; border: 2px solid #fff; letter-spacing: .03em; white-space: nowrap; box-shadow: 0 3px 8px rgba(0,0,0,.28); }" +
     ".pnode:hover { transform: translateY(-4px) scale(1.06); }" +
     ".pnode:active { transform: translateY(6px); box-shadow: 0 3px 0 rgba(0,0,0,.4) !important; }" +
 
@@ -1329,7 +1346,7 @@ function renderLesson(data) {
      Concept lab thuộc PHẦN HỌC nên luôn mở. */
   const xuongBiKhoa = (loai, ds) => {
     if (!ds || !ds.length || typeof Plan === "undefined" || Plan.xuongMo(loai, l)) return false;
-    Plan.khoaXuongBox(loai, l, ds.length);
+    Plan.khoaXuongBox(loai, l, ds);   // truyền cả mảng để hộp khoá còn hiện được ĐỀ
     return true;
   };
   if (typeof injectExercises === "function" && !xuongBiKhoa("python", (window.EXERCISES || {})[l.id])) injectExercises(l);
