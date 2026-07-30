@@ -418,10 +418,13 @@ function renderHome() {
   const learnedCount = State.learned.filter((id) => LESSONS.some((l) => l.id === id)).length;
   const ic = (n, e) => (typeof ICON === "function" ? ICON(n, 30) : e);
 
-  /* Số bài thực hành: đếm ĐÚNG như demBaiTap() trong nhiem-vu.js — ba kho có máy
-     chấm, KHÔNG tính GLAB vì phòng đồ hoạ là mô phỏng, không có đúng/sai để chấm.
-     Đếm khác đi là trang chủ và nhiệm vụ tuần báo hai con số lệch nhau. */
-  const soBaiTap = ["EXERCISES", "SQL_EXERCISES", "WEB_EXERCISES"].reduce((n, ten) => {
+  /* Số bài thực hành: đếm ĐÚNG như demBaiTap() trong nhiem-vu.js — BỐN kho, có cả
+     GLAB. Trước đây bỏ GLAB với lí do "phòng đồ hoạ là mô phỏng, không có đúng/sai
+     để chấm", nhưng mỗi widget đồ hoạ đều có đáp án đích và tự chấm, làm đúng là
+     gọi Gam.onExercisePass y như ba kho kia — nên nó vào tử số mà không có trong
+     mẫu số, đếm ra tỉ lệ vượt 100%. Đổi ở đây thì phải đổi cả demBaiTap(), không
+     thì trang chủ và nhiệm vụ tuần báo hai con số lệch nhau. */
+  const soBaiTap = ["EXERCISES", "SQL_EXERCISES", "WEB_EXERCISES", "GLAB"].reduce((n, ten) => {
     const o = window[ten];
     if (!o) return n;
     if (Array.isArray(o)) return n + o.length;

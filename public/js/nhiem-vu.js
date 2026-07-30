@@ -41,9 +41,16 @@
 
   /* Đếm tổng số bài thực hành có trong app, để biết còn bài nào chưa làm không.
      Không đếm được (tệp dữ liệu chưa nạp) thì trả 0 -> nhiệm vụ tự bị loại. */
+  /* BỐN kho, có cả GLAB. Trước đây cố ý bỏ GLAB với lí do "phòng đồ hoạ là mô
+     phỏng, không có đúng/sai để chấm" — nhưng đó là mô tả sai: mỗi widget đồ hoạ
+     đều có đáp án đích và tự chấm, làm đúng là gọi Gam.onExercisePass y như ba kho
+     kia. Nên bài đồ hoạ đã làm xong VẪN vào exDone (tử số) mà lại không có trong
+     mẫu số — đếm ra tỉ lệ hoàn thành vượt 100%. Đưa GLAB vào là hết lệch.
+     Phải sửa ĐỒNG THỜI với soBaiTap ở renderHome trong app.js, không thì trang chủ
+     và nhiệm vụ tuần báo hai con số khác nhau. */
   function demBaiTap() {
     var n = 0;
-    ["EXERCISES", "SQL_EXERCISES", "WEB_EXERCISES"].forEach(function (ten) {
+    ["EXERCISES", "SQL_EXERCISES", "WEB_EXERCISES", "GLAB"].forEach(function (ten) {
       var o = window[ten];
       if (!o) return;
       if (Array.isArray(o)) { n += o.length; return; }

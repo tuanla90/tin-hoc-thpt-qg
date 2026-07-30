@@ -175,11 +175,11 @@
     var oKhung = node.querySelector(".mh-khung");
     var oLoi = node.querySelector('[data-mh="loi"]');
     tien2.addEventListener("click", function () {
-      var truoc = oKhung.innerHTML + " " + oLoi.innerHTML;
+      var truoc = oKhung.innerHTML + "\u0000" + oLoi.innerHTML;
       /* Đọc lại NGAY SAU vòng lặp sự kiện hiện tại: handler của chính minh hoạ
          cũng nghe cú bấm này, phải để nó chạy xong mới so được. */
       setTimeout(function () {
-        if (oKhung.innerHTML + " " + oLoi.innerHTML !== truoc) return;
+        if (oKhung.innerHTML + "\u0000" + oLoi.innerHTML !== truoc) return;
         ghiDaXem(l.id);
         var t = document.getElementById("mrTien");
         if (!t) return;

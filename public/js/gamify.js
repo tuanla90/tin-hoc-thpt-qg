@@ -465,6 +465,16 @@ var Gam = {
     GAM.exDone.push(sig); gamSave();
     gamTouchStreak(); gamAward(15); gamCheckBadges();
   },
+  /* Làm đúng một widget KHÔNG thuộc kho bài thực hành nào: widget "Ôn tập tương
+     tác" của concept-lab (74 cái) và các widget của trang Xưởng đồ hoạ. Vẫn cộng
+     XP và giữ chuỗi ngày — vì học sinh có làm bài thật — nhưng KHÔNG ghi vào
+     exDone. Trước đây chúng cũng gọi onExercisePass nên vào TỬ SỐ của "số bài thực
+     hành đã làm", mà mẫu số chỉ đếm các kho bài tập, nên làm hết widget ôn tập là
+     con số vượt cả tổng số bài tập. */
+  onWidgetDung: function () {
+    if (window.Am) Am.dung();
+    gamTouchStreak(); gamAward(8); gamCheckBadges();
+  },
   /* Số bài tập đã làm đúng TRONG một bài học. Chỉ đếm được từ bản ghi có mã bài. */
   soBaiTapXong: function (baiId) {
     if (!baiId) return 0;

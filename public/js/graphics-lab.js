@@ -66,8 +66,16 @@
     var k = node && node.closest && node.closest("[data-bai]");
     return k ? k.getAttribute("data-bai") : null;
   }
+  /* Có mã bài -> đây là xưởng đồ hoạ CỦA một bài học, tính là bài thực hành.
+     Không có mã bài -> widget "Ôn tập tương tác" hoặc trang Xưởng đồ hoạ: vẫn cộng
+     XP nhưng KHÔNG tính vào số bài thực hành, vì chúng không nằm trong kho nào để
+     làm mẫu số. Xem Gam.onWidgetDung(). */
   function done(w, node) {
-    if (typeof Gam !== "undefined" && Gam.onExercisePass) Gam.onExercisePass({ prompt: w.prompt }, baiCua(node));
+    if (typeof Gam === "undefined") return;
+    var bai = baiCua(node);
+    if (bai && Gam.onExercisePass) Gam.onExercisePass({ prompt: w.prompt }, bai);
+    else if (Gam.onWidgetDung) Gam.onWidgetDung();
+    else if (Gam.onExercisePass) Gam.onExercisePass({ prompt: w.prompt });
   }
 
   /* Ảnh gốc: cảnh SVG tự vẽ (không dính bản quyền) */
