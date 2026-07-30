@@ -39,6 +39,19 @@
   --font-sans:    'Nunito', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-display: 'Baloo 2', var(--font-sans);
   --font-mono:    'JetBrains Mono', monospace;
+
+  /* Mặt phẳng chứa CODE (khung soạn code, ô kết quả, khối code trong bài học).
+     Trước đây cắm cứng màu tối, nên giao diện Sáng vẫn có một tảng đen giữa
+     trang — đúng chỗ học sinh nhìn lâu nhất. Đặt thành biến để cả hai giao diện
+     dùng chung một bộ quy tắc, đổi theme là đổi theo. */
+  /* Nền code KHÔNG lấy trắng: thẻ bọc ngoài (.pg) đã trắng, hai mặt phẳng cùng
+     màu thì không còn thấy "đây là khung code". Xám xanh nhạt hơn thẻ một bậc rõ
+     là đủ, mà vẫn giữ độ tương phản chữ trên 5:1. */
+  --code-bg:      #eef2f8;
+  --code-text:    #0f172a;
+  --code-line:    #d7dfec;
+  --code-out:     #047857;   /* chữ kết quả — xanh đậm để đọc được trên nền sáng */
+  --code-err:     #b91c1c;
 }
 
 [data-theme="dark"] {
@@ -68,6 +81,13 @@
 
   --shadow:       0 4px 18px rgba(0, 0, 0, 0.35);
   --shadow-lg:    0 16px 40px rgba(0, 0, 0, 0.55);
+
+  /* Giao diện Tối giữ đúng bộ màu code cũ — chỗ này vốn đã đúng từ đầu */
+  --code-bg:      #0d1526;
+  --code-text:    #e6edf7;
+  --code-line:    #1e293b;
+  --code-out:     #a7f3d0;
+  --code-err:     #fca5a5;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -218,12 +238,12 @@ body {
 }
 
 /* ------------------------- PLAYGROUND & CODE EDITORS STYLING ------------------------- */
-/* Chỉ các textarea bên trong .pg mới có màu tối của editor */
+/* Chỉ các textarea bên trong .pg mới mang màu của mặt phẳng code (xem --code-*) */
 .pg textarea, .pg-editor, #codeArea {
   width: 100%;
   min-height: 160px;
-  background: #0d1526;
-  color: #e6edf7;
+  background: var(--code-bg);
+  color: var(--code-text);
   font-family: var(--font-mono);
   font-size: 14.5px;
   line-height: 1.6;
@@ -259,19 +279,19 @@ select:focus, input[type="text"]:focus, input[type="number"]:focus {
 }
 
 .pg-out {
-  background: #0d1526;
-  color: #a7f3d0;
+  background: var(--code-bg);
+  color: var(--code-out);
   font-family: var(--font-mono);
   font-size: 14px;
   padding: 14px 18px;
-  border-top: 1px solid #1e293b;
+  border-top: 1px solid var(--code-line);
   min-height: 64px;
   overflow-x: auto;
   white-space: pre-wrap;
   display: block;
 }
 
-.pg-out.has-error { color: #fca5a5; }
+.pg-out.has-error { color: var(--code-err); }
 
 .pg-preview {
   width: 100%;
@@ -620,9 +640,9 @@ select:focus, input[type="text"]:focus, input[type="number"]:focus {
 .q-number { color: var(--primary); font-family: var(--font-mono); font-weight: 800; font-size: 14px; margin-bottom: 8px; }
 .q-text { font-size: 17px; font-weight: 650; margin-bottom: 10px; white-space: pre-wrap; line-height: 1.6; }
 .q-code {
-  background: #0d1526; color: #e6edf7; font-family: var(--font-mono);
+  background: var(--code-bg); color: var(--code-text); font-family: var(--font-mono);
   font-size: 14px; padding: 16px 18px; border-radius: 12px; margin: 16px 0;
-  white-space: pre; overflow-x: auto; line-height: 1.55; border: 1px solid #1e293b;
+  white-space: pre; overflow-x: auto; line-height: 1.55; border: 1px solid var(--code-line);
 }
 
 /* Lựa chọn trắc nghiệm */
@@ -795,6 +815,15 @@ select:focus, input[type="text"]:focus, input[type="number"]:focus {
   margin: 14px 0;
   font-size: 14.5px;
   line-height: 1.6;
+}
+
+/* Dòng nhắc THÔNG TIN, không phải cảnh báo: .ls-note mặc định màu hổ phách nên
+   dùng cho mẹo hay lưu ý "coi chừng"; còn câu kiểu "lần chạy đầu cần mạng" chỉ là
+   thông tin, tô vàng lên là học sinh tưởng app đang lỗi. */
+.ls-note.tin {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--info) 12%, transparent), color-mix(in srgb, var(--info) 4%, transparent));
+  border-left-color: var(--info);
+  color: var(--text-soft);
 }
 
 /* Hộp ví dụ */

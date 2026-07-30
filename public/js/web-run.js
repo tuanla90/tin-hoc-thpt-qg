@@ -13,7 +13,7 @@
     ".wbx-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}" +
     "@media(max-width:640px){.wbx-grid{grid-template-columns:1fr}}" +
     ".wbx-col-cap{font-size:12.5px;font-weight:700;color:var(--text-soft);margin-bottom:5px}" +
-    ".wbx-editor{width:100%;box-sizing:border-box;min-height:150px;border-radius:10px;border:1px solid var(--border);background:var(--bg-soft);color:var(--text);font-family:Consolas,'JetBrains Mono',monospace;font-size:13.5px;padding:10px 12px;resize:vertical}" +
+    ".wbx-editor{width:100%;box-sizing:border-box;min-height:150px;border-radius:10px;border:1px solid var(--code-line);background:var(--code-bg);color:var(--code-text);font-family:Consolas,'JetBrains Mono',monospace;font-size:13.5px;padding:10px 12px;resize:vertical}" +
     ".wbx-editor:focus{outline:none;border-color:var(--primary)}" +
     ".wbx-frame{width:100%;min-height:150px;border:1px solid var(--border);border-radius:10px;background:#fff}" +
     ".wbx-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}" +

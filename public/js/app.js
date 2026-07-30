@@ -1585,6 +1585,11 @@ function renderPlayground(data) {
   const isWeb = pgLang === "web";
   const isSql = pgLang === "sql";
   const isGfx = pgLang === "gfx";
+  /* Trình chạy Python nạp theo nhu cầu (js/skulpt-lazy.js) nên LÚC DỰNG MÀN Sk gần
+     như luôn chưa có — trước đây chỗ này báo đỏ "Trình chạy Python chưa sẵn sàng"
+     cho mọi người, kể cả người bấm Chạy xong thấy chạy tốt. Nay chỉ còn một dòng
+     nhắc trung tính, và skulptReady() tự xoá nó ngay khi tải xong; còn khi tải
+     HỎNG thật thì runPython/execPython đã báo ngay tại ô kết quả. */
   const noSk = typeof Sk === "undefined";
   const samples = isPy ? PG_SAMPLES : isWeb ? WEB_SAMPLES : [];
   const descMap = {
@@ -1609,7 +1614,7 @@ function renderPlayground(data) {
       <button class="chip ${isGfx ? "active" : ""}" data-lang="gfx">${aIco("sprout", null, 14)} Đồ hoạ</button>
     </div>
     <p style="color:var(--text-soft);font-size:14px;margin-bottom:14px">${desc}</p>
-    ${isPy && noSk ? `<div class="ls-note" style="background:var(--danger-soft);border-color:var(--danger)">${aIco("warn", "#dc2626", 15)} Trình chạy Python chưa sẵn sàng. Nếu là lần chạy đầu, hãy mở app một lần khi có mạng để tải thư viện, sau đó dùng offline bình thường.</div>` : ""}
+    ${isPy && noSk ? `<div class="ls-note tin" id="pyTai">${aIco("bulb", "#0891b2", 15)} Lần chạy đầu cần mạng để tải trình chạy Python (~1&nbsp;MB), sau đó chạy được cả khi offline.</div>` : ""}
     ${samplesHtml}
     <div id="pgHost"></div>
   `;

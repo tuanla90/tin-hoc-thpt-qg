@@ -13,7 +13,7 @@
     ".sqx{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:16px}" +
     ".sqx + .sqx{margin-top:14px}" +
     ".sqx-prompt{font-size:15px;margin-bottom:10px;line-height:1.55}" +
-    ".sqx-editor{width:100%;box-sizing:border-box;min-height:78px;border-radius:10px;border:1px solid var(--border);background:var(--bg-soft);color:var(--text);font-family:Consolas,'JetBrains Mono',monospace;font-size:14px;padding:10px 12px;resize:vertical}" +
+    ".sqx-editor{width:100%;box-sizing:border-box;min-height:78px;border-radius:10px;border:1px solid var(--code-line);background:var(--code-bg);color:var(--code-text);font-family:Consolas,'JetBrains Mono',monospace;font-size:14px;padding:10px 12px;resize:vertical}" +
     ".sqx-editor:focus{outline:none;border-color:var(--primary)}" +
     ".sqx-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}" +
     ".sqx-actions .btn{padding:8px 14px;font-size:13.5px}" +
