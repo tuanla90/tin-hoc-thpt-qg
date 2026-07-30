@@ -45,6 +45,7 @@
         "font:700 13.5px var(--font-sans);padding:9px 15px;border-radius:10px;cursor:pointer;min-height:40px}" +
       ".mh-btn:hover{border-color:var(--primary);color:var(--primary)}" +
       ".mh-btn.chinh{background:var(--primary);color:#fff;border-color:var(--primary)}" +
+      ".mh-btn.dang{background:var(--accent-amber,#d97706);color:#fff;border-color:var(--accent-amber,#d97706)}" +
       ".mh-btn:disabled{opacity:.45;cursor:default}" +
       ".mh-loi{flex:1;min-width:190px;font-size:13.5px;color:var(--text-soft);line-height:1.5}" +
       ".mh-loi b{color:var(--text)}" +
@@ -117,8 +118,55 @@
       (nhap ? '<div class="mh-nhap">' + nhap + "</div>" : "") +
       '<div class="mh-khung">' + than + "</div>" +
       '<div class="mh-thanh"><button class="mh-btn chinh" data-mh="tien">Bước tiếp →</button>' +
+      '<button class="mh-btn" data-mh="auto">▶ Tự chạy</button>' +
       '<button class="mh-btn" data-mh="lai">Làm lại</button>' +
       '<span class="mh-loi" data-mh="loi"></span></div></div>';
+  }
+
+  /* ------------------------------------------------------------ TỰ CHẠY
+     Gắn CHUNG cho cả bốn minh hoạ nên không phải sửa từng cái. Cách biết đã hết
+     bước: chụp lại nội dung khung + dòng giải thích trước và sau khi bấm; không
+     có gì đổi nghĩa là đã tới trạng thái cuối, tự dừng. Nhờ vậy không cần mỗi
+     minh hoạ khai báo riêng "tôi xong rồi". */
+  var NHIP = 1000;   // mỗi giây một bước — kịp đọc dòng giải thích
+
+  function ganTuChay(node) {
+    var btn = node.querySelector('[data-mh="auto"]');
+    var tien = node.querySelector('[data-mh="tien"]');
+    var lai = node.querySelector('[data-mh="lai"]');
+    var oKhung = node.querySelector(".mh-khung");
+    var oLoi = node.querySelector('[data-mh="loi"]');
+    if (!btn || !tien) return;
+    var hen = null;
+
+    function anh() { return oKhung.innerHTML + "\u0000" + oLoi.innerHTML; }
+    function dung() {
+      if (hen) { clearInterval(hen); hen = null; }
+      btn.textContent = "▶ Tự chạy";
+      btn.classList.remove("dang");
+    }
+    function chay() {
+      btn.textContent = "⏸ Tạm dừng";
+      btn.classList.add("dang");
+      hen = setInterval(function () {
+        /* Đổi bài là trang bị dựng lại, node này rời khỏi DOM. Không kiểm thì bộ
+           đếm chạy mãi và bấm vào phần tử đã biến mất. */
+        if (!node.isConnected) { clearInterval(hen); hen = null; return; }
+        var truoc = anh();
+        tien.click();
+        if (anh() === truoc) dung();   // không còn gì đổi -> hết bước
+      }, NHIP);
+    }
+
+    btn.onclick = function () { if (hen) dung(); else chay(); };
+
+    /* Học sinh bấm tay hoặc gõ lại dữ liệu thì dừng tự chạy, kẻo hai bên tranh
+       nhau. isTrusted phân biệt cú bấm THẬT với cú tien.click() do bộ đếm gọi. */
+    tien.addEventListener("click", function (e) { if (e.isTrusted) dung(); });
+    if (lai) lai.addEventListener("click", dung);
+    node.querySelectorAll(".mh-o-nhap").forEach(function (o) {
+      o.addEventListener("input", dung);
+    });
   }
 
   /* Đọc dãy số học sinh gõ vào. Nhận cả "5, 2, 9" lẫn "5 2 9" lẫn "5;2;9" —
@@ -437,8 +485,11 @@
     var neo = app.querySelector("#conceptLab") || app.querySelector(".lesson-body") || app;
     var host = document.createElement("div");
     neo.appendChild(host);
-    try { THEO_BAI[lesson.id](host); }
-    catch (e) { host.remove(); console.error("[minh-hoa] Không dựng được:", e); }
+    try {
+      THEO_BAI[lesson.id](host);
+      var node = host.querySelector(".mh");
+      if (node) ganTuChay(node);
+    } catch (e) { host.remove(); console.error("[minh-hoa] Không dựng được:", e); }
   }
 
   window.injectMinhHoa = injectMinhHoa;
