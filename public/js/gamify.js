@@ -19,6 +19,23 @@
     ".gam-xp-txt{display:flex;justify-content:space-between;font-size:12px;color:var(--text-soft);margin-top:4px}" +
     ".gam-chips{display:flex;gap:10px;flex-wrap:wrap}" +
     ".gam-chip{display:flex;align-items:center;gap:6px;background:var(--bg-card);border:1px solid var(--border);border-radius:99px;padding:7px 13px;font-size:13.5px;font-weight:600;color:var(--text);cursor:pointer}" +
+
+    /* Bản GỌN chỉ cho bảng ở trang chủ (#gamDash). Trang Thành tựu dùng lại đúng
+       các lớp trên với cỡ lớn — có cả trang cho nó, không cần bóp. Đừng sửa các
+       luật trên để làm gọn trang chủ: làm thế là bóp luôn trang Thành tựu. */
+    "#gamDash .gam-card{gap:8px;padding:10px 12px}" +
+    /* Chip cấp bo 14px chứ không 99px như chip tròn khác: nó cao gấp đôi vì có
+       vạch tiến độ bên trong, bo 99px thì hai đầu phình thành hình viên thuốc. */
+    "#gamDash .gam-chip-cap{border-radius:14px;padding:6px 12px 6px 6px;gap:9px;flex:1 1 auto;min-width:230px;max-width:340px}" +
+    "#gamDash .gam-ring{width:34px;height:34px;border-width:2px}" +
+    "#gamDash .gam-ring .ic{width:19px;height:19px}" +
+    "#gamDash .gam-cap-txt{flex:1;min-width:0;display:block;line-height:1.15}" +
+    "#gamDash .gam-cap-txt b{font-size:13.5px;color:var(--text)}" +
+    "#gamDash .gam-cap-txt small{color:var(--text-soft);font-size:11.5px;margin-left:5px}" +
+    "#gamDash .gam-cap-xp{flex:none;font-size:11px;font-weight:800;color:var(--primary-d);font-family:var(--font-mono)}" +
+    "#gamDash .gam-xp-bar{display:block;height:5px;margin-top:4px}" +
+    "#gamDash .gam-xp-fill{display:block}" +
+    "#gamDash .gam-chip{font-size:13px}" +
     ".gam-chip:hover{border-color:var(--primary)}" +
     ".gam-chip b{color:var(--primary-d)}" +
     /* +XP float */
@@ -436,21 +453,25 @@ var Gam = {
     var s = gamStats(), lv = gamLevel(s.xp);
     var pct = Math.round(lv.progress * 100);
     var xpTxt = lv.nextMin != null ? (s.xp + " / " + lv.nextMin + " XP") : (s.xp + " XP · tối đa");
+    /* MỘT hàng chip: cấp, XP, chuỗi ngày, XP hôm nay, huy hiệu. Trước đây xếp
+       dọc ba khối (cấp / thanh XP / hàng chip) chiếm 352px ở trang chủ — cao nhất
+       trang, đẩy hết phần chọn việc học xuống dưới.
+       Thanh tiến độ cấp không bỏ, chỉ thu thành vạch mảnh nằm dưới chip cấp: nó
+       là thứ cho biết còn bao nhiêu XP nữa lên cấp, mất hẳn thì XP thành con số
+       trơ không biết để làm gì. */
+    var coLich = gamLaBuoiHoc(new Date()) && GAM.lastSession !== gamDayStr(new Date());
     mount.innerHTML =
       '<div class="gam-card">' +
-        '<div class="gam-lvl">' +
-          '<div class="gam-ring">' + gRingIcon(lv) + "</div>" +
-          '<div class="gam-lvl-txt"><b>Cấp ' + lv.lvl + " · " + esc(lv.name) + "</b><small>" + s.xp + " XP</small></div>" +
+        '<div class="gam-chip gam-chip-cap" id="gamChipCap" title="' + esc(xpTxt) + '">' +
+          '<span class="gam-ring">' + gRingIcon(lv) + "</span>" +
+          '<span class="gam-cap-txt"><b>Cấp ' + lv.lvl + "</b><small>" + esc(lv.name) + "</small>" +
+            '<span class="gam-xp-bar"><span class="gam-xp-fill" style="width:' + pct + '%"></span></span>' +
+          "</span>" +
+          '<span class="gam-cap-xp">' + esc(xpTxt) + "</span>" +
         "</div>" +
-        '<div class="gam-xp">' +
-          '<div class="gam-xp-bar"><div class="gam-xp-fill" style="width:' + pct + '%"></div></div>' +
-          '<div class="gam-xp-txt"><span>Tiến độ cấp</span><span>' + xpTxt + "</span></div>" +
-        "</div>" +
-        '<div class="gam-chips">' +
-          '<div class="gam-chip' + (gamDailyXp() >= GAM_DAILY_GOAL ? " gam-chip-done" : "") + '">' + gIco("target", "#ef4444", "🎯") + "Hôm nay <b>" + Math.min(gamDailyXp(), GAM_DAILY_GOAL) + "/" + GAM_DAILY_GOAL + "</b> XP" + (gamDailyXp() >= GAM_DAILY_GOAL ? " ✓" : "") + "</div>" +
-          '<div class="gam-chip" id="gamChipStreak" title="' + esc(gamMoTaLich()) + '">' + gIco("flame", "#f97316", "🔥") + "<b>" + s.streak + "</b> " + gamDonViChuoi() + (gamLaBuoiHoc(new Date()) && GAM.lastSession !== gamDayStr(new Date()) ? " · hôm nay có lịch" : "") + "</div>" +
-          '<div class="gam-chip" id="gamChipBadge">' + gIco("medal", "#f59e0b", "🏅") + "<b>" + s.badges + "/" + GAM_BADGES.length + "</b> huy hiệu</div>" +
-        "</div>" +
+        '<div class="gam-chip" id="gamChipStreak" title="' + esc(gamMoTaLich()) + '">' + gIco("flame", "#f97316", "🔥") + "<b>" + s.streak + "</b> " + gamDonViChuoi() + (coLich ? " · hôm nay có lịch" : "") + "</div>" +
+        '<div class="gam-chip' + (gamDailyXp() >= GAM_DAILY_GOAL ? " gam-chip-done" : "") + '">' + gIco("target", "#ef4444", "🎯") + "Hôm nay <b>" + Math.min(gamDailyXp(), GAM_DAILY_GOAL) + "/" + GAM_DAILY_GOAL + "</b> XP" + (gamDailyXp() >= GAM_DAILY_GOAL ? " ✓" : "") + "</div>" +
+        '<div class="gam-chip" id="gamChipBadge">' + gIco("medal", "#f59e0b", "🏅") + "<b>" + s.badges + "/" + GAM_BADGES.length + "</b> huy hiệu</div>" +
       "</div>" +
       (window.NhiemVu ? NhiemVu.html() : "");
     var toAch = function () { if (typeof go === "function") go("achievements"); };

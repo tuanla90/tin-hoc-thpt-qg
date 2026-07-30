@@ -228,18 +228,25 @@
     var hang = ds.map(function (t) {
       var pct = Math.round((t.dat / t.muc) * 100);
       /* t.ic là TÊN icon trong icons.js, không phải emoji nữa. */
-      var ico = typeof ICON === "function" ? ICON(t.ic, 21) : "";
+      var ico = typeof ICON === "function" ? ICON(t.ic, 19) : "";
+      var so = t.xong && typeof ICON === "function" ? ICON("check2", 17) : (t.xong ? "✓" : t.dat + "/" + t.muc);
+      /* Ba nhiệm vụ nằm NGANG nhau, mỗi cái một cột nhỏ: icon và số cùng hàng
+         trên, tên bài dưới, vạch tiến độ dưới cùng. Xếp dọc ba dòng như trước
+         chiếm gần 200px ở trang chủ mà nội dung mỗi dòng chỉ có một câu ngắn. */
+      /* Bốn phần để PHẲNG, không bọc thêm tầng: nhờ vậy grid-template-areas xếp
+         được hai bố cục khác nhau trên cùng một DOM — ngang 3 ô khi rộng, quay về
+         một hàng gọn khi hẹp. Bọc icon với số vào một thẻ con là hết đảo được. */
       return '<div class="nv-item' + (t.xong ? " nv-done" : "") + '">' +
         '<span class="nv-ic">' + ico + "</span>" +
-        '<div class="nv-mid"><b>' + t.ten + "</b>" +
-          '<div class="nv-bar"><div class="nv-fill" style="width:' + pct + '%"></div></div></div>' +
-        '<span class="nv-so">' + (t.xong && typeof ICON === "function" ? ICON("check2", 17) : (t.xong ? "✓" : t.dat + "/" + t.muc)) + "</span>" +
+        '<b class="nv-ten">' + t.ten + "</b>" +
+        '<span class="nv-so">' + so + "</span>" +
+        '<div class="nv-bar"><div class="nv-fill" style="width:' + pct + '%"></div></div>' +
       "</div>";
     }).join("");
     return '<div class="nv-card' + (xongHet ? " nv-card-done" : "") + '">' +
       '<div class="nv-head"><b>Nhiệm vụ tuần này</b><small>' +
         (xongHet ? "Đã xong cả ba 🎉" : "còn " + ngayConLai() + " ngày") + "</small></div>" +
-      hang + "</div>";
+      '<div class="nv-hang">' + hang + "</div></div>";
   }
 
   function napCss() {
@@ -252,22 +259,39 @@
       ".nv-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:10px}" +
       ".nv-head b{font-family:var(--font-display);font-size:15.5px}" +
       ".nv-head small{color:var(--text-soft);font-size:12.5px;white-space:nowrap}" +
-      ".nv-item{display:flex;align-items:center;gap:11px;padding:7px 0}" +
+      /* auto-fit + minmax: ba nhiệm vụ nằm ngang khi đủ chỗ, tự rớt xuống 2 rồi 1
+         cột trên máy hẹp — khỏi cần media query. */
+      ".nv-hang{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}" +
+      /* Rộng: mỗi nhiệm vụ là một ô nhỏ — icon và số cùng hàng trên, tên ở giữa,
+         vạch tiến độ dưới cùng. */
+      ".nv-item{display:grid;gap:5px 8px;align-items:center;padding:9px 11px;border:1px solid var(--border);" +
+        "border-radius:12px;background:var(--bg-soft,transparent);" +
+        "grid-template-columns:auto 1fr;grid-template-areas:'ic so' 'ten ten' 'bar bar'}" +
+      ".nv-ic{grid-area:ic}.nv-ten{grid-area:ten}.nv-so{grid-area:so}.nv-bar{grid-area:bar}" +
       /* Icon nét thay emoji: cho nó cái nền tròn nhạt để vẫn nặng bằng emoji cũ,
          không thì hàng nhiệm vụ trông nhẹ bẫng lệch hẳn so với phần còn lại. */
-      ".nv-ic{flex:none;width:34px;height:34px;border-radius:11px;display:grid;place-items:center;" +
+      ".nv-ic{flex:none;width:30px;height:30px;border-radius:10px;display:grid;place-items:center;" +
         "background:var(--primary-soft);color:var(--primary)}" +
       ".nv-done .nv-ic{background:color-mix(in srgb, var(--success,#16a34a) 14%, transparent);color:var(--success,#16a34a)}" +
-      ".nv-mid{flex:1;min-width:0}" +
-      ".nv-mid b{display:block;font-size:13.5px;font-weight:700;margin-bottom:5px}" +
+      ".nv-ten{display:block;font-size:12.5px;font-weight:700;line-height:1.3}" +
       ".nv-bar{height:7px;border-radius:99px;background:var(--border);overflow:hidden}" +
       ".nv-fill{height:100%;border-radius:99px;background:var(--primary);transition:width .4s ease}" +
       ".nv-done .nv-fill{background:var(--success,#16a34a)}" +
-      ".nv-done .nv-mid b{color:var(--text-soft);text-decoration:line-through}" +
-      ".nv-so{flex:none;font-size:13px;font-weight:800;color:var(--text-soft);min-width:38px;text-align:right}" +
+      ".nv-done .nv-ten{color:var(--text-soft);text-decoration:line-through}" +
+      ".nv-so{font-size:12.5px;font-weight:800;color:var(--text-soft);text-align:right}" +
       ".nv-so .ic{vertical-align:-3px}" +
       ".nv-done .nv-so{color:var(--success,#16a34a)}" +
-      "@media (max-width:420px){.nv-head b{font-size:14.5px}.nv-mid b{font-size:12.5px}}";
+      /* Hẹp: 3 ô không xếp ngang nổi (mỗi ô còn ~90px), nên quay về đúng dáng cũ —
+         icon bên trái, tên và vạch ở giữa, số bên phải. Giữ kiểu ô dọc ở đây thì
+         mỗi nhiệm vụ cao 72px thay vì 48px, tức mobile còn tệ hơn trước khi sửa. */
+      "@media (max-width:560px){" +
+        ".nv-item{grid-template-columns:auto 1fr auto;grid-template-areas:'ic ten so' 'ic bar so';" +
+          "gap:2px 10px;border:0;padding:6px 0;background:none}" +
+        /* 1 cột: ở dáng hàng gọn, 2 cột chỉ còn 155px mỗi cột nên tên nhiệm vụ
+           phải xuống 2 dòng. Một cột thì tên vừa đúng một dòng. */
+        ".nv-hang{gap:0;grid-template-columns:1fr}" +
+      "}" +
+      "@media (max-width:420px){.nv-head b{font-size:14.5px}}";
     (document.head || document.documentElement).appendChild(st);
   }
   napCss();
