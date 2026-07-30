@@ -379,8 +379,11 @@
     }
 
     var out = document.getElementById("umAuthBtn"), sep = document.getElementById("umSepOut");
+    var doi = document.getElementById("umSwitchBtn");
     if (out) { out.hidden = !Account.user; out.onclick = dangXuat; }
     if (sep) sep.hidden = !Account.user;
+    // "Đổi hồ sơ": khách chưa có tài khoản thì không có gì để đổi.
+    if (doi) doi.hidden = !Account.user;
   }
 
   /* =========================== MÀN ĐĂNG NHẬP =========================== */

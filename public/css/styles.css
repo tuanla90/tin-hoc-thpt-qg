@@ -1371,13 +1371,36 @@ code.ic {
    thứ tự trong tệp KHÔNG thắng được đặc trưng thấp hơn — đây là chỗ suy luận sai
    lúc đầu, phải đo lại mới thấy. Một ID luôn thắng mọi tổ hợp lớp thuần tuý nên
    không phụ thuộc thứ tự trong tệp nữa, kể cả sau này có ai chỉnh .nav-btn. */
+/* Đủ bộ reset nút (border/background/font/màu) ngay tại đây, không dựa vào
+   .nav-btn cho việc này: "Hồ sơ"/"Tài khoản" có thêm .nav-btn nên trước đây
+   trông ổn, nhưng #umAuthBtn (Đăng xuất) chỉ mang .um-item + .um-danger, không
+   có .nav-btn, nên lộ nguyên khung nút mặc định của trình duyệt — nền xám/trắng,
+   viền outset, phông hệ thống, không theo theme tối. */
 #umMenu .um-item {
   display: flex; align-items: center; gap: 10px; width: 100%; text-align: left;
-  padding: 9px 10px; border-radius: 9px; font-size: 13.5px;
+  padding: 9px 10px; border-radius: 9px; font-size: 13.5px; font-weight: 650;
+  border: none; background: none; color: var(--text); cursor: pointer; font-family: var(--font-sans);
 }
 .um-item-ic { display: flex; color: var(--text-soft); flex: none; }
-.um-danger { color: var(--danger, #dc2626); }
+/* #umMenu (không phải .um-danger trơn): #umMenu .um-item vừa thêm ở trên đã tự
+   đặt color:var(--text) làm nền nếu không có .nav-btn để dựa vào — cùng lỗi
+   suy luận sai lúc trước, đặc trưng (0,1,0) của .um-danger trơn thua hẳn
+   (1,1,0) của #umMenu .um-item nên "Đăng xuất" đo ra vẫn màu chữ thường,
+   không đỏ. Đo được rồi mới thấy, không phải chỉ đoán. */
+/* --danger (#f43f5e) trên nền thẻ trắng chỉ 3,67:1 — dưới ngưỡng chữ thường
+   4,5:1. Đây là màu chung của cả trang (dùng cả cho viền/nền cảnh báo, không
+   riêng chữ) nên không đổi thẳng --danger — chỉ đổi RIÊNG màu chữ nút này ở
+   giao diện Sáng. Tối thì --danger (#fb7185) đã đủ sáng, 6,32:1, giữ nguyên. */
+#umMenu .um-danger { color: #be123c; }
+[data-theme="dark"] #umMenu .um-danger { color: var(--danger, #fb7185); }
 .um-danger:hover { background: color-mix(in srgb, var(--danger, #dc2626) 10%, transparent); }
+
+/* Viền lấy tiêu điểm mặc định của trình duyệt (Chrome: -webkit-focus-ring-color)
+   không theo theme — trên nền thẻ tối nó hiện thành một viền trắng/xanh nhạt
+   lạc quẻ. Đổi hẳn sang viền màu chính, cùng một kiểu ở mọi nút trong khối này. */
+.um-item:focus-visible, .um-switch:focus-visible, .um-trigger:focus-visible {
+  outline: 2px solid var(--primary); outline-offset: 2px;
+}
 
 .um-sep { height: 1px; background: var(--border); margin: 6px 4px; }
 
