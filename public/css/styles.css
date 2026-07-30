@@ -1351,10 +1351,13 @@ code.ic {
 .um-head { display: flex; align-items: center; gap: 12px; padding: 8px 10px 12px; }
 .um-head-txt { min-width: 0; }
 .um-head-txt b { display: block; font-size: 14.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-/* small bọc ngoài chỉ căn hàng; email co giãn được, chip gói giữ nguyên cỡ —
-   min-width:0 bắt buộc phải có thì ellipsis mới ăn được bên trong hàng flex. */
-.um-head-txt small { display: flex; align-items: center; gap: 6px; color: var(--text-soft); font-size: 12px; margin-top: 3px; }
-.um-email { min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Email và chip gói xếp CHỒNG (cột), không nằm chung một hàng: đo thử với email
+   ngắn "bug-dongbo@test.vn" (19 kí tự) đã thấy bị cắt — hai bên chung một hàng
+   174px thì chip gói ăn mất khoảng 65px, email chỉ còn ~109px trong khi cần
+   112px. Email thật ngoài đời còn dài hơn nhiều, nên tách hẳn ra hai dòng cho
+   mỗi bên toàn quyền bề ngang thay vì giằng co. */
+.um-head-txt small { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; color: var(--text-soft); font-size: 12px; margin-top: 3px; max-width: 100%; }
+.um-email { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .um-plan {
   flex: none; font-size: 10.5px; font-weight: 800; letter-spacing: 0.02em; padding: 2px 7px;
   border-radius: 999px; background: var(--bg-soft); border: 1px solid var(--border); color: var(--text-soft);
