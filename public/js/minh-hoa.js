@@ -507,5 +507,16 @@
   }
 
   window.injectMinhHoa = injectMinhHoa;
-  window.MINH_HOA_CO = Object.keys(THEO_BAI);
+
+  /* Mở khung dựng ra ngoài để minh hoạ mới đăng ký từ tệp khác, khỏi dồn hết vào
+     một tệp nghìn dòng. injectMinhHoa đọc THEO_BAI lúc gọi nên đăng ký muộn vẫn
+     kịp, và minh hoạ nào cũng tự có nút Tự chạy vì ganTuChay gắn ở một chỗ. */
+  window.MinhHoa = {
+    khung: khung,
+    el: el,
+    docDay: docDay,
+    napCss: napCss,
+    dangKy: function (id, fn) { THEO_BAI[id] = fn; },
+    coBai: function () { return Object.keys(THEO_BAI); },
+  };
 })();

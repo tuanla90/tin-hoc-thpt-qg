@@ -58,7 +58,7 @@ function dungSandbox() {
 function danhSachTep() {
   const html = fs.readFileSync(path.join(PUB, "index.html"), "utf8");
   const srcs = [...html.matchAll(/<script src="([^"]+)"/g)].map((m) => m[1]);
-  const boQua = /vendor\/|\/app\.js$|account\.js$|exam-modes\.js$|profile\.js$|skills\.js$|session\.js$|tutor\.js$|nhiem-vu\.js$|skulpt-lazy\.js$|pwa\.js$|nhac\.js$|am-thanh\.js$|minh-hoa\.js$/;
+  const boQua = /vendor\/|\/app\.js$|account\.js$|exam-modes\.js$|profile\.js$|skills\.js$|session\.js$|tutor\.js$|nhiem-vu\.js$|skulpt-lazy\.js$|pwa\.js$|nhac\.js$|am-thanh\.js$|minh-hoa(-\d)?\.js$/;
   return srcs.filter((s) => !boQua.test(s));
 }
 
