@@ -552,33 +552,78 @@ function renderLessons() {
     c.items.push({ l, gi: i });
   });
 
-  const IW = 340, CX = 170, A = 95, R = 32, STEP = 110, PADTOP = 50, PADBOT = 50;
-  // Mẫu tọa độ zigzag sinh động phong cách Candy Crush (độ lệch ngẫu nhiên nhưng mượt mà)
-  const pat = [0, 0.75, 0.35, -0.65, -0.95, -0.3, 0.6, 0.9, 0.1, -0.8]; 
+  /* Hình học bản đồ. Mỗi bậc phải chứa TRỌN: vòng tròn 68px + 9px bóng nổi 3D +
+     14px vành nhấp nháy của bài đang học + dòng "Bài N" + hai dòng tên bài (~47px).
+     STEP 110 cũ chỉ đủ cho vòng tròn nên dòng chữ của bài này đè lên vòng tròn
+     bài sau. Biên độ A hạ 95 -> 78 để khối chữ rộng 170px không tràn khung 340px,
+     đồng thời đường nối bớt gấp khúc. */
+  const IW = 340, CX = 170, A = 78, R = 32, STEP = 158, PADTOP = 68;
+  const CAP_DY = 22;      // hở từ đáy vòng tròn xuống dòng chữ
+  const CAP_DY_CHEST = 28; // rương to hơn nên cần hở nhiều hơn
+  const CAP_H = 118;      // chỗ chừa dưới điểm cuối cho dòng chữ bài cuối
+  const BUBBLE_H = 28;    // bong bóng "BẮT ĐẦU" nhô lên trên vòng tròn
+  const CAP_W = 170;
+  const pat = [0, 0.72, 0.34, -0.62, -0.9, -0.28, 0.58, 0.88, 0.1, -0.78];
   const ic = (name) => (typeof ICON === "function" ? ICON(name) : "");
+  /* Giữ khối chữ nằm trong khung: canh giữa dưới node, nhưng không cho vượt lề. */
+  const capL = (x) => Math.max(4, Math.min(IW - CAP_W - 4, x - CAP_W / 2)).toFixed(1);
+
+  /* Linh vật rải vào khoảng trống bên đối diện node cho bản đồ đỡ trống trải. */
+  const MASCOT_BANDO = [
+    "asset/mascot/scenes/cheer-pompom.png",
+    "asset/mascot/scenes/pointing.png",
+    "asset/mascot/scenes/thumbs-up.png",
+    "asset/mascot/scenes/reading-tablet.png",
+    "asset/mascot/scenes/wave.png",
+    "asset/mascot/scenes/magnifier.png",
+  ];
 
   const chapHtml = (c, chapIdx, bookIdx) => {
     const n = c.items.length;
     const C = c.color || "var(--primary)";
-    const H = PADTOP + (n - 1) * STEP + R + PADBOT;
-    const pts = c.items.map((it, k) => ({ x: CX + pat[k % pat.length] * A, y: PADTOP + k * STEP, it }));
-    
-    // Đường nối SVG Candy Crush uốn lượn hạt đậu siêu mượt
-    let pathD = "";
-    for (let k = 0; k < pts.length; k++) {
-      if (k === 0) {
-        pathD += `M ${pts[k].x.toFixed(1)} ${pts[k].y}`;
-      } else {
-        const prev = pts[k - 1];
-        const curr = pts[k];
-        const cy1 = prev.y + (curr.y - prev.y) * 0.55;
-        const cy2 = prev.y + (curr.y - prev.y) * 0.45;
-        pathD += ` C ${prev.x.toFixed(1)} ${cy1}, ${curr.x.toFixed(1)} ${cy2}, ${curr.x.toFixed(1)} ${curr.y}`;
-      }
+    /* Cộng dồn y thay vì k * STEP: bài đang học cần chừa thêm chỗ phía trên cho
+       bong bóng "BẮT ĐẦU", nếu không nó đè lên tên bài liền trước. */
+    let yy = PADTOP;
+    const pts = c.items.map((it, k) => {
+      if (k > 0) yy += STEP + (it.gi === currentIdx ? BUBBLE_H : 0);
+      return { x: CX + pat[k % pat.length] * A, y: yy, it, chest: (k + 1) % 4 === 0 };
+    });
+    const H = pts[pts.length - 1].y + CAP_H;
+
+    /* Đường nối mềm kiểu Duolingo: hai điểm điều khiển đặt cùng ở giữa quãng nên
+       tiếp tuyến tại mỗi node THẲNG ĐỨNG, hai nhịp cong nối nhau liền mạch.
+       Cái làm đường trông mềm hơn hẳn không phải công thức này (bản cũ 0.55/0.45
+       cũng đã liền tại node) mà là tỉ lệ dốc: biên độ hẹp lại còn bậc cao lên nên
+       chỗ dốc nhất giảm từ 62° xuống 43° so với trục dọc, dốc trung bình 28° -> 16°. */
+    let pathD = pts.length ? `M ${pts[0].x.toFixed(1)} ${pts[0].y}` : "";
+    for (let k = 1; k < pts.length; k++) {
+      const p = pts[k - 1], q = pts[k], gy = (q.y - p.y) / 2;
+      pathD += ` C ${p.x.toFixed(1)} ${(p.y + gy).toFixed(1)}, ${q.x.toFixed(1)} ${(q.y - gy).toFixed(1)}, ${q.x.toFixed(1)} ${q.y}`;
     }
 
-    const segs = `<path d="${pathD}" fill="none" stroke="var(--border)" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" />` +
+    const segs = `<path d="${pathD}" fill="none" stroke="var(--border)" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" />` +
       `<path d="${pathD}" fill="none" stroke="${C}" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" opacity="0.85" />`;
+
+    /* Đặt linh vật ở phía ĐỐI DIỆN node, bỏ bậc đầu và bậc cuối, tối đa 3 con và
+       cách nhau ít nhất 3 bậc cho đỡ rối.
+       Ngưỡng 14px là chỗ dễ đặt sai: linh vật bên phải chiếm x 248-322 nên lề
+       phải khối chữ (rộng 170, canh giữa dưới node) phải ≤ 248, tức node lệch
+       trái ít nhất 7px; bên trái đối xứng. Lấy 14px cho có dư. */
+    const macs = (() => {
+      const ra = [];
+      let truoc = -99;
+      pts.forEach((p, k) => {
+        if (ra.length >= 3 || k < 1 || k > n - 2) return;
+        if (Math.abs(p.x - CX) < 14 || k - truoc < 3) return;
+        truoc = k;
+        const ben = p.x < CX ? "right:18px" : "left:18px";
+        const img = MASCOT_BANDO[(bookIdx + chapIdx + ra.length) % MASCOT_BANDO.length];
+        ra.push(`<div class="pmascot" style="${ben};top:${(p.y - 30).toFixed(1)}px">
+            <img src="${mascotSrc(img)}" alt="" aria-hidden="true" draggable="false" loading="lazy" />
+          </div>`);
+      });
+      return ra.join("");
+    })();
 
     const nodes = pts.map((p, k) => {
       const gi = p.it.gi, l = p.it.l, done = learned[gi], open = unlocked[gi], cur = gi === currentIdx;
@@ -591,15 +636,14 @@ function renderLessons() {
       const starsHtml = stars >= 0 ? `<span class="pn-stars" title="Mastery: ${stars}/3 sao">${[0, 1, 2].map((i) => starSvg(i < stars)).join("")}</span>` : "";
 
       // Cứ 4 bài lại có 1 Rương Kho Báu / Boss Stage Candy Crush
-      const isChestNode = (k + 1) % 4 === 0;
       const chestIcon = done ? "🏆" : "🎁";
 
-      if (isChestNode) {
+      if (p.chest) {
         return `<button class="pnode chest ${cls}${cur ? " cur" : ""}" data-id="${l.id}" data-lock="${open ? 0 : 1}" style="left:${(p.x - R - 6).toFixed(1)}px;top:${p.y - R - 6}px;--cc:${C}" title="${esc(l.title)}">
             ${cur ? '<span class="pn-bubble">RƯƠNG THƯỞNG 🎁</span>' : ""}
             <span class="chest-emoji">${chestIcon}</span>
           </button>
-          <div class="pn-cap" style="left:${(p.x - 85).toFixed(1)}px;top:${p.y + R + 10}px">
+          <div class="pn-cap" style="left:${capL(p.x)}px;top:${p.y + R + CAP_DY_CHEST}px">
             <span class="pn-top"><span class="pn-num" style="color:#eab308">Cửa ải kho báu</span>${starsHtml}</span>
             <span class="pn-name">${name}</span>
           </div>`;
@@ -609,7 +653,7 @@ function renderLessons() {
           ${cur ? '<span class="pn-bubble">BẮT ĐẦU 🔥</span>' : ""}
           <span class="pnode-inner-icon">${glyph}</span>
         </button>
-        <div class="pn-cap" style="left:${(p.x - 85).toFixed(1)}px;top:${p.y + R + 10}px">
+        <div class="pn-cap" style="left:${capL(p.x)}px;top:${p.y + R + CAP_DY}px">
           <span class="pn-top"><span class="pn-num">Bài ${l.order}</span>${starsHtml}</span>
           <span class="pn-name">${name}</span>
         </div>`;
@@ -637,7 +681,7 @@ function renderLessons() {
         </div>
 
         <div class="pchap-acc-body" id="${accordId}" ${defaultOpen ? "" : "hidden"}>
-          <div class="pwrap" style="height:${H}px"><svg class="pconn" width="${IW}" height="${H}" viewBox="0 0 ${IW} ${H}">${segs}</svg>${nodes}</div>
+          <div class="pwrap" style="height:${H}px">${macs}<svg class="pconn" width="${IW}" height="${H}" viewBox="0 0 ${IW} ${H}">${segs}</svg>${nodes}</div>
         </div>
       </div>`;
   };
@@ -755,10 +799,19 @@ function injectPathCss() {
     "@keyframes fadeInAcc { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }" +
 
     ".pwrap { position: relative; width: 340px; margin: 0 auto; }" +
-    ".pconn { position: absolute; left: 0; top: 0; overflow: visible; z-index: 0; }" +
-    
-    /* 3D Duolingo Candy Button Nodes */
-    ".pnode { position: absolute; width: 68px; height: 68px; border-radius: 50%; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 1; padding: 0; transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1); outline: none; }" +
+    ".pconn { position: absolute; left: 0; top: 0; overflow: visible; z-index: 1; }" +
+
+    /* Linh vật trang trí: nằm dưới đường nối, không nhận chuột, không đọc màn hình */
+    /* Khung CỐ ĐỊNH, không để ảnh tự quyết chiều cao: bộ ảnh linh vật có tỉ lệ
+       khác nhau (đo được 79px tới 153px cùng bề rộng 74px), thả tự do thì không
+       tính trước được nó có chạm vào dòng chữ bậc dưới hay không. */
+    ".pmascot { position: absolute; width: 74px; height: 96px; z-index: 0; pointer-events: none; user-select: none; filter: drop-shadow(0 8px 16px rgba(0,0,0,.16)); animation: pmFloat 5s ease-in-out infinite; }" +
+    ".pmascot img { width: 100%; height: 100%; display: block; object-fit: contain; object-position: bottom; }" +
+    "@keyframes pmFloat { 0%,100% { transform: translateY(0) rotate(-2.5deg); } 50% { transform: translateY(-10px) rotate(2.5deg); } }" +
+
+    /* 3D Duolingo Candy Button Nodes — z-index phải CAO HƠN .pn-cap để vòng tròn
+       không bao giờ bị dòng chữ vẽ chồng lên (khoảng cách đã đủ, đây là chốt hạ) */
+    ".pnode { position: absolute; width: 68px; height: 68px; border-radius: 50%; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 3; padding: 0; transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1); outline: none; }" +
     ".pnode-inner-icon svg { width: 32px; height: 32px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.25)); }" +
     ".pnode.done { background: linear-gradient(180deg, #58cc02 0%, #46a302 100%); color: #fff; box-shadow: 0 9px 0 #3b8a02, 0 15px 25px rgba(88, 204, 2, 0.45); border: 3px solid #79e622; }" +
     ".pnode.open { background: linear-gradient(180deg, #ff007f 0%, #d8006c 100%); color: #fff; box-shadow: 0 9px 0 #9e004f, 0 15px 25px rgba(255, 0, 127, 0.45); border: 3px solid #ff66c4; }" +
@@ -773,16 +826,19 @@ function injectPathCss() {
     ".pnode.chest.cur::after { border-radius: 28px; }" +
     "@keyframes plpulse { 0%,100% { transform: scale(1); opacity: .8; } 50% { transform: scale(1.24); opacity: .2; } }" +
     
-    ".pn-bubble { position: absolute; top: -38px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #ff9800, #ff5722); color: #fff; font-family: var(--font-display); font-size: 11.5px; font-weight: 900; padding: 5px 14px; border-radius: 16px; white-space: nowrap; z-index: 3; box-shadow: 0 6px 18px rgba(255, 87, 34, 0.5); border: 2px solid #fff; animation: bounceNav 2s infinite; letter-spacing: 0.03em; }" +
+    ".pn-bubble { position: absolute; top: -38px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #ff9800, #ff5722); color: #fff; font-family: var(--font-display); font-size: 11.5px; font-weight: 900; padding: 5px 14px; border-radius: 16px; white-space: nowrap; z-index: 4; box-shadow: 0 6px 18px rgba(255, 87, 34, 0.5); border: 2px solid #fff; animation: bounceNav 2s infinite; letter-spacing: 0.03em; }" +
     "@keyframes bounceNav { 0%,100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(-5px); } }" +
-    ".pn-cap { position: absolute; width: 170px; text-align: center; pointer-events: none; z-index: 1; line-height: 1.25; }" +
+    ".pn-cap { position: absolute; width: 170px; text-align: center; pointer-events: none; z-index: 2; line-height: 1.25; }" +
     ".pn-num { display: block; font-size: 12px; font-weight: 900; color: var(--primary); font-family: var(--font-mono); }" +
     ".pn-name { font-size: 12.5px; font-weight: 800; color: var(--text); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; margin-top: 3px; font-family: var(--font-sans); }" +
     ".pn-top { display: flex; align-items: center; justify-content: center; gap: 6px; line-height: 1; margin-bottom: 2px; }" +
     ".pn-stars { display: inline-flex; gap: 3px; }" +
     ".pn-star { width: 14px; height: 14px; fill: var(--border); }" +
     ".pn-star.on { fill: #ffc107; filter: drop-shadow(0 2px 4px rgba(255, 193, 7, 0.6)); }" +
-    "@media (max-width: 560px) { .path-hero-mascot { display: none; } }";
+    "@media (max-width: 560px) { .path-hero-mascot { display: none; } }" +
+    /* Bản đồ có ba thứ động cùng lúc (linh vật trôi, vành nhấp nháy, bong bóng
+       nhảy) — ai đặt hệ thống giảm hiệu ứng thì tắt hết cho đỡ chóng mặt. */
+    "@media (prefers-reduced-motion: reduce) { .pmascot, .pn-bubble, .pnode.cur::after { animation: none; } }";
   document.head.appendChild(s);
 }
 
