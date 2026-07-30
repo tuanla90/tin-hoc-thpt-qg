@@ -404,40 +404,54 @@
    *  chặng hỏi đáp ở giữa, và vì sao lần sau lại nhanh hơn (bộ nhớ đệm).
    * ================================================================ */
   function dns(host) {
-    var B = [
-      { ic: "🌐", ten: "Trình duyệt", mo: "gõ vnexpress.net", noi: "Trình duyệt chưa biết địa chỉ số của tên miền này, nên đi hỏi." },
-      { ic: "📇", ten: "Máy chủ DNS", mo: "của nhà mạng", noi: "Hỏi máy chủ DNS nhà mạng. Nếu nó vừa tra hộ ai đó, nó trả lời ngay từ <b>bộ nhớ đệm</b>." },
-      { ic: "🌱", ten: "Máy chủ gốc", mo: "root", noi: "Chưa có trong đệm → hỏi máy chủ gốc. Gốc không biết địa chỉ, chỉ chỉ đường: “hỏi bên quản lý .net”." },
-      { ic: "🏷️", ten: "Máy chủ .net", mo: "TLD", noi: "Bên quản lý đuôi .net cũng không giữ địa chỉ, nhưng biết ai quản lý vnexpress.net." },
-      { ic: "📮", ten: "Máy chủ quản lý", mo: "vnexpress.net", noi: "Đây mới là nơi giữ bản ghi thật, trả về <b>địa chỉ IP</b>." },
-      { ic: "✅", ten: "Có IP", mo: "kết nối", noi: "Có IP rồi, trình duyệt mới thật sự kết nối tới máy chủ web. Địa chỉ được nhớ tạm, nên lần sau vào lại nhanh hơn hẳn." },
-    ];
+    /* CHỈ giữ biểu tượng ở đây. Nhãn và lời giải thích phải sinh theo tên miền
+       người gõ — trước đây nhãn đậm đóng cứng "Máy chủ .net" nên gõ tên miền .vn
+       vẫn hiện .net, trông như minh hoạ chẳng có logic gì. */
+    var IC = ["🌐", "📇", "🌱", "🏷️", "📮", "✅"];
     var k = -1;
     var node = el(khung("Gõ một tên miền, máy tính tìm nhau thế nào?",
       "Máy tính chỉ liên lạc được bằng <b>địa chỉ IP</b> (dãy số), còn người thì nhớ <b>tên miền</b> (chữ). " +
-      "Ở giữa là mấy chặng hỏi đáp mà ta không nhìn thấy — gõ tên miền em hay vào rồi bấm từng chặng.",
+      "Ở giữa là mấy chặng hỏi đáp mà ta không nhìn thấy — gõ tên miền em hay vào rồi bấm từng chặng. " +
+      "<i>Đây là sơ đồ mô tả quy trình chuẩn, không phải một lần tra cứu thật: trang web không có " +
+      "cách nào tự đi hỏi máy chủ gốc để cho em xem.</i>",
       '<div class="mh-nut" data-mh="nut"></div>',
       '<label for="mhTen">Tên miền:</label>' +
-      '<input class="mh-o-nhap" id="mhTen" data-mh="ten" type="text" value="vnexpress.net" ' +
-      'style="max-width:260px;font-size:16px">'));
+      '<input class="mh-o-nhap" id="mhTen" data-mh="ten" type="text" value="vnexpress.net" style="max-width:260px">' +
+      '<span class="mh-canh" data-mh="canh" hidden></span>'));
 
     /* Đuôi tên miền quyết định chặng thứ 4 hỏi ai, nên phải lấy từ chữ người gõ.
        Gõ có "https://" hay "/tin-tuc" thì cắt bỏ, đừng bắt các em gõ đúng chuẩn. */
-    function tenMien() {
+    function phanTich() {
       var t = String(node.querySelector('[data-mh="ten"]').value || "").trim().toLowerCase();
-      t = t.replace(/^[a-z]+:\/\//, "").replace(/^www\./, "").split(/[/?#]/)[0];
-      return t || "vnexpress.net";
-    }
-    function duoi() {
-      var p = tenMien().split(".");
-      return p.length > 1 ? p[p.length - 1] : "net";
+      /* Cắt giao thức, đường dẫn, "www." và SỐ CỔNG — đừng bắt các em gõ đúng chuẩn. */
+      t = t.replace(/^[a-z][a-z0-9+.-]*:\/\//, "").split(/[/?#]/)[0].replace(/^www\./, "").replace(/:\d+$/, "");
+      var p = t.split(".").filter(Boolean);
+      if (!t) return { ten: "vnexpress.net", duoi: "net", vi: "" };
+      /* Không có dấu chấm ("localhost", "localhost:3000") thì KHÔNG phải tên miền
+         nhiều cấp — nói thẳng, thay vì bịa ra đuôi .net như bản trước. */
+      if (/^\d+(\.\d+){3}$/.test(t)) return { tho: t, ten: t, duoi: "", vi: "la-ip" };
+      if (p.length < 2) return { tho: t, ten: t, duoi: "", vi: "khong-duoi" };
+      return { tho: t, ten: p.join("."), duoi: p[p.length - 1], vi: "" };
     }
 
     function ve() {
-      var ten = tenMien(), d = duoi();
-      /* Nhãn và lời giải thích thay theo tên miền người gõ, chứ không ghi cứng
-         vnexpress.net — các em gõ tên trường mình mới thấy nó nói về chính mình. */
-      var nhan = [ten, "của nhà mạng", "root", "." + d, ten, "kết nối"];
+      var pt = phanTich(), ten = pt.ten, d = pt.duoi;
+      var canh = node.querySelector('[data-mh="canh"]');
+      if (pt.vi === "khong-duoi") {
+        canh.hidden = false;
+        canh.innerHTML = "<b>" + pt.tho + "</b> không có đuôi tên miền nên DNS không tra theo đường này — " +
+          "tên kiểu đó chỉ có nghĩa trong máy hoặc trong mạng nội bộ. Thử một tên miền thật, " +
+          "ví dụ tên miền trường em.";
+      } else if (pt.vi === "la-ip") {
+        canh.hidden = false;
+        canh.innerHTML = "Em vừa gõ sẵn một <b>địa chỉ IP</b> — khỏi cần tra DNS, trình duyệt kết nối " +
+          "được luôn. Đó chính là thứ mà cả quá trình này đi tìm.";
+      } else { canh.hidden = true; }
+
+      /* Nhãn ĐẬM cũng phải sinh theo tên miền, không chỉ dòng nhỏ bên dưới. */
+      var tenTld = d ? "Máy chủ ." + d : "Máy chủ đuôi";
+      var TEN = ["Trình duyệt", "Máy chủ DNS", "Máy chủ gốc", tenTld, "Máy chủ quản lý", "Có IP"];
+      var nhan = [ten, "của nhà mạng", "root", d ? "." + d : "—", ten, "kết nối"];
       var noi = [
         "Trình duyệt chưa biết địa chỉ số của <b>" + ten + "</b>, nên đi hỏi.",
         "Hỏi máy chủ DNS nhà mạng. Nếu nó vừa tra hộ ai đó, nó trả lời ngay từ <b>bộ nhớ đệm</b>.",
@@ -446,19 +460,19 @@
         "Đây mới là nơi giữ bản ghi thật của <b>" + ten + "</b>, trả về <b>địa chỉ IP</b>.",
         "Có IP rồi, trình duyệt mới thật sự kết nối tới <b>" + ten + "</b>. Địa chỉ được nhớ tạm, nên lần sau vào lại nhanh hơn hẳn.",
       ];
-      node.querySelector('[data-mh="nut"]').innerHTML = B.map(function (b, n) {
-        return '<div class="mh-hop' + (n <= k ? " sang" : "") + '"><div class="mh-ic">' + b.ic + "</div>" +
-          "<b>" + b.ten + "</b><small>" + nhan[n] + "</small></div>";
+      node.querySelector('[data-mh="nut"]').innerHTML = IC.map(function (ic, n) {
+        return '<div class="mh-hop' + (n <= k ? " sang" : "") + '"><div class="mh-ic">' + ic + "</div>" +
+          "<b>" + TEN[n] + "</b><small>" + nhan[n] + "</small></div>";
       }).join("");
       return noi;
     }
     function loi(t) { node.querySelector('[data-mh="loi"]').innerHTML = t; }
 
     node.querySelector('[data-mh="tien"]').onclick = function () {
-      if (k >= B.length - 1) { loi("Cả quá trình này thường xong trong vài phần trăm giây."); return; }
+      if (k >= IC.length - 1) { loi("Cả quá trình này thường xong trong vài phần trăm giây."); return; }
       k++; loi(ve()[k]);
     };
-    function lamLai() { k = -1; ve(); loi("Tra <b>" + tenMien() + "</b>. Bấm “Bước tiếp” để đi chặng đầu tiên."); }
+    function lamLai() { k = -1; ve(); loi("Tra <b>" + phanTich().ten + "</b>. Bấm “Bước tiếp” để đi chặng đầu tiên."); }
     node.querySelector('[data-mh="lai"]').onclick = lamLai;
     node.querySelector('[data-mh="ten"]').oninput = lamLai;
     host.appendChild(node); lamLai();
