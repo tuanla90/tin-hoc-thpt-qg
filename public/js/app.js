@@ -930,8 +930,13 @@ function renderLessons(data) {
         truoc = k;
         const ben = p.x < CX ? "right:6px" : "left:6px";
         const img = MASCOT_BANDO[(CHANG + chapIdx + ra.length) % MASCOT_BANDO.length];
-        /* 56 = nửa chiều cao .pmascot (112px) -> linh vật canh giữa ngang tầm ô. */
-        ra.push(`<div class="pmascot" style="${ben};top:${f1(p.y - 56)}px">
+        /* 56 = nửa chiều cao .pmascot (112px). Cộng thêm 26 để canh KHÔNG PHẢI
+           theo tâm ô mà theo tâm của cả khối "ô + khối chữ" bên dưới nó — đo
+           trên trình duyệt thấy tâm khối chữ lệch xuống dưới tâm ô 22-33px (tuỳ
+           ô 68px hay 76px và chữ 1-3 dòng), 26 là mức giữa. Không cộng thì linh
+           vật canh đúng tâm ô nhưng nhìn lệch hẳn lên trên so với cả cụm gồm ô
+           và tên bài/tên ô phía dưới. */
+        ra.push(`<div class="pmascot" style="${ben};top:${f1(p.y - 56 + 26)}px">
             <img src="${mascotSrc(img)}" alt="" aria-hidden="true" draggable="false" loading="lazy" />
           </div>`);
       });
@@ -950,9 +955,15 @@ function renderLessons(data) {
       /* Nửa bề ngang ô, để đặt left = tâm - nửa. Phải bằng ĐÚNG nửa bề rộng CSS
          (ô bài 68px, ô phụ 76px), không thì hai ô lẽ ra đối xứng lại lệch nhau. */
       const dat = (bk) => `left:${f1(p.x - bk)}px;top:${f1(p.y - bk)}px;--cc:${C}`;
+      /* mauNhan chỉ được truyền cho ô phụ (mô phỏng/thực hành/luyện tập/thi thử) —
+         dùng chính điều kiện đó để đổi font: .pn-num vốn font-mono cho vừa nhãn
+         "Bài 12" (số, hợp monospace), nhưng nhãn ô phụ là CHỮ VIỆT NHIỀU DẤU
+         ("Luyện tập", "Mô phỏng") — monospace ép mỗi kí tự vào ô rộng bằng nhau
+         bất kể nét chữ, nhìn ra một khoảng "hở" giữa các kí tự có dấu, giống lỗi
+         dãn cách. Đổi sang phông thường (.pn-chu) cho đúng nhãn có dấu. */
       const capHtml = (nhan, mauNhan, ten, phai) =>
         `<div class="pn-cap" style="${capStyle}">
-          <span class="pn-top"><span class="pn-num"${mauNhan ? ` style="color:${mauNhan}"` : ""}>${nhan}</span>${phai || ""}</span>
+          <span class="pn-top"><span class="pn-num${mauNhan ? " pn-chu" : ""}"${mauNhan ? ` style="color:${mauNhan}"` : ""}>${nhan}</span>${phai || ""}</span>
           <span class="pn-name">${ten}</span>
         </div>`;
 
@@ -1319,6 +1330,9 @@ function injectPathCss() {
        dòng. .tl = chữ ở bên phải node (canh lề trái), .tr = ngược lại. */
     ".pn-cap { position: absolute; width: 190px; text-align: center; pointer-events: none; z-index: 2; line-height: 1.25; }" +
     ".pn-num { display: block; font-size: 12px; font-weight: 900; color: var(--primary); font-family: var(--font-mono); }" +
+    /* Nhãn ô phụ là chữ Việt ("Luyện tập", "Mô phỏng"...), không phải số như "Bài 12" —
+       xem chú thích tại chỗ gọi capHtml. */
+    ".pn-num.pn-chu { font-family: var(--font-sans); letter-spacing: 0; }" +
     ".pn-name { font-size: 12.5px; font-weight: 800; color: var(--text); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; margin-top: 3px; font-family: var(--font-sans); }" +
     ".pn-top { display: flex; align-items: center; justify-content: center; gap: 6px; line-height: 1; margin-bottom: 2px; }" +
     ".pn-stars { display: inline-flex; gap: 3px; }" +
