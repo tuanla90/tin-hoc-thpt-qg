@@ -601,7 +601,7 @@ function renderChonChang() {
       <div class="path-hero-content">
         <div class="path-hero-badge">${aIco("flag", null, 14)} LỘ TRÌNH HỌC</div>
         <h2>Hành trình chinh phục Tin học</h2>
-        <p>Chọn một chặng bên dưới để mở bản đồ bài học của chặng đó.</p>
+        <p>Chọn một chặng để bắt đầu.</p>
 
         <div class="path-progress-box">
           <div class="progress-track-wrapper">
@@ -677,17 +677,20 @@ function renderLessons(data) {
   /* Bề ngang = 2A + CELL. Muốn ≈ 5 ô thì 2A = 4·CELL, tức A = 2·CELL = 136; trừ
      8px lấy lề để vành nhấp nháy của ô đang học không tràn khỏi thẻ. */
   const A = 2 * CELL - 8;
-  const IW = 340, CX = 170, R = 32, STEP = 176, PADTOP = 78;
+  const IW = 340, CX = 170, STEP = 176, PADTOP = 78;
   const CAP_W = 190;                   // 190px/3 dòng: không cắt tên bài nào trong 119 bài
   const CAP_DY = 52;                   // hở từ tâm ô xuống đầu khối chữ (qua bóng nổi + vành)
   const CAP_BOT = 133;                 // chỗ chừa dưới ô cuối cho khối chữ của nó
   const ic = (name) => (typeof ICON === "function" ? ICON(name) : "");
 
-  /* Lấy mẫu hình sin, chu kì 8 ô. Dùng sin chứ không chia đều (0 – 0,5 – 1) vì
-     sin chậm dần khi tới hai đầu biên (bước 0,71 rồi 0,29) nên chỗ quay đầu trông
-     mềm, còn chia đều thì mỗi bước bằng nhau, quay đầu ra gãy góc.
+  /* Lấy mẫu hình sin, chu kì 8 ô, KHÔNG lệch pha — ô đầu tiên nằm đúng giữa rồi
+     mới cong dần sang phải. Trước đây lệch pha +1 nên ô đầu đã ở sát rìa phải,
+     vào màn là thấy bản đồ bắt đầu lệch hẳn một bên.
+     Dùng sin chứ không chia đều (0 – 0,5 – 1) vì sin chậm dần khi tới hai đầu
+     biên (bước 0,71 rồi 0,29) nên chỗ quay đầu trông mềm, còn chia đều thì mỗi
+     bước bằng nhau, quay đầu ra gãy góc.
      Năm cột x rơi vào 42 – 80 – 170 – 260 – 298: đúng "tầm 5 ô" theo bề ngang. */
-  const lech = (k) => Math.sin((Math.PI * 2 * (k + 1)) / 8);
+  const lech = (k) => Math.sin((Math.PI * 2 * k) / 8);
 
   /* Linh vật rải vào khoảng trống bên đối diện node cho bản đồ đỡ trống trải. */
   const MASCOT_BANDO = [
@@ -743,7 +746,10 @@ function renderLessons(data) {
 
       // Cứ 4 bài lại có 1 ô rương thưởng
       const chestIcon = done ? "🏆" : "🎁";
-      const bk = p.chest ? R + 6 : R;   // nửa bề ngang node (rương to hơn 6px)
+      /* Nửa bề ngang ô, để đặt left = tâm - nửa. Phải bằng ĐÚNG nửa bề rộng CSS
+         (ô 68px, rương 76px). Trước đây dùng 32 nên mọi ô thường bị đẩy lệch 2px
+         sang phải, còn ô rương lại đúng — hai ô lẽ ra đối xứng đo ra 263 và 261. */
+      const bk = p.chest ? 38 : CELL / 2;
 
       /* Khối chữ về lại NGAY DƯỚI ô, canh giữa theo ô — bỏ đường nối rồi thì đây
          là chỗ sạch và cân nhất. Kẹp trong khung vì ô ngoài cùng lệch tới 128px,
@@ -813,7 +819,7 @@ function renderLessons(data) {
       <div class="path-hero-content">
         <div class="path-hero-badge">${aIco("book", null, 14)} ${esc(nhanChang.phu || "Lộ trình học")}</div>
         <h2>${esc(nhanChang.ten)}</h2>
-        <p>Chọn một chương để mở bản đồ bài học, rồi bấm vào từng bài để vào học.</p>
+        <p>Chọn một chương để mở bản đồ bài học.</p>
 
         <div class="path-progress-box">
           <div class="progress-track-wrapper">
@@ -878,20 +884,20 @@ function injectPathCss() {
   const s = document.createElement("style");
   s.id = "pl-css";
   s.textContent =
-    ".path-hero-card { display: flex; align-items: center; justify-content: space-between; gap: 24px; background: linear-gradient(135deg, #ff007f 0%, #7928ca 50%, #4338ca 100%); color: #fff; padding: 32px 36px; border-radius: 28px; box-shadow: 0 14px 0 #4f107b, 0 25px 40px rgba(121, 40, 202, 0.4); margin-bottom: 36px; position: relative; overflow: hidden; border: 2px solid #ff66c4; }" +
+    ".path-hero-card { display: flex; align-items: center; justify-content: space-between; gap: 20px; background: linear-gradient(135deg, #ff007f 0%, #7928ca 50%, #4338ca 100%); color: #fff; padding: 20px 26px; border-radius: 22px; box-shadow: 0 9px 0 #4f107b, 0 18px 30px rgba(121, 40, 202, 0.32); margin-bottom: 22px; position: relative; overflow: hidden; border: 2px solid #ff66c4; }" +
     "[data-theme='dark'] .path-hero-card { background: linear-gradient(135deg, #6366f1 0%, #7c3aed 50%, #4338ca 100%); border-color: #a855f7; box-shadow: 0 14px 0 #3730a3, 0 25px 40px rgba(124, 58, 237, 0.45); }" +
     ".path-hero-glow { position: absolute; inset: 0; background: radial-gradient(circle, rgba(255,255,255,0.25) 0%, transparent 70%); pointer-events: none; }" +
     ".path-hero-content { flex: 1; z-index: 2; }" +
-    ".path-hero-badge { font-family: var(--font-mono); font-size: 12px; font-weight: 900; background: rgba(0, 0, 0, 0.28); padding: 6px 16px; border-radius: 20px; display: inline-block; margin-bottom: 12px; letter-spacing: 0.05em; backdrop-filter: blur(6px); border: 1px solid rgba(255,255,255,0.25); }" +
-    ".path-hero-content h2 { font-family: var(--font-display); font-size: clamp(26px, 4.5vw, 34px); font-weight: 900; margin-bottom: 8px; letter-spacing: -0.02em; text-shadow: 0 2px 4px rgba(0,0,0,0.2); }" +
-    ".path-hero-content p { font-size: 15px; opacity: 0.95; margin-bottom: 20px; line-height: 1.55; text-shadow: 0 1px 2px rgba(0,0,0,0.15); }" +
-    ".path-progress-box { background: rgba(0, 0, 0, 0.32); padding: 16px 20px; border-radius: 20px; backdrop-filter: blur(10px); border: 1.5px solid rgba(255,255,255,0.2); }" +
-    ".path-progress-stats { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; font-size: 13.5px; font-weight: 800; }" +
+    ".path-hero-badge { font-family: var(--font-mono); font-size: 11px; font-weight: 900; background: rgba(0, 0, 0, 0.28); padding: 4px 12px; border-radius: 20px; display: inline-block; margin-bottom: 8px; letter-spacing: 0.05em; backdrop-filter: blur(6px); border: 1px solid rgba(255,255,255,0.25); }" +
+    ".path-hero-content h2 { font-family: var(--font-display); font-size: clamp(21px, 3.4vw, 26px); font-weight: 900; margin-bottom: 5px; letter-spacing: -0.02em; text-shadow: 0 2px 4px rgba(0,0,0,0.2); }" +
+    ".path-hero-content p { font-size: 13.5px; opacity: 0.95; margin-bottom: 13px; line-height: 1.5; text-shadow: 0 1px 2px rgba(0,0,0,0.15); }" +
+    ".path-progress-box { background: rgba(0, 0, 0, 0.32); padding: 11px 15px; border-radius: 15px; backdrop-filter: blur(10px); border: 1.5px solid rgba(255,255,255,0.2); }" +
+    ".path-progress-stats { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-top: 8px; font-size: 12.5px; font-weight: 800; }" +
     ".path-xp-badge { font-family: var(--font-mono); color: #ffeb3b; background: rgba(0, 0, 0, 0.45); padding: 4px 12px; border-radius: 12px; border: 1.5px solid #ffee58; font-weight: 900; font-size: 13px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }" +
     ".path-hero-mascot { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; }" +
-    ".path-mascot-speech { background: #fff; color: #0f172a; font-weight: 900; font-size: 13px; padding: 8px 16px; border-radius: 18px; white-space: nowrap; margin-bottom: 8px; box-shadow: 0 8px 20px rgba(0,0,0,0.25); animation: floatSpeech 3s ease-in-out infinite; border: 2.5px solid #ff007f; font-family: var(--font-display); }" +
+    ".path-mascot-speech { background: #fff; color: #0f172a; font-weight: 900; font-size: 11.5px; padding: 5px 12px; border-radius: 15px; white-space: nowrap; margin-bottom: 6px; box-shadow: 0 8px 20px rgba(0,0,0,0.25); animation: floatSpeech 3s ease-in-out infinite; border: 2.5px solid #ff007f; font-family: var(--font-display); }" +
     "@keyframes floatSpeech { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }" +
-    ".path-hero-mascot img { width: 135px; height: 135px; object-fit: contain; filter: drop-shadow(0 12px 24px rgba(0,0,0,0.4)); animation: mascotHover 4s ease-in-out infinite; }" +
+    ".path-hero-mascot img { width: 96px; height: 96px; object-fit: contain; filter: drop-shadow(0 10px 18px rgba(0,0,0,0.35)); animation: mascotHover 4s ease-in-out infinite; }" +
     "@keyframes mascotHover { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }" +
 
     ".pathroot { max-width: 520px; margin: 0 auto; padding-bottom: 60px; }" +
@@ -976,7 +982,7 @@ function injectPathCss() {
     ".pn-stars { display: inline-flex; gap: 3px; }" +
     ".pn-star { width: 14px; height: 14px; fill: var(--border); }" +
     ".pn-star.on { fill: #ffc107; filter: drop-shadow(0 2px 4px rgba(255, 193, 7, 0.6)); }" +
-    "@media (max-width: 560px) { .path-hero-mascot { display: none; } }" +
+    "@media (max-width: 560px) { .path-hero-mascot { display: none; } .path-hero-card { padding: 16px 18px; margin-bottom: 16px; } }" +
     /* Bản đồ có ba thứ động cùng lúc (linh vật trôi, vành nhấp nháy, bong bóng
        nhảy) — ai đặt hệ thống giảm hiệu ứng thì tắt hết cho đỡ chóng mặt. */
     "@media (prefers-reduced-motion: reduce) { .pmascot, .pn-bubble, .pnode.cur::after { animation: none; } }";
