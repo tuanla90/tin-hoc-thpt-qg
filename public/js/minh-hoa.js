@@ -64,7 +64,39 @@
       ".mh-hop .mh-ic{font-size:24px;line-height:1.1}" +
       ".mh-hop b{display:block;font-size:12.5px;margin-top:4px}" +
       ".mh-hop small{display:block;font-size:11.5px;color:var(--text-soft);margin-top:2px;line-height:1.35}" +
-      "@media (max-width:560px){.mh-bit{width:38px}.mh-bit-o{height:38px;font-size:16px}}";
+      "@media (max-width:560px){.mh-bit{width:38px}.mh-bit-o{height:38px;font-size:16px}}" +
+
+      /* --- CHUYỂN ĐỘNG ---
+         Cố ý rất ngắn (180–420ms) và chỉ chạy MỘT lần khi trạng thái đổi. Animation
+         dài hoặc chạy vô hạn ở đây sẽ phản tác dụng: học sinh bấm liên tiếp thì các
+         hiệu ứng chồng lên nhau thành nhấp nháy, và mắt bị hút vào chuyển động thay
+         vì vào con số. Toàn bộ tự tắt khi hệ điều hành bật "giảm chuyển động" —
+         xem luật prefers-reduced-motion ở css/styles.css. */
+      "@keyframes mhPop{0%{transform:translateY(-3px) scale(1)}45%{transform:translateY(-6px) scale(1.14)}100%{transform:translateY(-3px) scale(1)}}" +
+      ".mh-bit.on .mh-bit-o{animation:mhPop .26s ease}" +
+
+      /* Ô giữa: vòng sáng loang ra một nhịp, đủ để mắt bắt được "đang xét ô này". */
+      "@keyframes mhLoang{0%{box-shadow:0 0 0 0 var(--primary)}100%{box-shadow:0 0 0 11px transparent}}" +
+      ".mh-o.giua{animation:mhLoang .5s ease-out}" +
+
+      /* Đổi chỗ: lắc ngang — trực giác "hai ô vừa tráo nhau". */
+      "@keyframes mhLac{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}" +
+      ".mh-o.doi{animation:mhLac .3s ease}" +
+
+      /* Tìm thấy / đã đúng chỗ: nảy lên một cái cho ra cảm giác chốt hạ. */
+      "@keyframes mhNay{0%{transform:scale(1)}40%{transform:scale(1.22)}100%{transform:scale(1)}}" +
+      ".mh-o.thay{animation:mhNay .42s cubic-bezier(.34,1.56,.64,1)}" +
+
+      /* Chặng DNS vừa sáng: trôi lên vào chỗ, thấy rõ "câu hỏi đi tiếp một chặng". */
+      "@keyframes mhTroi{0%{opacity:.35;transform:translateY(7px)}100%{opacity:1;transform:translateY(-3px)}}" +
+      ".mh-hop.sang{animation:mhTroi .34s ease-out}" +
+
+      /* Ô bị loại khỏi vùng tìm mờ dần thay vì tắt đột ngột. */
+      ".mh-o{transition:opacity .3s ease,border-color .25s,background .25s,color .25s,transform .25s}" +
+
+      /* Thanh tổng nhấp một nhịp khi số đổi, để không ai bấm bit mà không nhận ra. */
+      "@keyframes mhSang{0%{background:var(--primary-soft)}100%{background:transparent}}" +
+      ".mh-tong.doi{animation:mhSang .5s ease-out;border-radius:9px}";
     (document.head || document.documentElement).appendChild(st);
   }
 
@@ -101,7 +133,13 @@
       }).join("");
       var tong = bit.reduce(function (s, b, i) { return s + (b ? W[i] : 0); }, 0);
       var cong = W.filter(function (w, i) { return bit[i]; });
-      node.querySelector('[data-mh="tong"]').innerHTML =
+      var oTong = node.querySelector('[data-mh="tong"]');
+      /* Phần tử này KHÔNG bị dựng lại (chỉ đổi innerHTML) nên animation sẽ không tự
+         chạy lần hai. Bỏ class, buộc trình duyệt tính lại layout, rồi gắn lại. */
+      oTong.classList.remove("doi");
+      void oTong.offsetWidth;
+      oTong.classList.add("doi");
+      oTong.innerHTML =
         (cong.length ? cong.join(" + ") + " = " : "") + "<b>" + tong + "</b>" +
         '<div style="font-size:12.5px;color:var(--text-soft);margin-top:3px">nhị phân ' +
         bit.join("") + "<sub>2</sub> = " + tong + "<sub>10</sub></div>";
@@ -256,11 +294,14 @@
   }
 
   /* ------------------------------------------------------- ĐĂNG KÝ THEO BÀI */
+  /* Khoá là ID bài (C12-21), KHÔNG phải số bài trong tên slug. Slug ghi "bai-5"
+     là thuộc tính order, hoàn toàn khác ID — suy ID từ slug là gắn minh hoạ sai
+     bài (DNS từng bị gắn vào bài Thiết kế mạng LAN vì lỗi này). */
   var THEO_BAI = {
-    "C10-23": nhiPhan,
-    "C11-14": timNhiPhan,
-    "C11-15": sapXep,
-    "C12-05": dns,
+    "C10-23": nhiPhan,      // Bài 4 lớp 10 — Tính toán với số nhị phân
+    "C11-14": timNhiPhan,   // Bài 22 lớp 11 — Thuật toán tìm kiếm nhị phân
+    "C11-15": sapXep,       // Bài 23 lớp 11 — Thuật toán sắp xếp
+    "C12-21": dns,          // Bài 5 lớp 12 — Từ tên miền đến địa chỉ IP
   };
 
   /* Cắm vào cuối phần lý thuyết, ngay trước khu luyện tập — đúng chỗ concept-lab
