@@ -83,11 +83,17 @@
   (document.head || document.documentElement).appendChild(st);
 
   /* ---- Lựa chọn ---- */
+  /* Bỏ hẳn nút "Để sau": bấm Lưu mà chưa chọn ai thì #pfSave vẫn tự lưu
+     gender="" (xem wireForm) — im lặng không chọn đã có TÁC DỤNG Y HỆT nút đó,
+     nên bớt nút không mất khả năng bỏ qua, chỉ bớt một lựa chọn thừa trên màn. */
   var CHARS = [
     { val: "nu", ten: "Bạn nữ", anh: "asset/mascot/poses/happy.png", emoji: "👧" },
     { val: "nam", ten: "Bạn nam", anh: "asset/mascot/nam/poses/happy.png", emoji: "👦" },
-    { val: "khac", ten: "Để sau", anh: "", emoji: "🧑‍🎓" },
   ];
+  /* Ảnh đại diện khi CHƯA chọn ai (gender rỗng) — tách khỏi CHARS để xoá nút
+     "Để sau" không kéo theo mất luôn ảnh mặc định (charOf sẽ vỡ nếu vẫn trỏ
+     CHARS[2] mà mảng chỉ còn 2 phần tử). */
+  var MAC_DINH = { val: "", ten: "Chưa chọn", anh: "", emoji: "🧑‍🎓" };
   var GRADES = [["10", "Lớp 10", "Nền tảng"], ["11", "Lớp 11", "Kĩ thuật"], ["12", "Lớp 12", "Ôn thi"]];
   var TRACKS = [
     ["khmt", "Khoa học máy tính", "Lập trình Python, thuật toán, cơ sở dữ liệu"],
@@ -101,7 +107,7 @@
   var DEFAULT = { name: "", gender: "", grade: "", track: "", mode: "", days: [] };
 
   function labelOf(list, val) { for (var i = 0; i < list.length; i++) if (list[i][0] === val) return list[i][1]; return ""; }
-  function charOf(val) { for (var i = 0; i < CHARS.length; i++) if (CHARS[i].val === val) return CHARS[i]; return CHARS[2]; }
+  function charOf(val) { for (var i = 0; i < CHARS.length; i++) if (CHARS[i].val === val) return CHARS[i]; return MAC_DINH; }
   function profileAvatar(p) {
     var c = charOf((p && p.gender) || "");
     return c.anh ? '<img src="' + c.anh + '" alt="">' : c.emoji;
