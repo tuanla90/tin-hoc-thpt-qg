@@ -79,7 +79,23 @@ test("trang một bài có đủ phần cần cho SEO", async () => {
   assert.match(r.body, /Đáp án: [A-D]/);
   assert.match(r.body, /Thuật ngữ tiếng Anh/);
   assert.ok(r.body.includes('href="/hoc#/lesson/C12-16"'), "phải có lối vào ứng dụng");
-  assert.ok(!r.body.includes("<script src"), "trang public không nạp JS của app");
+  /* Ý định của luật này là KHÔNG kéo bundle ứng dụng (~1,2MB) vào trang công khai,
+     chứ không phải cấm mọi thẻ script. Bài này không có minh hoạ nên phải sạch trơn. */
+  assert.ok(!r.body.includes("<script src"), "bài không có minh hoạ thì không nạp script nào");
+});
+
+test("bài có minh hoạ: kèm khối riêng + 2 tệp minh hoạ, KHÔNG kéo bundle app", async () => {
+  const r = await lay("/bai/tin-hoc-11-bai-22-thuat-toan-tim-kiem-nhi-phan");
+  assert.equal(r.status, 200);
+  assert.match(r.body, /Thử ngay: minh hoạ từng bước/, "phải có khối minh hoạ riêng");
+  assert.match(r.body, /id="mhMount" data-bai="C11-14"/, "phải gắn đúng ID bài");
+  assert.ok(r.body.includes('src="/js/minh-hoa.js"'), "nạp minh-hoa.js");
+  assert.ok(r.body.includes('src="/js/minh-hoa-2.js"'), "nạp minh-hoa-2.js");
+  assert.match(r.body, /<noscript>/, "tắt JS thì phải có lối vào ứng dụng");
+  /* Chốt quan trọng: tuyệt đối không được kéo theo bundle nặng của ứng dụng. */
+  ["app.js", "questions.js", "clean-tin10.js", "gamify.js", "account.js", "skulpt"].forEach((t) => {
+    assert.ok(!r.body.includes("/js/" + t), "KHÔNG được nạp " + t);
+  });
 });
 
 test("chỉ mở vài câu mẫu, KHÔNG mở câu Vận dụng", async () => {

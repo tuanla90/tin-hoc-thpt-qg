@@ -518,5 +518,17 @@
     napCss: napCss,
     dangKy: function (id, fn) { THEO_BAI[id] = fn; },
     coBai: function () { return Object.keys(THEO_BAI); },
+    /* Dựng vào một phần tử chỉ định. Trang công khai /bai/<slug> không có #app
+       nên injectMinhHoa không dùng được ở đó — dùng hàm này. */
+    veVao: function (host, id) {
+      if (!host || !THEO_BAI[id]) return false;
+      napCss();
+      try {
+        THEO_BAI[id](host);
+        var n = host.querySelector(".mh");
+        if (n) ganTuChay(n);
+        return true;
+      } catch (e) { console.error("[minh-hoa] Không dựng được:", e); return false; }
+    },
   };
 })();

@@ -276,6 +276,14 @@ const CSS_RIENG = `
    phẩm số và khung pháp lí…" cụt mất phần quan trọng nhất — người tra cứu không
    biết đó có phải bài mình cần không. Thẻ cứ cao thấp khác nhau, lưới vẫn đều. */
 .seo-grid b{font-size:14.5px;font-weight:650;line-height:1.4}
+/* Bắc cầu biến màu cho khối minh hoạ: js/minh-hoa.js viết cho css/styles.css của
+   app (--bg-card, --border, --primary…), còn trang công khai dùng landing.css với
+   tên khác (--surface-card, --line, --brand…). Không map thì minh hoạ mất hết màu.
+   Biến CSS kế thừa nên đặt ở khối bọc là đủ. */
+.mh-cau-noi{--bg-card:var(--surface-card);--bg-soft:var(--bg-subtle);--border:var(--line);
+  --primary:var(--brand);--primary-soft:var(--brand-soft);--primary-d:var(--brand-dark);
+  --text:var(--ink-main);--text-soft:var(--ink-muted);--success:#16a34a;--radius:14px}
+.mh-cau-noi .mh{margin:0;border:0;padding:0;background:transparent}
 /* Nhãn lớp trong khối "Bài liên quan": xuống dòng riêng cho khỏi dính vào tên
    bài, và nhạt hơn để tên bài vẫn là thứ đọc trước. */
 .seo-lq-lop{display:block;margin-top:3px;font-weight:600;font-size:12.5px;color:var(--ink-faint)}
@@ -583,12 +591,55 @@ function lienQuanHtml(muc) {
 </div>`;
 }
 
+/* ---- Bài nào có minh hoạ động ----
+   Quét ID trực tiếp từ hai tệp JS thay vì chép tay danh sách vào đây: chép tay
+   là kiểu gì cũng có lúc thêm minh hoạ mà quên cập nhật, rồi trang công khai
+   thiếu khối trong khi app thì có. Đọc một lần rồi nhớ. */
+let MH_CO = null;
+function baiCoMinhHoa() {
+  if (MH_CO) return MH_CO;
+  MH_CO = new Set();
+  ["minh-hoa.js", "minh-hoa-2.js"].forEach((ten) => {
+    try {
+      const src = fs.readFileSync(path.join(__dirname, "..", "public", "js", ten), "utf8");
+      // khớp cả 'dangKy("C10-22"' lẫn '"C10-23": nhiPhan' trong bảng THEO_BAI
+      for (const m of src.matchAll(/dangKy\(\s*"([A-Z]\d{2}-\d{2})"/g)) MH_CO.add(m[1]);
+      for (const m of src.matchAll(/"([A-Z]\d{2}-\d{2})":\s*[a-zA-Z]/g)) MH_CO.add(m[1]);
+    } catch (e) { /* thiếu tệp thì đơn giản là không có bài nào */ }
+  });
+  return MH_CO;
+}
+
+/* Khối minh hoạ trên trang công khai.
+   Trang này CỐ Ý không nạp bundle của app (nặng ~1,2MB). Hai tệp minh hoạ thì
+   độc lập hoàn toàn — không đụng State, LESSONS hay QUESTION_BANK — nên nạp
+   riêng được, tổng ~62KB và chỉ nạp ở 11 bài thật có minh hoạ. */
+function minhHoaHtml(muc) {
+  const id = muc.bai.id;
+  if (!baiCoMinhHoa().has(id)) return { than: "", them: "" };
+  const than = `
+<div class="pg-card">
+  <h2>Thử ngay: minh hoạ từng bước</h2>
+  <p class="pg-note" style="margin-top:0">Bấm từng bước để tự xem cơ chế hoạt động, hoặc bấm
+    “Tự chạy” cho nó tiến mỗi giây một lần. Đổi được dữ liệu đầu vào — không cần đăng nhập.</p>
+  <div class="mh-cau-noi" id="mhMount" data-bai="${esc(id)}"></div>
+  <noscript><p class="pg-note">Minh hoạ này cần bật JavaScript.
+    <a href="/hoc#/lesson/${esc(id)}">Mở trong ứng dụng</a>.</p></noscript>
+</div>`;
+  const them = `<script src="/js/minh-hoa.js" defer></script>
+<script src="/js/minh-hoa-2.js" defer></script>
+<script>window.addEventListener("load",function(){var h=document.getElementById("mhMount");` +
+    `if(h&&window.MinhHoa)window.MinhHoa.veVao(h,h.dataset.bai)});</script>`;
+  return { than, them };
+}
+
 function trangBai(muc, base) {
   const khoaCache = muc.slug + "|" + base;
   if (CACHE.has(khoaCache)) return CACHE.get(khoaCache);
 
   const { kho } = chiMuc();
   const l = muc.bai;
+  const mh = minhHoaHtml(muc);
   const canonical = base + "/bai/" + muc.slug;
   /* Tiêu đề dồn từ khoá quan trọng lên đầu (Google cắt quanh 60-70 ký tự): tên
      lớp + số bài + tên bài trước, cụm "trắc nghiệm có đáp án" ở đuôi. Nhánh
@@ -665,6 +716,8 @@ ${(cauMcHtml || cauTfHtml) ? `<div class="pg-card">
 <p class="pg-note" style="margin-top:0">Mấy câu mẫu để bạn tự kiểm tra ngay. Trong ứng dụng, bài này có đủ ${(l.quiz || []).length} câu, chấm điểm tự động và giải thích từng câu sai.</p>
 ${cauMcHtml}${cauTfHtml}</div>` : ""}
 
+${mh.than}
+
 <div class="pg-card" style="text-align:center">
   <h2>Học trọn bài này trong ứng dụng</h2>
   <p class="pg-note">Bài giảng đầy đủ, ${(l.quiz || []).length} câu luyện tập chấm tự động, thi thử đúng cấu trúc đề tốt nghiệp
@@ -705,7 +758,7 @@ ${lienQuanHtml(muc)}
     ],
   };
 
-  const html = khung({ title: tieuDe, desc, canonical, body, ld });
+  const html = khung({ title: tieuDe, desc, canonical, body, ld, them: mh.them });
   CACHE.set(khoaCache, html);
   return html;
 }
