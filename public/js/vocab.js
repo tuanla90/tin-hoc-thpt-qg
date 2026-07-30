@@ -23,8 +23,13 @@
     ".voc-card{background:var(--bg-card);border:1px solid var(--border);border-left:4px solid var(--info);border-radius:var(--radius-sm);padding:11px 13px}" +
     ".voc-top{display:flex;align-items:center;gap:8px;margin-bottom:6px}" +
     ".voc-en{font-size:16.5px;font-weight:800;color:var(--info);line-height:1.2}" +
-    ".voc-say{margin-left:auto;flex:none;border:1px solid var(--border);background:var(--bg-soft);border-radius:8px;cursor:pointer;font-size:14px;line-height:1;padding:5px 8px}" +
-    ".voc-say:hover{background:var(--primary-soft)}" +
+    /* Trước dùng border:var(--border) trên nền background:var(--bg-soft) — ở giao
+       diện Tối hai biến đó CÙNG MỘT MÃ MÀU (#1e293b), nên viền biến mất và nút chỉ
+       còn là một khối xám mờ hơi nhỉnh màu thẻ, nhìn "chìm" y như phản ánh. Đổi sang
+       tông --info: đã là màu nhấn của khối từ vựng (viền trái thẻ, tên thuật ngữ),
+       nút mượn màu đó nên nổi rõ mà vẫn cùng một hệ màu, không lạc tông. */
+    ".voc-say{margin-left:auto;flex:none;border:1.5px solid var(--info);background:var(--info-soft);color:var(--info);border-radius:8px;cursor:pointer;font-size:14px;line-height:1;padding:5px 8px;transition:background .15s,color .15s}" +
+    ".voc-say:hover{background:var(--info);color:#fff}" +
     ".voc-say:active{transform:scale(.92)}" +
     ".voc-pron{font-size:13.5px;color:var(--text);margin-bottom:3px}" +
     ".voc-ipa{color:var(--text-soft);font-size:12px;margin-left:4px}" +
