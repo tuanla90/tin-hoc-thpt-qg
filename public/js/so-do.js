@@ -227,5 +227,8 @@
     dangKy: function (id, d) { THEO_BAI[id] = d; },
     coBai: function () { return Object.keys(THEO_BAI); },
     veVao: veVao,
+    /* Mở dữ liệu thô cho trang "Ôn nhanh" (js/on-nhanh.js): nó lấy dòng "ghi" làm
+       câu chốt của bài khi bài đó không có khối "Sai ở đâu" nào. Chỉ đọc. */
+    lay: function (id) { return THEO_BAI[id]; },
   };
 })();

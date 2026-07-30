@@ -178,7 +178,7 @@ function countByType(t) { return QUESTION_BANK.filter((q) => q.type === t).lengt
  * ------------------------------------------------------------------------- */
 /* Bảng ánh xạ view -> hàm render (dựng lại mỗi lần để bắt được window.* nạp sau) */
 function viewRenderer(view) {
-  const map = { home: renderHome, lessons: renderLessons, lesson: renderLesson, playground: renderPlayground, practiceSetup: renderPracticeSetup, quiz: renderQuiz, result: renderResult, history: renderHistory, vocab: window.renderVocabPage, achievements: (window.Gam && window.Gam.renderAchievements), examCodes: window.renderExamCodes, tfDrill: window.renderTFDrill, profile: window.renderProfile, sqlLab: window.renderSqlLab, gfxLab: window.renderGfxLab, account: window.renderAccount };
+  const map = { home: renderHome, lessons: renderLessons, lesson: renderLesson, playground: renderPlayground, practiceSetup: renderPracticeSetup, quiz: renderQuiz, result: renderResult, history: renderHistory, vocab: window.renderVocabPage, achievements: (window.Gam && window.Gam.renderAchievements), examCodes: window.renderExamCodes, tfDrill: window.renderTFDrill, profile: window.renderProfile, sqlLab: window.renderSqlLab, gfxLab: window.renderGfxLab, account: window.renderAccount, onNhanh: window.renderOnNhanh };
   return map[view] || renderHome;
 }
 
@@ -195,6 +195,14 @@ function viewToHash(view, data) {
        chặng riêng (xem scrollNho). */
     case "lessons": return "#/lessons" + (data && data.stage ? "/" + data.stage : "");
     case "lesson": return "#/lesson/" + encodeURIComponent((data && data.id) || "");
+    /* Ôn nhanh gộp ba màn (tổng kết chương / bẫy / bản in) vào MỘT view, phân
+       biệt bằng data.muc — ba view rời thì ba lần khai báo ở cả ba chỗ (hash,
+       parse, renderer) trong khi chúng dùng chung hết dữ liệu và thanh tab. */
+    case "onNhanh": {
+      const m = data && data.muc, s = data && data.stage;
+      if (m === "chuong") return "#/on-nhanh/chuong/" + s + "/" + (data.ci || 0);
+      return "#/on-nhanh" + (m ? "/" + m : "") + (s ? "/" + s : "");
+    }
     /* Bốn xưởng thực hành có ĐỊA CHỈ RIÊNG. Trước đây mọi xưởng đều là #/playground:
        đổi tab không đổi URL, nên F5 là về Python, không gửi được link "vào thẳng
        xưởng SQL" cho bạn, và nút Back của trình duyệt không lùi giữa các tab.
@@ -251,6 +259,15 @@ function parseHash() {
     }
     case "history": return { view: "history", data: undefined };
     case "vocab": return { view: "vocab", data: undefined };
+    /* #/on-nhanh · #/on-nhanh/<muc> · #/on-nhanh/<stage> · #/on-nhanh/chuong/<stage>/<ci>
+       Đoạn thứ hai vừa có thể là tên mục vừa có thể là số chặng (dạng "#/on-nhanh/20"),
+       nên phải xét bằng isNaN chứ không đếm số đoạn. */
+    case "on-nhanh": {
+      const p1 = parts[1] || "";
+      if (p1 === "chuong") return { view: "onNhanh", data: { muc: "chuong", stage: +parts[2], ci: +parts[3] } };
+      if (p1 === "" || !isNaN(+p1)) return { view: "onNhanh", data: { stage: +p1 || undefined } };
+      return { view: "onNhanh", data: { muc: p1, stage: +parts[2] || undefined } };
+    }
     case "achievements": return { view: "achievements", data: undefined };
     case "exam": return { view: "examCodes", data: undefined };
     case "tf-drill": return { view: "tfDrill", data: undefined };
@@ -704,6 +721,7 @@ const TEN_XUONG_NGAN = { python: "Python", sql: "SQL", web: "HTML/CSS", gfx: "đ
 const O_PHU = {
   mophong: { nhan: "Mô phỏng", icon: "bulb", mau: "#0891b2" },
   thuchanh: { nhan: "Thực hành", icon: "code", mau: "#7c3aed" },
+  tongket: { nhan: "Tổng kết", icon: "layers", mau: "#0284c7" },
   luyen: { nhan: "Luyện tập", icon: "target", mau: "#16a34a" },
   thi: { nhan: "Thi thử", icon: "flag", mau: "#dc2626" },
 };
@@ -799,6 +817,12 @@ function renderLessons(data) {
       const x = xuongCuaBai(l.id);
       if (x) cells.push({ loai: "thuchanh", l, gi, xuong: x.loai, soBt: x.so });
     });
+    /* Ô tổng kết đứng TRƯỚC ô luyện tập: đọc lại chốt kiến thức rồi mới làm câu
+       hỏi mới đúng thứ tự ôn. Chương nào chưa gom được câu chốt nào thì bỏ qua,
+       không vẽ ô rỗng. */
+    if (typeof OnNhanh !== "undefined" && OnNhanh.chuongCoChot(CHANG, ci)) {
+      cells.push({ loai: "tongket", chuong: c, ci });
+    }
     cells.push({ loai: "luyen", chuong: c, ci });
     if (ci === chaps.length - 1) cells.push({ loai: "thi" });
     cells.forEach((o, k) => {
@@ -936,6 +960,11 @@ function renderLessons(data) {
         ten = `${o.soBt} bài ${TEN_XUONG_NGAN[o.xuong] || "code"} — máy chấm`;
         khoaTxt = vBai;
         pre = typeof Plan !== "undefined" && !Plan.xuongMo(o.xuong, o.l);
+      } else if (o.loai === "tongket") {
+        /* Mở ngay từ đầu, KHÔNG đòi học xong bài nào: đây là bản rút gọn để ôn
+           gấp, mà lúc ôn gấp thì học sinh cần vào thẳng chứ không đi lại lộ trình. */
+        open = true;
+        ten = "Cả chương trong một màn, mỗi bài một câu chốt";
       } else if (o.loai === "luyen") {
         const daHoc = c.items.filter((it) => learned[it.gi]).length;
         open = daHoc >= 1;
@@ -1078,6 +1107,7 @@ function renderLessons(data) {
       if (o.loai === "bai") { go("lesson", { id: o.l.id }); return; }
       if (o.loai === "mophong") { go("lesson", { id: o.l.id, tieu: "mophong" }); return; }
       if (o.loai === "thuchanh") { go("lesson", { id: o.l.id, tieu: "thuchanh" }); return; }
+      if (o.loai === "tongket") { go("onNhanh", { muc: "chuong", stage: CHANG, ci: o.ci }); return; }
       if (o.loai === "luyen") { batDauLuyenChuong(o.chuong, o.idDiem); return; }
       if (o.loai === "thi") {
         // Gói Miễn phí: thi thử 1 đề. Ô vẫn bấm được để biết mình đang bỏ lỡ gì.
@@ -1204,6 +1234,9 @@ function injectPathCss() {
     "[data-theme='dark'] .pnode.ophu.locked .ophu-ic { color: #475569; }" +
     ".pnode.o-mophong.open { background: linear-gradient(180deg, #22d3ee 0%, #0891b2 100%); box-shadow: 0 9px 0 #0e6f8a, 0 15px 25px rgba(8, 145, 178, .42); border: 3px solid #67e8f9; }" +
     ".pnode.o-thuchanh.open { background: linear-gradient(180deg, #a78bfa 0%, #7c3aed 100%); box-shadow: 0 9px 0 #5b21b6, 0 15px 25px rgba(124, 58, 237, .42); border: 3px solid #c4b5fd; }" +
+    /* Xanh dương: tách hẳn khỏi lục (luyện tập) đứng ngay cạnh nó, và khỏi lam
+       của ô mô phỏng ở xa hơn trong chương. */
+    ".pnode.o-tongket.open { background: linear-gradient(180deg, #38bdf8 0%, #0284c7 100%); box-shadow: 0 9px 0 #075985, 0 15px 25px rgba(2, 132, 199, .42); border: 3px solid #7dd3fc; }" +
     ".pnode.o-luyen.open { background: linear-gradient(180deg, #4ade80 0%, #16a34a 100%); box-shadow: 0 9px 0 #15803d, 0 15px 25px rgba(22, 163, 74, .42); border: 3px solid #86efac; }" +
     ".pnode.o-thi.open { background: linear-gradient(180deg, #fb923c 0%, #dc2626 100%); box-shadow: 0 9px 0 #991b1b, 0 15px 25px rgba(220, 38, 38, .45); border: 3px solid #fdba74; }" +
     /* Ô thi thử là cửa ải cuối chặng — cho nó thở nhẹ để mắt bắt được ngay */

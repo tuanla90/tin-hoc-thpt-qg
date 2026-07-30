@@ -222,5 +222,9 @@
     dangKy: function (id, ds) { THEO_BAI[id] = ds; },
     coBai: function () { return Object.keys(THEO_BAI); },
     veVao: veVao,
+    /* Mở dữ liệu thô cho trang "Ôn nhanh" (js/on-nhanh.js) lắp lại thành danh sách
+       bẫy và bản in. Trả về CHÍNH mảng gốc, không nhân bản: chỗ dùng chỉ đọc, mà
+       nhân bản 105 bài mỗi lần dựng trang thì tốn vô ích. */
+    lay: function (id) { return THEO_BAI[id]; },
   };
 })();
