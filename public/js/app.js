@@ -390,6 +390,22 @@ function renderFromHashThat() {
 
 window.addEventListener("hashchange", renderFromHash);
 
+/* Bản đồ lộ trình tính hình học (bề ngang khung, biên độ sóng) MỘT LẦN lúc dựng,
+   dựa vào window.innerWidth. Xoay ngang điện thoại là đổi mốc 620px nhưng bản đồ
+   vẫn giữ hình học cũ — sóng hẹp giữa một khung rộng, hoặc chữ tràn khỏi thẻ.
+   Chỉ dựng lại KHI ĐỔI MỐC, không phải mỗi lần kéo cửa sổ: dựng lại là mất chỗ
+   cuộn và đóng lại các chương đang mở, không đáng làm cho một vài pixel. */
+let mocRongCu = window.innerWidth >= 620;
+let henDoiCo = null;
+window.addEventListener("resize", () => {
+  const moc = window.innerWidth >= 620;
+  if (moc === mocRongCu) return;
+  mocRongCu = moc;
+  if (State.view !== "lessons") return;   // màn khác không phụ thuộc hình học này
+  clearTimeout(henDoiCo);
+  henDoiCo = setTimeout(() => { keepScrollOnce = true; renderFromHash(); }, 180);
+});
+
 /* ===========================================================================
  *  TRANG CHỦ
  * ========================================================================= */
@@ -844,11 +860,24 @@ function renderLessons(data) {
      136 đúng chằn) để chừa 8px lề, không thì vành nhấp nháy của ô đang học tràn
      ra khỏi thẻ. */
   const CELL = 68;                     // đường kính một ô
-  /* Bề ngang = 2A + CELL. Muốn ≈ 5 ô thì 2A = 4·CELL, tức A = 2·CELL = 136; trừ
-     8px lấy lề để vành nhấp nháy của ô đang học không tràn khỏi thẻ. */
-  const A = 2 * CELL - 8;
-  const IW = 340, CX = 170, STEP = 176, PADTOP = 78;
   const CAP_W = 190;                   // 190px/3 dòng: không cắt tên bài nào trong 119 bài
+
+  /* BỀ NGANG KHUNG THEO MÀN HÌNH, và BIÊN ĐỘ SÓNG SUY TỪ NÓ.
+     Trước đây khung đóng cứng 340px với biên độ 128px. Khối chữ rộng 190px canh
+     giữa dưới ô, nên ô ngoài cùng (tâm cách lề 42px) cần chữ bắt đầu ở -53px —
+     phải kẹp về 4px, tức chữ LỆCH KHỎI TÂM Ô 57px. Đo được 15 khối lệch mỗi chặng,
+     hai cột ngoài cùng lệch 57px, hai cột trong lệch 19px. Mắt thấy ngay.
+     Ở desktop thẻ chương rộng 756px nên 340px là bỏ không hơn 400px chỗ trống —
+     nới khung ra là hết phải kẹp mà sóng vẫn giữ nguyên biên độ.
+     Ở điện thoại 375px thẻ chỉ rộng 339px, không nới được, nên phải HẠ biên độ:
+     sóng hẹp hơn nhưng chữ đúng tâm ô. Thà sóng bớt rộng còn hơn chữ lệch. */
+  const IW = window.innerWidth >= 620 ? 460 : 330;
+  const CX = Math.round(IW / 2);
+  /* Biên độ tối đa để khối chữ của ô ngoài cùng vẫn nằm trong khung: CX − nửa
+     khối chữ − 4px lề. Trần 2·CELL−8 giữ đúng ý "sóng rộng khoảng 5 ô" của bản
+     đầu, và chừa 8px cho vành nhấp nháy của ô đang học. */
+  const A = Math.min(2 * CELL - 8, CX - CAP_W / 2 - 4);
+  const STEP = 176, PADTOP = 78;
   const CAP_DY = 52;                   // hở từ tâm ô xuống đầu khối chữ (qua bóng nổi + vành)
   const CAP_BOT = 133;                 // chỗ chừa dưới ô cuối cho khối chữ của nó
   const ic = (name) => (typeof ICON === "function" ? ICON(name) : "");
@@ -914,7 +943,10 @@ function renderLessons(data) {
       const o = p.o;
       /* Khối chữ NGAY DƯỚI ô, canh giữa theo ô. Kẹp trong khung vì ô ngoài cùng
          lệch tới 128px, canh giữa nguyên bản sẽ đẩy khối chữ 190px ra ngoài mép. */
-      const capL = Math.max(4, Math.min(IW - CAP_W - 4, p.x - CAP_W / 2));
+      /* KHÔNG kẹp nữa — A ở trên đã được suy ra sao cho khối chữ của ô ngoài cùng
+         vẫn nằm trong khung, nên kẹp chỉ có thể làm chữ lệch khỏi tâm ô chứ không
+         cứu được gì. Đó chính là lỗi của bản trước. */
+      const capL = p.x - CAP_W / 2;
       const capStyle = `left:${f1(capL)}px;top:${f1(p.y + CAP_DY)}px`;
       /* Nửa bề ngang ô, để đặt left = tâm - nửa. Phải bằng ĐÚNG nửa bề rộng CSS
          (ô bài 68px, ô phụ 76px), không thì hai ô lẽ ra đối xứng lại lệch nhau. */
@@ -1025,7 +1057,7 @@ function renderLessons(data) {
         </div>
 
         <div class="pchap-acc-body" id="${accordId}" ${defaultOpen ? "" : "hidden"}>
-          <div class="pwrap" style="height:${H}px">${macs}${nodes}</div>
+          <div class="pwrap" style="width:${IW}px;height:${H}px">${macs}${nodes}</div>
         </div>
       </div>`;
   };
@@ -1212,7 +1244,9 @@ function injectPathCss() {
     ".pchap-acc-body { padding: 10px 0 30px; border-top: 2px dashed var(--border); background: color-mix(in srgb, var(--cc) 3%, var(--bg-card)); animation: fadeInAcc 0.3s ease; }" +
     "@keyframes fadeInAcc { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }" +
 
-    ".pwrap { position: relative; width: 340px; margin: 0 auto; }" +
+    /* Bề ngang do renderLessons đặt inline (đổi theo khổ màn hình) — ở đây chỉ để
+       340px làm giá trị đỡ, phòng khi có chỗ nào dựng .pwrap mà quên đặt. */
+    ".pwrap { position: relative; width: 340px; max-width: 100%; margin: 0 auto; }" +
 
     /* Linh vật trang trí: nằm dưới đường nối, không nhận chuột, không đọc màn hình */
     /* Khung CỐ ĐỊNH, không để ảnh tự quyết chiều cao: bộ ảnh linh vật có tỉ lệ
