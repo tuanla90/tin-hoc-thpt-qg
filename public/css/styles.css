@@ -1290,6 +1290,18 @@ code.ic {
 .floating-mascot-close { min-width: 44px; min-height: 44px; }
 .floating-mascot-ask { min-height: 52px; }
 
+/* Khối vừa được cuộn tới từ ô "Mô phỏng" / "Thực hành" trên bản đồ lộ trình:
+   nháy viền một nhịp rồi tắt, để người học biết trang mở đúng vào mục mình bấm
+   chứ không phải cuộn bừa. Chỉ viền + nền nhạt, không dịch chỗ khối. */
+.neo-sang {
+  animation: neoSang 1.5s ease-out 1;
+  border-radius: 16px;
+}
+@keyframes neoSang {
+  0%, 22% { box-shadow: 0 0 0 3px var(--primary), 0 0 22px color-mix(in srgb, var(--primary) 45%, transparent); background: var(--primary-soft); }
+  100% { box-shadow: 0 0 0 3px transparent; background: transparent; }
+}
+
 /* Bốn animation chạy infinite repaint không ngừng kể cả lúc học sinh đang đọc
    đề — tốn pin và giật trên máy yếu. Tôn trọng lựa chọn giảm chuyển động của
    hệ điều hành. */

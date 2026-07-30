@@ -268,6 +268,10 @@ function goStay(view, data) { keepScrollOnce = true; go(view, data); }
    trang (đúng), còn quay lại đúng chỗ cũ thì trả lại đúng chỗ cũ. */
 const scrollNho = new Map();
 let hashTruoc = location.hash;
+/* Hash vừa mở KÈM NEO (vào bài để xem đúng một khối, xem coNeo bên dưới). Chỗ cuộn
+   sâu đó không được nhớ: nhớ rồi thì lần sau bấm ô BÀI HỌC của đúng bài ấy sẽ mở ra
+   ở lưng trang, người học tưởng app cuộn bừa. */
+let hashCoNeo = null;
 
 /* Đọc hash rồi render. Cả nút trong app lẫn Back/Forward đều đi qua đây. */
 /* Bọc ngoài renderFromHash: ứng dụng dựng toàn bộ giao diện bằng JS từ ~40 tệp
@@ -312,15 +316,22 @@ function renderFromHashThat() {
   keepScrollOnce = false;
   const prevY = window.scrollY;
 
-  /* Ghi lại chỗ đang đứng của màn VỪA RỜI, rồi xem màn sắp vào đã từng ghé chưa. */
-  if (hashTruoc && hashTruoc !== location.hash) scrollNho.set(hashTruoc, prevY);
-  hashTruoc = location.hash;
-  const yCu = keepScroll ? prevY : scrollNho.get(location.hash);
-
   /* Vào bài để xem ĐÚNG MỘT KHỐI (ô "Mô phỏng" / "Thực hành" trên bản đồ gửi kèm
      data.tieu) thì màn hình tự cuộn tới khối đó ở cuối renderLesson — router phải
      tránh đường, không thì hai cú cuộn tranh nhau và khối kia luôn thắng. */
   const coNeo = !!(d && d.tieu);
+
+  /* Ghi lại chỗ đang đứng của màn VỪA RỜI, rồi xem màn sắp vào đã từng ghé chưa.
+     Màn vừa rời mà mở bằng NEO thì XOÁ chỗ đã nhớ chứ không ghi chỗ cuộn sâu ấy:
+     ghi rồi thì lần sau bấm ô BÀI HỌC của đúng bài đó lại mở ra ở lưng trang, đúng
+     chỗ khối thực hành — người học tưởng app cuộn bừa. */
+  if (hashTruoc && hashTruoc !== location.hash) {
+    if (hashTruoc === hashCoNeo) { scrollNho.delete(hashTruoc); hashCoNeo = null; }
+    else scrollNho.set(hashTruoc, prevY);
+  }
+  hashTruoc = location.hash;
+  if (coNeo) hashCoNeo = location.hash;
+  const yCu = keepScroll ? prevY : scrollNho.get(location.hash);
   if (!keepScroll && yCu == null && !coNeo) window.scrollTo({ top: 0, behavior: "smooth" });
   (viewRenderer(view))(d);
   /* Đặt lại SAU khi DOM mới dựng xong: thay innerHTML có thể làm trang co lại rồi
@@ -656,11 +667,13 @@ function renderChonChang() {
 /* Bốn loại ô phụ trên bản đồ lộ trình. Màu tách hẳn khỏi màu chương để nhìn một
    cái là biết ô này không phải bài học: xem chapHtml trong renderLessons. */
 const TEN_XUONG_NGAN = { python: "Python", sql: "SQL", web: "HTML/CSS", gfx: "đồ hoạ" };
+/* icon lấy từ js/icons.js (bộ nét vẽ dùng khắp app), KHÔNG dùng emoji: emoji mỗi
+   hệ điều hành vẽ một kiểu, cỡ không khớp icon xung quanh và không nhận màu. */
 const O_PHU = {
-  mophong: { nhan: "Mô phỏng", icon: "🔬", mau: "#0891b2" },
-  thuchanh: { nhan: "Thực hành", icon: "⌨️", mau: "#7c3aed" },
-  luyen: { nhan: "Luyện tập", icon: "🎯", mau: "#16a34a" },
-  thi: { nhan: "Thi thử", icon: "🏁", mau: "#dc2626" },
+  mophong: { nhan: "Mô phỏng", icon: "bulb", mau: "#0891b2" },
+  thuchanh: { nhan: "Thực hành", icon: "code", mau: "#7c3aed" },
+  luyen: { nhan: "Luyện tập", icon: "target", mau: "#16a34a" },
+  thi: { nhan: "Thi thử", icon: "flag", mau: "#dc2626" },
 };
 
 function renderLessons(data) {
@@ -901,7 +914,7 @@ function renderLessons(data) {
       const cuaBai = o.l ? " — " + (o.l.title || "").replace(/^Bài\s*\d+[.\s]*/, "") : "";
       const mota = `${dang.nhan}${cuaBai}: ${ten}` + (pre ? " (gói Premium)" : "") + (open ? "" : " (chưa mở)");
       return `<button class="pnode ophu o-${o.loai} ${open ? "open" : "locked"}${pre ? " o-pre" : ""}" data-key="${esc(o.key)}" data-lock="${open ? 0 : 1}" data-khoa="${esc(khoaTxt)}" style="${dat(38)}" title="${esc(mota)}" aria-label="${esc(mota)}">
-          <span class="ophu-emoji">${open ? dang.icon : "🔒"}</span>
+          <span class="ophu-ic">${ic(open ? dang.icon : "lock")}</span>
           ${pre ? '<span class="ophu-pre">PRO</span>' : ""}
         </button>
         ${capHtml(nhan, dang.mau, ten, starsHtml)}`;
@@ -946,7 +959,7 @@ function renderLessons(data) {
   chaps.forEach((c) => c.cells.forEach((o) => { if (o.loai !== "bai") loaiCo.add(o.loai); }));
   const chuGiai = `<div class="path-chugiai">
       <span class="pcg"><b class="pcg-ic pcg-bai">${ic("play")}</b>Bài học</span>
-      ${Object.keys(O_PHU).filter((k) => loaiCo.has(k)).map((k) => `<span class="pcg"><b class="pcg-ic pcg-${k}">${O_PHU[k].icon}</b>${O_PHU[k].nhan}</span>`).join("")}
+      ${Object.keys(O_PHU).filter((k) => loaiCo.has(k)).map((k) => `<span class="pcg"><b class="pcg-ic pcg-${k}">${ic(O_PHU[k].icon)}</b>${O_PHU[k].nhan}</span>`).join("")}
     </div>`;
 
   app.innerHTML = `
@@ -1066,8 +1079,8 @@ function injectPathCss() {
     /* Chú giải loại ô — đứng trên danh sách chương, tự xuống dòng trên điện thoại */
     ".path-chugiai { max-width: 520px; margin: -8px auto 14px; display: flex; flex-wrap: wrap; gap: 6px 14px; justify-content: center; }" +
     ".pcg { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 800; color: var(--text-soft); }" +
-    ".pcg-ic { width: 24px; height: 24px; border-radius: 8px; display: grid; place-items: center; font-size: 13px; font-style: normal; flex: none; }" +
-    ".pcg-ic svg { width: 13px; height: 13px; }" +
+    ".pcg-ic { width: 24px; height: 24px; border-radius: 8px; display: grid; place-items: center; flex: none; color: #fff; }" +
+    ".pcg-ic svg { width: 14px; height: 14px; }" +
     ".pcg-bai { border-radius: 50%; background: linear-gradient(180deg, #ff007f, #d8006c); color: #fff; }" +
     ".pcg-mophong { background: linear-gradient(180deg, #22d3ee, #0891b2); }" +
     ".pcg-thuchanh { background: linear-gradient(180deg, #a78bfa, #7c3aed); }" +
@@ -1138,7 +1151,10 @@ function injectPathCss() {
        ô bài học 8px, để phân biệt được cả khi không nhìn màu — người mù màu vẫn
        thấy đây không phải một bài học. Màu lấy theo từng loại ở O_PHU. */
     ".pnode.ophu { width: 76px; height: 76px; border-radius: 24px; }" +
-    ".ophu-emoji { font-size: 32px; line-height: 1; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.25)); }" +
+    ".ophu-ic { display: flex; color: #fff; }" +
+    ".ophu-ic svg { width: 34px; height: 34px; stroke-width: 2.2; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.3)); }" +
+    ".pnode.ophu.locked .ophu-ic { color: #9ca3af; }" +
+    "[data-theme='dark'] .pnode.ophu.locked .ophu-ic { color: #475569; }" +
     ".pnode.o-mophong.open { background: linear-gradient(180deg, #22d3ee 0%, #0891b2 100%); box-shadow: 0 9px 0 #0e6f8a, 0 15px 25px rgba(8, 145, 178, .42); border: 3px solid #67e8f9; }" +
     ".pnode.o-thuchanh.open { background: linear-gradient(180deg, #a78bfa 0%, #7c3aed 100%); box-shadow: 0 9px 0 #5b21b6, 0 15px 25px rgba(124, 58, 237, .42); border: 3px solid #c4b5fd; }" +
     ".pnode.o-luyen.open { background: linear-gradient(180deg, #4ade80 0%, #16a34a 100%); box-shadow: 0 9px 0 #15803d, 0 15px 25px rgba(22, 163, 74, .42); border: 3px solid #86efac; }" +
@@ -1327,9 +1343,17 @@ function renderLesson(data) {
     const nhay = () => {
       const o = app.querySelector(chon);
       if (!o) return false;
-      const r = o.getBoundingClientRect();
-      const dich = window.scrollY + r.top - Math.max(70, (window.innerHeight - r.height) / 2);
+      /* Neo vào cả TIÊU ĐỀ của khối, và đặt tiêu đề ngay dưới thanh trên cùng thay
+         vì canh giữa khối: canh giữa một khối cao thì lên màn là chữ cắt ngang lưng,
+         nhìn hệt như app cuộn bừa. Thấy dòng "Bài thực hành..." ở trên cùng thì
+         hiểu ngay là trang mở đúng vào mục mình bấm. */
+      const cha = o.parentElement;
+      const khoi = cha && cha !== app && cha.querySelector(".section-title") ? cha : o;
+      const dich = window.scrollY + khoi.getBoundingClientRect().top - 78;
       window.scrollTo({ top: Math.max(0, dich), behavior: "auto" });
+      // Nháy viền một nhịp cho mắt bắt được mình vừa được đưa tới đâu
+      khoi.classList.add("neo-sang");
+      setTimeout(() => khoi.classList.remove("neo-sang"), 1500);
       return true;
     };
     setTimeout(() => { if (nhay()) setTimeout(nhay, 400); }, 0);
