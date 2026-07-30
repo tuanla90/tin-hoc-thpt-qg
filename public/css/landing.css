@@ -983,6 +983,11 @@ a { text-decoration: none; color: inherit; }
   color: var(--ink-faint);
   font-size: 13px;
   max-width: 720px;
+  /* Đoạn này bẻ dòng đúng luật vẫn ra một từ lẻ loi trên dòng cuối (ví dụ chỉ còn
+     "nào." một mình) — không sai kỹ thuật nhưng nhìn như lỗi dàn trang. text-wrap:
+     pretty được sinh ra đúng để tránh việc này; trình duyệt chưa hỗ trợ thì bỏ qua
+     thuộc tính, quay về cách bẻ dòng bình thường như trước, không có gì tệ hơn. */
+  text-wrap: pretty;
 }
 
 /* Pricing Section */
