@@ -30,6 +30,17 @@
       ".mh-mo{color:var(--text-soft);font-size:13.5px;margin:0 0 14px;line-height:1.55}" +
       ".mh-khung{background:var(--bg-soft);border-radius:12px;padding:14px 12px;overflow-x:auto}" +
       ".mh-thanh{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px}" +
+      ".mh-nhap{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 12px}" +
+      ".mh-nhap label{font-size:13px;font-weight:700;color:var(--text-soft)}" +
+      /* Chọn bằng ".mh input.mh-o-nhap" (0,2,1) chứ không phải ".mh-o-nhap" (0,1,0):
+         styles.css có luật input[type=text]{font-size:14px} với độ ưu tiên 0,1,1 —
+         cao hơn một class trơn, nên cỡ chữ 16px sẽ bị đè. Mà dưới 16px thì iOS tự
+         phóng to trang lúc chạm vào ô, phóng rồi là kẹt ở trạng thái trượt ngang. */
+      ".mh input.mh-o-nhap{border:1.5px solid var(--border);background:var(--bg-card);color:var(--text);" +
+        "border-radius:10px;padding:9px 11px;font:700 16px var(--font-mono);min-height:40px;max-width:210px}" +
+      ".mh input.mh-o-nhap:focus{outline:none;border-color:var(--primary)}" +
+      ".mh input.mh-o-nhap.hep{width:92px}" +
+      ".mh-canh{font-size:12.5px;color:var(--accent-amber,#d97706);flex-basis:100%;line-height:1.45}" +
       ".mh-btn{border:1px solid var(--border);background:var(--bg-card);color:var(--text);" +
         "font:700 13.5px var(--font-sans);padding:9px 15px;border-radius:10px;cursor:pointer;min-height:40px}" +
       ".mh-btn:hover{border-color:var(--primary);color:var(--primary)}" +
@@ -101,12 +112,22 @@
   }
 
   function el(html) { var d = document.createElement("div"); d.innerHTML = html; return d.firstElementChild; }
-  function khung(tieuDe, moTa, than) {
+  function khung(tieuDe, moTa, than, nhap) {
     return '<div class="mh"><h4>' + tieuDe + "</h4><p class=\"mh-mo\">" + moTa + "</p>" +
+      (nhap ? '<div class="mh-nhap">' + nhap + "</div>" : "") +
       '<div class="mh-khung">' + than + "</div>" +
       '<div class="mh-thanh"><button class="mh-btn chinh" data-mh="tien">Bước tiếp →</button>' +
       '<button class="mh-btn" data-mh="lai">Làm lại</button>' +
       '<span class="mh-loi" data-mh="loi"></span></div></div>';
+  }
+
+  /* Đọc dãy số học sinh gõ vào. Nhận cả "5, 2, 9" lẫn "5 2 9" lẫn "5;2;9" —
+     đừng bắt các em nhớ đúng một kiểu dấu phân cách. */
+  function docDay(txt, toiDa) {
+    return String(txt || "").split(/[^0-9]+/)
+      .filter(function (x) { return x !== ""; })
+      .map(Number).filter(function (n) { return n >= 0 && n <= 999; })
+      .slice(0, toiDa);
   }
 
   /* ==================================================================
@@ -119,11 +140,15 @@
     var bit = [0, 0, 0, 0, 0, 0, 0, 0];
     var buoc = -1;
     var muc = 0;
+    var MOI = "Gõ số em muốn đổi, hoặc bấm thẳng vào các ô bit để tự thử.";
 
     var node = el(khung("Số nhị phân biến thành số thập phân thế nào?",
-      "Mỗi ô là một <b>bit</b>, dưới ô là <b>trọng số</b> của nó. Bấm vào ô để bật/tắt bit — " +
-      "hoặc bấm “Bước tiếp” để xem máy đổi số <b>77</b> từng bước một.",
-      '<div class="mh-bits" data-mh="bits"></div><div class="mh-tong" data-mh="tong"></div>'));
+      "Mỗi ô là một <b>bit</b>, dưới ô là <b>trọng số</b> của nó. Bấm vào ô để bật/tắt bit, " +
+      "hoặc gõ một số rồi bấm “Bước tiếp” để xem máy đổi số đó từng bước.",
+      '<div class="mh-bits" data-mh="bits"></div><div class="mh-tong" data-mh="tong"></div>',
+      '<label for="mhSo">Đổi số:</label>' +
+      '<input class="mh-o-nhap hep" id="mhSo" data-mh="so" type="number" min="0" max="255" value="77">' +
+      '<span style="font-size:12.5px;color:var(--text-soft)">0–255 (8 bit)</span>'));
 
     function ve() {
       var bits = node.querySelector('[data-mh="bits"]');
@@ -149,19 +174,33 @@
     }
     function loi(t) { node.querySelector('[data-mh="loi"]').innerHTML = t; }
 
+    function soNhap() {
+      var v = Math.floor(Number(node.querySelector('[data-mh="so"]').value));
+      if (!isFinite(v) || v < 0) v = 0;
+      return Math.min(255, v);   // 8 bit chỉ chứa tới 255
+    }
+    /* Gõ số mới thì bắt đầu lại từ bit đầu, đừng để dở dang giữa số cũ. */
+    node.querySelector('[data-mh="so"]').oninput = function () {
+      bit = [0, 0, 0, 0, 0, 0, 0, 0]; buoc = -1; ve();
+      loi("Số cần đổi: <b>" + soNhap() + "</b>. Bấm “Bước tiếp”.");
+    };
+
     node.querySelector('[data-mh="tien"]').onclick = function () {
-      if (buoc < 0) { bit = [0, 0, 0, 0, 0, 0, 0, 0]; muc = 77; buoc = 0; }
-      if (buoc >= 8) { loi("Xong: <b>77</b> = 01001101<sub>2</sub>. Bấm “Làm lại” để thử số khác."); return; }
+      var goc = soNhap();
+      if (buoc < 0) { bit = [0, 0, 0, 0, 0, 0, 0, 0]; muc = goc; buoc = 0; }
+      if (buoc >= 8) {
+        loi("Xong: <b>" + goc + "</b> = " + bit.join("") + "<sub>2</sub>. Gõ số khác để thử tiếp.");
+        return;
+      }
       var w = W[buoc], du = muc;
       if (du >= w) { bit[buoc] = 1; muc -= w; loi("Còn <b>" + du + "</b> ≥ " + w + " → bật bit, trừ đi " + w + ", còn <b>" + muc + "</b>."); }
       else { bit[buoc] = 0; loi("Còn <b>" + du + "</b> &lt; " + w + " → bit này để 0."); }
       buoc++; ve();
     };
     node.querySelector('[data-mh="lai"]').onclick = function () {
-      bit = [0, 0, 0, 0, 0, 0, 0, 0]; buoc = -1; ve(); loi("Bấm vào ô bất kỳ để tự thử, hoặc “Bước tiếp” để xem máy đổi số 77.");
+      bit = [0, 0, 0, 0, 0, 0, 0, 0]; buoc = -1; ve(); loi(MOI);
     };
-    host.appendChild(node); ve();
-    loi("Bấm vào ô bất kỳ để tự thử, hoặc “Bước tiếp” để xem máy đổi số 77.");
+    host.appendChild(node); ve(); loi(MOI);
   }
 
   /* ==================================================================
@@ -170,15 +209,39 @@
    *  Cho thấy vùng còn lại teo đi sau mỗi bước là hiểu ngay.
    * ================================================================ */
   function timNhiPhan(host) {
-    var A = [3, 8, 12, 17, 23, 29, 34, 41, 47, 52, 58, 63, 70, 78, 85];
-    var can = 58, lo, hi, xong, soBuoc;
+    var MAC_DINH = [3, 8, 12, 17, 23, 29, 34, 41, 47, 52, 58, 63, 70, 78, 85];
+    var A = MAC_DINH.slice();
+    var can, lo, hi, xong, soBuoc;
 
     var node = el(khung("Tìm kiếm nhị phân: vì sao chỉ vài bước là ra?",
-      "Dãy đã <b>sắp xếp sẵn</b> — đó là điều kiện bắt buộc. Ta tìm số <b>" + can + "</b>. " +
-      "Mỗi bước nhìn đúng <b>ô giữa</b> rồi bỏ hẳn một nửa. Để ý vùng sáng teo đi sau mỗi lần bấm.",
-      '<div class="mh-mang" data-mh="mang"></div>'));
+      "Dãy phải <b>sắp xếp sẵn</b> — đó là điều kiện bắt buộc, nên dãy em gõ vào sẽ được " +
+      "sắp lại trước khi tìm. Mỗi bước nhìn đúng <b>ô giữa</b> rồi bỏ hẳn một nửa; " +
+      "để ý vùng sáng teo đi sau mỗi lần bấm.",
+      '<div class="mh-mang" data-mh="mang"></div>',
+      '<label for="mhTimSo">Tìm số:</label>' +
+      '<input class="mh-o-nhap hep" id="mhTimSo" data-mh="can" type="number" min="0" max="999" value="58">' +
+      '<label for="mhTimDay">trong dãy:</label>' +
+      '<input class="mh-o-nhap" id="mhTimDay" data-mh="day" type="text" ' +
+      'value="3 8 12 17 23 29 34 41 47 52 58 63 70 78 85">' +
+      '<span class="mh-canh" data-mh="canh" hidden></span>'));
 
-    function dat() { lo = 0; hi = A.length - 1; xong = false; soBuoc = 0; }
+    /* Đọc dãy người nhập rồi SẮP LẠI — nói rõ đã sắp, để các em không tưởng thuật
+       toán này chạy được trên dãy lộn xộn. Thử tìm một số KHÔNG có trong dãy cũng
+       là bài học: vùng tìm teo về rỗng. */
+    function docNhap() {
+      var v = docDay(node.querySelector('[data-mh="day"]').value, 20);
+      var canh = node.querySelector('[data-mh="canh"]');
+      if (v.length < 2) { A = MAC_DINH.slice(); canh.hidden = true; }
+      else {
+        var truoc = v.join(" ");
+        A = v.slice().sort(function (x, y) { return x - y; });
+        canh.hidden = (A.join(" ") === truoc);
+        canh.innerHTML = "Dãy em gõ chưa sắp xếp — đã tự sắp thành: " + A.join(" ");
+      }
+      can = Math.floor(Number(node.querySelector('[data-mh="can"]').value)) || 0;
+    }
+
+    function dat() { docNhap(); lo = 0; hi = A.length - 1; xong = false; soBuoc = 0; }
     function ve(giua) {
       node.querySelector('[data-mh="mang"]').innerHTML = A.map(function (v, i) {
         var c = "mh-o";
@@ -190,14 +253,25 @@
     }
     function loi(t) { node.querySelector('[data-mh="loi"]').innerHTML = t; }
 
+    /* Số bước tối đa của dò tuần tự = vị trí của số trong dãy (1-based); không có
+       thì phải quét hết. So sánh với con số THẬT của dãy này, đừng ghi cứng 11. */
+    function buocTuanTu() {
+      var i = A.indexOf(can);
+      return i < 0 ? A.length : i + 1;
+    }
+
     node.querySelector('[data-mh="tien"]').onclick = function () {
-      if (xong) { loi("Đã tìm xong sau <b>" + soBuoc + "</b> bước. Dò từng ô sẽ mất tới 11 bước."); return; }
-      if (lo > hi) { loi("Vùng tìm rỗng → không có số này trong dãy."); xong = true; return; }
+      if (xong) { loi("Đã xong sau <b>" + soBuoc + "</b> bước. Dò từng ô sẽ mất tới <b>" + buocTuanTu() + "</b> bước."); return; }
+      if (lo > hi) {
+        loi("Vùng tìm đã teo về <b>rỗng</b> → dãy này <b>không có</b> số " + can +
+            ". Chỉ mất <b>" + soBuoc + "</b> bước để chắc chắn điều đó.");
+        xong = true; ve(-1); return;
+      }
       var g = Math.floor((lo + hi) / 2); soBuoc++;
       if (A[g] === can) {
         xong = true; ve(g);
         loi("A[" + g + "] = <b>" + can + "</b> → tìm thấy sau <b>" + soBuoc + "</b> bước. " +
-            "Dò tuần tự từ đầu sẽ mất <b>11</b> bước.");
+            "Dò tuần tự từ đầu sẽ mất <b>" + buocTuanTu() + "</b> bước.");
       } else if (A[g] < can) {
         loi("A[" + g + "] = " + A[g] + " &lt; " + can + " → số cần nằm bên <b>phải</b>, bỏ nửa trái.");
         lo = g + 1; ve(g);
@@ -206,9 +280,11 @@
         hi = g - 1; ve(g);
       }
     };
-    node.querySelector('[data-mh="lai"]').onclick = function () { dat(); ve(-1); loi("Bấm “Bước tiếp” để nhìn ô giữa."); };
-    host.appendChild(node); dat(); ve(-1);
-    loi("Bấm “Bước tiếp” để nhìn ô giữa.");
+    function lamLai() { dat(); ve(-1); loi("Tìm <b>" + can + "</b> trong " + A.length + " số. Bấm “Bước tiếp” để nhìn ô giữa."); }
+    node.querySelector('[data-mh="lai"]').onclick = lamLai;
+    node.querySelector('[data-mh="can"]').oninput = lamLai;
+    node.querySelector('[data-mh="day"]').oninput = lamLai;
+    host.appendChild(node); lamLai();
   }
 
   /* ==================================================================
@@ -217,15 +293,24 @@
    *  số phép so sánh lớn lên rất nhanh theo độ dài dãy.
    * ================================================================ */
   function sapXep(host) {
-    var GOC = [5, 2, 9, 1, 7, 3];
+    var MAC_DINH = [5, 2, 9, 1, 7, 3];
+    var GOC = MAC_DINH.slice();
     var A, i, j, soSanh, doi, xong;
 
     var node = el(khung("Sắp xếp nổi bọt: từng phép so sánh một",
       "Mỗi lần bấm là <b>một</b> phép so sánh hai ô cạnh nhau; sai thứ tự thì đổi chỗ. " +
-      "Số lớn “nổi” dần về cuối — ô đã đúng chỗ chuyển sang màu xanh.",
-      '<div class="mh-mang" data-mh="mang"></div>'));
+      "Số lớn “nổi” dần về cuối — ô đã đúng chỗ chuyển sang màu xanh. " +
+      "Thử gõ dãy <b>đã sắp sẵn</b> rồi đếm số phép so sánh, so với dãy <b>ngược</b>.",
+      '<div class="mh-mang" data-mh="mang"></div>',
+      '<label for="mhDay">Dãy của em:</label>' +
+      '<input class="mh-o-nhap" id="mhDay" data-mh="day" type="text" value="5 2 9 1 7 3">' +
+      '<span style="font-size:12.5px;color:var(--text-soft)">2–10 số, cách nhau dấu cách</span>'));
 
-    function dat() { A = GOC.slice(); i = 0; j = 0; soSanh = 0; doi = 0; xong = false; }
+    function dat() {
+      var v = docDay(node.querySelector('[data-mh="day"]').value, 10);
+      GOC = v.length >= 2 ? v : MAC_DINH.slice();
+      A = GOC.slice(); i = 0; j = 0; soSanh = 0; doi = 0; xong = false;
+    }
     function ve(a, b, dangDoi) {
       node.querySelector('[data-mh="mang"]').innerHTML = A.map(function (v, k) {
         var c = "mh-o";
@@ -238,8 +323,16 @@
     function loi(t) { node.querySelector('[data-mh="loi"]').innerHTML = t; }
 
     node.querySelector('[data-mh="tien"]').onclick = function () {
-      if (xong) { loi("Xong: <b>" + soSanh + "</b> phép so sánh, <b>" + doi + "</b> lần đổi chỗ cho 6 số."); return; }
-      if (j >= A.length - 1 - i) { i++; j = 0; if (i >= A.length - 1) { xong = true; ve(-1, -1); loi("Xong: <b>" + soSanh + "</b> phép so sánh, <b>" + doi + "</b> lần đổi chỗ. Dãy 6 số đã tốn ngần này — dãy 1000 số thì sao?"); return; } }
+      if (xong) { loi("Xong: <b>" + soSanh + "</b> phép so sánh, <b>" + doi + "</b> lần đổi chỗ cho " + A.length + " số."); return; }
+      if (j >= A.length - 1 - i) {
+        i++; j = 0;
+        if (i >= A.length - 1) {
+          xong = true; ve(-1, -1);
+          loi("Xong: <b>" + soSanh + "</b> phép so sánh, <b>" + doi + "</b> lần đổi chỗ cho " +
+              A.length + " số. Dãy dài gấp đôi sẽ tốn khoảng <b>gấp bốn</b> — đó là ý nghĩa của O(n²).");
+          return;
+        }
+      }
       soSanh++;
       if (A[j] > A[j + 1]) {
         var t = A[j]; A[j] = A[j + 1]; A[j + 1] = t; doi++;
@@ -251,9 +344,10 @@
       }
       j++;
     };
-    node.querySelector('[data-mh="lai"]').onclick = function () { dat(); ve(-1, -1); loi("Bấm “Bước tiếp” để so sánh cặp đầu tiên."); };
-    host.appendChild(node); dat(); ve(-1, -1);
-    loi("Bấm “Bước tiếp” để so sánh cặp đầu tiên.");
+    function lamLai() { dat(); ve(-1, -1); loi("Dãy " + A.length + " số. Bấm “Bước tiếp” để so sánh cặp đầu tiên."); }
+    node.querySelector('[data-mh="lai"]').onclick = lamLai;
+    node.querySelector('[data-mh="day"]').oninput = lamLai;
+    host.appendChild(node); lamLai();
   }
 
   /* ==================================================================
@@ -273,24 +367,53 @@
     var k = -1;
     var node = el(khung("Gõ một tên miền, máy tính tìm nhau thế nào?",
       "Máy tính chỉ liên lạc được bằng <b>địa chỉ IP</b> (dãy số), còn người thì nhớ <b>tên miền</b> (chữ). " +
-      "Ở giữa là mấy chặng hỏi đáp mà ta không nhìn thấy — bấm để đi từng chặng.",
-      '<div class="mh-nut" data-mh="nut"></div>'));
+      "Ở giữa là mấy chặng hỏi đáp mà ta không nhìn thấy — gõ tên miền em hay vào rồi bấm từng chặng.",
+      '<div class="mh-nut" data-mh="nut"></div>',
+      '<label for="mhTen">Tên miền:</label>' +
+      '<input class="mh-o-nhap" id="mhTen" data-mh="ten" type="text" value="vnexpress.net" ' +
+      'style="max-width:260px;font-size:16px">'));
+
+    /* Đuôi tên miền quyết định chặng thứ 4 hỏi ai, nên phải lấy từ chữ người gõ.
+       Gõ có "https://" hay "/tin-tuc" thì cắt bỏ, đừng bắt các em gõ đúng chuẩn. */
+    function tenMien() {
+      var t = String(node.querySelector('[data-mh="ten"]').value || "").trim().toLowerCase();
+      t = t.replace(/^[a-z]+:\/\//, "").replace(/^www\./, "").split(/[/?#]/)[0];
+      return t || "vnexpress.net";
+    }
+    function duoi() {
+      var p = tenMien().split(".");
+      return p.length > 1 ? p[p.length - 1] : "net";
+    }
 
     function ve() {
+      var ten = tenMien(), d = duoi();
+      /* Nhãn và lời giải thích thay theo tên miền người gõ, chứ không ghi cứng
+         vnexpress.net — các em gõ tên trường mình mới thấy nó nói về chính mình. */
+      var nhan = [ten, "của nhà mạng", "root", "." + d, ten, "kết nối"];
+      var noi = [
+        "Trình duyệt chưa biết địa chỉ số của <b>" + ten + "</b>, nên đi hỏi.",
+        "Hỏi máy chủ DNS nhà mạng. Nếu nó vừa tra hộ ai đó, nó trả lời ngay từ <b>bộ nhớ đệm</b>.",
+        "Chưa có trong đệm → hỏi máy chủ gốc. Gốc không biết địa chỉ, chỉ chỉ đường: “hỏi bên quản lý <b>." + d + "</b>”.",
+        "Bên quản lý đuôi <b>." + d + "</b> cũng không giữ địa chỉ, nhưng biết ai quản lý <b>" + ten + "</b>.",
+        "Đây mới là nơi giữ bản ghi thật của <b>" + ten + "</b>, trả về <b>địa chỉ IP</b>.",
+        "Có IP rồi, trình duyệt mới thật sự kết nối tới <b>" + ten + "</b>. Địa chỉ được nhớ tạm, nên lần sau vào lại nhanh hơn hẳn.",
+      ];
       node.querySelector('[data-mh="nut"]').innerHTML = B.map(function (b, n) {
         return '<div class="mh-hop' + (n <= k ? " sang" : "") + '"><div class="mh-ic">' + b.ic + "</div>" +
-          "<b>" + b.ten + "</b><small>" + b.mo + "</small></div>";
+          "<b>" + b.ten + "</b><small>" + nhan[n] + "</small></div>";
       }).join("");
+      return noi;
     }
     function loi(t) { node.querySelector('[data-mh="loi"]').innerHTML = t; }
 
     node.querySelector('[data-mh="tien"]').onclick = function () {
       if (k >= B.length - 1) { loi("Cả quá trình này thường xong trong vài phần trăm giây."); return; }
-      k++; ve(); loi(B[k].noi);
+      k++; loi(ve()[k]);
     };
-    node.querySelector('[data-mh="lai"]').onclick = function () { k = -1; ve(); loi("Bấm “Bước tiếp” để đi chặng đầu tiên."); };
-    host.appendChild(node); ve();
-    loi("Bấm “Bước tiếp” để đi chặng đầu tiên.");
+    function lamLai() { k = -1; ve(); loi("Tra <b>" + tenMien() + "</b>. Bấm “Bước tiếp” để đi chặng đầu tiên."); }
+    node.querySelector('[data-mh="lai"]').onclick = lamLai;
+    node.querySelector('[data-mh="ten"]').oninput = lamLai;
+    host.appendChild(node); lamLai();
   }
 
   /* ------------------------------------------------------- ĐĂNG KÝ THEO BÀI */
