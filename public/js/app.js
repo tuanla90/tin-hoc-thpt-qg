@@ -348,6 +348,27 @@ function renderHome() {
   const learnedCount = State.learned.filter((id) => LESSONS.some((l) => l.id === id)).length;
   const ic = (n, e) => (typeof ICON === "function" ? ICON(n, 30) : e);
 
+  /* Số bài thực hành: đếm ĐÚNG như demBaiTap() trong nhiem-vu.js — ba kho có máy
+     chấm, KHÔNG tính GLAB vì phòng đồ hoạ là mô phỏng, không có đúng/sai để chấm.
+     Đếm khác đi là trang chủ và nhiệm vụ tuần báo hai con số lệch nhau. */
+  const soBaiTap = ["EXERCISES", "SQL_EXERCISES", "WEB_EXERCISES"].reduce((n, ten) => {
+    const o = window[ten];
+    if (!o) return n;
+    if (Array.isArray(o)) return n + o.length;
+    return n + Object.keys(o).reduce((m, k) => m + (Array.isArray(o[k]) ? o[k].length : 0), 0);
+  }, 0);
+  const btXong = (typeof GAM !== "undefined" && GAM.exDone && GAM.exDone.length) || 0;
+
+  /* Nhãn ô Luyện nhanh phải khớp ĐÚNG ba nhánh của khoLuyenNhanh():
+       - dưới 2 bài đã học  -> bốc từ 3 bài đầu lộ trình (KHÔNG phải bài đã học)
+       - bài đã học chưa đủ 10 câu -> dự phòng bằng cả kho
+       - còn lại -> đúng là từ bài đã học
+     Ghi "Từ bài đã học" cho mọi trường hợp là nói sai với người mới vào. */
+  const khoQuick = typeof khoLuyenNhanh === "function" ? khoLuyenNhanh() : null;
+  const nhanQuick = !khoQuick || khoQuick === QUESTION_BANK
+    ? "Cả kho câu"
+    : learnedCount >= 2 ? "Từ bài đã học" : "Bài đầu lộ trình";
+
   // Bài đang học: lấy đúng bài mà trang Lộ trình đang mở, để hai nơi không lệch nhau
   const curL = pathState().cur;
   const contTitle = curL ? esc((curL.title || "").replace(/^Bài\s*\d+[.\s]*/, "")) : "";
@@ -401,12 +422,13 @@ function renderHome() {
         <p>Lộ trình bài giảng từ số 0: lý thuyết, ví dụ code, tóm tắt điểm cần nhớ. Học đến đâu luyện tập đến đó.</p>
       </div>
       <div class="mode-card" data-mode="playground">
-        <div class="m-badge">Mới</div>
+        <div class="m-badge">${btXong}/${soBaiTap} bài</div>
         <div class="m-icon">${ic("code", "💻")}</div>
         <h3>Thực hành</h3>
         <p>Viết & chạy <b>Python</b>, xem trước <b>HTML/CSS</b>, thực hành <b>SQL</b> và <b>đồ hoạ</b> ngay trên trình duyệt — không cần cài đặt.</p>
       </div>
       <div class="mode-card" data-mode="quick">
+        <div class="m-badge">${nhanQuick}</div>
         <div class="m-icon">${ic("zap", "⚡")}</div>
         <h3>Luyện nhanh 10 câu</h3>
         <p>10 câu rút từ những bài em đã học, để khởi động và ôn lại, có lời giải tức thì.</p>
@@ -600,7 +622,7 @@ function renderChonChang() {
   app.innerHTML = `
     <button class="back-link" id="back">${aIco("aleft", null, 15)} Về trang chủ</button>
 
-    <div class="path-hero-card hero-rong">
+    <div class="path-hero-card">
       <div class="path-hero-glow"></div>
       <div class="path-hero-content">
         <div class="path-hero-badge">${aIco("flag", null, 14)} LỘ TRÌNH HỌC</div>
@@ -1016,12 +1038,15 @@ function injectPathCss() {
   const s = document.createElement("style");
   s.id = "pl-css";
   s.textContent =
-    ".path-hero-card { display: flex; align-items: center; justify-content: space-between; gap: 20px; background: linear-gradient(135deg, #ff007f 0%, #7928ca 50%, #4338ca 100%); color: #fff; padding: 20px 26px; border-radius: 22px; box-shadow: 0 9px 0 #4f107b, 0 18px 30px rgba(121, 40, 202, 0.32); max-width: 520px; margin: 0 auto 22px; position: relative; overflow: hidden; border: 2px solid #ff66c4; }" +
+    ".path-hero-card { display: flex; align-items: center; justify-content: space-between; gap: 20px; background: linear-gradient(135deg, #ff007f 0%, #7928ca 50%, #4338ca 100%); color: #fff; padding: 20px 26px; border-radius: 22px; box-shadow: 0 9px 0 #4f107b, 0 18px 30px rgba(121, 40, 202, 0.32); margin-bottom: 22px; position: relative; overflow: hidden; border: 2px solid #ff66c4; }" +
     "[data-theme='dark'] .path-hero-card { background: linear-gradient(135deg, #6366f1 0%, #7c3aed 50%, #4338ca 100%); border-color: #a855f7; box-shadow: 0 14px 0 #3730a3, 0 25px 40px rgba(124, 58, 237, 0.45); }" +
     /* Màn chọn chặng có lưới ô rộng 760px nên banner nới theo cho thẳng lề; màn
    bản đồ giữ 520px bằng .pathroot. Trước đây banner luôn 924px, rộng hơn nội
    dung tới 404px ở màn bản đồ nên hai khối trông lệch hẳn nhau. */
-    ".path-hero-card.hero-rong { max-width: 760px; }" +
+    /* MỘT chỗ duy nhất quy định bề ngang khung, cho cả banner, bản đồ chương và
+       lưới chọn chặng. Tách ra ba chỗ như trước là kiểu gì cũng lệch lại: banner
+       từng để tự giãn 924px trong khi nội dung chỉ 520-760px. */
+    ".path-hero-card, .pathroot, .cc-luoi { max-width: 760px; margin-left: auto; margin-right: auto; }" +
     ".path-hero-glow { position: absolute; inset: 0; background: radial-gradient(circle, rgba(255,255,255,0.25) 0%, transparent 70%); pointer-events: none; }" +
     ".path-hero-content { flex: 1; z-index: 2; }" +
     ".path-hero-badge { font-family: var(--font-mono); font-size: 11px; font-weight: 900; background: rgba(0, 0, 0, 0.28); padding: 4px 12px; border-radius: 20px; display: inline-block; margin-bottom: 8px; letter-spacing: 0.05em; backdrop-filter: blur(6px); border: 1px solid rgba(255,255,255,0.25); }" +
@@ -1036,7 +1061,7 @@ function injectPathCss() {
     ".path-hero-mascot img { width: 96px; height: 96px; object-fit: contain; filter: drop-shadow(0 10px 18px rgba(0,0,0,0.35)); animation: mascotHover 4s ease-in-out infinite; }" +
     "@keyframes mascotHover { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }" +
 
-    ".pathroot { max-width: 520px; margin: 0 auto; padding-bottom: 60px; }" +
+    ".pathroot { padding-bottom: 60px; }" +
 
     /* Chú giải loại ô — đứng trên danh sách chương, tự xuống dòng trên điện thoại */
     ".path-chugiai { max-width: 520px; margin: -8px auto 14px; display: flex; flex-wrap: wrap; gap: 6px 14px; justify-content: center; }" +
@@ -1051,7 +1076,7 @@ function injectPathCss() {
 
     /* MÀN CHỌN CHẶNG — năm ô. auto-fit + minmax để 5 ô tự xếp 3+2 trên máy tính,
        2+2+1 trên máy tính bảng, 1 cột trên điện thoại, không cần media query. */
-    ".cc-luoi { max-width: 760px; margin: 0 auto; padding-bottom: 60px; display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(216px, 1fr)); }" +
+    ".cc-luoi { padding-bottom: 60px; display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(216px, 1fr)); }" +
     ".cc-o { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left; padding: 18px 18px 16px; border-radius: 20px; border: 2px solid var(--border); background: var(--bg-card); cursor: pointer; font: inherit; color: var(--text); transition: transform .15s cubic-bezier(.16,1,.3,1), border-color .15s, box-shadow .15s; }" +
     ".cc-o:hover { transform: translateY(-3px); border-color: var(--cc); box-shadow: 0 10px 24px color-mix(in srgb, var(--cc) 22%, transparent); }" +
     ".cc-o:focus-visible { outline: 3px solid var(--cc); outline-offset: 2px; }" +
