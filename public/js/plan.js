@@ -150,6 +150,9 @@
     phan1: { tit: "Luyện trắc nghiệm Phần 1 — Premium", mo: "Chọn chủ đề, lớp, mức độ rồi luyện không giới hạn dạng trắc nghiệm 4 đáp án (Phần I của đề). Gói Miễn phí vẫn luyện được qua lộ trình bài học và ô Luyện nhanh 10 câu." },
     phan2: { tit: "Luyện Phần 2 Đúng/Sai — Premium", mo: "Chuyên luyện dạng Đúng/Sai 4 ý — phần dễ mất điểm nhất của đề. Gói Miễn phí gặp dạng này trong lộ trình bài học và trong đề thi thử miễn phí." },
     thithu: { tit: "Thi thử full 2 phần — Premium", mo: "Đề đầy đủ 24 câu trắc nghiệm + 4 câu Đúng/Sai, tính giờ 50 phút, chấm thang 10. Gói Miễn phí được thi thử 1 đề — làm lại bao nhiêu lần cũng được." },
+    /* Ô "Thi thử" cuối chặng trên bản đồ lộ trình. Đề đầu tiên free thật, nên chỉ
+       hiện lời mời này từ đề thứ hai — nói rõ đề đã làm vẫn thi lại được. */
+    thithu_chang: { tit: "Đã dùng lượt thi thử miễn phí", mo: "Gói Miễn phí được thi thử 1 đề trong lộ trình và bạn đã làm rồi. Vẫn còn Đề biên soạn 1 ở mục Thi thử — làm lại bao nhiêu lần cũng được. Nâng cấp để mở ô Thi thử ở cuối mọi chặng, 13 đề biên soạn và đề ngẫu nhiên không giới hạn." },
     yeu: { tit: "Luyện đúng chỗ yếu — Premium", mo: "Ứng dụng đã âm thầm chấm bạn mạnh/yếu chủ đề nào qua từng câu luyện. Gói Premium mở tab Chỗ yếu: ôn đúng chủ đề yếu, ưu tiên câu từng làm sai." },
     deep: { tit: "Giải thích kỹ hơn — Premium", mo: "Nút này gọi model AI mạnh hơn để giảng chậm và sâu hơn. Gói Premium được dùng model sâu và 25 lượt hỏi gia sư mỗi ngày (miễn phí: 5 lượt)." },
     hoso: { tit: "Thêm hồ sơ — Premium", mo: "Gói Miễn phí dùng 1 hồ sơ học tập. Premium mở 3 hồ sơ — nhà có anh chị em dùng chung một tài khoản, tiến độ vẫn riêng." },

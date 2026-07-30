@@ -317,11 +317,15 @@ function renderFromHashThat() {
   hashTruoc = location.hash;
   const yCu = keepScroll ? prevY : scrollNho.get(location.hash);
 
-  if (!keepScroll && yCu == null) window.scrollTo({ top: 0, behavior: "smooth" });
+  /* Vào bài để xem ĐÚNG MỘT KHỐI (ô "Mô phỏng" / "Thực hành" trên bản đồ gửi kèm
+     data.tieu) thì màn hình tự cuộn tới khối đó ở cuối renderLesson — router phải
+     tránh đường, không thì hai cú cuộn tranh nhau và khối kia luôn thắng. */
+  const coNeo = !!(d && d.tieu);
+  if (!keepScroll && yCu == null && !coNeo) window.scrollTo({ top: 0, behavior: "smooth" });
   (viewRenderer(view))(d);
   /* Đặt lại SAU khi DOM mới dựng xong: thay innerHTML có thể làm trang co lại rồi
      tụt cuộn, đặt trước thì mất tác dụng. */
-  if (yCu != null) window.scrollTo(0, yCu);
+  if (yCu != null && !coNeo) window.scrollTo(0, yCu);
 }
 
 window.addEventListener("hashchange", renderFromHash);
@@ -627,6 +631,16 @@ function renderChonChang() {
   });
 }
 
+/* Bốn loại ô phụ trên bản đồ lộ trình. Màu tách hẳn khỏi màu chương để nhìn một
+   cái là biết ô này không phải bài học: xem chapHtml trong renderLessons. */
+const TEN_XUONG_NGAN = { python: "Python", sql: "SQL", web: "HTML/CSS", gfx: "đồ hoạ" };
+const O_PHU = {
+  mophong: { nhan: "Mô phỏng", icon: "🔬", mau: "#0891b2" },
+  thuchanh: { nhan: "Thực hành", icon: "⌨️", mau: "#7c3aed" },
+  luyen: { nhan: "Luyện tập", icon: "🎯", mau: "#16a34a" },
+  thi: { nhan: "Thi thử", icon: "🏁", mau: "#dc2626" },
+};
+
 function renderLessons(data) {
   if (!data || !data.stage) { renderChonChang(); return; }
   injectPathCss();
@@ -662,6 +676,71 @@ function renderLessons(data) {
     let c = chaps[chaps.length - 1];
     if (!c || c.name !== cd.name) { c = { name: cd.name, color: cd.color, items: [] }; chaps.push(c); }
     c.items.push({ l, gi: i });
+  });
+
+  /* ---- Các loại ô trên bản đồ ---------------------------------------------
+     Trước đây bản đồ chỉ có ô bài học + một ô "rương thưởng" cứ 4 bài một lần,
+     mà rương chỉ đổi hình chứ bấm vào vẫn ra đúng bài học đó -> không khác gì ô
+     thường. Giờ bỏ rương, thay bằng 4 loại ô lấy từ nội dung THẬT của bài:
+       mophong  – bài có minh hoạ tương tác (js/minh-hoa*.js)
+       thuchanh – bài có bài tập tự viết code (EXERCISES / SQL / WEB / GLAB)
+       luyen    – cuối mỗi chương: biết đáp án ngay từng câu, chấm 3 sao
+       thi      – cuối mỗi chặng: có đếm giờ, làm xong mới trả kết quả
+     Ô phụ KHÔNG tính vào tiến độ mở khoá: learned/unlocked/curIdx vẫn chỉ đánh
+     theo bài học, nên thêm ô mới không đẩy ai đang học dở về trạng thái khoá. */
+  const coMinhHoa = (id) => {
+    try { return !!(window.MinhHoa && MinhHoa.coBai().indexOf(id) >= 0); } catch (e) { return false; }
+  };
+  const XUONG = [["python", "EXERCISES"], ["sql", "SQL_EXERCISES"], ["web", "WEB_EXERCISES"], ["gfx", "GLAB"]];
+  const xuongCuaBai = (id) => {
+    for (const [ten, bien] of XUONG) {
+      const kho = window[bien];
+      if (kho && kho[id] && kho[id].length) return { loai: ten, so: kho[id].length };
+    }
+    return null;
+  };
+  /* Điểm tốt nhất của một ô phụ — lấy từ lịch sử làm bài qua id tổng hợp
+     ("LT:22:1", "TT:22"). Dùng chung đường ghi với luyện tập theo bài nên không
+     phải thêm chỗ lưu mới, và đăng nhập rồi thì theo lên máy chủ luôn. */
+  const diemO = (id) => {
+    let best = null;
+    State.history.forEach((h) => {
+      if (h && h.lessonId === id && h.total) {
+        const s = h.correctCount / h.total;
+        if (best == null || s > best) best = s;
+      }
+    });
+    return best;
+  };
+  /* Số đề THI THỬ TRONG LỘ TRÌNH đã làm (id tổng hợp bắt đầu bằng "TT:"). Chỉ đếm
+     đề của lộ trình, không đếm đề ở mục Thi thử: mỗi đường có quyền lợi free
+     riêng, trộn vào nhau thì làm 1 đề ở mục kia là mất luôn ô này. */
+  const soDeDaThi = State.history.filter(
+    (h) => h && h.mode === "exam" && typeof h.lessonId === "string" && h.lessonId.indexOf("TT:") === 0
+  ).length;
+  const traGoi = typeof Plan !== "undefined" && Plan.paid();
+  /* Mốc mở ô thi thử: học xong 2/3 số bài của chặng. "Thời gian đầu chưa học đủ
+     thì thi thử làm gì" — nên ô này phải là cửa ải cuối, không mở sẵn từ bài 1. */
+  const mocThi = Math.ceil((baiChang.length * 2) / 3);
+
+  const cellByKey = new Map();
+  chaps.forEach((c, ci) => {
+    const cells = [];
+    c.items.forEach(({ l, gi }) => {
+      cells.push({ loai: "bai", l, gi });
+      if (coMinhHoa(l.id)) cells.push({ loai: "mophong", l, gi });
+      const x = xuongCuaBai(l.id);
+      if (x) cells.push({ loai: "thuchanh", l, gi, xuong: x.loai, soBt: x.so });
+    });
+    cells.push({ loai: "luyen", chuong: c, ci });
+    if (ci === chaps.length - 1) cells.push({ loai: "thi" });
+    cells.forEach((o, k) => {
+      o.key = o.loai === "bai" ? o.l.id : `${o.loai}:${CHANG}:${ci}:${k}`;
+      if (o.loai === "luyen") o.idDiem = `LT:${CHANG}:${ci}`;
+      if (o.loai === "thi") o.idDiem = `TT:${CHANG}`;
+      cellByKey.set(o.key, o);
+    });
+    c.cells = cells;
   });
 
   /* Hình học bản đồ — kiểu Duolingo: KHÔNG có đường nối, chỉ có các ô xếp thành
@@ -703,10 +782,10 @@ function renderLessons(data) {
   ];
 
   const chapHtml = (c, chapIdx) => {
-    const n = c.items.length;
+    const n = c.cells.length;
     const C = c.color || "var(--primary)";
-    const pts = c.items.map((it, k) => ({
-      x: CX + lech(k) * A, y: PADTOP + k * STEP, it, chest: (k + 1) % 4 === 0,
+    const pts = c.cells.map((o, k) => ({
+      x: CX + lech(k) * A, y: PADTOP + k * STEP, o,
     }));
     const H = pts[pts.length - 1].y + CAP_BOT;
 
@@ -734,48 +813,76 @@ function renderLessons(data) {
       return ra.join("");
     })();
 
-    const nodes = pts.map((p, k) => {
-      const gi = p.it.gi, l = p.it.l, done = learned[gi], open = unlocked[gi], cur = gi === currentIdx;
-      const cls = done ? "done" : open ? "open" : "locked";
-      const glyph = done ? ic("check") : open ? ic("play") : ic("lock");
-      const name = esc((l.title || "").replace(/^Bài\s*\d+[.\s]*/, ""));
-      const stTxt = done ? "đã học" : open ? "đang học" : "chưa mở khóa";
-      const hasQuiz = l.quiz && l.quiz.length;
-      const stars = done && hasQuiz ? starsFor(scoreByLesson[l.id]) : -1;
-      const starsHtml = stars >= 0 ? `<span class="pn-stars" title="Mastery: ${stars}/3 sao">${[0, 1, 2].map((i) => starSvg(i < stars)).join("")}</span>` : "";
-
-      // Cứ 4 bài lại có 1 ô rương thưởng
-      const chestIcon = done ? "🏆" : "🎁";
-      /* Nửa bề ngang ô, để đặt left = tâm - nửa. Phải bằng ĐÚNG nửa bề rộng CSS
-         (ô 68px, rương 76px). Trước đây dùng 32 nên mọi ô thường bị đẩy lệch 2px
-         sang phải, còn ô rương lại đúng — hai ô lẽ ra đối xứng đo ra 263 và 261. */
-      const bk = p.chest ? 38 : CELL / 2;
-
-      /* Khối chữ về lại NGAY DƯỚI ô, canh giữa theo ô — bỏ đường nối rồi thì đây
-         là chỗ sạch và cân nhất. Kẹp trong khung vì ô ngoài cùng lệch tới 128px,
-         canh giữa nguyên bản sẽ đẩy khối chữ 190px ra ngoài mép. */
+    const nodes = pts.map((p) => {
+      const o = p.o;
+      /* Khối chữ NGAY DƯỚI ô, canh giữa theo ô. Kẹp trong khung vì ô ngoài cùng
+         lệch tới 128px, canh giữa nguyên bản sẽ đẩy khối chữ 190px ra ngoài mép. */
       const capL = Math.max(4, Math.min(IW - CAP_W - 4, p.x - CAP_W / 2));
       const capStyle = `left:${f1(capL)}px;top:${f1(p.y + CAP_DY)}px`;
+      /* Nửa bề ngang ô, để đặt left = tâm - nửa. Phải bằng ĐÚNG nửa bề rộng CSS
+         (ô bài 68px, ô phụ 76px), không thì hai ô lẽ ra đối xứng lại lệch nhau. */
+      const dat = (bk) => `left:${f1(p.x - bk)}px;top:${f1(p.y - bk)}px;--cc:${C}`;
+      const capHtml = (nhan, mauNhan, ten, phai) =>
+        `<div class="pn-cap" style="${capStyle}">
+          <span class="pn-top"><span class="pn-num"${mauNhan ? ` style="color:${mauNhan}"` : ""}>${nhan}</span>${phai || ""}</span>
+          <span class="pn-name">${ten}</span>
+        </div>`;
 
-      if (p.chest) {
-        return `<button class="pnode chest ${cls}${cur ? " cur" : ""}" data-id="${l.id}" data-lock="${open ? 0 : 1}" style="left:${f1(p.x - bk)}px;top:${f1(p.y - bk)}px;--cc:${C}" title="${esc(l.title)}">
-            ${cur ? '<span class="pn-bubble">RƯƠNG THƯỞNG 🎁</span>' : ""}
-            <span class="chest-emoji">${chestIcon}</span>
+      if (o.loai === "bai") {
+        const gi = o.gi, l = o.l, done = learned[gi], open = unlocked[gi], cur = gi === currentIdx;
+        const cls = done ? "done" : open ? "open" : "locked";
+        const glyph = done ? ic("check") : open ? ic("play") : ic("lock");
+        const name = esc((l.title || "").replace(/^Bài\s*\d+[.\s]*/, ""));
+        const stTxt = done ? "đã học" : open ? "đang học" : "chưa mở khóa";
+        const hasQuiz = l.quiz && l.quiz.length;
+        const stars = done && hasQuiz ? starsFor(scoreByLesson[l.id]) : -1;
+        const starsHtml = stars >= 0 ? `<span class="pn-stars" title="Mastery: ${stars}/3 sao">${[0, 1, 2].map((i) => starSvg(i < stars)).join("")}</span>` : "";
+        return `<button class="pnode ${cls}${cur ? " cur" : ""}" data-key="${esc(o.key)}" data-lock="${open ? 0 : 1}" style="${dat(CELL / 2)}" title="${esc(l.title)}" aria-label="Bài ${l.order}: ${name} — ${stTxt}">
+            ${cur ? '<span class="pn-bubble">BẮT ĐẦU 🔥</span>' : ""}
+            <span class="pnode-inner-icon">${glyph}</span>
           </button>
-          <div class="pn-cap" style="${capStyle}">
-            <span class="pn-top"><span class="pn-num" style="color:#eab308">Cửa ải kho báu</span>${starsHtml}</span>
-            <span class="pn-name">${name}</span>
-          </div>`;
+          ${capHtml("Bài " + l.order, null, name, starsHtml)}`;
       }
 
-      return `<button class="pnode ${cls}${cur ? " cur" : ""}" data-id="${l.id}" data-lock="${open ? 0 : 1}" style="left:${f1(p.x - bk)}px;top:${f1(p.y - bk)}px;--cc:${C}" title="${esc(l.title)}" aria-label="Bài ${l.order}: ${name} — ${stTxt}">
-          ${cur ? '<span class="pn-bubble">BẮT ĐẦU 🔥</span>' : ""}
-          <span class="pnode-inner-icon">${glyph}</span>
+      // ---- Ô phụ: mô phỏng / thực hành / luyện tập / thi thử ----
+      const dang = O_PHU[o.loai];
+      let open = true, ten = "", nhan = dang.nhan, khoaTxt = "";
+      let starsHtml = "", pre = false;
+
+      if (o.loai === "mophong") {
+        open = unlocked[o.gi];
+        // Nhãn trên đã ghi "Mô phỏng" nên dòng dưới chỉ cần nói mô phỏng CÁI GÌ
+        ten = "Bấm từng bước, xem máy làm gì";
+      } else if (o.loai === "thuchanh") {
+        open = unlocked[o.gi];
+        ten = `${o.soBt} bài ${TEN_XUONG_NGAN[o.xuong] || "code"} — máy chấm`;
+        pre = typeof Plan !== "undefined" && !Plan.xuongMo(o.xuong, o.l);
+      } else if (o.loai === "luyen") {
+        const daHoc = c.items.filter((it) => learned[it.gi]).length;
+        open = daHoc >= 1;
+        ten = open ? "Ôn lại cả chương, biết đáp án ngay" : "Học xong 1 bài để mở";
+        khoaTxt = "Học xong ít nhất 1 bài trong chương rồi quay lại ô luyện tập này nhé";
+        const st = starsFor(diemO(o.idDiem));
+        if (open) starsHtml = `<span class="pn-stars" title="Luyện tập: ${st}/3 sao">${[0, 1, 2].map((i) => starSvg(i < st)).join("")}</span>`;
+      } else if (o.loai === "thi") {
+        open = doneCount >= mocThi;
+        pre = open && !traGoi && soDeDaThi >= 1;
+        const d = diemO(o.idDiem);
+        ten = open
+          ? (d != null ? `Điểm cao nhất: ${(d * 10).toFixed(1)}/10` : "50 phút, làm xong mới trả kết quả")
+          : `Cần học ${mocThi} bài của chặng (đang ${doneCount})`;
+        khoaTxt = `Ô thi thử mở khi em học xong ${mocThi}/${baiChang.length} bài của chặng này — hiện tại ${doneCount} bài`;
+      }
+
+      /* Ô mô phỏng / thực hành nằm ngay dưới bài của nó, nhìn thì rõ thuộc bài nào,
+         nhưng đọc bằng màn hình đọc thì không có "ngay dưới" -> nhắc tên bài. */
+      const cuaBai = o.l ? " — " + (o.l.title || "").replace(/^Bài\s*\d+[.\s]*/, "") : "";
+      const mota = `${dang.nhan}${cuaBai}: ${ten}` + (pre ? " (gói Premium)" : "") + (open ? "" : " (chưa mở)");
+      return `<button class="pnode ophu o-${o.loai} ${open ? "open" : "locked"}${pre ? " o-pre" : ""}" data-key="${esc(o.key)}" data-lock="${open ? 0 : 1}" data-khoa="${esc(khoaTxt)}" style="${dat(38)}" title="${esc(mota)}" aria-label="${esc(mota)}">
+          <span class="ophu-emoji">${open ? dang.icon : "🔒"}</span>
+          ${pre ? '<span class="ophu-pre">PRO</span>' : ""}
         </button>
-        <div class="pn-cap" style="${capStyle}">
-          <span class="pn-top"><span class="pn-num">Bài ${l.order}</span>${starsHtml}</span>
-          <span class="pn-name">${name}</span>
-        </div>`;
+        ${capHtml(nhan, dang.mau, ten, starsHtml)}`;
     }).join("");
 
     const cDone = c.items.filter((it) => learned[it.gi]).length, cAll = c.items.length, cOk = cDone === cAll;
@@ -811,6 +918,15 @@ function renderLessons(data) {
 
   const chapsHtml = chaps.map((c, cIdx) => chapHtml(c, cIdx)).join("");
 
+  /* Bảng chú giải các loại ô — chỉ liệt kê loại CÓ THẬT trong chặng đang xem, để
+     không hứa ô mô phỏng ở chặng chẳng có bài nào có minh hoạ. */
+  const loaiCo = new Set();
+  chaps.forEach((c) => c.cells.forEach((o) => { if (o.loai !== "bai") loaiCo.add(o.loai); }));
+  const chuGiai = `<div class="path-chugiai">
+      <span class="pcg"><b class="pcg-ic pcg-bai">${ic("play")}</b>Bài học</span>
+      ${Object.keys(O_PHU).filter((k) => loaiCo.has(k)).map((k) => `<span class="pcg"><b class="pcg-ic pcg-${k}">${O_PHU[k].icon}</b>${O_PHU[k].nhan}</span>`).join("")}
+    </div>`;
+
   app.innerHTML = `
     <button class="back-link" id="back">${aIco("aleft", null, 15)} Chọn chặng khác</button>
 
@@ -819,7 +935,7 @@ function renderLessons(data) {
       <div class="path-hero-content">
         <div class="path-hero-badge">${aIco("book", null, 14)} ${esc(nhanChang.phu || "Lộ trình học")}</div>
         <h2>${esc(nhanChang.ten)}</h2>
-        <p>Chọn một chương để mở bản đồ bài học.</p>
+        <p>Chọn một chương để mở bản đồ. Trên bản đồ, ngoài ô bài học còn có ô mô phỏng, thực hành, luyện tập và thi thử cuối chặng.</p>
 
         <div class="path-progress-box">
           <div class="progress-track-wrapper">
@@ -837,6 +953,7 @@ function renderLessons(data) {
       </div>
     </div>
 
+    ${chuGiai}
     <div class="pathroot">${chapsHtml}</div>`;
 
   document.getElementById("back").onclick = () => go("lessons");
@@ -868,8 +985,23 @@ function renderLessons(data) {
   app.querySelectorAll(".pnode").forEach((btn) => {
     btn.onclick = (e) => {
       e.stopPropagation();
-      if (btn.dataset.lock === "1") { toast("🔒 Hãy hoàn thành bài trước để mở khóa cửa ải này"); return; }
-      go("lesson", { id: btn.dataset.id });
+      const o = cellByKey.get(btn.dataset.key);
+      if (!o) return;
+      if (btn.dataset.lock === "1") {
+        toast("🔒 " + (btn.dataset.khoa || "Hãy hoàn thành bài trước để mở khóa cửa ải này"));
+        return;
+      }
+      /* Ô mô phỏng / thực hành đưa về đúng bài rồi cuộn tới khối đó — nội dung đã
+         nằm trong trang bài học, không dựng lại lần nữa ở chỗ khác. */
+      if (o.loai === "bai") { go("lesson", { id: o.l.id }); return; }
+      if (o.loai === "mophong") { go("lesson", { id: o.l.id, tieu: "mophong" }); return; }
+      if (o.loai === "thuchanh") { go("lesson", { id: o.l.id, tieu: "thuchanh" }); return; }
+      if (o.loai === "luyen") { batDauLuyenChuong(o.chuong, o.idDiem); return; }
+      if (o.loai === "thi") {
+        // Gói Miễn phí: thi thử 1 đề. Ô vẫn bấm được để biết mình đang bỏ lỡ gì.
+        if (!traGoi && soDeDaThi >= 1) { Plan.upsell("thithu_chang"); return; }
+        batDauThiChang(CHANG, nhanChang.ten, o.idDiem);
+      }
     };
   });
 
@@ -905,6 +1037,17 @@ function injectPathCss() {
     "@keyframes mascotHover { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }" +
 
     ".pathroot { max-width: 520px; margin: 0 auto; padding-bottom: 60px; }" +
+
+    /* Chú giải loại ô — đứng trên danh sách chương, tự xuống dòng trên điện thoại */
+    ".path-chugiai { max-width: 520px; margin: -8px auto 14px; display: flex; flex-wrap: wrap; gap: 6px 14px; justify-content: center; }" +
+    ".pcg { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 800; color: var(--text-soft); }" +
+    ".pcg-ic { width: 24px; height: 24px; border-radius: 8px; display: grid; place-items: center; font-size: 13px; font-style: normal; flex: none; }" +
+    ".pcg-ic svg { width: 13px; height: 13px; }" +
+    ".pcg-bai { border-radius: 50%; background: linear-gradient(180deg, #ff007f, #d8006c); color: #fff; }" +
+    ".pcg-mophong { background: linear-gradient(180deg, #22d3ee, #0891b2); }" +
+    ".pcg-thuchanh { background: linear-gradient(180deg, #a78bfa, #7c3aed); }" +
+    ".pcg-luyen { background: linear-gradient(180deg, #4ade80, #16a34a); }" +
+    ".pcg-thi { background: linear-gradient(180deg, #fb923c, #dc2626); }" +
 
     /* MÀN CHỌN CHẶNG — năm ô. auto-fit + minmax để 5 ô tự xếp 3+2 trên máy tính,
        2+2+1 trên máy tính bảng, 1 cột trên điện thoại, không cần media query. */
@@ -966,13 +1109,25 @@ function injectPathCss() {
     ".pnode.open { background: linear-gradient(180deg, #ff007f 0%, #d8006c 100%); color: #fff; box-shadow: 0 9px 0 #9e004f, 0 15px 25px rgba(255, 0, 127, 0.45); border: 3px solid #ff66c4; }" +
     ".pnode.locked { background: linear-gradient(180deg, #e5e7eb 0%, #d1d5db 100%); color: #9ca3af; box-shadow: 0 9px 0 #9ca3af; border: 3px solid #f3f4f6; opacity: 0.85; }" +
     "[data-theme='dark'] .pnode.locked { background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%); color: #475569; box-shadow: 0 9px 0 #020617; border-color: #334155; }" +
-    ".pnode.chest { width: 76px; height: 76px; border-radius: 24px; background: linear-gradient(180deg, #ffc107 0%, #ff9800 100%); box-shadow: 0 10px 0 #c77700, 0 16px 30px rgba(255, 193, 7, 0.5); border: 3.5px solid #ffe082; }" +
-    ".chest-emoji { font-size: 34px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.25)); }" +
+    /* Ô phụ (mô phỏng / thực hành / luyện tập / thi thử): VUÔNG bo góc và to hơn
+       ô bài học 8px, để phân biệt được cả khi không nhìn màu — người mù màu vẫn
+       thấy đây không phải một bài học. Màu lấy theo từng loại ở O_PHU. */
+    ".pnode.ophu { width: 76px; height: 76px; border-radius: 24px; }" +
+    ".ophu-emoji { font-size: 32px; line-height: 1; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.25)); }" +
+    ".pnode.o-mophong.open { background: linear-gradient(180deg, #22d3ee 0%, #0891b2 100%); box-shadow: 0 9px 0 #0e6f8a, 0 15px 25px rgba(8, 145, 178, .42); border: 3px solid #67e8f9; }" +
+    ".pnode.o-thuchanh.open { background: linear-gradient(180deg, #a78bfa 0%, #7c3aed 100%); box-shadow: 0 9px 0 #5b21b6, 0 15px 25px rgba(124, 58, 237, .42); border: 3px solid #c4b5fd; }" +
+    ".pnode.o-luyen.open { background: linear-gradient(180deg, #4ade80 0%, #16a34a 100%); box-shadow: 0 9px 0 #15803d, 0 15px 25px rgba(22, 163, 74, .42); border: 3px solid #86efac; }" +
+    ".pnode.o-thi.open { background: linear-gradient(180deg, #fb923c 0%, #dc2626 100%); box-shadow: 0 9px 0 #991b1b, 0 15px 25px rgba(220, 38, 38, .45); border: 3px solid #fdba74; }" +
+    /* Ô thi thử là cửa ải cuối chặng — cho nó thở nhẹ để mắt bắt được ngay */
+    ".pnode.o-thi.open { animation: oThiTho 2.6s ease-in-out infinite; }" +
+    "@keyframes oThiTho { 0%,100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-3px) scale(1.03); } }" +
+    /* Nhãn PRO: ô vẫn bấm được (bấm ra lời mời nâng cấp), chỉ nhạt đi cho biết */
+    ".pnode.o-pre { opacity: .82; }" +
+    ".ophu-pre { position: absolute; top: -8px; right: -10px; background: #b45309; color: #fff; font-family: var(--font-mono); font-size: 9.5px; font-weight: 900; padding: 2px 6px; border-radius: 8px; border: 2px solid #fff; letter-spacing: .04em; box-shadow: 0 3px 8px rgba(0,0,0,.28); }" +
     ".pnode:hover { transform: translateY(-4px) scale(1.06); }" +
     ".pnode:active { transform: translateY(6px); box-shadow: 0 3px 0 rgba(0,0,0,.4) !important; }" +
-    
+
     ".pnode.cur::after { content: ''; position: absolute; inset: -14px; border-radius: 50%; border: 4px solid #ffc107; animation: plpulse 1.6s ease-in-out infinite; pointer-events: none; box-shadow: 0 0 20px rgba(255, 193, 7, 0.6); }" +
-    ".pnode.chest.cur::after { border-radius: 28px; }" +
     "@keyframes plpulse { 0%,100% { transform: scale(1); opacity: .8; } 50% { transform: scale(1.24); opacity: .2; } }" +
     
     ".pn-bubble { position: absolute; top: -38px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #ff9800, #ff5722); color: #fff; font-family: var(--font-display); font-size: 11.5px; font-weight: 900; padding: 5px 14px; border-radius: 16px; white-space: nowrap; z-index: 4; box-shadow: 0 6px 18px rgba(255, 87, 34, 0.5); border: 2px solid #fff; animation: bounceNav 2s infinite; letter-spacing: 0.03em; }" +
@@ -989,7 +1144,8 @@ function injectPathCss() {
     "@media (max-width: 560px) { .path-hero-mascot { display: none; } .path-hero-card { padding: 16px 18px; margin-bottom: 16px; } }" +
     /* Bản đồ có ba thứ động cùng lúc (linh vật trôi, vành nhấp nháy, bong bóng
        nhảy) — ai đặt hệ thống giảm hiệu ứng thì tắt hết cho đỡ chóng mặt. */
-    "@media (prefers-reduced-motion: reduce) { .pmascot, .pn-bubble, .pnode.cur::after { animation: none; } }";
+    ".pnode.o-thi.open:hover { animation: none; }" +   // để :hover nhấc ô lên được
+    "@media (prefers-reduced-motion: reduce) { .pmascot, .pn-bubble, .pnode.cur::after, .pnode.o-thi.open { animation: none; } }";
   document.head.appendChild(s);
 }
 
@@ -1134,6 +1290,25 @@ function renderLesson(data) {
     p.hidden = !p.hidden;
     sgkT.querySelector(".sgk-chev").innerHTML = aIco(p.hidden ? "play" : "chevdown", null, 14);
   };
+
+  /* Vào từ ô "Mô phỏng" / "Thực hành" trên bản đồ thì cuộn thẳng tới khối đó —
+     hai khối này nằm gần cuối trang bài, không cuộn thì mở ra chỉ thấy lý thuyết
+     và tưởng bấm sai ô. Khối chưa dựng (bài bị khoá xưởng) thì bỏ qua, không nhảy. */
+  if (data && data.tieu) {
+    const chon = data.tieu === "mophong" ? ".mh" : ".ex-host, .sqx-host, .wbx-host, .glab-host, .plan-lockbox";
+    /* setTimeout chứ KHÔNG requestAnimationFrame: tab đang ẩn thì trình duyệt
+       không gọi rAF, mở app ở tab sau rồi quay lại là chẳng cuộn gì cả (đã đo).
+       Chỉnh lại lần hai sau 400ms vì khối bài tập dựng xong mới biết cao bao nhiêu. */
+    const nhay = () => {
+      const o = app.querySelector(chon);
+      if (!o) return false;
+      const r = o.getBoundingClientRect();
+      const dich = window.scrollY + r.top - Math.max(70, (window.innerHeight - r.height) / 2);
+      window.scrollTo({ top: Math.max(0, dich), behavior: "auto" });
+      return true;
+    };
+    setTimeout(() => { if (nhay()) setTimeout(nhay, 400); }, 0);
+  }
 }
 
 function practiceLesson(l) {
@@ -1716,6 +1891,55 @@ function startQuick() {
   let qs = pick(kho, Math.min(10, kho.length));
   if (typeof Plan !== "undefined") qs = Plan.catQuota(qs);
   State.quiz = newQuiz(qs, "practice", { title: "Luyện nhanh 10 câu" });
+  go("quiz");
+}
+
+/* ---- Hai ô phụ trên bản đồ tự dựng bài làm ---------------------------------
+   Cùng đi qua newQuiz + go("quiz") như mọi chỗ khác, chỉ khác nguồn câu và cách
+   ghi điểm: `lessonId` là id tổng hợp ("LT:22:1" / "TT:22") để bản đồ đọc lại
+   được số sao của chính ô đó từ lịch sử làm bài. */
+function batDauLuyenChuong(chuong, idDiem) {
+  /* Ưu tiên câu của những bài ĐÃ HỌC trong chương: ô này mở ngay khi học xong 1
+     bài, nếu bốc cả chương thì học 1 bài mà gặp câu của 7 bài chưa học. */
+  const layIds = (ds) => {
+    const s = new Set();
+    ds.forEach((l) => (l.quiz || []).forEach((q) => s.add(q)));
+    return s;
+  };
+  const daHoc = chuong.items.filter((it) => isLearned(it.l.id)).map((it) => it.l);
+  let pool = QUESTION_BANK.filter((q) => layIds(daHoc).has(q.id));
+  if (pool.length < 5) {
+    const ca = layIds(chuong.items.map((it) => it.l));
+    pool = QUESTION_BANK.filter((q) => ca.has(q.id));
+  }
+  if (!pool.length) { toast("Chương này chưa có câu luyện tập"); return; }
+  if (typeof Plan !== "undefined" && !Plan.chanLuyen()) return; // hết quỹ câu/ngày của gói free
+  let qs = shuffle(pool).slice(0, Math.min(15, pool.length));
+  if (typeof Plan !== "undefined") qs = Plan.catQuota(qs);
+  State.quiz = newQuiz(qs, "practice", { title: "Luyện tập: " + chuong.name, lessonId: idDiem });
+  go("quiz");
+}
+
+function batDauThiChang(stage, tenChang, idDiem) {
+  /* Đề ĐỦ khổ 24 + 4 câu, ưu tiên câu của chặng này rồi mới bù từ kho chung:
+     điểm hiện ra là thang 10 nên đề thiếu câu sẽ báo điểm sai (làm đúng hết mà
+     chỉ được 7,0). Ô này lại mở ở cuối chặng nên đề đủ khổ mới đúng ý nghĩa. */
+  const ids = new Set();
+  LESSONS.filter((l) => l.stage === stage).forEach((l) => (l.quiz || []).forEach((q) => ids.add(q)));
+  const boc = (type, n) => {
+    const trong = shuffle(QUESTION_BANK.filter((q) => q.type === type && ids.has(q.id))).slice(0, n);
+    if (trong.length >= n) return trong;
+    const co = new Set(trong.map((q) => q.id));
+    const bu = shuffle(QUESTION_BANK.filter((q) => q.type === type && !co.has(q.id)));
+    return trong.concat(bu.slice(0, n - trong.length));
+  };
+  const qs = [...boc("mc", EXAM_CONFIG.mc), ...boc("tf", EXAM_CONFIG.tf)]; // giữ thứ tự Phần I → Phần II
+  if (qs.length < EXAM_CONFIG.mc) { toast("Chưa đủ câu để dựng đề thi thử"); return; }
+  State.quiz = newQuiz(qs, "exam", {
+    minutes: EXAM_CONFIG.minutes,
+    title: "Thi thử cuối chặng: " + tenChang,
+    lessonId: idDiem,
+  });
   go("quiz");
 }
 
