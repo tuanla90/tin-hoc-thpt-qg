@@ -100,6 +100,24 @@
          thanh trên và chân trang, mà đó không phải việc của tệp này. */
       "@media print{" +
         "body.in-nhanh .topbar,body.in-nhanh .footer,body.in-nhanh .on-khong-in{display:none!important}" +
+        /* Mọi thứ NỔI trên trang đều phải biến mất: trợ lý AI ở góc phải từng in
+           đè lên chữ. Hai lớp phòng thủ, vì liệt kê tay thì lần sau thêm nút nổi
+           mới lại sót:
+             · danh sách dưới đây bắt những cái đã biết;
+             · lớp .on-an-khi-in do beforeprint quét động, bắt cả những thứ chưa
+               có tên ở đây và những hộp mới hiện ra ngay trước lúc in. */
+        "body.in-nhanh .floating-mascot-container," +
+        "body.in-nhanh .toast," +
+        "body.in-nhanh #nhacBar,body.in-nhanh #pwaBar," +
+        "body.in-nhanh .tt-nen,body.in-nhanh .tt-panel,body.in-nhanh .tt-fab," +
+        "body.in-nhanh .modal-overlay,body.in-nhanh .pay-nen,body.in-nhanh .plan-nen," +
+        "body.in-nhanh .gam-xpfloat,body.in-nhanh .gam-cele,body.in-nhanh .gam-confetti," +
+        "body.in-nhanh .on-an-khi-in{display:none!important}" +
+        /* Nền trang phải đặt trên <html>, KHÔNG phải <body>: nền của body được lan
+           lên canvas, nên luật nhắm vào body không đổi được màu nền trang dù có
+           !important (đã đo: đặt gì trên body cũng vẫn ra #f8fafc, đặt trên html
+           thì đổi ngay). Vì vậy lớp "in-nhanh" gắn lên CẢ HAI phần tử. */
+        "html.in-nhanh{background:#fff!important}" +
         "body.in-nhanh{background:#fff!important}" +
         "body.in-nhanh .app-main{padding:0!important;max-width:none!important}" +
         /* Ép nền trắng chữ đen: nhiều máy in bỏ qua màu nền, ra chữ trắng trên
@@ -353,7 +371,7 @@
 
   /* ---- 4. Bản in ---- */
   function veIn(st) {
-    document.body.classList.add("in-nhanh");
+    datLopIn();
     var chuong = chuongCuaChang(st);
     var tong = 0;
 
@@ -391,10 +409,42 @@
 
   /* Lớp in-nhanh chỉ đúng ở màn Bản in. Gỡ nó ở MỌI lần dựng khác và cả khi rời
      trang: để sót thì người dùng in một trang khác cũng bị cắt thanh trên. */
-  function goLopIn() { document.body.classList.remove("in-nhanh"); }
+  /* Gắn lên cả <html> và <body>: body cho các luật ẩn phần tử, html cho luật nền
+     (xem giải thích ở khối @media print). */
+  function datLopIn() {
+    document.body.classList.add("in-nhanh");
+    document.documentElement.classList.add("in-nhanh");
+  }
+  function goLopIn() {
+    document.body.classList.remove("in-nhanh");
+    document.documentElement.classList.remove("in-nhanh");
+  }
   window.addEventListener("hashchange", function () {
     if (String(location.hash || "").indexOf("#/on-nhanh/in") !== 0) goLopIn();
   });
+
+  /* Quét động ngay trước lúc in: đánh dấu MỌI phần tử đang nổi (position fixed
+     hoặc sticky) nằm ngoài vùng nội dung, để luật @media print ẩn chúng đi.
+     Vì sao cần dù đã có danh sách tên ở CSS: nút trợ lý AI, thanh mời cài app,
+     thanh nhắc học và hộp toast do bốn tệp khác nhau dựng, cái thì có sẵn trong
+     index.html cái thì chèn lúc chạy — liệt kê tay chắc chắn sẽ sót về sau.
+     beforeprint chạy cả khi người dùng bấm Ctrl+P chứ không riêng nút In của ta. */
+  function quetNoi() {
+    if (!document.body.classList.contains("in-nhanh")) return;
+    var app = document.getElementById("app");
+    document.querySelectorAll("body *").forEach(function (e) {
+      if (app && (e === app || app.contains(e))) return;   // nội dung cần in thì bỏ qua
+      var p = getComputedStyle(e).position;
+      if (p === "fixed" || p === "sticky") e.classList.add("on-an-khi-in");
+    });
+  }
+  function boQuet() {
+    document.querySelectorAll(".on-an-khi-in").forEach(function (e) {
+      e.classList.remove("on-an-khi-in");
+    });
+  }
+  window.addEventListener("beforeprint", quetNoi);
+  window.addEventListener("afterprint", boQuet);
 
   function renderOnNhanh(d) {
     napCss();
