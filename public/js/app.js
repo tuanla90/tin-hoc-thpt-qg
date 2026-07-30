@@ -552,28 +552,30 @@ function renderLessons() {
     c.items.push({ l, gi: i });
   });
 
-  /* Hình học bản đồ.
-     ĐẶT CHỮ BÊN CẠNH NODE, KHÔNG ĐẶT BÊN DƯỚI. Đặt bên dưới thì đường nối luôn
-     cắt qua chữ, không cách nào tránh: đường xuất phát từ đúng tâm node đi xuống,
-     nên ở khoảng y của dòng chữ nó đã chạy tới giữa hai node. Muốn khối chữ rộng
-     170px thoát được thì hai node liền nhau phải lệch ngang hơn 170px, mà ngay cả
-     khi lệch đủ thì đoạn đầu đường vẫn đi sát tâm node và vẫn cắt dòng đầu.
-     Đặt ngang tầm node thì sạch: quanh y của node đường gần như thẳng đứng tại
-     x của node, nên chừa 12px khỏi mép vòng tròn là đủ.
-     Node so le hẳn hai bên (biên độ 88) để bên trong luôn còn 160px cho chữ. */
-  const IW = 340, CX = 170, A = 88, R = 32, STEP = 152, PADTOP = 78;
-  /* 190px vì mép TRONG của khối chữ bị node ghim ở x=126, nới rộng chỉ ăn về phía
-     lề ngoài nên không đổi khoảng hở với đường nối. Đo trên 119 bài: 160px/2 dòng
-     cắt mất 23 tên bài, 190px/3 dòng không cắt cái nào. */
-  const CAP_W = 190;
-  const CAP_DX = 12;      // hở từ mép vòng tròn sang khối chữ
-  const CAP_BOT = 62;     // chỗ chừa dưới node cuối (bóng nổi + vành nhấp nháy)
+  /* Hình học bản đồ — kiểu Duolingo: KHÔNG có đường nối, chỉ có các ô xếp thành
+     làn sóng, nên bố cục do vị trí các ô tự nói lên.
+     Bỏ đường nối cũng mở lại chỗ đặt chữ ngay dưới ô: trước đây phải đẩy chữ sang
+     cạnh ô vì đường nối xuất phát từ tâm ô đi xuống và cắt qua chữ, giờ không còn
+     đường thì dưới ô là chỗ sạch và cân nhất.
+     Bề ngang: từ mép ngoài ô trái nhất tới mép ngoài ô phải nhất khoảng 5 ô. Ô
+     rộng 68px nên tâm hai ô ngoài cùng cách nhau 4 ô; lấy biên độ 128 (thay vì
+     136 đúng chằn) để chừa 8px lề, không thì vành nhấp nháy của ô đang học tràn
+     ra khỏi thẻ. */
+  const CELL = 68;                     // đường kính một ô
+  /* Bề ngang = 2A + CELL. Muốn ≈ 5 ô thì 2A = 4·CELL, tức A = 2·CELL = 136; trừ
+     8px lấy lề để vành nhấp nháy của ô đang học không tràn khỏi thẻ. */
+  const A = 2 * CELL - 8;
+  const IW = 340, CX = 170, R = 32, STEP = 176, PADTOP = 78;
+  const CAP_W = 190;                   // 190px/3 dòng: không cắt tên bài nào trong 119 bài
+  const CAP_DY = 52;                   // hở từ tâm ô xuống đầu khối chữ (qua bóng nổi + vành)
+  const CAP_BOT = 133;                 // chỗ chừa dưới ô cuối cho khối chữ của nó
   const ic = (name) => (typeof ICON === "function" ? ICON(name) : "");
 
-  /* So le hẳn hai bên, biên độ dao động nhẹ cho đỡ máy móc nhưng vẫn là một
-     làn sóng: mỗi nhịp là một nửa cô-sin nên tiếp tuyến tại node luôn thẳng đứng. */
-  const bienDo = [1, 0.94, 1, 0.9, 0.97, 1, 0.92, 0.98];
-  const lech = (k) => (k % 2 ? 1 : -1) * bienDo[k % bienDo.length];
+  /* Lấy mẫu hình sin, chu kì 8 ô. Dùng sin chứ không chia đều (0 – 0,5 – 1) vì
+     sin chậm dần khi tới hai đầu biên (bước 0,71 rồi 0,29) nên chỗ quay đầu trông
+     mềm, còn chia đều thì mỗi bước bằng nhau, quay đầu ra gãy góc.
+     Năm cột x rơi vào 42 – 80 – 170 – 260 – 298: đúng "tầm 5 ô" theo bề ngang. */
+  const lech = (k) => Math.sin((Math.PI * 2 * (k + 1)) / 8);
 
   /* Linh vật rải vào khoảng trống bên đối diện node cho bản đồ đỡ trống trải. */
   const MASCOT_BANDO = [
@@ -593,46 +595,24 @@ function renderLessons() {
     }));
     const H = pts[pts.length - 1].y + CAP_BOT;
 
-    /* MỘT đường duy nhất, node đặt lên trên — không phải nối từng đoạn.
-       Mỗi nhịp là nửa cô-sin thật: x(t) = giữa + biên·cos(πt) với t chạy 0→1 theo
-       y. Nửa cô-sin có đạo hàm ngang bằng 0 ở cả hai đầu nên tiếp tuyến tại mọi
-       node đều thẳng đứng, hai nhịp khớp nhau liền mạch thành một làn sóng.
-       Mỗi nhịp viết bằng HAI đoạn Bézier tách ở điểm uốn (giữa quãng) — dùng một
-       đoạn thì phải kéo điểm điều khiển ra giữa, sinh ra một khúc gần như thẳng ở
-       giữa nhịp, chính là cái làm đường trông như ghép từng mẩu.
-       Hệ số π/6 ≈ 0.5236 là tiếp tuyến của cô-sin tại điểm uốn quy về tham số
-       Bézier; đặt đúng nó thì đường cong khít với cô-sin. */
-    const P6 = Math.PI / 6;
     const f1 = (v) => v.toFixed(1);
-    let pathD = pts.length ? `M ${f1(pts[0].x)} ${f1(pts[0].y)}` : "";
-    for (let k = 1; k < pts.length; k++) {
-      const p = pts[k - 1], q = pts[k];
-      const dy = q.y - p.y, gi = (p.x + q.x) / 2, bi = (p.x - q.x) / 2;
-      // nhịp 1: từ node trên xuống điểm uốn ở giữa
-      pathD += ` C ${f1(p.x)} ${f1(p.y + dy / 6)}, ${f1(gi + bi * P6)} ${f1(p.y + dy / 3)}, ${f1(gi)} ${f1(p.y + dy / 2)}`;
-      // nhịp 2: từ điểm uốn xuống node dưới (đối xứng)
-      pathD += ` C ${f1(gi - bi * P6)} ${f1(p.y + (2 * dy) / 3)}, ${f1(q.x)} ${f1(q.y - dy / 6)}, ${f1(q.x)} ${f1(q.y)}`;
-    }
 
-    const segs = `<path d="${pathD}" fill="none" stroke="var(--border)" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" />` +
-      `<path d="${pathD}" fill="none" stroke="${C}" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" opacity="0.85" />`;
-
-    /* Linh vật nằm ở LỀ NGOÀI, phía đối diện node, trong khoảng trống giữa khối
-       chữ bậc này và node bậc sau. Đường nối chỉ chạy trong dải x 82–258 (cộng
-       7px nửa nét) nên lề ngoài 4px là vùng đường không bao giờ tới.
-       +42px và chỉ cao 64px là khe hẹp nhất còn lại, phải lách hai bên: trên là
-       khối chữ lúc tràn 3 dòng (nửa chiều cao 34px), dưới là node bậc sau — mà
-       node đó có thể là RƯƠNG, rương rộng 76px nên hộp cao hơn node thường 4px
-       mỗi phía và đã từng chạm đáy linh vật. */
+    /* Linh vật đứng NGANG TẦM ô, ở lề phía đối diện ô. Bỏ đường nối rồi thì dải
+       giữa không còn gì chiếm, nhưng khối chữ nằm ngay dưới ô nên vẫn phải tránh:
+       đặt ở tầm ô (y ± 34) thì trên là khối chữ bậc trước đã kết thúc, dưới là
+       khối chữ bậc này còn chưa bắt đầu.
+       Bỏ qua ô nằm sát trục giữa: bên nào cũng chật vì khối chữ 190px canh giữa
+       dưới ô sẽ phủ gần hết bề ngang. */
     const macs = (() => {
       const ra = [];
       let truoc = -99;
       pts.forEach((p, k) => {
-        if (ra.length >= 3 || k < 0 || k > n - 2 || k - truoc < 3) return;
+        if (ra.length >= 3 || k > n - 2 || k - truoc < 3) return;
+        if (Math.abs(p.x - CX) < 60) return;
         truoc = k;
-        const ben = p.x < CX ? "right:4px" : "left:4px";
+        const ben = p.x < CX ? "right:6px" : "left:6px";
         const img = MASCOT_BANDO[(bookIdx + chapIdx + ra.length) % MASCOT_BANDO.length];
-        ra.push(`<div class="pmascot" style="${ben};top:${f1(p.y + 42)}px">
+        ra.push(`<div class="pmascot" style="${ben};top:${f1(p.y - 42)}px">
             <img src="${mascotSrc(img)}" alt="" aria-hidden="true" draggable="false" loading="lazy" />
           </div>`);
       });
@@ -653,21 +633,18 @@ function renderLessons() {
       const chestIcon = done ? "🏆" : "🎁";
       const bk = p.chest ? R + 6 : R;   // nửa bề ngang node (rương to hơn 6px)
 
-      /* Khối chữ nằm ngang tầm node, ở phía TRONG (hướng về giữa) vì phía ngoài
-         chỉ còn ~48px. Canh giữa theo trục dọc bằng translateY(-50%) để cao 1 hay
-         2 dòng đều đúng tâm, khỏi phải đoán chiều cao. */
-      const trai = p.x < CX;
-      const capPos = trai
-        ? `left:${f1(p.x + bk + CAP_DX)}px`
-        : `right:${f1(IW - (p.x - bk - CAP_DX))}px`;
-      const capStyle = `${capPos};top:${f1(p.y)}px`;
+      /* Khối chữ về lại NGAY DƯỚI ô, canh giữa theo ô — bỏ đường nối rồi thì đây
+         là chỗ sạch và cân nhất. Kẹp trong khung vì ô ngoài cùng lệch tới 128px,
+         canh giữa nguyên bản sẽ đẩy khối chữ 190px ra ngoài mép. */
+      const capL = Math.max(4, Math.min(IW - CAP_W - 4, p.x - CAP_W / 2));
+      const capStyle = `left:${f1(capL)}px;top:${f1(p.y + CAP_DY)}px`;
 
       if (p.chest) {
         return `<button class="pnode chest ${cls}${cur ? " cur" : ""}" data-id="${l.id}" data-lock="${open ? 0 : 1}" style="left:${f1(p.x - bk)}px;top:${f1(p.y - bk)}px;--cc:${C}" title="${esc(l.title)}">
             ${cur ? '<span class="pn-bubble">RƯƠNG THƯỞNG 🎁</span>' : ""}
             <span class="chest-emoji">${chestIcon}</span>
           </button>
-          <div class="pn-cap ${trai ? "tl" : "tr"}" style="${capStyle}">
+          <div class="pn-cap" style="${capStyle}">
             <span class="pn-top"><span class="pn-num" style="color:#eab308">Cửa ải kho báu</span>${starsHtml}</span>
             <span class="pn-name">${name}</span>
           </div>`;
@@ -677,35 +654,39 @@ function renderLessons() {
           ${cur ? '<span class="pn-bubble">BẮT ĐẦU 🔥</span>' : ""}
           <span class="pnode-inner-icon">${glyph}</span>
         </button>
-        <div class="pn-cap ${trai ? "tl" : "tr"}" style="${capStyle}">
+        <div class="pn-cap" style="${capStyle}">
           <span class="pn-top"><span class="pn-num">Bài ${l.order}</span>${starsHtml}</span>
           <span class="pn-name">${name}</span>
         </div>`;
     }).join("");
 
     const cDone = c.items.filter((it) => learned[it.gi]).length, cAll = c.items.length, cOk = cDone === cAll;
+    const cPct = Math.round((cDone / cAll) * 100);
     const hasCurrentItem = c.items.some((it) => it.gi === currentIdx);
-    // Tự động mở chặng nếu chặng đó chứa bài đang học hoặc nếu bài đầu tiên của chặng đã mở
-    const defaultOpen = hasCurrentItem || (chapIdx === 0 && bookIdx === 0) || cDone > 0;
+    /* Mặc định CHỈ mở chặng đang học, còn lại thu hết: người dùng chọn chương
+       trước rồi mới mở vào trong. Trước đây mở luôn cả chặng đầu và mọi chặng đã
+       học dở nên vào màn là một dọc bản đồ trải ra, không còn chỗ để "chọn". */
+    const defaultOpen = hasCurrentItem;
     const accordId = `chap-acc-${bookIdx}-${chapIdx}`;
 
     return `<div class="pchap-accordion-card ${defaultOpen ? "is-open" : ""}" style="--cc:${C}">
-        <div class="pchap-acc-header" data-target="${accordId}">
-          <div class="pchap-head-left">
-            <span class="pchap-acc-icon">${cOk && typeof ICON === "function" ? ICON("check", 18) : "⚔️"}</span>
-            <div>
-              <div class="pchap-title">${esc(c.name)}</div>
-              <div class="pchap-sub">${cDone}/${cAll} Bài đã hoàn thành</div>
-            </div>
+        <div class="pchap-acc-header" data-target="${accordId}" role="button" tabindex="0"
+             aria-expanded="${defaultOpen ? "true" : "false"}" aria-controls="${accordId}">
+          <span class="pchap-acc-icon">${cOk && typeof ICON === "function" ? ICON("check", 18) : aIco("layers", null, 18)}</span>
+          <div class="pchap-head-mid">
+            <div class="pchap-title">${esc(c.name)}</div>
+            <div class="pchap-bar" role="progressbar" aria-valuenow="${cPct}" aria-valuemin="0" aria-valuemax="100"
+                 aria-label="Tiến độ chương ${esc(c.name)}"><div class="pchap-fill" style="width:${cPct}%"></div></div>
+            <div class="pchap-sub">${cDone}/${cAll} bài đã hoàn thành</div>
           </div>
           <div class="pchap-head-right">
-            <span class="pchap-badge-pct">${Math.round((cDone / cAll) * 100)}%</span>
-            <span class="pchap-chev">${aIco(defaultOpen ? "chevup" : "chevdown", null, 18)}</span>
+            <span class="pchap-badge-pct">${cPct}%</span>
+            <span class="pchap-chev">${aIco("chevdown", null, 18)}</span>
           </div>
         </div>
 
         <div class="pchap-acc-body" id="${accordId}" ${defaultOpen ? "" : "hidden"}>
-          <div class="pwrap" style="height:${H}px">${macs}<svg class="pconn" width="${IW}" height="${H}" viewBox="0 0 ${IW} ${H}">${segs}</svg>${nodes}</div>
+          <div class="pwrap" style="height:${H}px">${macs}${nodes}</div>
         </div>
       </div>`;
   };
@@ -748,24 +729,28 @@ function renderLessons() {
 
   document.getElementById("back").onclick = () => go("home");
   
-  // Xử lý sự kiện Mở Ra / Thu Vào (Accordion Expand/Collapse) của từng Chặng
+  /* Mở ra / thu vào từng chương. Mỗi lúc CHỈ một chương mở: bản đồ một chương đã
+     dài cả nghìn pixel, mở nhiều cái cùng lúc thì cuộn mãi không thấy chương sau. */
+  const datMo = (hdr, mo) => {
+    const card = hdr.closest(".pchap-accordion-card");
+    const body = document.getElementById(hdr.dataset.target);
+    card.classList.toggle("is-open", mo);
+    body.hidden = !mo;
+    hdr.setAttribute("aria-expanded", mo ? "true" : "false");
+    /* Chỉ QUAY mũi chevron bằng CSS, không đổi icon. icons.js không có "chevup":
+       aIco rơi về icon mặc định là dấu tích trong vòng tròn, nên chương đang mở
+       lại hiện dấu ✓ — dễ đọc thành "đã hoàn thành". */
+  };
   app.querySelectorAll(".pchap-acc-header").forEach((hdr) => {
-    hdr.onclick = () => {
-      const card = hdr.closest(".pchap-accordion-card");
-      const targetId = hdr.dataset.target;
-      const body = document.getElementById(targetId);
-      const isOpen = card.classList.contains("is-open");
-
-      if (isOpen) {
-        card.classList.remove("is-open");
-        body.hidden = true;
-        hdr.querySelector(".pchap-chev").innerHTML = aIco("chevdown", null, 18);
-      } else {
-        card.classList.add("is-open");
-        body.hidden = false;
-        hdr.querySelector(".pchap-chev").innerHTML = aIco("chevup", null, 18);
-      }
+    const bat = () => {
+      const dangMo = hdr.closest(".pchap-accordion-card").classList.contains("is-open");
+      app.querySelectorAll(".pchap-acc-header").forEach((h) => { if (h !== hdr) datMo(h, false); });
+      datMo(hdr, !dangMo);
+      if (!dangMo) hdr.scrollIntoView({ block: "nearest", behavior: "smooth" });
     };
+    hdr.onclick = bat;
+    // Header là <div> nên phải tự nối bàn phím, không thì chỉ bấm chuột mới mở được
+    hdr.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); bat(); } };
   });
 
   app.querySelectorAll(".pnode").forEach((btn) => {
@@ -810,26 +795,32 @@ function injectPathCss() {
     /* Thẻ Chặng Ngang Accordion Mở Ra / Thu Vào */
     ".pchap-accordion-card { background: var(--surface-card); border: 2.5px solid var(--border); border-radius: 24px; margin-bottom: 18px; overflow: hidden; box-shadow: 0 8px 0 var(--border), 0 12px 24px rgba(0,0,0,0.05); transition: all 0.25s ease; }" +
     ".pchap-accordion-card.is-open { border-color: var(--cc, var(--brand)); box-shadow: 0 10px 0 color-mix(in srgb, var(--cc) 70%, #000), 0 16px 32px rgba(0,0,0,0.08); }" +
-    ".pchap-acc-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 24px; cursor: pointer; user-select: none; background: var(--surface-card); transition: background 0.15s; }" +
+    ".pchap-acc-header { display: flex; align-items: center; gap: 14px; padding: 16px 20px; cursor: pointer; user-select: none; background: var(--surface-card); transition: background 0.15s; }" +
     ".pchap-acc-header:hover { background: var(--bg-soft); }" +
-    ".pchap-head-left { display: flex; align-items: center; gap: 14px; }" +
+    ".pchap-acc-header:focus-visible { outline: 3px solid var(--cc); outline-offset: -3px; }" +
     ".pchap-acc-icon { width: 42px; height: 42px; border-radius: 14px; background: color-mix(in srgb, var(--cc) 15%, transparent); color: var(--cc); display: grid; place-items: center; font-size: 20px; font-weight: 850; flex-shrink: 0; }" +
+    // min-width:0 để tên chương dài co lại được, không thì nó đẩy phần % ra ngoài
+    ".pchap-head-mid { flex: 1; min-width: 0; }" +
     ".pchap-title { font-family: var(--font-display); font-weight: 850; font-size: 16px; color: var(--text); line-height: 1.3; }" +
-    ".pchap-sub { font-size: 12.5px; color: var(--text-soft); font-weight: 650; margin-top: 2px; }" +
-    ".pchap-head-right { display: flex; align-items: center; gap: 12px; }" +
+    // Thanh tiến độ từng chương — thấy ngay chương nào còn dở mà không cần mở ra
+    ".pchap-bar { height: 8px; border-radius: 99px; background: var(--border); overflow: hidden; margin: 7px 0 5px; }" +
+    ".pchap-fill { height: 100%; border-radius: 99px; background: var(--cc); transition: width .45s cubic-bezier(.16,1,.3,1); }" +
+    ".pchap-sub { font-size: 12.5px; color: var(--text-soft); font-weight: 650; }" +
+    ".pchap-head-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }" +
     ".pchap-badge-pct { font-family: var(--font-mono); font-weight: 900; font-size: 13px; background: color-mix(in srgb, var(--cc) 15%, transparent); color: var(--cc); padding: 5px 12px; border-radius: 14px; border: 1px solid color-mix(in srgb, var(--cc) 30%, transparent); }" +
     ".pchap-chev { color: var(--text-soft); transition: transform 0.2s; display: grid; place-items: center; }" +
+    ".pchap-accordion-card.is-open .pchap-chev { transform: rotate(180deg); color: var(--cc); }" +
+    "@media (prefers-reduced-motion: reduce) { .pchap-chev { transition: none; } }" +
     ".pchap-acc-body { padding: 10px 0 30px; border-top: 2px dashed var(--border); background: color-mix(in srgb, var(--cc) 3%, var(--bg-card)); animation: fadeInAcc 0.3s ease; }" +
     "@keyframes fadeInAcc { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }" +
 
     ".pwrap { position: relative; width: 340px; margin: 0 auto; }" +
-    ".pconn { position: absolute; left: 0; top: 0; overflow: visible; z-index: 1; }" +
 
     /* Linh vật trang trí: nằm dưới đường nối, không nhận chuột, không đọc màn hình */
     /* Khung CỐ ĐỊNH, không để ảnh tự quyết chiều cao: bộ ảnh linh vật có tỉ lệ
        khác nhau (đo được 79px tới 153px cùng bề rộng 74px), thả tự do thì không
        tính trước được nó có chạm vào dòng chữ bậc dưới hay không. */
-    ".pmascot { position: absolute; width: 66px; height: 64px; z-index: 0; pointer-events: none; user-select: none; filter: drop-shadow(0 8px 16px rgba(0,0,0,.16)); animation: pmFloat 5s ease-in-out infinite; }" +
+    ".pmascot { position: absolute; width: 78px; height: 84px; z-index: 0; pointer-events: none; user-select: none; filter: drop-shadow(0 8px 16px rgba(0,0,0,.16)); animation: pmFloat 5s ease-in-out infinite; }" +
     ".pmascot img { width: 100%; height: 100%; display: block; object-fit: contain; object-position: bottom; }" +
     "@keyframes pmFloat { 0%,100% { transform: translateY(0) rotate(-2.5deg); } 50% { transform: translateY(-10px) rotate(2.5deg); } }" +
 
@@ -854,14 +845,10 @@ function injectPathCss() {
     "@keyframes bounceNav { 0%,100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(-5px); } }" +
     /* Khối chữ nằm ngang tầm node: translateY(-50%) canh tâm bất kể cao 1 hay 2
        dòng. .tl = chữ ở bên phải node (canh lề trái), .tr = ngược lại. */
-    ".pn-cap { position: absolute; width: 190px; pointer-events: none; z-index: 2; line-height: 1.25; transform: translateY(-50%); }" +
-    ".pn-cap.tl { text-align: left; }" +
-    ".pn-cap.tr { text-align: right; }" +
+    ".pn-cap { position: absolute; width: 190px; text-align: center; pointer-events: none; z-index: 2; line-height: 1.25; }" +
     ".pn-num { display: block; font-size: 12px; font-weight: 900; color: var(--primary); font-family: var(--font-mono); }" +
     ".pn-name { font-size: 12.5px; font-weight: 800; color: var(--text); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; margin-top: 3px; font-family: var(--font-sans); }" +
-    ".pn-top { display: flex; align-items: center; gap: 6px; line-height: 1; margin-bottom: 2px; }" +
-    ".pn-cap.tl .pn-top { justify-content: flex-start; }" +
-    ".pn-cap.tr .pn-top { justify-content: flex-end; }" +
+    ".pn-top { display: flex; align-items: center; justify-content: center; gap: 6px; line-height: 1; margin-bottom: 2px; }" +
     ".pn-stars { display: inline-flex; gap: 3px; }" +
     ".pn-star { width: 14px; height: 14px; fill: var(--border); }" +
     ".pn-star.on { fill: #ffc107; filter: drop-shadow(0 2px 4px rgba(255, 193, 7, 0.6)); }" +

@@ -91,29 +91,29 @@
      muc(daHoc): mức yêu cầu, tăng dần theo chặng.
      co(b): có giao nhiệm vụ này không — chặn mọi nhiệm vụ bất khả thi. */
   var KHO = {
-    dung: { ic: "✅", ten: function (n) { return "Trả lời đúng " + n + " câu"; },
+    dung: { ic: "check2", ten: function (n) { return "Trả lời đúng " + n + " câu"; },
             muc: function (d) { return d < 5 ? 20 : (d < 20 ? 40 : 60); },
             co: function () { return true; } },
-    bai:  { ic: "📘", ten: function (n) { return "Học xong " + n + " bài mới"; },
+    bai:  { ic: "book", ten: function (n) { return "Học xong " + n + " bài mới"; },
             muc: function (d) { return d < 5 ? 2 : 3; },
             co: function (b) { return b.conBai >= 2; } },
-    ngay: { ic: "📅", ten: function (n) { return "Học đủ " + n + " ngày trong tuần"; },
+    ngay: { ic: "calendar", ten: function (n) { return "Học đủ " + n + " ngày trong tuần"; },
             muc: function (d) { return d < 5 ? 3 : 4; },
             co: function () { return true; } },
-    bt:   { ic: "💻", ten: function (n) { return "Hoàn thành " + n + " bài thực hành"; },
+    bt:   { ic: "monitor", ten: function (n) { return "Hoàn thành " + n + " bài thực hành"; },
             muc: function () { return 3; },
             /* Đã giải hết bài thực hành thì exDone không tăng được nữa — giao
                nhiệm vụ này là treo vĩnh viễn. */
             co: function (b) { return b.conBT >= 3; } },
-    tuvung: { ic: "🔤", ten: function (n) { return "Học " + n + " từ vựng mới"; },
+    tuvung: { ic: "letters", ten: function (n) { return "Học " + n + " từ vựng mới"; },
             muc: function () { return 15; },
             co: function (b) { return b.conTuVung >= 15; } },
-    diem8: { ic: "⭐", ten: function (n) { return "Đạt 8+ điểm " + n + " lượt luyện"; },
+    diem8: { ic: "star", ten: function (n) { return "Đạt 8+ điểm " + n + " lượt luyện"; },
             muc: function () { return 1; },
             /* Chưa học được mấy bài thì điểm cao là chuyện may rủi, không phải
                kết quả của việc ôn — đợi đã học kha khá rồi hãy giao. */
             co: function (b) { return b.daHoc >= 8; } },
-    de:   { ic: "📝", ten: function (n) { return "Làm " + n + " đề thi thử"; },
+    de:   { ic: "exam", ten: function (n) { return "Làm " + n + " đề thi thử"; },
             muc: function () { return 1; },
             /* Đề thi thử bao trùm cả chương trình. Giao cho người mới học vài
                bài là bắt các em làm bài toàn câu chưa từng thấy -> nản. */
@@ -227,11 +227,13 @@
     var xongHet = ds.every(function (t) { return t.xong; });
     var hang = ds.map(function (t) {
       var pct = Math.round((t.dat / t.muc) * 100);
+      /* t.ic là TÊN icon trong icons.js, không phải emoji nữa. */
+      var ico = typeof ICON === "function" ? ICON(t.ic, 21) : "";
       return '<div class="nv-item' + (t.xong ? " nv-done" : "") + '">' +
-        '<span class="nv-ic">' + t.ic + "</span>" +
+        '<span class="nv-ic">' + ico + "</span>" +
         '<div class="nv-mid"><b>' + t.ten + "</b>" +
           '<div class="nv-bar"><div class="nv-fill" style="width:' + pct + '%"></div></div></div>' +
-        '<span class="nv-so">' + (t.xong ? "✓" : t.dat + "/" + t.muc) + "</span>" +
+        '<span class="nv-so">' + (t.xong && typeof ICON === "function" ? ICON("check2", 17) : (t.xong ? "✓" : t.dat + "/" + t.muc)) + "</span>" +
       "</div>";
     }).join("");
     return '<div class="nv-card' + (xongHet ? " nv-card-done" : "") + '">' +
@@ -251,8 +253,11 @@
       ".nv-head b{font-family:var(--font-display);font-size:15.5px}" +
       ".nv-head small{color:var(--text-soft);font-size:12.5px;white-space:nowrap}" +
       ".nv-item{display:flex;align-items:center;gap:11px;padding:7px 0}" +
-      /* Emoji rộng hơn cỡ chữ danh nghĩa — để 26px là bị cắt mép trên iOS. */
-      ".nv-ic{font-size:21px;line-height:1;flex:none;width:30px;text-align:center}" +
+      /* Icon nét thay emoji: cho nó cái nền tròn nhạt để vẫn nặng bằng emoji cũ,
+         không thì hàng nhiệm vụ trông nhẹ bẫng lệch hẳn so với phần còn lại. */
+      ".nv-ic{flex:none;width:34px;height:34px;border-radius:11px;display:grid;place-items:center;" +
+        "background:var(--primary-soft);color:var(--primary)}" +
+      ".nv-done .nv-ic{background:color-mix(in srgb, var(--success,#16a34a) 14%, transparent);color:var(--success,#16a34a)}" +
       ".nv-mid{flex:1;min-width:0}" +
       ".nv-mid b{display:block;font-size:13.5px;font-weight:700;margin-bottom:5px}" +
       ".nv-bar{height:7px;border-radius:99px;background:var(--border);overflow:hidden}" +
@@ -260,6 +265,7 @@
       ".nv-done .nv-fill{background:var(--success,#16a34a)}" +
       ".nv-done .nv-mid b{color:var(--text-soft);text-decoration:line-through}" +
       ".nv-so{flex:none;font-size:13px;font-weight:800;color:var(--text-soft);min-width:38px;text-align:right}" +
+      ".nv-so .ic{vertical-align:-3px}" +
       ".nv-done .nv-so{color:var(--success,#16a34a)}" +
       "@media (max-width:420px){.nv-head b{font-size:14.5px}.nv-mid b{font-size:12.5px}}";
     (document.head || document.documentElement).appendChild(st);

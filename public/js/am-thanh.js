@@ -100,7 +100,11 @@
     var b = document.getElementById("amToggle");
     if (!b) return;
     var bat = dangBat();
-    b.textContent = bat ? "🔊" : "🔇";
+    /* icons.js nạp SAU tệp này nên ICON chưa có lúc phân tích cú pháp, nhưng hàm
+       này chỉ chạy từ DOMContentLoaded trở đi nên lúc đó đã có. Vẫn để nhánh dự
+       phòng emoji cho trường hợp icons.js lỗi, đừng để trống trơ cái nút. */
+    if (typeof ICON === "function") b.innerHTML = ICON(bat ? "volume" : "volumeoff", 20);
+    else b.textContent = bat ? "🔊" : "🔇";
     b.title = bat ? "Tắt âm thanh" : "Bật âm thanh";
     b.setAttribute("aria-pressed", bat ? "true" : "false");
   }
