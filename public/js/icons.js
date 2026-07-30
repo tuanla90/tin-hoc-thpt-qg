@@ -75,7 +75,7 @@
     ".voc-mode .ic,.voc-vlabel .ic,.voc-vtest .ic,.voc-vnote .ic{vertical-align:-3px;margin-right:4px}" +
     ".flash-pron .ic,.flash-src .ic{vertical-align:-2px;margin-right:3px}" +
     ".brand-logo{color:var(--primary);display:inline-flex;align-items:center}" +
-    ".result-msg .ic,.result-flag .ic,.pg-title .ic,.chip .ic,.topic-count .ic,.flag-btn .ic{vertical-align:-3px;margin-right:4px}" +
+    ".result-msg .ic,.result-flag .ic,.pg-title .ic,.chip .ic,.flag-btn .ic{vertical-align:-3px;margin-right:4px}" +
     ".ex-hint .ic,.ex-result .ic{vertical-align:-2px;margin-right:3px}";
   var st = document.createElement("style");
   st.textContent = css;

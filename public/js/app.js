@@ -368,8 +368,6 @@ function renderHome() {
   const nhanPre = (mac) => (laPre ? "Premium" : mac);
 
   const totalQ = QUESTION_BANK.length;
-  const attempts = State.history.length;
-  const best = attempts ? Math.max(...State.history.map((h) => h.score)).toFixed(2) : "—";
   const learnedCount = State.learned.filter((id) => LESSONS.some((l) => l.id === id)).length;
   const ic = (n, e) => (typeof ICON === "function" ? ICON(n, 30) : e);
 
@@ -419,20 +417,29 @@ function renderHome() {
       </div>`
     : "";
 
-  app.innerHTML = `
-    ${typeof profileGreeting === "function" ? profileGreeting() : ""}
-    ${khachHtml}
+  /* Khối giới thiệu chỉ hiện với người CHƯA bắt đầu học. Nó cao 322px và nằm ngay
+     trên nút "Tiếp tục học", nên với người học quay lại mỗi ngày thì việc đầu tiên
+     họ thấy là chữ quảng cáo, còn nút cần bấm bị đẩy xuống y=447 — gần nửa màn
+     hình. Ô thống kê "x/119 bài" cũng trùng đúng badge của thẻ "Học lý thuyết".
+     Vẫn giữ cho người mới: nhiều em vào /hoc thẳng từ trang giới thiệu hoặc từ
+     Google, không có khối này thì không biết đây là cái gì. */
+  const chuaBatDau = learnedCount === 0 && !State.history.length;
+  const gioiThieuHtml = chuaBatDau ? `
     <section class="hero">
       <div class="hero-ic">${ic("cap", "🎓")}</div>
       <h1>Học & Ôn thi Tin học THPT</h1>
-      <p>Tự học từ đầu theo lộ trình bài giảng, rồi luyện tập và thi thử bám sát cấu trúc đề chính thức. Phù hợp cho người tự ôn, không cần đến trường.</p>
+      <p>Tự học từ đầu theo lộ trình bài giảng, rồi luyện tập và thi thử bám sát cấu trúc đề chính thức.</p>
       <div class="hero-stats">
-        <div class="hero-stat"><b>${learnedCount}/${LESSONS.length}</b><span>bài học đã xong</span></div>
+        <div class="hero-stat"><b>${LESSONS.length}</b><span>bài học</span></div>
         <div class="hero-stat"><b>${totalQ}</b><span>câu hỏi luyện tập</span></div>
-        <div class="hero-stat"><b>${best}</b><span>điểm thi thử cao nhất</span></div>
+        <div class="hero-stat"><b>${soBaiTap}</b><span>bài thực hành</span></div>
       </div>
-    </section>
+    </section>` : "";
 
+  app.innerHTML = `
+    ${typeof profileGreeting === "function" ? profileGreeting() : ""}
+    ${khachHtml}
+    ${gioiThieuHtml}
     ${continueHtml}
 
     <div id="gamDash"></div>
@@ -478,19 +485,13 @@ function renderHome() {
       </div>
     </div>
 
-    <div class="section-title">${aIco("layers", "#4f46e5", 18)} Ôn theo từng chủ đề</div>
-    <div class="topic-list">
-      ${Object.entries(TOPICS).map(([code, name]) => {
-        const n = QUESTION_BANK.filter((q) => q.topic === code).length;
-        return `
-        <div class="topic-row" data-topic="${code}">
-          <div class="topic-badge">${code}</div>
-          <div class="topic-info"><b>${esc(name)}</b><small>${n} câu hỏi</small></div>
-          <div class="topic-count">Luyện ${aIco("aright", null, 14)}</div>
-        </div>`;
-      }).join("")}
-    </div>
   `;
+  /* Bỏ khối "Ôn theo từng chủ đề": bảy hàng chủ đề chỉ mở đúng màn mà ô "Luyện
+     trắc nghiệm Phần 1" đã mở, chỉ khác là chọn sẵn chủ đề — trùng chức năng.
+     Bỏ luôn khép được một chỗ lệch cửa: ô Phần 1 khoá theo gói và hiện lời mời
+     nâng cấp, còn hàng chủ đề đi thẳng vào màn luyện tập không qua lời mời nào
+     (quota ngày vẫn chặn ở bước bắt đầu luyện, nên không phải mở toang, nhưng
+     hai cửa cùng đích mà một khoá một mở thì người dùng thấy tiền hậu bất nhất). */
 
   app.querySelectorAll(".mode-card").forEach((c) => c.onclick = () => {
     const mode = c.dataset.mode;
@@ -504,7 +505,6 @@ function renderHome() {
     else if (mode === "playground") go("playground");
     else go("practiceSetup");
   });
-  app.querySelectorAll(".topic-row").forEach((r) => r.onclick = () => go("practiceSetup", { topic: r.dataset.topic }));
   const cc = document.getElementById("continueCard");
   if (cc) { const goCur = () => go("lesson", { id: cc.dataset.id }); cc.onclick = goCur; cc.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); goCur(); } }; }
   const gl = document.getElementById("guestLogin");
