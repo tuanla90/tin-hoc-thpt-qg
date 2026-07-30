@@ -133,9 +133,11 @@
      cái gì nên cũng chẳng có lý do nâng cấp; mà đề bài thì đọc xong vẫn học được
      (nghĩ cách giải trên giấy). Nhận cả mảng bài tập lẫn số lượng để lời gọi cũ
      truyền số vẫn chạy. */
-  function khoaXuongBox(loai, lesson, ds) {
-    var anchor = document.querySelector(".ls-actions");
-    if (!anchor || !anchor.parentNode) return;
+  /* hostNgoai (tuỳ chọn): dựng thẳng vào khối này thay vì tìm .ls-actions — màn
+     Thực hành riêng (js/man-rieng.js) không có .ls-actions nào để neo vào. */
+  function khoaXuongBox(loai, lesson, ds, hostNgoai) {
+    var anchor = hostNgoai || document.querySelector(".ls-actions");
+    if (!anchor || (!hostNgoai && !anchor.parentNode)) return;
     var ds2 = Array.isArray(ds) ? ds : [];
     var soBai = Array.isArray(ds) ? ds.length : (ds || 0);
     var chu = function (s) {
@@ -164,7 +166,8 @@
         "Gợi ý và Đáp án mẫu của cả " + soBai + " bài này.</small></span>" +
         '<button class="btn btn-primary plan-lock-btn">Tìm hiểu Premium</button>' +
       "</div>";
-    anchor.parentNode.insertBefore(d, anchor);
+    if (hostNgoai) anchor.appendChild(d);
+    else anchor.parentNode.insertBefore(d, anchor);
     d.querySelector(".plan-lock-btn").onclick = function () { upsell("xuong"); };
   }
 

@@ -336,7 +336,7 @@
         res.innerHTML = (ex.check ? '<div class="sqx-cap">Bảng sau khi chạy:</div>' : '<div class="sqx-cap">Kết quả truy vấn của bạn:</div>') +
           (showRes.rows.length ? tableHTML(showRes.columns, showRes.rows) : '<div class="sqx-cap">(không có dòng nào)</div>');
         var ok = sameResult(actual, expected, ex.orderMatters);
-        if (ok && typeof Gam !== "undefined" && Gam.onExercisePass) Gam.onExercisePass({ prompt: ex.prompt });
+        if (ok && typeof Gam !== "undefined" && Gam.onExercisePass) Gam.onExercisePass({ prompt: ex.prompt }, lessonId);
         if (ok) { hong = 0; if (aiBtn) aiBtn.hidden = true; } else moiGiaSu(null);
         verdict.className = "sqx-verdict " + (ok ? "ok" : "no");
         verdict.innerHTML = ok
@@ -347,21 +347,28 @@
     };
   }
 
-  function injectSqlExercises(lesson) {
+  /* hostNgoai: xem chú thích ở injectExercises trong js/exercises.js. */
+  function injectSqlExercises(lesson, hostNgoai) {
     var list = SQL_EXERCISES[lesson.id];
-    if (!list || !list.length) return;
-    var anchor = document.querySelector(".ls-actions");
-    if (!anchor || !anchor.parentNode) return;
-    var wrap = document.createElement("div");
-    wrap.innerHTML =
-      '<div class="section-title" style="margin-top:24px">' + (typeof ICON === "function" ? ICON("layers", 17, "#0891b2") : "") + " Thực hành SQL (máy chạy &amp; tự chấm)</div>" +
-      '<p style="color:var(--text-soft);font-size:13.5px;margin-bottom:12px">Gõ câu lệnh SQL rồi bấm “Chạy &amp; Kiểm tra” — máy chạy trên cơ sở dữ liệu mẫu ngay trong trình duyệt và tự chấm kết quả.</p>' +
-      '<div class="sqx-host"></div>';
-    anchor.parentNode.insertBefore(wrap, anchor);
-    var host = wrap.querySelector(".sqx-host");
+    if (!list || !list.length) return false;
+    var host;
+    if (hostNgoai) {
+      host = hostNgoai;
+    } else {
+      var anchor = document.querySelector(".ls-actions");
+      if (!anchor || !anchor.parentNode) return false;
+      var wrap = document.createElement("div");
+      wrap.innerHTML =
+        '<div class="section-title" style="margin-top:24px">' + (typeof ICON === "function" ? ICON("layers", 17, "#0891b2") : "") + " Thực hành SQL (máy chạy &amp; tự chấm)</div>" +
+        '<p style="color:var(--text-soft);font-size:13.5px;margin-bottom:12px">Gõ câu lệnh SQL rồi bấm “Chạy &amp; Kiểm tra” — máy chạy trên cơ sở dữ liệu mẫu ngay trong trình duyệt và tự chấm kết quả.</p>' +
+        '<div class="sqx-host"></div>';
+      anchor.parentNode.insertBefore(wrap, anchor);
+      host = wrap.querySelector(".sqx-host");
+    }
     host.innerHTML = list.map(exHTML).join("");
     var nodes = host.querySelectorAll(".sqx");
     list.forEach(function (ex, i) { bindEx(nodes[i], ex, i, lesson.id); });
+    return true;
   }
 
   /* ---------------- SÂN CHƠI SQL (route sqlLab) ---------------- */

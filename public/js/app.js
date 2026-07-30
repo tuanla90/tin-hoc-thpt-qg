@@ -178,7 +178,8 @@ function countByType(t) { return QUESTION_BANK.filter((q) => q.type === t).lengt
  * ------------------------------------------------------------------------- */
 /* Bảng ánh xạ view -> hàm render (dựng lại mỗi lần để bắt được window.* nạp sau) */
 function viewRenderer(view) {
-  const map = { home: renderHome, lessons: renderLessons, lesson: renderLesson, playground: renderPlayground, practiceSetup: renderPracticeSetup, quiz: renderQuiz, result: renderResult, history: renderHistory, vocab: window.renderVocabPage, achievements: (window.Gam && window.Gam.renderAchievements), examCodes: window.renderExamCodes, tfDrill: window.renderTFDrill, profile: window.renderProfile, sqlLab: window.renderSqlLab, gfxLab: window.renderGfxLab, account: window.renderAccount, onNhanh: window.renderOnNhanh };
+  const map = { home: renderHome, lessons: renderLessons, lesson: renderLesson, playground: renderPlayground, practiceSetup: renderPracticeSetup, quiz: renderQuiz, result: renderResult, history: renderHistory, vocab: window.renderVocabPage, achievements: (window.Gam && window.Gam.renderAchievements), examCodes: window.renderExamCodes, tfDrill: window.renderTFDrill, profile: window.renderProfile, sqlLab: window.renderSqlLab, gfxLab: window.renderGfxLab, account: window.renderAccount, onNhanh: window.renderOnNhanh,
+    moPhong: window.renderMoPhong, thucHanh: window.renderThucHanh };
   return map[view] || renderHome;
 }
 
@@ -195,6 +196,11 @@ function viewToHash(view, data) {
        chặng riêng (xem scrollNho). */
     case "lessons": return "#/lessons" + (data && data.stage ? "/" + data.stage : "");
     case "lesson": return "#/lesson/" + encodeURIComponent((data && data.id) || "");
+    /* Mô phỏng và Thực hành có ĐỊA CHỈ RIÊNG, không còn là trang bài học cuộn
+       xuống. Nhờ vậy gửi được link riêng, F5 vẫn ở đúng chỗ, và mỗi màn có tiến
+       độ riêng (dấu "đã xem" cho mô phỏng, số sao cho thực hành). */
+    case "moPhong": return "#/mo-phong/" + encodeURIComponent((data && data.id) || "");
+    case "thucHanh": return "#/thuc-hanh/" + encodeURIComponent((data && data.id) || "");
     /* Ôn nhanh gộp ba màn (tổng kết chương / bẫy / bản in) vào MỘT view, phân
        biệt bằng data.muc — ba view rời thì ba lần khai báo ở cả ba chỗ (hash,
        parse, renderer) trong khi chúng dùng chung hết dữ liệu và thanh tab. */
@@ -244,6 +250,8 @@ function parseHash() {
       return { view: "lessons", data: st ? { stage: st } : undefined };
     }
     case "lesson": return { view: "lesson", data: parts[1] ? { id: decodeURIComponent(parts[1]) } : undefined };
+    case "mo-phong": return { view: "moPhong", data: parts[1] ? { id: decodeURIComponent(parts[1]) } : undefined };
+    case "thuc-hanh": return { view: "thucHanh", data: parts[1] ? { id: decodeURIComponent(parts[1]) } : undefined };
     /* #/playground/<python|web|sql|gfx>; #/sql-lab và #/graphics-lab giữ nguyên cho
        những link đã phát ra trước đây. Chữ lang lạ thì rơi về Python. */
     case "playground": {
@@ -303,10 +311,6 @@ function goStay(view, data) { keepScrollOnce = true; go(view, data); }
    trang (đúng), còn quay lại đúng chỗ cũ thì trả lại đúng chỗ cũ. */
 const scrollNho = new Map();
 let hashTruoc = location.hash;
-/* Hash vừa mở KÈM NEO (vào bài để xem đúng một khối, xem coNeo bên dưới). Chỗ cuộn
-   sâu đó không được nhớ: nhớ rồi thì lần sau bấm ô BÀI HỌC của đúng bài ấy sẽ mở ra
-   ở lưng trang, người học tưởng app cuộn bừa. */
-let hashCoNeo = null;
 
 /* Vẽ lại màn hiện tại sau khi đồng bộ xong: chỉ những màn ĐỌC tiến độ và KHÔNG
    giữ ô nhập của người học.
@@ -365,27 +369,19 @@ function renderFromHashThat() {
   keepScrollOnce = false;
   const prevY = window.scrollY;
 
-  /* Vào bài để xem ĐÚNG MỘT KHỐI (ô "Mô phỏng" / "Thực hành" trên bản đồ gửi kèm
-     data.tieu) thì màn hình tự cuộn tới khối đó ở cuối renderLesson — router phải
-     tránh đường, không thì hai cú cuộn tranh nhau và khối kia luôn thắng. */
-  const coNeo = !!(d && d.tieu);
-
   /* Ghi lại chỗ đang đứng của màn VỪA RỜI, rồi xem màn sắp vào đã từng ghé chưa.
-     Màn vừa rời mà mở bằng NEO thì XOÁ chỗ đã nhớ chứ không ghi chỗ cuộn sâu ấy:
-     ghi rồi thì lần sau bấm ô BÀI HỌC của đúng bài đó lại mở ra ở lưng trang, đúng
-     chỗ khối thực hành — người học tưởng app cuộn bừa. */
-  if (hashTruoc && hashTruoc !== location.hash) {
-    if (hashTruoc === hashCoNeo) { scrollNho.delete(hashTruoc); hashCoNeo = null; }
-    else scrollNho.set(hashTruoc, prevY);
-  }
+     Trước đây chỗ này còn một nhánh "hashCoNeo" để XOÁ chỗ cuộn đã nhớ khi màn vừa
+     rời được mở bằng neo (bấm ô Mô phỏng/Thực hành thì vào trang bài rồi cuộn sâu
+     xuống). Mô phỏng và Thực hành giờ là MÀN RIÊNG nên không còn cuộn sâu nào để
+     phải quên — nhánh đó đã bỏ. */
+  if (hashTruoc && hashTruoc !== location.hash) scrollNho.set(hashTruoc, prevY);
   hashTruoc = location.hash;
-  if (coNeo) hashCoNeo = location.hash;
   const yCu = keepScroll ? prevY : scrollNho.get(location.hash);
-  if (!keepScroll && yCu == null && !coNeo) window.scrollTo({ top: 0, behavior: "smooth" });
+  if (!keepScroll && yCu == null) window.scrollTo({ top: 0, behavior: "smooth" });
   (viewRenderer(view))(d);
   /* Đặt lại SAU khi DOM mới dựng xong: thay innerHTML có thể làm trang co lại rồi
      tụt cuộn, đặt trước thì mất tác dụng. */
-  if (yCu != null && !coNeo) window.scrollTo(0, yCu);
+  if (yCu != null) window.scrollTo(0, yCu);
 }
 
 window.addEventListener("hashchange", renderFromHash);
@@ -993,11 +989,26 @@ function renderLessons(data) {
         // Nhãn trên đã ghi "Mô phỏng" nên dòng dưới chỉ cần nói mô phỏng CÁI GÌ
         ten = open ? "Bấm từng bước, xem máy làm gì" : "Chưa mở — bài học chưa tới";
         khoaTxt = vBai;
+        /* DẤU TÍCH, không phải sao. Mô phỏng không có đúng/sai để chấm, gắn sao vào
+           thì ai cũng 3/3 — sao vô nghĩa, mà còn làm loãng ý nghĩa của sao ở ô
+           Luyện tập. Dấu tích chỉ nói "đã xem hết các bước". */
+        if (open && window.ManRieng && ManRieng.daXemMoPhong(o.l.id)) {
+          starsHtml = `<span class="pn-xem" title="Đã xem hết các bước">${aIco("check2", "#16a34a", 14)}</span>`;
+        }
       } else if (o.loai === "thuchanh") {
         open = unlocked[o.gi];
         ten = `${o.soBt} bài ${TEN_XUONG_NGAN[o.xuong] || "code"} — máy chấm`;
         khoaTxt = vBai;
         pre = typeof Plan !== "undefined" && !Plan.xuongMo(o.xuong, o.l);
+        /* SAO theo số bài làm đúng — xưởng thực hành có máy chấm nên đo được thật.
+           Chỉ hiện khi đã làm được ít nhất một bài: ô nào cũng kèm ba sao rỗng thì
+           bản đồ đầy sao xám, mất luôn tác dụng báo hiệu. */
+        if (open && !pre && window.ManRieng) {
+          const st = ManRieng.saoThucHanh(o.l.id);
+          if (st.xong > 0) {
+            starsHtml = `<span class="pn-stars" title="Thực hành: ${st.xong}/${st.tong} bài đúng">${[0, 1, 2].map((i) => starSvg(i < st.sao)).join("")}</span>`;
+          }
+        }
       } else if (o.loai === "tongket") {
         /* Mở ngay từ đầu, KHÔNG đòi học xong bài nào: đây là bản rút gọn để ôn
            gấp, mà lúc ôn gấp thì học sinh cần vào thẳng chứ không đi lại lộ trình. */
@@ -1143,8 +1154,10 @@ function renderLessons(data) {
       /* Ô mô phỏng / thực hành đưa về đúng bài rồi cuộn tới khối đó — nội dung đã
          nằm trong trang bài học, không dựng lại lần nữa ở chỗ khác. */
       if (o.loai === "bai") { go("lesson", { id: o.l.id }); return; }
-      if (o.loai === "mophong") { go("lesson", { id: o.l.id, tieu: "mophong" }); return; }
-      if (o.loai === "thuchanh") { go("lesson", { id: o.l.id, tieu: "thuchanh" }); return; }
+      /* Mở MÀN RIÊNG, không còn mở trang bài rồi cuộn xuống — xem lí do ở đầu
+         js/man-rieng.js. */
+      if (o.loai === "mophong") { go("moPhong", { id: o.l.id }); return; }
+      if (o.loai === "thuchanh") { go("thucHanh", { id: o.l.id }); return; }
       if (o.loai === "tongket") { go("onNhanh", { muc: "chuong", stage: CHANG, ci: o.ci }); return; }
       if (o.loai === "luyen") { batDauLuyenChuong(o.chuong, o.idDiem); return; }
       if (o.loai === "thi") {
@@ -1306,6 +1319,9 @@ function injectPathCss() {
     ".pn-name { font-size: 12.5px; font-weight: 800; color: var(--text); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; margin-top: 3px; font-family: var(--font-sans); }" +
     ".pn-top { display: flex; align-items: center; justify-content: center; gap: 6px; line-height: 1; margin-bottom: 2px; }" +
     ".pn-stars { display: inline-flex; gap: 3px; }" +
+    /* Dấu "đã xem hết mô phỏng" — đứng cùng chỗ với chùm sao trên .pn-top nên phải
+       cùng cách canh, không thì dòng nhãn nhảy lên nhảy xuống giữa các ô. */
+    ".pn-xem { display: inline-flex; align-items: center; }" +
     ".pn-star { width: 14px; height: 14px; fill: var(--border); }" +
     ".pn-star.on { fill: #ffc107; filter: drop-shadow(0 2px 4px rgba(255, 193, 7, 0.6)); }" +
     "@media (max-width: 560px) { .path-hero-mascot { display: none; } .path-hero-card { padding: 16px 18px; margin-bottom: 16px; } }" +
@@ -1377,6 +1393,52 @@ function renderBlocks(sections) {
   }).join("");
 }
 
+/* Thanh chip ngay dưới câu dẫn của bài: cho biết bài này có sẵn những gì và mở
+   thẳng tới đó. Mô phỏng và Thực hành mở sang MÀN RIÊNG (địa chỉ riêng, có tiến độ
+   riêng); Sơ đồ, Sai ở đâu và Từ vựng nằm trong trang này nên chỉ cuộn tới.
+   Chỉ hiện chip của thứ bài này THẬT SỰ có — bài nào cũng đủ năm chip thì thanh này
+   thành đồ trang trí, không còn nói lên điều gì. */
+/* CSS riêng, KHÔNG gộp vào injectPathCss(): hàm đó chỉ chạy khi mở bản đồ lộ trình,
+   nên mở thẳng một bài bằng đường dẫn thì thanh chip sẽ mất hết kiểu dáng. */
+function injectLsJumpCss() {
+  if (document.getElementById("lsJumpCss")) return;
+  const s = document.createElement("style");
+  s.id = "lsJumpCss";
+  s.textContent =
+    ".ls-jump{display:flex;gap:7px;flex-wrap:wrap;margin:0 0 18px}" +
+    ".ls-jump-b{display:inline-flex;align-items:center;gap:5px;border:1.5px solid var(--border);" +
+      "background:var(--bg-card);color:var(--text-soft);border-radius:999px;padding:7px 13px;" +
+      "font:700 12.5px var(--font-sans);cursor:pointer;min-height:36px}" +
+    ".ls-jump-b:hover{border-color:var(--primary);color:var(--primary)}";
+  (document.head || document.documentElement).appendChild(s);
+}
+
+function lsJumpBar(l) {
+  const co = (f) => { try { return !!f(); } catch (e) { return false; } };
+  const chips = [];
+  if (co(() => window.MinhHoa && MinhHoa.coBai().indexOf(l.id) >= 0)) {
+    chips.push({ ic: "bulb", ten: "Mô phỏng", di: () => go("moPhong", { id: l.id }) });
+  }
+  const x = co(() => window.ManRieng) ? ManRieng.xuongCuaBai(l.id) : null;
+  if (x) chips.push({ ic: x.icon, ten: "Thực hành", di: () => go("thucHanh", { id: l.id }) });
+  if (co(() => window.SoDo && SoDo.coBai().indexOf(l.id) >= 0)) {
+    chips.push({ ic: "layers", ten: "Sơ đồ", cuon: ".sd" });
+  }
+  if (co(() => window.SaiODau && SaiODau.coBai().indexOf(l.id) >= 0)) {
+    chips.push({ ic: "search", ten: "Sai ở đâu?", cuon: ".sod" });
+  }
+  if (co(() => window.VOCAB && VOCAB[l.id] && VOCAB[l.id].length)) {
+    chips.push({ ic: "letters", ten: "Từ vựng", cuon: ".voc-box" });
+  }
+  if (!chips.length) return "";
+  injectLsJumpCss();
+  LS_JUMP = chips;
+  return '<div class="ls-jump">' + chips.map((c, i) =>
+    `<button class="ls-jump-b" data-j="${i}">${aIco(c.ic, null, 14)} ${esc(c.ten)}</button>`
+  ).join("") + "</div>";
+}
+let LS_JUMP = [];
+
 function renderLesson(data) {
   const sorted = LESSONS.slice().sort((a, b) => a.stage - b.stage || a.order - b.order);
   const idx = sorted.findIndex((l) => l.id === data.id);
@@ -1396,7 +1458,8 @@ function renderLesson(data) {
       <span class="pill">~${l.minutes} phút</span>
     </div>
     <h2 style="margin-bottom:8px">${esc(l.title)}</h2>
-    <p style="color:var(--text-soft);font-size:15px;margin-bottom:18px">${fmtInline(l.intro)}</p>
+    <p style="color:var(--text-soft);font-size:15px;margin-bottom:14px">${fmtInline(l.intro)}</p>
+    ${lsJumpBar(l)}
 
     <div class="lesson-body">${renderBlocks(l.sections)}</div>
 
@@ -1453,6 +1516,19 @@ function renderLesson(data) {
   if (typeof injectSaiODau === "function") injectSaiODau(l);
   if (typeof injectMinhHoa === "function") injectMinhHoa(l);
   if (typeof injectVocab === "function") injectVocab(l);
+
+  /* Gắn sau khi MỌI khối đã dựng: chip cuộn tới .sd / .sod / .voc-box mà mấy khối
+     đó do các tệp khác chèn vào sau, gắn sớm thì querySelector trả về null. */
+  app.querySelectorAll(".ls-jump-b").forEach((b) => {
+    const c = LS_JUMP[+b.dataset.j];
+    if (!c) return;
+    b.onclick = () => {
+      if (c.di) { c.di(); return; }
+      const o = app.querySelector(c.cuon);
+      if (!o) { toast("Phần này chưa dựng xong, thử lại sau một nhịp"); return; }
+      window.scrollTo({ top: Math.max(0, window.scrollY + o.getBoundingClientRect().top - 78), behavior: "smooth" });
+    };
+  });
   const sgkT = document.getElementById("sgkToggle");
   if (sgkT) sgkT.onclick = () => {
     const p = document.getElementById("sgkPages");
@@ -1460,32 +1536,6 @@ function renderLesson(data) {
     sgkT.querySelector(".sgk-chev").innerHTML = aIco(p.hidden ? "play" : "chevdown", null, 14);
   };
 
-  /* Vào từ ô "Mô phỏng" / "Thực hành" trên bản đồ thì cuộn thẳng tới khối đó —
-     hai khối này nằm gần cuối trang bài, không cuộn thì mở ra chỉ thấy lý thuyết
-     và tưởng bấm sai ô. Khối chưa dựng (bài bị khoá xưởng) thì bỏ qua, không nhảy. */
-  if (data && data.tieu) {
-    const chon = data.tieu === "mophong" ? ".mh" : ".ex-host, .sqx-host, .wbx-host, .glab-host, .plan-lockbox";
-    /* setTimeout chứ KHÔNG requestAnimationFrame: tab đang ẩn thì trình duyệt
-       không gọi rAF, mở app ở tab sau rồi quay lại là chẳng cuộn gì cả (đã đo).
-       Chỉnh lại lần hai sau 400ms vì khối bài tập dựng xong mới biết cao bao nhiêu. */
-    const nhay = () => {
-      const o = app.querySelector(chon);
-      if (!o) return false;
-      /* Neo vào cả TIÊU ĐỀ của khối, và đặt tiêu đề ngay dưới thanh trên cùng thay
-         vì canh giữa khối: canh giữa một khối cao thì lên màn là chữ cắt ngang lưng,
-         nhìn hệt như app cuộn bừa. Thấy dòng "Bài thực hành..." ở trên cùng thì
-         hiểu ngay là trang mở đúng vào mục mình bấm. */
-      const cha = o.parentElement;
-      const khoi = cha && cha !== app && cha.querySelector(".section-title") ? cha : o;
-      const dich = window.scrollY + khoi.getBoundingClientRect().top - 78;
-      window.scrollTo({ top: Math.max(0, dich), behavior: "auto" });
-      // Nháy viền một nhịp cho mắt bắt được mình vừa được đưa tới đâu
-      khoi.classList.add("neo-sang");
-      setTimeout(() => khoi.classList.remove("neo-sang"), 1500);
-      return true;
-    };
-    setTimeout(() => { if (nhay()) setTimeout(nhay, 400); }, 0);
-  }
 }
 
 function practiceLesson(l) {
@@ -3125,22 +3175,41 @@ function initUserMenu() {
     trig.classList.toggle("open", mo);
   };
   trig.onclick = (e) => { e.stopPropagation(); dat(menu.hidden); };
+  /* Dùng composedPath() để biết click có nằm trong menu không, KHÔNG dùng
+     menu.contains(e.target): nút loa/giao diện thay nguyên innerHTML (đổi icon)
+     ngay lúc bấm, nên nếu bấm trúng đúng hình <svg>/<path> bên trong, phần tử
+     đó bị THÁO KHỎI DOM giữa lúc sự kiện đang nổi bọt lên — .contains() với một
+     nút đã tháo luôn trả về false dù bấm rõ ràng ở trong menu, khiến menu tự
+     đóng và tưởng như bấm icon "không có phản hồi". composedPath() chụp lại
+     đường đi của sự kiện NGAY LÚC PHÁT ra, không đổi dù DOM có bị sửa giữa
+     chừng — đây chính là lỗi đã đo được khi bấm thẳng vào icon loa/theme. */
+  const trongMenu = (e) => {
+    const duong = e.composedPath ? e.composedPath() : [e.target];
+    return duong.includes(menu) || duong.includes(trig);
+  };
   document.addEventListener("click", (e) => {
-    if (!menu.hidden && !menu.contains(e.target) && e.target !== trig) dat(false);
+    if (!menu.hidden && !trongMenu(e)) dat(false);
   });
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && !menu.hidden) { dat(false); trig.focus(); }
   });
-  // Bấm "Hồ sơ" / "Tài khoản" / "Đăng xuất" thì đóng menu trước khi chuyển màn,
-  // không thì menu vẫn che lên trên nội dung màn mới.
+  // Bấm "Hồ sơ" / "Tài khoản" / "Đổi hồ sơ" / "Đăng xuất" thì đóng menu trước
+  // khi chuyển màn, không thì menu vẫn che lên trên nội dung màn mới.
   menu.querySelectorAll(".um-item").forEach((b) => b.addEventListener("click", () => dat(false)));
   // Hai hàng công tắc: bấm cả hàng cũng bật/tắt được, không chỉ đúng cái nút nhỏ.
   // Không đóng menu khi bấm — người học có thể muốn chỉnh cả hai rồi mới đóng.
   [["umRowSound", "amToggle"], ["umRowTheme", "themeToggle"]].forEach(([rowId, btnId]) => {
     const row = document.getElementById(rowId), btn = document.getElementById(btnId);
     if (!row || !btn) return;
-    row.addEventListener("click", (e) => { if (!btn.contains(e.target)) btn.click(); });
+    row.addEventListener("click", (e) => {
+      const duong = e.composedPath ? e.composedPath() : [e.target];
+      if (!duong.includes(btn)) btn.click();
+    });
   });
+  // "Đổi hồ sơ": dùng lại đúng màn chọn hồ sơ ở lúc đăng nhập (Account.renderProfilePicker),
+  // qua guardLeave vì đây là đổi cả danh tính đang dùng, không phải chuyển trang thường.
+  const switchBtn = document.getElementById("umSwitchBtn");
+  if (switchBtn) switchBtn.onclick = () => guardLeave(() => { if (window.Account) Account.renderProfilePicker(); });
 }
 
 /* Nếu đang làm bài thi (chưa nộp) thì hỏi trước khi rời đi */

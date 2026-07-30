@@ -449,12 +449,27 @@ var Gam = {
     else gamAward(5 + correct * 2);
     gamCheckBadges();
   },
-  onExercisePass: function (ex) {
+  /* baiId (tuỳ chọn) là MÃ BÀI HỌC chứa bài tập này. Trước đây chữ ký chỉ gồm đề
+     bài, nên đếm được TỔNG số bài đã làm nhưng không biết bài nào thuộc bài học
+     nào — không tính được số sao cho từng bài học. Nay ghi thêm mã bài vào chữ ký.
+     Bản ghi CŨ (không có mã bài) vẫn nằm nguyên trong exDone và vẫn được đếm vào
+     tổng, chỉ là không quy được về bài học nào; xem Gam.soBaiTapXong(). Cố ý KHÔNG
+     xoá hay chuyển đổi chúng: không có cách nào biết một đề bài cũ thuộc bài nào
+     mà không đoán, mà đoán sai thì học sinh mất thành tích đã có. */
+  onExercisePass: function (ex, baiId) {
     if (window.Am) Am.dung();               // code chạy đúng cũng đáng một tiếng khen
-    var sig = "ex:" + ((ex && (ex.prompt || ex.expected)) || Math.random());
-    if (GAM.exDone.indexOf(sig) >= 0) return; // đã làm đúng trước đó
+    var de = (ex && (ex.prompt || ex.expected)) || Math.random();
+    var sig = "ex:" + (baiId ? baiId + ":" : "") + de;
+    /* Đã làm đúng ở bản ghi kiểu CŨ thì cũng coi như xong, đừng cộng XP lần hai. */
+    if (GAM.exDone.indexOf(sig) >= 0 || GAM.exDone.indexOf("ex:" + de) >= 0) return;
     GAM.exDone.push(sig); gamSave();
     gamTouchStreak(); gamAward(15); gamCheckBadges();
+  },
+  /* Số bài tập đã làm đúng TRONG một bài học. Chỉ đếm được từ bản ghi có mã bài. */
+  soBaiTapXong: function (baiId) {
+    if (!baiId) return 0;
+    var tien = "ex:" + baiId + ":";
+    return GAM.exDone.filter(function (s) { return String(s).indexOf(tien) === 0; }).length;
   },
   onVocabMastered: function (word) {
     if (!word) return;

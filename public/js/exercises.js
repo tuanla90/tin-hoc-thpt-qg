@@ -257,7 +257,7 @@ function renderExercises(host, exercises, lessonId) {
         out.classList.remove("has-error");
         out.textContent = output === "" ? "(chương trình không in ra gì)" : output;
         var ok = normOut(output) === normOut(ex.expected);
-        if (ok && typeof Gam !== "undefined") Gam.onExercisePass(ex);
+        if (ok && typeof Gam !== "undefined") Gam.onExercisePass(ex, lessonId);
         if (ok) { hong = 0; if (aiBtn) aiBtn.hidden = true; }
         else moiGiaSu(ta.value, output, null);
         res.hidden = false;
@@ -283,18 +283,29 @@ function renderExercises(host, exercises, lessonId) {
 }
 
 /* Chèn khu bài thực hành vào trang bài học (gọi từ renderLesson trong app.js) */
-function injectExercises(lesson) {
+/* hostNgoai (tuỳ chọn): dựng thẳng vào khối này và BỎ tiêu đề mục — dùng cho màn
+   Thực hành riêng (js/man-rieng.js), nơi tiêu đề đã nằm ở đầu trang. Không truyền
+   thì giữ nguyên hành vi cũ: tự tìm .ls-actions trong trang bài học rồi chèn trước.
+   Trả về true nếu có dựng được gì, để màn riêng biết bài này có bài tập hay không. */
+function injectExercises(lesson, hostNgoai) {
   var exs = (typeof EXERCISES !== "undefined" && EXERCISES[lesson.id]) || [];
-  if (!exs.length) return;
-  var anchor = document.querySelector(".ls-actions");
-  if (!anchor || !anchor.parentNode) return;
-  var wrap = document.createElement("div");
-  wrap.innerHTML =
-    '<div class="section-title" style="margin-top:24px">' + xIco("code", "#0891b2", 17) + " Bài thực hành (tự viết code)</div>" +
-    '<p style="color:var(--text-soft);font-size:13.5px;margin-bottom:12px">Tự tay viết code rồi bấm "Chạy &amp; Kiểm tra" — máy sẽ chấm kết quả giúp em. Bí quá thì xem Gợi ý hoặc Đáp án mẫu.</p>' +
-    '<div class="ex-host"></div>';
-  anchor.parentNode.insertBefore(wrap, anchor);
-  renderExercises(wrap.querySelector(".ex-host"), exs, lesson.id);
+  if (!exs.length) return false;
+  var host;
+  if (hostNgoai) {
+    host = hostNgoai;
+  } else {
+    var anchor = document.querySelector(".ls-actions");
+    if (!anchor || !anchor.parentNode) return false;
+    var wrap = document.createElement("div");
+    wrap.innerHTML =
+      '<div class="section-title" style="margin-top:24px">' + xIco("code", "#0891b2", 17) + " Bài thực hành (tự viết code)</div>" +
+      '<p style="color:var(--text-soft);font-size:13.5px;margin-bottom:12px">Tự tay viết code rồi bấm "Chạy &amp; Kiểm tra" — máy sẽ chấm kết quả giúp em. Bí quá thì xem Gợi ý hoặc Đáp án mẫu.</p>' +
+      '<div class="ex-host"></div>';
+    anchor.parentNode.insertBefore(wrap, anchor);
+    host = wrap.querySelector(".ex-host");
+  }
+  renderExercises(host, exs, lesson.id);
+  return true;
 }
 
 if (typeof window !== "undefined") {

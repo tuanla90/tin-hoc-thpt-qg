@@ -137,7 +137,7 @@
         var got = r[0], want = r[1];
         var results = ex.checks.map(function (c, k) { return { desc: c.desc, ok: String(got[k]) === String(want[k]) }; });
         var allOk = results.every(function (x) { return x.ok; });
-        if (allOk && typeof Gam !== "undefined" && Gam.onExercisePass) Gam.onExercisePass({ prompt: ex.prompt });
+        if (allOk && typeof Gam !== "undefined" && Gam.onExercisePass) Gam.onExercisePass({ prompt: ex.prompt }, lessonId);
         /* Vấp 2 lần mới mời gia sư; gửi kèm danh sách yêu cầu chưa đạt. */
         if (allOk) { hong = 0; if (aiBtn) aiBtn.hidden = true; }
         else if (++hong >= 2 && aiBtn && typeof Tutor !== "undefined") {
@@ -155,21 +155,28 @@
     };
   }
 
-  function injectWebExercises(lesson) {
+  /* hostNgoai: xem chú thích ở injectExercises trong js/exercises.js. */
+  function injectWebExercises(lesson, hostNgoai) {
     var list = WEB_EXERCISES[lesson.id];
-    if (!list || !list.length) return;
-    var anchor = document.querySelector(".ls-actions");
-    if (!anchor || !anchor.parentNode) return;
-    var wrap = document.createElement("div");
-    wrap.innerHTML =
-      '<div class="section-title" style="margin-top:24px">' + (typeof ICON === "function" ? ICON("globe", 17, "#0891b2") : "") + " Thực hành HTML/CSS (xem trước &amp; máy chấm)</div>" +
-      '<p style="color:var(--text-soft);font-size:13.5px;margin-bottom:12px">Sửa mã bên trái, kết quả hiện ngay bên phải. Bấm “Kiểm tra” để máy soát từng yêu cầu.</p>' +
-      '<div class="wbx-host"></div>';
-    anchor.parentNode.insertBefore(wrap, anchor);
-    var host = wrap.querySelector(".wbx-host");
+    if (!list || !list.length) return false;
+    var host;
+    if (hostNgoai) {
+      host = hostNgoai;
+    } else {
+      var anchor = document.querySelector(".ls-actions");
+      if (!anchor || !anchor.parentNode) return false;
+      var wrap = document.createElement("div");
+      wrap.innerHTML =
+        '<div class="section-title" style="margin-top:24px">' + (typeof ICON === "function" ? ICON("globe", 17, "#0891b2") : "") + " Thực hành HTML/CSS (xem trước &amp; máy chấm)</div>" +
+        '<p style="color:var(--text-soft);font-size:13.5px;margin-bottom:12px">Sửa mã bên trái, kết quả hiện ngay bên phải. Bấm “Kiểm tra” để máy soát từng yêu cầu.</p>' +
+        '<div class="wbx-host"></div>';
+      anchor.parentNode.insertBefore(wrap, anchor);
+      host = wrap.querySelector(".wbx-host");
+    }
     host.innerHTML = list.map(exHTML).join("");
     var nodes = host.querySelectorAll(".wbx");
     list.forEach(function (ex, i) { bindEx(nodes[i], ex, i, lesson.id); });
+    return true;
   }
 
   if (typeof window !== "undefined") {
