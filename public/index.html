@@ -53,10 +53,40 @@
       <button class="nav-btn" data-nav="vocab" title="Từ vựng"><span class="nav-ic" data-ic="book"></span><span class="nav-label">Từ vựng</span></button>
       <button class="nav-btn" data-nav="history" title="Kết quả"><span class="nav-ic" data-ic="chart"></span><span class="nav-label">Kết quả</span></button>
       <button class="nav-btn" data-nav="achievements" title="Thành tựu"><span class="nav-ic" data-ic="trophy"></span><span class="nav-label">Thành tựu</span></button>
-      <button class="nav-btn" data-nav="profile" title="Hồ sơ"><span class="nav-ic" data-ic="user"></span><span class="nav-label">Hồ sơ</span></button>
-      <button class="nav-btn" data-nav="account" title="Tài khoản"><span class="nav-ic" data-ic="globe"></span><span class="nav-label">Tài khoản</span></button>
-      <button class="nav-btn icon-only" id="amToggle" title="Tắt âm thanh" aria-pressed="true">🔊</button>
-      <button class="nav-btn icon-only" id="themeToggle" title="Chế độ sáng/tối">🌙</button>
+      <!-- Khối tài khoản: gộp Hồ sơ / Tài khoản / âm thanh / giao diện vào một
+           menu thả xuống kiểu SaaS thay vì 4 nút rời. Mở/đóng do initUserMenu()
+           trong app.js; nội dung (avatar, tên, gói) do veUserMenu() trong
+           account.js — hai tệp cùng lo một khối vì trigger phải hoạt động được
+           ngay cả khi account.js lỗi, còn nội dung thì cần dữ liệu tài khoản. -->
+      <div class="um-wrap" id="umWrap">
+        <button class="um-trigger" id="umTrigger" type="button" aria-haspopup="true" aria-expanded="false" title="Tài khoản và cài đặt">
+          <span class="um-avatar" id="umAvatar"></span>
+          <span class="um-name" id="umName">Khách</span>
+          <span class="um-chev" data-ic="chevdown" data-ic-size="14"></span>
+        </button>
+        <div class="um-menu" id="umMenu" hidden>
+          <div class="um-head">
+            <span class="um-head-ava" id="umHeadAvatar"></span>
+            <div class="um-head-txt">
+              <b id="umHeadName">Khách</b>
+              <small id="umHeadSub"></small>
+            </div>
+          </div>
+          <button class="nav-btn um-item" data-nav="profile"><span class="um-item-ic" data-ic="user"></span>Hồ sơ</button>
+          <button class="nav-btn um-item" data-nav="account"><span class="um-item-ic" data-ic="globe"></span>Tài khoản</button>
+          <div class="um-sep"></div>
+          <div class="um-row" id="umRowSound">
+            <span class="um-row-txt">Âm thanh</span>
+            <button class="um-switch" id="amToggle" type="button" title="Tắt âm thanh" aria-pressed="true"></button>
+          </div>
+          <div class="um-row" id="umRowTheme">
+            <span class="um-row-txt">Giao diện tối</span>
+            <button class="um-switch" id="themeToggle" type="button" title="Chế độ sáng/tối"></button>
+          </div>
+          <div class="um-sep" id="umSepOut" hidden></div>
+          <button class="um-item um-danger" id="umAuthBtn" type="button" hidden>Đăng xuất</button>
+        </div>
+      </div>
     </nav>
   </header>
 
@@ -117,16 +147,19 @@
   <script src="js/minh-hoa.js"></script>
   <script src="js/minh-hoa-2.js"></script>
   <script src="js/minh-hoa-3.js"></script>
+  <script src="js/minh-hoa-4.js"></script>
   <!-- Khối "Sai ở đâu?": luyện đúng kĩ năng mà 4 câu Đúng/Sai trong đề đòi —
        đọc một phát biểu nghe hợp lí rồi chỉ ra chữ nào làm nó sai.
        Hai tệp nội dung nạp sau bộ máy dựng vì dùng SaiODau.dangKy của nó. -->
   <script src="js/sai-o-dau.js"></script>
   <script src="js/sai-o-dau-10.js"></script>
   <script src="js/sai-o-dau-11-12.js"></script>
+  <script src="js/sai-o-dau-ud.js"></script>
   <!-- Sơ đồ của bài: dựng bằng HTML+CSS thay vì chèn ảnh, để chạy offline, đổi
        màu theo giao diện sáng/tối và tự xếp lại một cột trên điện thoại. -->
   <script src="js/so-do.js"></script>
   <script src="js/so-do-noi-dung.js"></script>
+  <script src="js/so-do-noi-dung-2.js"></script>
   <script src="js/clean-ict11.js"></script>
   <script src="js/clean-ict12.js"></script>
   <script src="js/vocab.js"></script>

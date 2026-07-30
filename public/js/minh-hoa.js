@@ -118,7 +118,7 @@
       (nhap ? '<div class="mh-nhap">' + nhap + "</div>" : "") +
       '<div class="mh-khung">' + than + "</div>" +
       '<div class="mh-thanh"><button class="mh-btn chinh" data-mh="tien">Bước tiếp →</button>' +
-      '<button class="mh-btn" data-mh="auto">▶ Tự chạy</button>' +
+      '<button class="mh-btn" data-mh="auto">' + ICON("play", 14) + ' Tự chạy</button>' +
       '<button class="mh-btn" data-mh="lai">Làm lại</button>' +
       '<span class="mh-loi" data-mh="loi"></span></div></div>';
   }

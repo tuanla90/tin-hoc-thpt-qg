@@ -911,7 +911,7 @@ function renderLessons(data) {
           ? `Học xong Bài ${truoc.order} — ${(truoc.title || "").replace(/^Bài\s*\d+[.\s]*/, "")} thì bài này mở`
           : "Bài này chưa mở khoá trong lộ trình tuần tự";
         return `<button class="pnode ${cls}${cur ? " cur" : ""}" data-key="${esc(o.key)}" data-lock="${open ? 0 : 1}" data-khoa="${esc(khoaBai)}" style="${dat(CELL / 2)}" title="${esc(l.title)}" aria-label="Bài ${l.order}: ${name} — ${stTxt}">
-            ${cur ? '<span class="pn-bubble">BẮT ĐẦU 🔥</span>' : ""}
+            ${cur ? `<span class="pn-bubble">${ICON("flame", 13)} BẮT ĐẦU</span>` : ""}
             <span class="pnode-inner-icon">${glyph}</span>
           </button>
           ${capHtml("Bài " + l.order, null, name, starsHtml)}`;
@@ -1220,7 +1220,7 @@ function injectPathCss() {
     ".pnode.cur::after { content: ''; position: absolute; inset: -14px; border-radius: 50%; border: 4px solid #ffc107; animation: plpulse 1.6s ease-in-out infinite; pointer-events: none; box-shadow: 0 0 20px rgba(255, 193, 7, 0.6); }" +
     "@keyframes plpulse { 0%,100% { transform: scale(1); opacity: .8; } 50% { transform: scale(1.24); opacity: .2; } }" +
     
-    ".pn-bubble { position: absolute; top: -38px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #ff9800, #ff5722); color: #fff; font-family: var(--font-display); font-size: 11.5px; font-weight: 900; padding: 5px 14px; border-radius: 16px; white-space: nowrap; z-index: 4; box-shadow: 0 6px 18px rgba(255, 87, 34, 0.5); border: 2px solid #fff; animation: bounceNav 2s infinite; letter-spacing: 0.03em; }" +
+    ".pn-bubble { position: absolute; top: -38px; left: 50%; transform: translateX(-50%); display: inline-flex; align-items: center; gap: 4px; background: linear-gradient(135deg, #ff9800, #ff5722); color: #fff; font-family: var(--font-display); font-size: 11.5px; font-weight: 900; padding: 5px 14px; border-radius: 16px; white-space: nowrap; z-index: 4; box-shadow: 0 6px 18px rgba(255, 87, 34, 0.5); border: 2px solid #fff; animation: bounceNav 2s infinite; letter-spacing: 0.03em; }" +
     "@keyframes bounceNav { 0%,100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(-5px); } }" +
     /* Khối chữ nằm ngang tầm node: translateY(-50%) canh tâm bất kể cao 1 hay 2
        dòng. .tl = chữ ở bên phải node (canh lề trái), .tr = ngược lại. */
@@ -2342,7 +2342,7 @@ function renderQuiz() {
       <div class="progress-info-row">
         <span>Câu ${Q.index + 1} / ${Q.questions.length} (${pct}%)</span>
         ${Q.streak && Q.streak >= 2
-          ? `<span class="streak-counter">🔥 Streak ${Q.streak} câu đúng</span>`
+          ? `<span class="streak-counter">${aIco("flame", null, 14)} Streak ${Q.streak} câu đúng</span>`
           : `<span>${esc(luat.moTa)}</span>`}
       </div>
     </div>
@@ -3017,6 +3017,8 @@ function applyTheme() {
   const dark = State.settings.theme === "dark";
   if (typeof ICON === "function") tb.innerHTML = ICON(dark ? "sun" : "moon", 18);
   else tb.textContent = dark ? "☀️" : "🌙";
+  // aria-pressed để .um-switch[aria-pressed="true"] tô sáng đúng lúc đang bật tối
+  tb.setAttribute("aria-pressed", dark ? "true" : "false");
 }
 function toggleTheme() {
   State.settings.theme = State.settings.theme === "dark" ? "light" : "dark";
@@ -3030,6 +3032,38 @@ function initNav() {
   document.getElementById("homeLink").onclick = () => guardLeave(() => go("home"));
   document.getElementById("homeLink").onkeydown = (e) => { if (e.key === "Enter") go("home"); };
   document.querySelectorAll(".nav-btn[data-nav]").forEach((b) => b.onclick = () => guardLeave(() => go(b.dataset.nav)));
+  initUserMenu();
+}
+
+/* Khối avatar góc phải (Hồ sơ / Tài khoản / âm thanh / giao diện gộp lại).
+   Chỉ lo việc MỞ/ĐÓNG — nội dung bên trong (avatar, tên, gói) do
+   Account.veUserMenu() ở account.js tự cập nhật, độc lập với hàm này. */
+function initUserMenu() {
+  const trig = document.getElementById("umTrigger");
+  const menu = document.getElementById("umMenu");
+  if (!trig || !menu) return;
+  const dat = (mo) => {
+    menu.hidden = !mo;
+    trig.setAttribute("aria-expanded", mo ? "true" : "false");
+    trig.classList.toggle("open", mo);
+  };
+  trig.onclick = (e) => { e.stopPropagation(); dat(menu.hidden); };
+  document.addEventListener("click", (e) => {
+    if (!menu.hidden && !menu.contains(e.target) && e.target !== trig) dat(false);
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !menu.hidden) { dat(false); trig.focus(); }
+  });
+  // Bấm "Hồ sơ" / "Tài khoản" / "Đăng xuất" thì đóng menu trước khi chuyển màn,
+  // không thì menu vẫn che lên trên nội dung màn mới.
+  menu.querySelectorAll(".um-item").forEach((b) => b.addEventListener("click", () => dat(false)));
+  // Hai hàng công tắc: bấm cả hàng cũng bật/tắt được, không chỉ đúng cái nút nhỏ.
+  // Không đóng menu khi bấm — người học có thể muốn chỉnh cả hai rồi mới đóng.
+  [["umRowSound", "amToggle"], ["umRowTheme", "themeToggle"]].forEach(([rowId, btnId]) => {
+    const row = document.getElementById(rowId), btn = document.getElementById(btnId);
+    if (!row || !btn) return;
+    row.addEventListener("click", (e) => { if (!btn.contains(e.target)) btn.click(); });
+  });
 }
 
 /* Nếu đang làm bài thi (chưa nộp) thì hỏi trước khi rời đi */
@@ -3055,6 +3089,11 @@ window.addEventListener("beforeunload", (e) => {
  * ------------------------------------------------------------------------- */
 function moKhoaGiaoDien(mo) {
   document.querySelectorAll(".topnav .nav-btn[data-nav]").forEach((b) => { b.hidden = !mo; });
+  // Khối avatar không mang data-nav (nó là nút mở menu, không phải điều hướng
+  // trực tiếp) nên phải tự ẩn/hiện riêng, không thì lúc chờ đăng nhập vẫn bấm
+  // mở được menu trong khi mọi nút khác đã bị khoá.
+  const umWrap = document.getElementById("umWrap");
+  if (umWrap) umWrap.hidden = !mo;
   const brand = document.getElementById("homeLink");
   if (brand) brand.style.pointerEvents = mo ? "" : "none";
 }
@@ -3069,6 +3108,11 @@ function khoiDong() {
   }
   moKhoaGiaoDien(false);
   Account.boot().then(function () {
+    /* Đổ avatar/tên/gói vào khối tài khoản NGAY khi boot() xong, bất kể sau đó
+       rẽ vào nhánh khách, chọn hồ sơ, hay đã đăng nhập đủ — cả bốn đường trong
+       boot() (file://, mất mạng, đăng nhập, lỗi máy chủ) đều đi qua đúng một
+       chỗ này khi resolve. */
+    if (window.Account && Account.veUserMenu) Account.veUserMenu();
     /* CHƯA ĐĂNG NHẬP vẫn học được đầy đủ phần miễn phí — tiến độ lưu trên máy,
        khi nào đăng nhập thì được mang sang tài khoản (Account.gopDuLieuKhach).
        Không đặt tường đăng nhập ở đây: khách từ Google vào trang /bai bấm "Mở

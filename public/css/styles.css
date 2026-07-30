@@ -133,7 +133,6 @@ body {
   font-family: var(--font-sans);
 }
 .nav-btn:hover { background: var(--bg-soft); color: var(--primary); }
-.nav-btn.icon-only { font-size: 18px; padding: 8px 11px; }
 
 /* ------------------------- Bố cục chính ------------------------- */
 .app-main {
@@ -1313,6 +1312,87 @@ code.ic {
 @keyframes neoSang {
   0%, 22% { box-shadow: 0 0 0 3px var(--primary), 0 0 22px color-mix(in srgb, var(--primary) 45%, transparent); background: var(--primary-soft); }
   100% { box-shadow: 0 0 0 3px transparent; background: transparent; }
+}
+
+/* ===========================================================================
+ *  KHỐI AVATAR / MENU TÀI KHOẢN Ở THANH TRÊN (xem index.html #umWrap)
+ *  Đặt cuối tệp để thắng .topnav .nav-btn (đặc trưng 0,2,0) ở màn hẹp — hai nút
+ *  "Hồ sơ"/"Tài khoản" bên trong menu vẫn giữ class .nav-btn để dùng lại nguyên
+ *  logic điều hướng có chặn (guardLeave) và ẩn/hiện lúc chờ đăng nhập, nên phải
+ *  đặt luật ghi đè ở đây thay vì sửa rải rác .nav-btn phía trên.
+ * ========================================================================= */
+.um-wrap { position: relative; }
+.um-trigger {
+  display: flex; align-items: center; gap: 8px; border: 1px solid transparent; background: transparent;
+  padding: 5px 10px 5px 6px; border-radius: 999px; cursor: pointer; font-family: var(--font-sans);
+  color: var(--text);
+}
+.um-trigger:hover, .um-trigger.open { background: var(--bg-soft); border-color: var(--border); }
+.um-name { font-size: 13.5px; font-weight: 700; max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.um-chev { display: flex; color: var(--text-soft); transition: transform 0.18s; }
+.um-trigger.open .um-chev { transform: rotate(180deg); }
+
+.um-avatar, .um-head-ava {
+  display: flex; align-items: center; justify-content: center; flex: none; overflow: hidden;
+  border-radius: 50%; background: var(--primary-soft); line-height: 1;
+}
+.um-avatar { width: 28px; height: 28px; font-size: 16px; }
+.um-head-ava { width: 40px; height: 40px; font-size: 21px; }
+.um-avatar img, .um-head-ava img { width: 100%; height: 100%; object-fit: cover; }
+
+.um-menu {
+  position: absolute; top: calc(100% + 10px); right: 0; z-index: 5;
+  width: 268px; max-width: calc(100vw - 20px); box-sizing: border-box;
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px;
+  box-shadow: var(--shadow-lg); padding: 8px; animation: umPop 0.15s ease;
+}
+@keyframes umPop { from { opacity: 0; transform: translateY(-6px) scale(0.98); } to { opacity: 1; transform: none; } }
+
+.um-head { display: flex; align-items: center; gap: 12px; padding: 8px 10px 12px; }
+.um-head-txt { min-width: 0; }
+.um-head-txt b { display: block; font-size: 14.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* small bọc ngoài chỉ căn hàng; email co giãn được, chip gói giữ nguyên cỡ —
+   min-width:0 bắt buộc phải có thì ellipsis mới ăn được bên trong hàng flex. */
+.um-head-txt small { display: flex; align-items: center; gap: 6px; color: var(--text-soft); font-size: 12px; margin-top: 3px; }
+.um-email { min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.um-plan {
+  flex: none; font-size: 10.5px; font-weight: 800; letter-spacing: 0.02em; padding: 2px 7px;
+  border-radius: 999px; background: var(--bg-soft); border: 1px solid var(--border); color: var(--text-soft);
+}
+.um-plan-pre { background: color-mix(in srgb, #b45309 15%, transparent); border-color: #b45309; color: #b45309; }
+
+/* #umMenu .um-item (ID + lớp = đặc trưng 1,1,0) chứ không phải .um-item trơn
+   (0,1,0): "Hồ sơ"/"Tài khoản" còn mang cả lớp .nav-btn, mà .topnav .nav-btn ở
+   màn hẹp đã đặc trưng 0,2,0 — đo trên máy thấy padding/display của .um-item bị
+   đè thành 8px 7px / flex:none dù đặt luật ở cuối tệp. Đặc trưng mới thắng cuộc,
+   thứ tự trong tệp KHÔNG thắng được đặc trưng thấp hơn — đây là chỗ suy luận sai
+   lúc đầu, phải đo lại mới thấy. Một ID luôn thắng mọi tổ hợp lớp thuần tuý nên
+   không phụ thuộc thứ tự trong tệp nữa, kể cả sau này có ai chỉnh .nav-btn. */
+#umMenu .um-item {
+  display: flex; align-items: center; gap: 10px; width: 100%; text-align: left;
+  padding: 9px 10px; border-radius: 9px; font-size: 13.5px;
+}
+.um-item-ic { display: flex; color: var(--text-soft); flex: none; }
+.um-danger { color: var(--danger, #dc2626); }
+.um-danger:hover { background: color-mix(in srgb, var(--danger, #dc2626) 10%, transparent); }
+
+.um-sep { height: 1px; background: var(--border); margin: 6px 4px; }
+
+.um-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 7px 10px; border-radius: 9px; cursor: pointer; }
+.um-row:hover { background: var(--bg-soft); }
+.um-row-txt { font-size: 13.5px; font-weight: 650; color: var(--text); }
+.um-switch {
+  flex: none; width: 42px; height: 25px; border-radius: 999px; border: 1.5px solid var(--border);
+  background: var(--bg-soft); display: flex; align-items: center; justify-content: center;
+  cursor: pointer; padding: 0; color: var(--text-soft);
+}
+.um-switch[aria-pressed="true"] { background: var(--primary-soft); border-color: var(--primary); color: var(--primary); }
+.um-switch .ic { width: 14px; height: 14px; }
+
+@media (max-width: 560px) {
+  .um-name { display: none; }
+  .um-trigger { padding: 5px; }
+  .um-menu { right: -6px; }
 }
 
 /* Bốn animation chạy infinite repaint không ngừng kể cả lúc học sinh đang đọc

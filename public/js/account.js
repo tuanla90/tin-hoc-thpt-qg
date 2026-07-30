@@ -124,6 +124,11 @@
 
   /* app.js gọi trong save() */
   function onSaved(key, val) {
+    /* Avatar/tên ở khối tài khoản phải theo kịp MỌI lần đổi hồ sơ — kể cả lúc
+       còn là khách (chưa có Account.user, thoát sớm ở dưới) và lúc fullSync()
+       ghi hồ sơ từ máy chủ đè lên qua mutedSave (đang _mute nên cũng thoát sớm
+       ở dưới) — nên gọi TRƯỚC hai điều kiện thoát sớm đó, không phải sau. */
+    if (key === "profile") veUserMenu();
     if (Account._mute || !Account.user || !Account.profileId) return;
     var pid = Account.profileId;
     if (key === "history") {
@@ -329,6 +334,54 @@
       : (p.gender === "nam" ? "👦" : p.gender === "nu" ? "👧" : "🧑‍🎓");
   }
   function esc2(s) { return (typeof esc === "function") ? esc(s) : String(s == null ? "" : s); }
+
+  /* Nhãn ngắn cho gói đang dùng — dùng lại đúng logic renderAccount() (dòng
+     "Đang dùng") để khỏi hai chỗ nói khác nhau, ví dụ khối này bảo "Premium"
+     mà trang Tài khoản lại bảo "Miễn phí". */
+  function nhanGoi() {
+    var plan = Account.plan || { tier: "free" };
+    if (plan.tier !== "paid") return "Miễn phí";
+    var hanTxt = plan.hetHan ? new Date(plan.hetHan).toLocaleDateString("vi-VN") : "";
+    var theoVaiTro = plan.nguon === "vaiTro";
+    return "Premium" + (hanTxt ? " — đến " + hanTxt : theoVaiTro ? " (theo vai trò quản lí)" : "");
+  }
+
+  /* ================== KHỐI AVATAR / MENU TÀI KHOẢN Ở THANH TRÊN ==================
+     Đổ avatar, tên, gói và nút đăng xuất vào #umTrigger/#umMenu (index.html).
+     Gọi lại MỖI KHI hồ sơ đổi (xem onSaved) chứ không chỉ một lần lúc vào app,
+     vì sửa tên/ảnh đại diện ở trang Hồ sơ không tải lại trang — mọi nơi KHÁC
+     đổi trạng thái đăng nhập (đăng nhập, đổi hồ sơ, tạo hồ sơ, đăng xuất) đều
+     kết thúc bằng location.reload() nên tự nhiên vẽ lại từ đầu. */
+  function veUserMenu() {
+    var trig = document.getElementById("umTrigger");
+    if (!trig) return;   // trang không có khối này thì thôi, đừng vỡ
+    var p = (typeof getProfile === "function") ? getProfile() : { name: "" };
+    var avaHtml = avatarCua(p);
+    var ten = p.name || (Account.user && Account.user.name) ||
+      (Account.user && Account.user.email ? Account.user.email.split("@")[0] : "Khách");
+
+    var umAvatar = document.getElementById("umAvatar"), umHeadAva = document.getElementById("umHeadAvatar");
+    if (umAvatar) umAvatar.innerHTML = avaHtml;
+    if (umHeadAva) umHeadAva.innerHTML = avaHtml;
+    var umName = document.getElementById("umName"), umHeadName = document.getElementById("umHeadName");
+    if (umName) umName.textContent = ten;
+    if (umHeadName) umHeadName.textContent = ten;
+
+    var sub = document.getElementById("umHeadSub");
+    if (sub) {
+      if (Account.user) {
+        var laPre = !!(Account.plan && Account.plan.tier === "paid");
+        sub.innerHTML = '<span class="um-email">' + esc2(Account.user.email || "") + "</span>" +
+          '<span class="um-plan' + (laPre ? " um-plan-pre" : "") + '">' + esc2(nhanGoi()) + "</span>";
+      } else {
+        sub.textContent = "Chế độ khách — tiến độ lưu trên máy này";
+      }
+    }
+
+    var out = document.getElementById("umAuthBtn"), sep = document.getElementById("umSepOut");
+    if (out) { out.hidden = !Account.user; out.onclick = dangXuat; }
+    if (sep) sep.hidden = !Account.user;
+  }
 
   /* =========================== MÀN ĐĂNG NHẬP =========================== */
   function renderGate(mode) {
@@ -689,6 +742,7 @@
   Account.laKhach = laKhach;
   Account.moiDangNhap = moiDangNhap;
   Account.gopDuLieuKhach = gopDuLieuKhach;
+  Account.veUserMenu = veUserMenu;
   window.Account = Account;
   window.renderAccount = renderAccount;
 })();

@@ -618,7 +618,7 @@ let MH_CO = null;
 function baiCoMinhHoa() {
   if (MH_CO) return MH_CO;
   MH_CO = new Set();
-  ["minh-hoa.js", "minh-hoa-2.js", "minh-hoa-3.js"].forEach((ten) => {
+  ["minh-hoa.js", "minh-hoa-2.js", "minh-hoa-3.js", "minh-hoa-4.js"].forEach((ten) => {
     try {
       const src = fs.readFileSync(path.join(__dirname, "..", "public", "js", ten), "utf8");
       // khớp cả 'dangKy("C10-22"' lẫn '"C10-23": nhiPhan' trong bảng THEO_BAI
@@ -648,6 +648,7 @@ function minhHoaHtml(muc) {
   const them = `<script src="/js/minh-hoa.js" defer></script>
 <script src="/js/minh-hoa-2.js" defer></script>
 <script src="/js/minh-hoa-3.js" defer></script>
+<script src="/js/minh-hoa-4.js" defer></script>
 <script>window.addEventListener("load",function(){var h=document.getElementById("mhMount");` +
     `if(h&&window.MinhHoa)window.MinhHoa.veVao(h,h.dataset.bai)});</script>`;
   return { than, them };
