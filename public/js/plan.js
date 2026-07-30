@@ -20,7 +20,11 @@
      ĐỔI SỐ NÀY PHẢI SỬA LUÔN bảng so sánh ở nang-cap.html và landing.html, kẻo
      trang bán hàng công bố sai. */
   var DE_FREE = { TC1: 1 };
-  var XUONG_FREE = { python: 20, web: 8, sql: 6, gfx: 3 }; // số bài thực hành free mỗi xưởng
+  /* Số bài thực hành free mỗi xưởng. Đơn vị là BÀI TẬP nhưng cắt theo BÀI HỌC (xem
+     tinhFreeSets), nên con số này chỉ quyết định "mở tới bài học thứ mấy".
+     gfx = 5: xưởng đồ hoạ vừa được thêm bài (mỗi bài học giờ 3-4 bài tập thay vì
+     1-2), để nguyên 3 thì phần free tụt từ hai bài học xuống còn một. */
+  var XUONG_FREE = { python: 20, web: 8, sql: 6, gfx: 5 };
 
   function ico(n, c, s) { return (typeof ICON === "function") ? ICON(n, s || 16, c) : ""; }
 

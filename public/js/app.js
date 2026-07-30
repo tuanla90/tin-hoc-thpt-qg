@@ -182,6 +182,11 @@ function viewRenderer(view) {
   return map[view] || renderHome;
 }
 
+/* Xưởng thực hành đang mở. Khai báo Ở ĐÂY, trên cả viewToHash: `let` có vùng chết
+   (TDZ) nên nếu để dưới cuối tệp thì một lời gọi viewToHash sớm sẽ NÉM lỗi, mà
+   `typeof` cũng không đỡ được. */
+let pgLang = "python";
+
 /* view + tham số  ->  chuỗi hash (nguồn sự thật của URL) */
 function viewToHash(view, data) {
   switch (view) {
@@ -190,7 +195,14 @@ function viewToHash(view, data) {
        chặng riêng (xem scrollNho). */
     case "lessons": return "#/lessons" + (data && data.stage ? "/" + data.stage : "");
     case "lesson": return "#/lesson/" + encodeURIComponent((data && data.id) || "");
-    case "playground": return "#/playground";
+    /* Bốn xưởng thực hành có ĐỊA CHỈ RIÊNG. Trước đây mọi xưởng đều là #/playground:
+       đổi tab không đổi URL, nên F5 là về Python, không gửi được link "vào thẳng
+       xưởng SQL" cho bạn, và nút Back của trình duyệt không lùi giữa các tab.
+       Không kèm lang thì hiểu là Python (giữ đúng link #/playground đã phát ra). */
+    case "playground": {
+      const lg = (data && data.lang) || pgLang;
+      return "#/playground" + (lg && lg !== "python" ? "/" + lg : "");
+    }
     case "sqlLab": return "#/sql-lab";
     case "gfxLab": return "#/graphics-lab";
     case "practiceSetup": return "#/practice" + (data && data.topic ? "?topic=" + encodeURIComponent(data.topic) : "");
@@ -224,7 +236,13 @@ function parseHash() {
       return { view: "lessons", data: st ? { stage: st } : undefined };
     }
     case "lesson": return { view: "lesson", data: parts[1] ? { id: decodeURIComponent(parts[1]) } : undefined };
-    case "playground": return { view: "playground", data: undefined };
+    /* #/playground/<python|web|sql|gfx>; #/sql-lab và #/graphics-lab giữ nguyên cho
+       những link đã phát ra trước đây. Chữ lang lạ thì rơi về Python. */
+    case "playground": {
+      const HOP_LE = { python: 1, web: 1, sql: 1, gfx: 1 };
+      const lg = parts[1] && HOP_LE[parts[1]] ? parts[1] : "python";
+      return { view: "playground", data: { lang: lg } };
+    }
     case "sql-lab": return { view: "playground", data: { lang: "sql" } };
     case "graphics-lab": return { view: "playground", data: { lang: "gfx" } };
     case "practice": {
@@ -1577,8 +1595,8 @@ function buildWebEditor(host, initialCode) {
   render(); // hiển thị ngay lần đầu
 }
 
-/* Trang Thực hành độc lập (Python / HTML/CSS / SQL / Đồ hoạ) */
-let pgLang = "python";
+/* Trang Thực hành độc lập (Python / HTML/CSS / SQL / Đồ hoạ) — xưởng đang mở giữ ở
+   pgLang, khai báo ở đầu tệp vì viewToHash cần đọc (xem chú thích tại đó). */
 function renderPlayground(data) {
   if (data && data.lang) pgLang = data.lang;
   const isPy = pgLang === "python";
@@ -1630,7 +1648,9 @@ function renderPlayground(data) {
   } else if (isGfx) {
     if (typeof window.renderGfxLabInner === "function") window.renderGfxLabInner(document.getElementById("pgHost"));
   }
-  app.querySelectorAll("#langToggle .chip").forEach((b) => b.onclick = () => { pgLang = b.dataset.lang; go("playground"); });
+  /* Đổi tab là đổi URL (go mang lang theo), nhờ vậy Back lùi được về tab trước và
+     link dán cho bạn mở đúng xưởng đó. */
+  app.querySelectorAll("#langToggle .chip").forEach((b) => b.onclick = () => go("playground", { lang: b.dataset.lang }));
 }
 
 /* Gắn nút chạy/xem thử vào các khối code trong bài học */

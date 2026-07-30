@@ -111,7 +111,9 @@
 
   /* ============ 2) XẾP LỚP (z-order) ============ */
   function renderLayers(node, w) {
-    var order = w.layers.map(function (_, i) { return i; });
+    // Cũng xáo thế bài ban đầu như dạng "order": xem chú thích ở xaoKhacDich
+    var order = xaoKhacDich(w.layers.length, w.targetOrder || w.layers.map(function (_, i) { return i; }),
+      (w.prompt || "").length * 17 + w.layers.length);
     node.innerHTML = '<div class="glab-prompt">' + fmtInline(w.prompt) + "</div>" +
       '<div class="glab-two"><div><div class="glab-cap">Kết quả ghép lớp</div><div class="glab-stage" data-r="comp"></div></div>' +
       '<div><div class="glab-cap">Thứ tự lớp (trên → dưới)</div><div class="glab-layers" data-r="lyrs"></div></div></div>' +
@@ -213,8 +215,19 @@
   }
 
   /* ============ 6) SẮP THỨ TỰ (order) ============ */
+  /* Xáo trộn thứ tự BAN ĐẦU. Trước đây bắt đầu bằng [0,1,2,...] đúng y thứ tự khai
+     báo, mà mọi bài đều khai items theo đúng trình tự đáp án nên targetOrder cũng là
+     [0,1,2,...]: mở ra là đã xếp sẵn đúng, học sinh chỉ bấm "Kiểm tra" là được khen.
+     Xáo có hạt cố định để mỗi bài luôn ra một thế bài (làm lại vẫn thấy như cũ, không
+     phải mỗi lần một kiểu), và xoay một nhịp nếu xáo xong lại trùng đáp án. */
+  function xaoKhacDich(n, dich, seed) {
+    var a = seedShuffle(dich.slice(), seed);
+    if (JSON.stringify(a) === JSON.stringify(dich) && n > 1) a.push(a.shift());
+    return a;
+  }
   function renderOrder(node, w) {
-    var order = w.items.map(function (_, i) { return i; });
+    var dich = w.targetOrder || w.items.map(function (_, i) { return i; });
+    var order = xaoKhacDich(w.items.length, dich, (w.prompt || "").length * 31 + w.items.length);
     node.innerHTML = '<div class="glab-prompt">' + fmtInline(w.prompt) + "</div>" +
       '<div class="glab-strip" data-r="strip"></div>' +
       '<div class="glab-actions"><button class="btn btn-primary" data-a="check">' + ico("check2", null, 14) + ' Kiểm tra</button></div><div class="glab-verdict" hidden></div>';
