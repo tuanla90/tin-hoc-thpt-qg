@@ -273,6 +273,20 @@ let hashTruoc = location.hash;
    ở lưng trang, người học tưởng app cuộn bừa. */
 let hashCoNeo = null;
 
+/* Vẽ lại màn hiện tại sau khi đồng bộ xong: chỉ những màn ĐỌC tiến độ và KHÔNG
+   giữ ô nhập của người học.
+   Trước đây chỉ có "home" và "history". Đăng nhập trên máy mới rồi mở thẳng bản đồ
+   lộ trình thì tiến độ tải về đủ (State.learned có 5 bài) nhưng màn hình vẫn báo
+   0/34 — đúng cái người dùng báo là "đăng nhập mà không nhớ lịch sử học". Rời màn
+   rồi vào lại mới thấy, nên dữ liệu không hề mất.
+   Cố ý dùng danh sách CHO PHÉP, không dùng danh sách chặn: màn bài học và ba phòng
+   code (playground / sqlLab / gfxLab) đang giữ code do người học tự gõ, vẽ lại là
+   xoá sạch. Thêm màn mới mà quên khai ở đây thì chỉ chậm cập nhật một nhịp; quên
+   chặn thì mất bài làm của các em. */
+const VE_LAI_SAU_DONG_BO = new Set([
+  "home", "history", "lessons", "practiceSetup", "achievements", "profile", "account",
+]);
+
 /* Đọc hash rồi render. Cả nút trong app lẫn Back/Forward đều đi qua đây. */
 /* Bọc ngoài renderFromHash: ứng dụng dựng toàn bộ giao diện bằng JS từ ~40 tệp
    nạp nối nhau, chỉ cần MỘT tệp tải hỏng (mạng chập chờn, deploy dở) là <main>
@@ -3035,7 +3049,7 @@ function khoiDong() {
          rỗng thì người đã học 2 tháng mở app trên máy mới sẽ thấy cả 3 nhiệm vụ
          tự xanh và được tặng 190 XP khống. */
       if (window.NhiemVu) NhiemVu.moKhoa();
-      if (State.view === "home" || State.view === "history") renderFromHash();
+      if (VE_LAI_SAU_DONG_BO.has(State.view)) renderFromHash();
     });
   });
 }
