@@ -491,6 +491,16 @@ select:focus, input[type="text"]:focus, input[type="number"]:focus {
 .section-title { font-family: var(--font-display); font-size: 17px; font-weight: 800; margin: 28px 0 16px; display: flex; align-items: center; gap: 10px; }
 
 .mode-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+/* Ô Premium ở trang chủ: nhạt đi và đổi nhãn thành "Premium", nhưng VẪN bấm được
+   để hiện lời mời nâng cấp — chặn hẳn thì học sinh không biết mình bỏ lỡ gì. */
+.mode-card.khoa-pre { opacity: .72; }
+.mode-card.khoa-pre:hover { opacity: 1; }
+.mode-card.khoa-pre .m-badge {
+  background: var(--accent-amber-soft, #fef3c7);
+  color: var(--accent-amber, #d97706);
+  border-color: var(--accent-amber, #d97706);
+}
+
 .mode-card {
   background: var(--bg-card); border: 1px solid var(--border);
   border-radius: var(--radius); padding: 24px; cursor: pointer;

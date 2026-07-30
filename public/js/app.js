@@ -185,7 +185,10 @@ function viewRenderer(view) {
 /* view + tham số  ->  chuỗi hash (nguồn sự thật của URL) */
 function viewToHash(view, data) {
   switch (view) {
-    case "lessons": return "#/lessons";
+    /* Chặng nằm trong hash, không giữ trong biến: nhờ vậy nút Back của trình
+       duyệt lùi từ bản đồ về màn chọn chặng, và vị trí cuộn nhớ được theo từng
+       chặng riêng (xem scrollNho). */
+    case "lessons": return "#/lessons" + (data && data.stage ? "/" + data.stage : "");
     case "lesson": return "#/lesson/" + encodeURIComponent((data && data.id) || "");
     case "playground": return "#/playground";
     case "sqlLab": return "#/sql-lab";
@@ -216,7 +219,10 @@ function parseHash() {
   const parts = h.split("/").filter((x) => x !== "");
   const seg = parts[0] || "";
   switch (seg) {
-    case "lessons": return { view: "lessons", data: undefined };
+    case "lessons": {
+      const st = parts[1] ? Number(parts[1]) : 0;
+      return { view: "lessons", data: st ? { stage: st } : undefined };
+    }
     case "lesson": return { view: "lesson", data: parts[1] ? { id: decodeURIComponent(parts[1]) } : undefined };
     case "playground": return { view: "playground", data: undefined };
     case "sql-lab": return { view: "playground", data: { lang: "sql" } };
@@ -254,6 +260,14 @@ function go(view, data) {
    cuộn lên đầu chỉ đúng khi CHUYỂN màn, còn làm mới tại chỗ thì phải giữ chỗ đọc. */
 let keepScrollOnce = false;
 function goStay(view, data) { keepScrollOnce = true; go(view, data); }
+
+/* Nhớ vị trí cuộn theo TỪNG hash. Trước đây màn nào cũng bị kéo về đầu trang, nên
+   học xong bài thứ 12 rồi thoát ra là phải cuộn lại từ đầu bản đồ để tìm bài 13 —
+   mỗi bài một lần, cả trăm bài.
+   Khoá theo hash chứ không theo tên view: mở bài khác là hash khác nên vẫn về đầu
+   trang (đúng), còn quay lại đúng chỗ cũ thì trả lại đúng chỗ cũ. */
+const scrollNho = new Map();
+let hashTruoc = location.hash;
 
 /* Đọc hash rồi render. Cả nút trong app lẫn Back/Forward đều đi qua đây. */
 /* Bọc ngoài renderFromHash: ứng dụng dựng toàn bộ giao diện bằng JS từ ~40 tệp
@@ -297,10 +311,17 @@ function renderFromHashThat() {
   const keepScroll = keepScrollOnce;
   keepScrollOnce = false;
   const prevY = window.scrollY;
-  if (!keepScroll) window.scrollTo({ top: 0, behavior: "smooth" });
+
+  /* Ghi lại chỗ đang đứng của màn VỪA RỜI, rồi xem màn sắp vào đã từng ghé chưa. */
+  if (hashTruoc && hashTruoc !== location.hash) scrollNho.set(hashTruoc, prevY);
+  hashTruoc = location.hash;
+  const yCu = keepScroll ? prevY : scrollNho.get(location.hash);
+
+  if (!keepScroll && yCu == null) window.scrollTo({ top: 0, behavior: "smooth" });
   (viewRenderer(view))(d);
-  // Đặt lại sau khi DOM mới dựng xong (thay innerHTML có thể làm trang co lại -> tụt cuộn).
-  if (keepScroll) window.scrollTo(0, prevY);
+  /* Đặt lại SAU khi DOM mới dựng xong: thay innerHTML có thể làm trang co lại rồi
+     tụt cuộn, đặt trước thì mất tác dụng. */
+  if (yCu != null) window.scrollTo(0, yCu);
 }
 
 window.addEventListener("hashchange", renderFromHash);
@@ -309,6 +330,14 @@ window.addEventListener("hashchange", renderFromHash);
  *  TRANG CHỦ
  * ========================================================================= */
 function renderHome() {
+  /* Ba ô luyện/thi ở trang chủ là Premium; ba ô đầu (lý thuyết, thực hành, luyện
+     nhanh 10 câu) miễn phí. Lộ trình bài học thì free hoàn toàn — luyện tập và
+     thi thử có giới hạn nằm TRONG lộ trình, nên gói Miễn phí vẫn ôn được, chỉ là
+     phải đi theo tiến độ chứ không nhảy vào cày tự do. */
+  const laPre = typeof Plan !== "undefined" && !Plan.paid();
+  const khoaPre = laPre ? " khoa-pre" : "";
+  const nhanPre = (mac) => (laPre ? "Premium" : mac);
+
   const totalQ = QUESTION_BANK.length;
   const attempts = State.history.length;
   const best = attempts ? Math.max(...State.history.map((h) => h.score)).toFixed(2) : "—";
@@ -373,27 +402,28 @@ function renderHome() {
         <h3>Thực hành</h3>
         <p>Viết & chạy <b>Python</b>, xem trước <b>HTML/CSS</b>, thực hành <b>SQL</b> và <b>đồ hoạ</b> ngay trên trình duyệt — không cần cài đặt.</p>
       </div>
-      <div class="mode-card" data-mode="practice">
-        <div class="m-icon">${ic("target", "🎯")}</div>
-        <h3>Luyện tập theo chủ đề</h3>
-        <p>Chọn chủ đề, lớp, dạng câu, mức độ. Xem đáp án và lời giải ngay sau mỗi câu.</p>
-      </div>
       <div class="mode-card" data-mode="quick">
         <div class="m-icon">${ic("zap", "⚡")}</div>
         <h3>Luyện nhanh 10 câu</h3>
         <p>10 câu rút từ những bài em đã học, để khởi động và ôn lại, có lời giải tức thì.</p>
       </div>
-      <div class="mode-card" data-mode="tfdrill">
-        <div class="m-badge">Phần II</div>
-        <div class="m-icon">${ic("check", "✅")}</div>
-        <h3>Luyện Đúng/Sai</h3>
-        <p>Chuyên luyện dạng câu Đúng/Sai 4 ý (Phần II của đề thi), có cách tính điểm và lời giải chi tiết.</p>
+      <div class="mode-card${khoaPre}" data-mode="practice" data-pre="phan1">
+        <div class="m-badge">${nhanPre("Phần I")}</div>
+        <div class="m-icon">${ic("target", "🎯")}</div>
+        <h3>Luyện trắc nghiệm Phần 1</h3>
+        <p>Dạng trắc nghiệm 4 đáp án — chọn chủ đề, lớp, mức độ. Xem đáp án và lời giải ngay sau mỗi câu.</p>
       </div>
-      <div class="mode-card" data-mode="exam">
-        <div class="m-badge">${EXAM_CONFIG.minutes} phút</div>
+      <div class="mode-card${khoaPre}" data-mode="tfdrill" data-pre="phan2">
+        <div class="m-badge">${nhanPre("Phần II")}</div>
+        <div class="m-icon">${ic("check", "✅")}</div>
+        <h3>Luyện Phần 2 — Đúng/Sai</h3>
+        <p>Chuyên luyện dạng Đúng/Sai 4 ý — phần dễ mất điểm nhất của đề, có cách tính điểm và lời giải chi tiết.</p>
+      </div>
+      <div class="mode-card${khoaPre}" data-mode="exam" data-pre="thithu">
+        <div class="m-badge">${nhanPre(EXAM_CONFIG.minutes + " phút")}</div>
         <div class="m-icon">${ic("exam", "📝")}</div>
-        <h3>Thi thử</h3>
-        <p>Nhiều <b>mã đề cố định</b> ${EXAM_CONFIG.mc + EXAM_CONFIG.tf} câu, tính giờ, chấm thang 10 — làm lại để so tiến bộ.</p>
+        <h3>Thi thử full 2 phần</h3>
+        <p>Đề đầy đủ ${EXAM_CONFIG.mc} câu trắc nghiệm + ${EXAM_CONFIG.tf} câu Đúng/Sai, tính giờ, chấm thang 10 — làm lại để so tiến bộ.</p>
       </div>
     </div>
 
@@ -413,6 +443,9 @@ function renderHome() {
 
   app.querySelectorAll(".mode-card").forEach((c) => c.onclick = () => {
     const mode = c.dataset.mode;
+    /* Ô Premium: mời nâng cấp thay vì mở. Vẫn CHO BẤM chứ không chặn từ ngoài —
+       không bấm được thì học sinh chẳng biết mình đang bỏ lỡ cái gì. */
+    if (c.dataset.pre && typeof Plan !== "undefined" && !Plan.paid()) { Plan.upsell(c.dataset.pre); return; }
     if (mode === "exam") go("examCodes");
     else if (mode === "tfdrill") go("tfDrill");
     else if (mode === "quick") startQuick();
@@ -520,12 +553,93 @@ function chapterOfLesson(l) {
     || { name: "", color: "var(--primary)" };
 }
 
-function renderLessons() {
+/* Nhãn ngắn + phụ đề cho năm chặng, dùng ở màn chọn chặng. STAGES giữ tên đầy đủ
+   ("Tin học 11 — Khoa học máy tính") quá dài cho ô vuông, nên tách làm hai dòng. */
+const CHANG_NHAN = {
+  20: { ten: "Tin học 10", phu: "Dùng chung cả hai định hướng", ico: "sprout" },
+  21: { ten: "Tin học 11", phu: "Khoa học máy tính", ico: "code" },
+  22: { ten: "Tin học 12", phu: "Khoa học máy tính", ico: "brain" },
+  23: { ten: "Tin học 11", phu: "Tin học ứng dụng", ico: "monitor" },
+  24: { ten: "Tin học 12", phu: "Tin học ứng dụng", ico: "globe" },
+};
+
+/* MÀN CHỌN CHẶNG — năm ô, bấm một ô mới vào bản đồ bên trong.
+   Trước đây vào là đổ thẳng cả 21 chương của cả năm chặng vào một trang, phải
+   cuộn rất lâu mới tới chặng mình đang học. */
+function renderChonChang() {
+  injectPathCss();
+  const app = document.getElementById("app");
+  const { sorted, learned, curIdx } = pathState();
+  const curL = sorted[curIdx];
+  const doneAll = learned.filter(Boolean).length;
+  const pctAll = Math.round((doneAll / sorted.length) * 100);
+
+  const stages = Object.keys(STAGES).map(Number).sort((a, b) => a - b);
+  const oHtml = stages.map((st) => {
+    const bai = sorted.map((l, i) => ({ l, i })).filter((x) => x.l.stage === st);
+    const xong = bai.filter((x) => learned[x.i]).length;
+    const pct = bai.length ? Math.round((xong / bai.length) * 100) : 0;
+    const nh = CHANG_NHAN[st] || { ten: STAGES[st] || "Lớp " + st, phu: "", ico: "book" };
+    const dangHoc = curL && curL.stage === st;
+    const soChuong = (LESSON_CHAPTERS[st] || []).length;
+    return `<button class="cc-o${dangHoc ? " dang-hoc" : ""}${pct === 100 ? " xong" : ""}" data-stage="${st}"
+        style="--cc:${stageColor(st)}" aria-label="${esc(nh.ten + " " + nh.phu)} — ${xong}/${bai.length} bài đã học">
+        ${dangHoc ? '<span class="cc-co">Đang học</span>' : ""}
+        <span class="cc-ico">${aIco(nh.ico, null, 26)}</span>
+        <span class="cc-ten">${esc(nh.ten)}</span>
+        <span class="cc-phu">${esc(nh.phu)}</span>
+        <span class="cc-bar"><span class="cc-fill" style="width:${pct}%"></span></span>
+        <span class="cc-so">${xong}/${bai.length} bài${soChuong ? " · " + soChuong + " chương" : ""}</span>
+      </button>`;
+  }).join("");
+
+  app.innerHTML = `
+    <button class="back-link" id="back">${aIco("aleft", null, 15)} Về trang chủ</button>
+
+    <div class="path-hero-card">
+      <div class="path-hero-glow"></div>
+      <div class="path-hero-content">
+        <div class="path-hero-badge">${aIco("flag", null, 14)} LỘ TRÌNH HỌC</div>
+        <h2>Hành trình chinh phục Tin học</h2>
+        <p>Chọn một chặng bên dưới để mở bản đồ bài học của chặng đó.</p>
+
+        <div class="path-progress-box">
+          <div class="progress-track-wrapper">
+            <div class="progress-fill" style="width:${pctAll}%"></div>
+          </div>
+          <div class="path-progress-stats">
+            <span><b>${doneAll}</b> / ${sorted.length} bài đã học (${pctAll}%)</span>
+            <span class="path-xp-badge">${aIco("zap", null, 13)} ${doneAll * 50} XP</span>
+          </div>
+        </div>
+      </div>
+      <div class="path-hero-mascot">
+        <div class="path-mascot-speech">${curL ? "Mình đang ở " + esc(CHANG_NHAN[curL.stage] ? CHANG_NHAN[curL.stage].ten : "") + " nhé!" : "Bắt đầu từ Tin học 10 nhé!"}</div>
+        <img src="${mascotSrc("asset/mascot/poses/celebrate-jump.png")}" alt="Linh vật" />
+      </div>
+    </div>
+
+    <div class="cc-luoi">${oHtml}</div>`;
+
+  document.getElementById("back").onclick = () => go("home");
+  app.querySelectorAll(".cc-o").forEach((b) => {
+    b.onclick = () => go("lessons", { stage: Number(b.dataset.stage) });
+  });
+}
+
+function renderLessons(data) {
+  if (!data || !data.stage) { renderChonChang(); return; }
   injectPathCss();
   // Dùng chung trạng thái với trang chủ (xem pathState) để không nói khác nhau
   const { sorted, learned, unlocked, curIdx: currentIdx } = pathState();
-  const doneCount = learned.filter(Boolean).length;
-  const pct = Math.round((doneCount / sorted.length) * 100);
+  const CHANG = data.stage;
+  /* Chỉ số trong `sorted` là chỉ số TOÀN CỤC — learned/unlocked/currentIdx đều
+     đánh theo nó, nên lọc theo chặng vẫn phải giữ nguyên chỉ số gốc. */
+  const baiChang = sorted.map((l, i) => ({ l, i })).filter((x) => x.l.stage === CHANG);
+  if (!baiChang.length) { go("lessons"); return; }
+  const doneCount = baiChang.filter((x) => learned[x.i]).length;
+  const pct = Math.round((doneCount / baiChang.length) * 100);
+  const nhanChang = CHANG_NHAN[CHANG] || { ten: STAGES[CHANG] || "Lớp " + CHANG, phu: "" };
 
   const CHAPTERS = LESSON_CHAPTERS;
   const chapterOf = chapterOfLesson;
@@ -541,14 +655,12 @@ function renderLessons() {
   const starsFor = (s) => (s == null ? 0 : s >= 0.9 ? 3 : s >= 0.6 ? 2 : s > 0 ? 1 : 0);
   const starSvg = (on) => `<svg viewBox="0 0 24 24" class="pn-star${on ? " on" : ""}" aria-hidden="true"><path d="M12 3l2.6 5.6 6.1.8-4.5 4.2 1.2 6-5.4-3-5.4 3 1.2-6L3.3 9.4l6.1-.8z"/></svg>`;
 
-  // Gom: sách -> chương -> bài (giữ nguyên thứ tự)
-  const books = [];
-  sorted.forEach((l, i) => {
-    let b = books[books.length - 1];
-    if (!b || b.stage !== l.stage) { b = { stage: l.stage, chaps: [] }; books.push(b); }
+  // Gom chương -> bài, chỉ trong chặng đang xem (giữ nguyên thứ tự)
+  const chaps = [];
+  baiChang.forEach(({ l, i }) => {
     const cd = chapterOf(l);
-    let c = b.chaps[b.chaps.length - 1];
-    if (!c || c.name !== cd.name) { c = { name: cd.name, color: cd.color, items: [] }; b.chaps.push(c); }
+    let c = chaps[chaps.length - 1];
+    if (!c || c.name !== cd.name) { c = { name: cd.name, color: cd.color, items: [] }; chaps.push(c); }
     c.items.push({ l, gi: i });
   });
 
@@ -587,7 +699,7 @@ function renderLessons() {
     "asset/mascot/scenes/magnifier.png",
   ];
 
-  const chapHtml = (c, chapIdx, bookIdx) => {
+  const chapHtml = (c, chapIdx) => {
     const n = c.items.length;
     const C = c.color || "var(--primary)";
     const pts = c.items.map((it, k) => ({
@@ -611,7 +723,7 @@ function renderLessons() {
         if (Math.abs(p.x - CX) < 60) return;
         truoc = k;
         const ben = p.x < CX ? "right:6px" : "left:6px";
-        const img = MASCOT_BANDO[(bookIdx + chapIdx + ra.length) % MASCOT_BANDO.length];
+        const img = MASCOT_BANDO[(CHANG + chapIdx + ra.length) % MASCOT_BANDO.length];
         ra.push(`<div class="pmascot" style="${ben};top:${f1(p.y - 42)}px">
             <img src="${mascotSrc(img)}" alt="" aria-hidden="true" draggable="false" loading="lazy" />
           </div>`);
@@ -667,7 +779,7 @@ function renderLessons() {
        trước rồi mới mở vào trong. Trước đây mở luôn cả chặng đầu và mọi chặng đã
        học dở nên vào màn là một dọc bản đồ trải ra, không còn chỗ để "chọn". */
     const defaultOpen = hasCurrentItem;
-    const accordId = `chap-acc-${bookIdx}-${chapIdx}`;
+    const accordId = `chap-acc-${CHANG}-${chapIdx}`;
 
     return `<div class="pchap-accordion-card ${defaultOpen ? "is-open" : ""}" style="--cc:${C}">
         <div class="pchap-acc-header" data-target="${accordId}" role="button" tabindex="0"
@@ -691,43 +803,37 @@ function renderLessons() {
       </div>`;
   };
 
-  const booksHtml = books.map((b, bookIdx) =>
-    `<div class="pbookh">
-      <span class="pbookh-icon">${aIco("book", "#ffffff", 20)}</span>
-      <span>${esc(STAGES[b.stage] || "Lớp " + b.stage)}</span>
-    </div>` + b.chaps.map((c, cIdx) => chapHtml(c, cIdx, bookIdx)).join("")
-  ).join("");
+  const chapsHtml = chaps.map((c, cIdx) => chapHtml(c, cIdx)).join("");
 
   app.innerHTML = `
-    <button class="back-link" id="back">${aIco("aleft", null, 15)} Về trang chủ</button>
+    <button class="back-link" id="back">${aIco("aleft", null, 15)} Chọn chặng khác</button>
 
-    <!-- DUOLINGO & CANDY CRUSH STAGE MAP HEADER -->
-    <div class="path-hero-card">
+    <div class="path-hero-card" style="--cc:${stageColor(CHANG)}">
       <div class="path-hero-glow"></div>
       <div class="path-hero-content">
-        <div class="path-hero-badge">🍬 THỬ THÁCH CANDY MAP 3D</div>
-        <h2>Hành Trình Chinh Phục Tin Học</h2>
-        <p>Chọn từng chặng ngang để mở rộng bản đồ, chinh phục từng cửa ải bài học và săn rương kho báu XP!</p>
-        
+        <div class="path-hero-badge">${aIco("book", null, 14)} ${esc(nhanChang.phu || "Lộ trình học")}</div>
+        <h2>${esc(nhanChang.ten)}</h2>
+        <p>Chọn một chương để mở bản đồ bài học, rồi bấm vào từng bài để vào học.</p>
+
         <div class="path-progress-box">
           <div class="progress-track-wrapper">
             <div class="progress-fill" style="width:${pct}%"></div>
           </div>
           <div class="path-progress-stats">
-            <span><b>${doneCount}</b> / ${sorted.length} bài đã chinh phục (${pct}%)</span>
-            <span class="path-xp-badge">⚡ ${doneCount * 50} XP</span>
+            <span><b>${doneCount}</b> / ${baiChang.length} bài đã học (${pct}%)</span>
+            <span class="path-xp-badge">${aIco("zap", null, 13)} ${doneCount * 50} XP</span>
           </div>
         </div>
       </div>
       <div class="path-hero-mascot">
-        <div class="path-mascot-speech">Mở chặng để chiến thôi em! ⚔️</div>
+        <div class="path-mascot-speech">${pct === 100 ? "Chặng này xong hết rồi!" : "Cùng học tiếp nhé!"}</div>
         <img src="${mascotSrc("asset/mascot/poses/celebrate-jump.png")}" alt="Linh vật" />
       </div>
     </div>
 
-    <div class="pathroot">${booksHtml}</div>`;
+    <div class="pathroot">${chapsHtml}</div>`;
 
-  document.getElementById("back").onclick = () => go("home");
+  document.getElementById("back").onclick = () => go("lessons");
   
   /* Mở ra / thu vào từng chương. Mỗi lúc CHỈ một chương mở: bản đồ một chương đã
      dài cả nghìn pixel, mở nhiều cái cùng lúc thì cuộn mãi không thấy chương sau. */
@@ -789,8 +895,26 @@ function injectPathCss() {
     "@keyframes mascotHover { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }" +
 
     ".pathroot { max-width: 520px; margin: 0 auto; padding-bottom: 60px; }" +
-    ".pbookh { text-align: center; font-family: var(--font-display); font-weight: 900; font-size: 19px; background: linear-gradient(135deg, #1cb0f6, #0082c4); color: #fff; margin: 36px 0 20px; padding: 16px 28px; border-radius: 22px; box-shadow: 0 8px 0 #006097, 0 16px 30px rgba(28, 176, 246, 0.4); display: flex; align-items: center; justify-content: center; gap: 12px; border: 2px solid #64d2ff; }" +
-    "[data-theme='dark'] .pbookh { background: linear-gradient(135deg, #6366f1, #4338ca); border-color: #818cf8; box-shadow: 0 8px 0 #3730a3, 0 16px 30px rgba(99, 102, 241, 0.4); }" +
+
+    /* MÀN CHỌN CHẶNG — năm ô. auto-fit + minmax để 5 ô tự xếp 3+2 trên máy tính,
+       2+2+1 trên máy tính bảng, 1 cột trên điện thoại, không cần media query. */
+    ".cc-luoi { max-width: 760px; margin: 0 auto; padding-bottom: 60px; display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(216px, 1fr)); }" +
+    ".cc-o { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left; padding: 18px 18px 16px; border-radius: 20px; border: 2px solid var(--border); background: var(--bg-card); cursor: pointer; font: inherit; color: var(--text); transition: transform .15s cubic-bezier(.16,1,.3,1), border-color .15s, box-shadow .15s; }" +
+    ".cc-o:hover { transform: translateY(-3px); border-color: var(--cc); box-shadow: 0 10px 24px color-mix(in srgb, var(--cc) 22%, transparent); }" +
+    ".cc-o:focus-visible { outline: 3px solid var(--cc); outline-offset: 2px; }" +
+    ".cc-o.dang-hoc { border-color: var(--cc); box-shadow: 0 6px 0 color-mix(in srgb, var(--cc) 55%, #000); }" +
+    ".cc-ico { width: 46px; height: 46px; border-radius: 15px; display: grid; place-items: center; background: color-mix(in srgb, var(--cc) 15%, transparent); color: var(--cc); margin-bottom: 8px; }" +
+    ".cc-ten { font-family: var(--font-display); font-weight: 850; font-size: 17px; line-height: 1.2; }" +
+    ".cc-phu { font-size: 12.5px; font-weight: 650; color: var(--text-soft); margin-bottom: 10px; }" +
+    ".cc-bar { width: 100%; height: 8px; border-radius: 99px; background: var(--border); overflow: hidden; }" +
+    ".cc-fill { display: block; height: 100%; border-radius: 99px; background: var(--cc); }" +
+    ".cc-so { font-size: 12px; font-weight: 700; color: var(--text-soft); margin-top: 7px; font-family: var(--font-mono); }" +
+    // Cờ "Đang học" đặt tuyệt đối nên phải chừa chỗ, không thì nó phủ lên góc ô
+    ".cc-o.dang-hoc { padding-top: 34px; }" +
+    ".cc-co { position: absolute; top: 12px; left: 18px; font-size: 10.5px; font-weight: 900; letter-spacing: .06em; text-transform: uppercase; color: #fff; background: var(--cc); padding: 3px 9px; border-radius: 99px; }" +
+    // Chặng học hết: đảo nền icon thành đặc để nhìn một cái là thấy khác hẳn
+    ".cc-o.xong .cc-ico { background: var(--cc); color: #fff; }" +
+    "@media (prefers-reduced-motion: reduce) { .cc-o { transition: none; } .cc-o:hover { transform: none; } }" +
     
     /* Thẻ Chặng Ngang Accordion Mở Ra / Thu Vào */
     ".pchap-accordion-card { background: var(--surface-card); border: 2.5px solid var(--border); border-radius: 24px; margin-bottom: 18px; overflow: hidden; box-shadow: 0 8px 0 var(--border), 0 12px 24px rgba(0,0,0,0.05); transition: all 0.25s ease; }" +
@@ -967,7 +1091,9 @@ function renderLesson(data) {
       <button class="btn btn-ghost" id="nextBtn" ${next ? "" : "disabled"}>${next ? `Bài tiếp theo ${aIco("aright", null, 14)}` : `Hết lộ trình ${aIco("flag", "#16a34a", 15)}`}</button>
     </div>
   `;
-  document.getElementById("back").onclick = () => go("lessons");
+  /* Về đúng bản đồ của chặng chứa bài này, không về màn chọn chặng — thoát bài
+     xong lại phải chọn chặng lần nữa thì thành thêm một cú bấm mỗi bài. */
+  document.getElementById("back").onclick = () => go("lessons", { stage: l.stage });
   document.getElementById("doneBtn").onclick = () => { markLearned(l.id, !isLearned(l.id)); go("lesson", { id: l.id }); };
   document.getElementById("practiceBtn").onclick = () => practiceLesson(l);
   // Nút gia sư chỉ hiện khi máy chủ đã bật AI (Tutor tự gỡ nút nếu chưa bật)
