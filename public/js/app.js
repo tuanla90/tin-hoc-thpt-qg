@@ -596,7 +596,7 @@ function renderChonChang() {
   app.innerHTML = `
     <button class="back-link" id="back">${aIco("aleft", null, 15)} Về trang chủ</button>
 
-    <div class="path-hero-card">
+    <div class="path-hero-card hero-rong">
       <div class="path-hero-glow"></div>
       <div class="path-hero-content">
         <div class="path-hero-badge">${aIco("flag", null, 14)} LỘ TRÌNH HỌC</div>
@@ -884,8 +884,12 @@ function injectPathCss() {
   const s = document.createElement("style");
   s.id = "pl-css";
   s.textContent =
-    ".path-hero-card { display: flex; align-items: center; justify-content: space-between; gap: 20px; background: linear-gradient(135deg, #ff007f 0%, #7928ca 50%, #4338ca 100%); color: #fff; padding: 20px 26px; border-radius: 22px; box-shadow: 0 9px 0 #4f107b, 0 18px 30px rgba(121, 40, 202, 0.32); margin-bottom: 22px; position: relative; overflow: hidden; border: 2px solid #ff66c4; }" +
+    ".path-hero-card { display: flex; align-items: center; justify-content: space-between; gap: 20px; background: linear-gradient(135deg, #ff007f 0%, #7928ca 50%, #4338ca 100%); color: #fff; padding: 20px 26px; border-radius: 22px; box-shadow: 0 9px 0 #4f107b, 0 18px 30px rgba(121, 40, 202, 0.32); max-width: 520px; margin: 0 auto 22px; position: relative; overflow: hidden; border: 2px solid #ff66c4; }" +
     "[data-theme='dark'] .path-hero-card { background: linear-gradient(135deg, #6366f1 0%, #7c3aed 50%, #4338ca 100%); border-color: #a855f7; box-shadow: 0 14px 0 #3730a3, 0 25px 40px rgba(124, 58, 237, 0.45); }" +
+    /* Màn chọn chặng có lưới ô rộng 760px nên banner nới theo cho thẳng lề; màn
+   bản đồ giữ 520px bằng .pathroot. Trước đây banner luôn 924px, rộng hơn nội
+   dung tới 404px ở màn bản đồ nên hai khối trông lệch hẳn nhau. */
+    ".path-hero-card.hero-rong { max-width: 760px; }" +
     ".path-hero-glow { position: absolute; inset: 0; background: radial-gradient(circle, rgba(255,255,255,0.25) 0%, transparent 70%); pointer-events: none; }" +
     ".path-hero-content { flex: 1; z-index: 2; }" +
     ".path-hero-badge { font-family: var(--font-mono); font-size: 11px; font-weight: 900; background: rgba(0, 0, 0, 0.28); padding: 4px 12px; border-radius: 20px; display: inline-block; margin-bottom: 8px; letter-spacing: 0.05em; backdrop-filter: blur(6px); border: 1px solid rgba(255,255,255,0.25); }" +
