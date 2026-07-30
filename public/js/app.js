@@ -1371,6 +1371,7 @@ function renderLesson(data) {
   if (typeof injectSqlExercises === "function" && !xuongBiKhoa("sql", (window.SQL_EXERCISES || {})[l.id])) injectSqlExercises(l);
   if (typeof injectWebExercises === "function" && !xuongBiKhoa("web", (window.WEB_EXERCISES || {})[l.id])) injectWebExercises(l);
   if (typeof injectGraphicsLab === "function" && !xuongBiKhoa("gfx", (window.GLAB || {})[l.id])) injectGraphicsLab(l);
+  if (typeof injectSoDo === "function") injectSoDo(l);   // đặt TRƯỚC lý thuyết
   if (typeof injectConceptLab === "function") injectConceptLab(l);
   if (typeof injectSaiODau === "function") injectSaiODau(l);
   if (typeof injectMinhHoa === "function") injectMinhHoa(l);
