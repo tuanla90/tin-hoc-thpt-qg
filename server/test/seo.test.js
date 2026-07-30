@@ -127,6 +127,51 @@ test("đường dẫn sai trả 404 kèm lối quay lại", async () => {
   assert.ok(r.body.includes('href="/bai"'));
 });
 
+test("bốn xưởng thực hành có trang riêng, số liệu lấy từ kho bài tập thật", async () => {
+  const { kho } = chiMuc();
+  const dem = (o) => Object.keys(o || {}).reduce((n, k) => n + (Array.isArray(o[k]) ? o[k].length : 0), 0);
+  const mong = {
+    python: { slug: "python", so: dem((kho.BT || {}).python) },
+    web: { slug: "html-css", so: dem((kho.BT || {}).web) },
+    sql: { slug: "sql", so: dem((kho.BT || {}).sql) },
+    gfx: { slug: "do-hoa", so: dem(kho.GLAB) },
+  };
+  for (const [ma, m] of Object.entries(mong)) {
+    assert.ok(m.so > 0, "kho " + ma + " rỗng — trang sẽ nói suông");
+    const r = await lay("/thuc-hanh/" + m.slug);
+    assert.equal(r.status, 200, m.slug);
+    assert.match(r.body, /<h1>/, m.slug + " thiếu H1");
+    assert.ok(r.body.includes('rel="canonical" href="http'), m.slug + " thiếu canonical tuyệt đối");
+    assert.ok(r.body.includes("/thuc-hanh/" + m.slug + '"'), m.slug + " canonical phải trỏ chính nó");
+    assert.ok(r.body.includes('"@type":"FAQPage"'), m.slug + " thiếu FAQ có cấu trúc");
+    assert.ok(r.body.includes('"@type":"BreadcrumbList"'), m.slug + " thiếu breadcrumb");
+    /* Số bài tập trên trang phải KHỚP kho thật — chốt để trang không nói quá khi
+       thêm/bớt bài tập mà quên sửa chữ. */
+    assert.ok(r.body.includes(m.so + " bài tập"), m.slug + ": phải ghi đúng " + m.so + " bài tập");
+    // Lối vào đúng xưởng trong ứng dụng
+    assert.match(r.body, /href="\/hoc#\/playground/, m.slug + " thiếu lối vào ứng dụng");
+    // Tuyệt đối không kéo bundle app vào trang công khai
+    ["app.js", "questions.js", "gamify.js", "skulpt"].forEach((t) =>
+      assert.ok(!r.body.includes("/js/" + t), m.slug + ": KHÔNG được nạp " + t));
+  }
+  // Trang gộp: đủ 4 lối vào + tổng số bài tập
+  const ds = await lay("/thuc-hanh");
+  assert.equal(ds.status, 200);
+  Object.values(mong).forEach((m) =>
+    assert.ok(ds.body.includes('href="/thuc-hanh/' + m.slug + '"'), "trang gộp thiếu " + m.slug));
+  const tong = Object.values(mong).reduce((n, m) => n + m.so, 0);
+  assert.ok(ds.body.includes(tong + " bài tập"), "trang gộp phải ghi đúng tổng " + tong);
+  // Gọi bằng mã trong ứng dụng -> chuyển sang URL chuẩn, tránh trùng nội dung
+  for (const [ma, slug] of [["web", "html-css"], ["gfx", "do-hoa"]]) {
+    const r = await lay("/thuc-hanh/" + ma);
+    assert.equal(r.status, 301, ma + " phải 301");
+    assert.equal(r.loc, "/thuc-hanh/" + slug);
+  }
+  const la = await lay("/thuc-hanh/khong-he-co");
+  assert.equal(la.status, 302);
+  assert.equal(la.loc, "/thuc-hanh");
+});
+
 test("sitemap liệt kê mọi bài, robots chặn trang quản trị", async () => {
   const { ds } = chiMuc();
   const s = await lay("/sitemap.xml");
@@ -136,7 +181,8 @@ test("sitemap liệt kê mọi bài, robots chặn trang quản trị", async ()
      tự đúng, không phải đi sửa số. */
   /* "/" là trang giới thiệu; "/hoc" (vỏ ứng dụng) CỐ Ý không nằm trong sitemap
      vì nó noindex — nội dung của nó do JS dựng, Google đọc ra trang trống. */
-  const trangTinh = ["/", "/bai", "/doi-chieu-sgk", "/nang-cap", "/quyen-rieng-tu"];
+  const trangTinh = ["/", "/bai", "/thuc-hanh", "/thuc-hanh/python", "/thuc-hanh/html-css",
+    "/thuc-hanh/sql", "/thuc-hanh/do-hoa", "/doi-chieu-sgk", "/nang-cap", "/quyen-rieng-tu"];
   trangTinh.forEach((p) => assert.ok(s.body.includes("<loc>http") && s.body.includes(p), "sitemap thiếu " + p));
   /* Từ bộ sách thứ hai trở đi, mỗi bộ có thêm một trang đối chiếu riêng. */
   const bo = (chiMuc().kho.SGK_MAP || {}).bo || [];

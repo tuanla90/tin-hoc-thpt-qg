@@ -172,7 +172,7 @@
   var LY_DO = {
     quota: { tit: "Hết quỹ luyện hôm nay", mo: "Bạn đã luyện đủ " + QUOTA_NGAY + " câu miễn phí của hôm nay — đúng nhịp học đều đấy! Muốn cày ôn kiểm tra hay ôn thi không giới hạn thì cần gói Premium." },
     exam: { tit: "Đề này thuộc gói Premium", mo: "Gói Miễn phí thi thử được 1 đề (Đề biên soạn 1) — làm lại bao nhiêu lần cũng được. Nâng cấp để mở cả 13 đề và đề ngẫu nhiên mỗi ngày." },
-    xuong: { tit: "Bài thực hành Premium", mo: "Các bài thực hành thuộc những chương đầu là miễn phí. Nâng cấp để mở toàn bộ 250+ bài Python, SQL, HTML/CSS có máy chấm." },
+    xuong: { tit: "Bài thực hành Premium", mo: "Các bài thực hành thuộc những chương đầu là miễn phí. Nâng cấp để mở toàn bộ 280+ bài Python, SQL, HTML/CSS và đồ hoạ có máy chấm." },
     /* Ba khoá cho 3 ô luyện/thi ở trang chủ. Nói rõ vẫn còn đường miễn phí (lộ
        trình + luyện nhanh 10 câu) để lời mời không thành cụt đường. */
     phan1: { tit: "Luyện trắc nghiệm Phần 1 — Premium", mo: "Chọn chủ đề, lớp, mức độ rồi luyện không giới hạn dạng trắc nghiệm 4 đáp án (Phần I của đề). Gói Miễn phí vẫn luyện được qua lộ trình bài học và ô Luyện nhanh 10 câu." },
@@ -188,7 +188,7 @@
   var QUYEN_LOI = [
     "Luyện tập không giới hạn (miễn phí: " + QUOTA_NGAY + " câu/ngày)",
     "13 đề thi thử + đề ngẫu nhiên không giới hạn",
-    "250+ bài thực hành Python · SQL · HTML/CSS có máy chấm",
+    "280+ bài thực hành Python · SQL · HTML/CSS · đồ hoạ có máy chấm",
     "Tab Chỗ yếu — ôn đúng chủ đề đang yếu",
     "Gia sư AI 25 lượt/ngày + nút “giải thích kỹ hơn”",
     "3 hồ sơ học tập trong một tài khoản",

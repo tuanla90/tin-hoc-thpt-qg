@@ -282,11 +282,29 @@ const CSS_RIENG = `
    Biến CSS kế thừa nên đặt ở khối bọc là đủ. */
 .mh-cau-noi{--bg-card:var(--surface-card);--bg-soft:var(--bg-subtle);--border:var(--line);
   --primary:var(--brand);--primary-soft:var(--brand-soft);--primary-d:var(--brand-dark);
-  --text:var(--ink-main);--text-soft:var(--ink-muted);--success:#16a34a;--radius:14px}
+  --text:var(--ink-main);--text-soft:var(--ink-muted);--success:#16a34a;--radius:14px;
+  /* Đợt minh hoạ thứ ba dùng thêm bộ màu trạng thái và --border-strong; không map
+     thì bảng chân trị mất hẳn phần tô đúng/sai, tức là mất luôn nội dung. Lấy đúng
+     mã trong css/styles.css chứ không đoán, để hai bên nhìn giống nhau. */
+  --border-strong:#cbd5e1;--danger:#f43f5e;--danger-soft:#fff1f2;--success-soft:#ecfdf5;
+  --warning:#f59e0b;--warning-soft:#fffbeb;--info:#0d9488;--code-bg:#eef2f8}
 .mh-cau-noi .mh{margin:0;border:0;padding:0;background:transparent}
 /* Nhãn lớp trong khối "Bài liên quan": xuống dòng riêng cho khỏi dính vào tên
    bài, và nhạt hơn để tên bài vẫn là thứ đọc trước. */
 .seo-lq-lop{display:block;margin-top:3px;font-weight:600;font-size:12.5px;color:var(--ink-faint)}
+/* Thẻ xưởng thực hành: .seo-grid a mặc định xếp NGANG (số bài + tên), còn thẻ này
+   có ba dòng nên phải xếp dọc, không thì ba dòng nằm cạnh nhau và tràn thẻ. */
+.seo-grid a.seo-lq{flex-direction:column;gap:2px}
+.seo-lq .seo-lq-lop{margin-top:0}
+.seo-lq-ten{font-size:14.5px;font-weight:650;line-height:1.4}
+.seo-lq-so{font-size:12.5px;color:var(--ink-muted);line-height:1.5}
+/* Đề mẫu của xưởng */
+.seo-de-ds{display:grid;gap:10px;margin-top:12px}
+.seo-de{background:var(--bg-subtle);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.seo-de-txt{font-size:14.5px;line-height:1.55}
+.seo-de-bai{margin-top:7px;font-size:12.5px;color:var(--ink-muted)}
+.seo-de-bai a{color:var(--brand);font-weight:700;text-decoration:none}
+.seo-de-bai a:hover{text-decoration:underline}
 .seo-lop{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:30px 0 0;
   padding-top:14px;border-top:1px solid var(--line)}
 .seo-lop h2{margin:0;font-size:20px}
@@ -551,6 +569,7 @@ function khung(o) {
       "</div>" +
       '<nav class="foot-links">' +
         '<a href="/bai">Tất cả bài học</a>' +
+        '<a href="/thuc-hanh">Thực hành</a>' +
         '<a href="/doi-chieu-sgk">Đối chiếu SGK</a>' +
         '<a href="/">Giới thiệu</a>' +
         '<a href="/nang-cap">Bảng giá &amp; nâng cấp</a>' +
@@ -1055,6 +1074,285 @@ ${bo.sach.map((s, i) => mucSach(s, theoId, i === 0)).join("")}
 }
 
 /* --------------------------------- router --------------------------------- */
+/* ==========================================================================
+ *  TRANG CÔNG KHAI CHO BỐN XƯỞNG THỰC HÀNH
+ *
+ *  Trong ứng dụng, bốn xưởng đã có địa chỉ riêng (#/playground/sql...) nhưng đó là
+ *  HASH — với Google cả bốn vẫn là một trang /hoc, nên "thực hành Python online"
+ *  hay "luyện SQL online" không có trang nào để xếp hạng. Bốn trang dưới đây là
+ *  trang thật, dựng sẵn HTML, mỗi xưởng một URL.
+ *
+ *  Nội dung KHÔNG bịa: số bài, đề bài mẫu và danh sách bài học đều đọc từ chính
+ *  kho bài tập mà ứng dụng đang dùng, nên trang không bao giờ nói quá.
+ * ========================================================================= */
+const XUONG = [
+  {
+    ma: "python", slug: "python", lang: "python", ten: "Python",
+    tenDai: "Thực hành Python online",
+    khoa: "python",
+    mo: "Viết Python ngay trong trình duyệt rồi bấm Chạy — không cài Python, không cài IDE, mở bằng điện thoại cũng được. Máy so kết quả với đáp án và nói ngay đúng hay sai.",
+    lam: [
+      "Gõ code vào khung soạn rồi bấm <b>Chạy &amp; Kiểm tra</b> — máy chạy thật, không phải chấm bằng cách so từng chữ.",
+      "Sai thì có <b>Gợi ý</b> và <b>Đáp án mẫu</b>; vấp hai lần thì hiện thêm nút hỏi gia sư AI về đúng bài đó.",
+      "Đủ dạng của chương trình lớp 10–11: biến, nhập/xuất, rẽ nhánh, vòng lặp, danh sách, xâu, hàm, đệ quy, tìm kiếm và sắp xếp.",
+    ],
+    hoi: [
+      ["Có phải cài Python không?", "Không. Trình chạy Python hoạt động ngay trong trình duyệt (Skulpt). Lần chạy đầu cần mạng để tải trình chạy khoảng 1 MB, sau đó chạy được cả khi mất mạng."],
+      ["Máy chấm kiểu gì?", "Máy chạy chương trình của bạn rồi so phần in ra với kết quả mong đợi của đề. Viết cách khác mà in ra đúng thì vẫn được tính đúng."],
+      ["Dùng được trên điện thoại không?", "Được. Khung soạn code và nút Chạy đều vừa màn hình điện thoại, tuy gõ code trên máy tính vẫn nhanh hơn."],
+    ],
+  },
+  {
+    ma: "web", slug: "html-css", lang: "web", ten: "HTML/CSS",
+    tenDai: "Thực hành HTML và CSS online",
+    khoa: "web",
+    mo: "Gõ HTML/CSS và thấy trang web hiện ra ngay bên cạnh. Máy đối chiếu với yêu cầu của đề — đúng thẻ, đúng thuộc tính mới tính là xong.",
+    lam: [
+      "Sửa code là <b>xem trước cập nhật ngay</b>, khỏi lưu tệp rồi mở lại bằng trình duyệt.",
+      "Bài tập theo đúng mạch Tin học 12: thẻ cơ bản, danh sách, bảng, hình ảnh, liên kết, biểu mẫu, bộ chọn CSS, mô hình hộp, bố cục.",
+      "Không chạy JavaScript trong phần xem trước — an toàn cho máy của trường.",
+    ],
+    hoi: [
+      ["Trang xem trước có chạy JavaScript không?", "Không. Phần xem trước chỉ dựng HTML và CSS, cố ý không chạy JavaScript để an toàn khi dùng máy chung ở trường."],
+      ["Có cần cài phần mềm gì không?", "Không. Chỉ cần trình duyệt — kể cả trình duyệt trên điện thoại."],
+      ["Máy chấm HTML thế nào?", "Máy đọc cấu trúc trang bạn vừa viết và kiểm đúng những gì đề yêu cầu (có thẻ nào, chữ gì, thuộc tính nào), chứ không so từng dấu cách."],
+    ],
+  },
+  {
+    ma: "sql", slug: "sql", lang: "sql", ten: "SQL",
+    tenDai: "Thực hành SQL online",
+    khoa: "sql",
+    mo: "Viết câu truy vấn SQL và chạy thật trên cơ sở dữ liệu mẫu ngay trong trình duyệt (SQLite). Máy so bảng kết quả với đáp án, không so chữ.",
+    lam: [
+      "Chạy <code>SELECT</code>, <code>WHERE</code>, <code>ORDER BY</code>, <code>JOIN</code>, <code>GROUP BY</code> trên bảng mẫu có sẵn dữ liệu.",
+      "Máy <b>so bảng kết quả</b>, nên viết câu khác cách mà ra đúng dữ liệu thì vẫn đúng.",
+      "Có sẵn sơ đồ bảng bên cạnh đề, khỏi phải nhớ tên cột.",
+    ],
+    hoi: [
+      ["Chạy SQL ở đâu, có cần cài MySQL không?", "Không cần cài gì. Cơ sở dữ liệu SQLite chạy ngay trong trình duyệt, dữ liệu mẫu nằm sẵn trong bài."],
+      ["Viết truy vấn khác đáp án mẫu có được tính không?", "Được, miễn bảng kết quả đúng. Riêng những bài yêu cầu sắp xếp thì thứ tự dòng cũng phải đúng."],
+      ["Có mất dữ liệu của bài khác không?", "Không. Mỗi bài dựng lại dữ liệu mẫu riêng, bạn thử xoá hay sửa thoải mái."],
+    ],
+  },
+  {
+    ma: "gfx", slug: "do-hoa", lang: "gfx", ten: "Đồ hoạ",
+    tenDai: "Thực hành đồ hoạ và ảnh online",
+    khoa: "gfx",
+    mo: "Kéo hình, xếp lớp, khoanh vùng chọn, pha màu RGB, sắp trình tự dựng phim — thao tác thật bằng chuột trong trình duyệt rồi máy chấm, không cần cài Photoshop hay GIMP.",
+    lam: [
+      "Tám kiểu thao tác: chỉnh sáng/tương phản, xếp lớp, khoanh vùng chọn, pha màu, nối khái niệm, sắp trình tự, bấm đúng công cụ, kéo hình vào chỗ.",
+      "Hình vẽ trong bài là <b>hình tự dựng bằng SVG</b> — không dùng ảnh của ai nên không vướng bản quyền.",
+      "Bám đúng phần Thiết kế đồ hoạ (Tin 10) và nhánh Tin học ứng dụng: ảnh, ảnh động, dựng phim.",
+    ],
+    hoi: [
+      ["Có cần cài Photoshop hay GIMP không?", "Không. Các bài mô phỏng đúng thao tác của phần mềm thật (lớp, vùng chọn, thanh chỉnh màu) nhưng chạy hoàn toàn trong trình duyệt."],
+      ["Đây có phải phần mềm đồ hoạ thật không?", "Không, và bài học cũng nói rõ như vậy. Mục đích là luyện đúng khái niệm và trình tự thao tác để khi ngồi vào phần mềm thật thì làm được ngay."],
+      ["Dùng chuột hay ngón tay đều được chứ?", "Được cả hai. Phần kéo-thả và khoanh vùng đều nhận cả chuột lẫn cảm ứng."],
+    ],
+  },
+];
+const XUONG_THEO_SLUG = new Map(XUONG.map((x) => [x.slug, x]));
+
+/* Đọc kho bài tập của một xưởng từ chính dữ liệu ứng dụng đang dùng */
+function baiTapXuong(x) {
+  const { kho, theoId } = chiMuc();
+  const nguon = x.ma === "gfx" ? (kho.GLAB || {}) : ((kho.BT || {})[x.khoa] || {});
+  const bai = [];
+  let soBt = 0;
+  Object.keys(nguon).forEach((id) => {
+    const ds = nguon[id];
+    if (!Array.isArray(ds) || !ds.length) return;
+    const muc = theoId.get(id);
+    if (!muc) return;                       // bài đã gỡ khỏi lộ trình
+    soBt += ds.length;
+    bai.push({ muc, ds });
+  });
+  bai.sort((a, b) => a.muc.i - b.muc.i);
+  return { bai, soBt, soBai: bai.length };
+}
+
+/* Đề mẫu: lấy rải đều các bài học chứ không dồn mấy bài đầu, để người đọc thấy
+   được độ khó tăng dần thay vì toàn bài "in ra Xin chào". */
+function deMau(bai, n) {
+  if (!bai.length) return [];
+  const buoc = Math.max(1, Math.floor(bai.length / n));
+  const ra = [];
+  for (let i = 0; i < bai.length && ra.length < n; i += buoc) {
+    const b = bai[i];
+    const bt = b.ds[0];
+    const de = String((bt && bt.prompt) || "").split("\n")[0];
+    if (de) ra.push({ muc: b.muc, de, so: b.ds.length });
+  }
+  return ra;
+}
+
+function trangXuong(x, base) {
+  const khoaCache = "xuong-" + x.slug + "|" + base;
+  if (CACHE.has(khoaCache)) return CACHE.get(khoaCache);
+
+  const { bai, soBt, soBai } = baiTapXuong(x);
+  const canonical = base + "/thuc-hanh/" + x.slug;
+  const tieuDe = `${x.tenDai} — ${soBt} bài tập máy tự chấm | Tin học THPT`;
+  const desc = moTa(x.mo, 155);
+  const mau = deMau(bai, 6);
+
+  const body = `
+<div class="pg-hero left">
+  <div class="seo-crumb"><a href="/thuc-hanh">Thực hành</a> › ${esc(x.ten)}</div>
+  <span class="eyebrow">Xưởng thực hành</span>
+  <h1>${esc(x.tenDai)}</h1>
+  <p class="lead">${nhan(x.mo)}</p>
+  <p class="seo-meta">${soBt} bài tập · trải trên ${soBai} bài học · máy chấm ngay trong trình duyệt · không cần cài đặt</p>
+</div>
+
+<div class="pg-card pg-prose">
+  <h2>Ở đây bạn làm được gì</h2>
+  <ul>${x.lam.map((t) => "<li>" + t + "</li>").join("")}</ul>
+</div>
+
+${mau.length ? `<div class="pg-card">
+  <h2>Một vài đề trong xưởng</h2>
+  <p class="pg-note" style="margin-top:0">Đề thật lấy từ chính xưởng, rải đều từ bài đầu tới bài cuối. Bấm tên bài để đọc phần lí thuyết trước khi làm.</p>
+  <div class="seo-de-ds">${mau.map((m) => `<div class="seo-de">
+    <div class="seo-de-txt">${nhan(m.de)}</div>
+    <div class="seo-de-bai"><a href="/bai/${esc(m.muc.slug)}">Bài ${m.muc.bai.order}. ${esc(m.muc.bai.title)}</a> · ${m.so} bài tập</div>
+  </div>`).join("")}</div>
+</div>` : ""}
+
+<div class="pg-card" style="text-align:center">
+  <h2>Mở xưởng ${esc(x.ten)} và làm thử</h2>
+  <p class="pg-note">Không cần tạo tài khoản, không cần cài đặt. Bài thực hành của những chương đầu mở miễn phí cho mọi người.</p>
+  <p style="margin-top:14px"><a class="btn btn-primary btn-lg" href="/hoc#/playground/${esc(x.lang)}">Vào xưởng ${esc(x.ten)}</a></p>
+</div>
+
+${soBai ? `<div class="pg-card">
+  <h2>Bài tập ${esc(x.ten)} theo từng bài học</h2>
+  <p class="pg-note" style="margin-top:0">Mỗi bài học có lí thuyết riêng rồi mới tới phần thực hành — học trước, làm sau thì đỡ bí.</p>
+  <div class="seo-grid">${bai.map((b) => `<a class="seo-lq" href="/bai/${esc(b.muc.slug)}">
+    <span class="seo-lq-lop">${esc(b.muc.lop)}</span>
+    <span class="seo-lq-ten">Bài ${b.muc.bai.order}. ${esc(b.muc.bai.title)}</span>
+    <span class="seo-lq-so">${b.ds.length} bài tập</span>
+  </a>`).join("")}</div>
+</div>` : ""}
+
+<div class="pg-card pg-prose">
+  <h2>Câu hỏi thường gặp</h2>
+  ${x.hoi.map((h) => "<h3>" + esc(h[0]) + "</h3><p>" + esc(h[1]) + "</p>").join("")}
+</div>
+
+<div class="pg-card">
+  <h2 style="margin-top:0">Ba xưởng còn lại</h2>
+  <div class="seo-grid">${XUONG.filter((y) => y.ma !== x.ma).map((y) => `<a class="seo-lq" href="/thuc-hanh/${esc(y.slug)}">
+    <span class="seo-lq-lop">Xưởng thực hành</span>
+    <span class="seo-lq-ten">${esc(y.tenDai)}</span>
+    <span class="seo-lq-so">${baiTapXuong(y).soBt} bài tập</span>
+  </a>`).join("")}</div>
+</div>`;
+
+  const ld = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "LearningResource",
+        name: x.tenDai,
+        description: desc,
+        url: canonical,
+        inLanguage: "vi",
+        learningResourceType: ["Bài thực hành", "Bài tập có chấm điểm"],
+        educationalLevel: "Trung học phổ thông",
+        teaches: x.ten,
+        isAccessibleForFree: true,
+      },
+      {
+        "@type": "FAQPage",
+        mainEntity: x.hoi.map((h) => ({
+          "@type": "Question", name: h[0],
+          acceptedAnswer: { "@type": "Answer", text: h[1] },
+        })),
+      },
+      {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: "Thực hành", item: base + "/thuc-hanh" },
+          { "@type": "ListItem", position: 2, name: x.tenDai, item: canonical },
+        ],
+      },
+    ],
+  };
+
+  const html = khung({ title: tieuDe, desc, canonical, body, ld });
+  CACHE.set(khoaCache, html);
+  return html;
+}
+
+function trangXuongDs(base) {
+  const khoaCache = "xuong-ds|" + base;
+  if (CACHE.has(khoaCache)) return CACHE.get(khoaCache);
+
+  const so = XUONG.map((x) => ({ x, ...baiTapXuong(x) }));
+  const tong = so.reduce((n, s) => n + s.soBt, 0);
+  const canonical = base + "/thuc-hanh";
+
+  const body = `
+<div class="pg-hero left">
+  <div class="seo-crumb"><a href="/">Trang chủ</a> › Thực hành</div>
+  <span class="eyebrow">Bốn xưởng</span>
+  <h1>Thực hành Tin học online — ${tong} bài tập máy tự chấm</h1>
+  <p class="lead">Viết Python, dựng HTML/CSS, truy vấn SQL và thao tác đồ hoạ ngay trong trình duyệt. Không cài đặt, không tạo tài khoản, mở bằng điện thoại cũng làm được.</p>
+  <p class="seo-meta">${tong} bài tập · 4 xưởng · máy chấm ngay tại chỗ</p>
+</div>
+
+<div class="pg-card">
+  <h2 style="margin-top:0">Chọn xưởng</h2>
+  <div class="seo-grid">${so.map((s) => `<a class="seo-lq" href="/thuc-hanh/${esc(s.x.slug)}">
+    <span class="seo-lq-lop">${s.soBt} bài tập · ${s.soBai} bài học</span>
+    <span class="seo-lq-ten">${esc(s.x.tenDai)}</span>
+    <span class="seo-lq-so">${esc(cat(s.x.mo, 96))}</span>
+  </a>`).join("")}</div>
+</div>
+
+<div class="pg-card pg-prose">
+  <h2>Vì sao nên làm thực hành, không chỉ đọc lí thuyết</h2>
+  <p>Đề tốt nghiệp môn Tin học định hướng Khoa học máy tính hỏi rất nhiều về <b>đọc code và đoán kết quả</b>. Đọc lí thuyết thì thấy hiểu hết, nhưng ngồi trước một đoạn code sai một dấu hai chấm mà tìm không ra thì lúc thi vẫn mất điểm. Tự gõ và tự chạy là cách nhanh nhất để những chỗ hiểu lơ mơ lộ ra.</p>
+  <p>Ở đây máy chấm ngay nên bạn biết mình sai ở đâu mà không phải đợi ai chữa bài. Sai thì có gợi ý, bí quá thì xem đáp án mẫu rồi tự viết lại.</p>
+</div>
+
+<div class="pg-card" style="text-align:center">
+  <h2>Mở xưởng thực hành</h2>
+  <p class="pg-note">Bài thực hành của những chương đầu mỗi xưởng mở miễn phí, không cần tài khoản.</p>
+  <p style="margin-top:14px"><a class="btn btn-primary btn-lg" href="/hoc#/playground">Vào xưởng thực hành</a></p>
+  <p class="pg-note" style="margin-top:10px">Muốn học lí thuyết trước? Xem <a href="/bai">danh sách toàn bộ bài học</a>.</p>
+</div>`;
+
+  const ld = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "CollectionPage",
+        name: "Thực hành Tin học online",
+        description: "Bốn xưởng thực hành chạy trong trình duyệt: Python, HTML/CSS, SQL và đồ hoạ, máy chấm ngay.",
+        url: canonical,
+        inLanguage: "vi",
+      },
+      {
+        "@type": "ItemList",
+        itemListElement: so.map((s, i) => ({
+          "@type": "ListItem", position: i + 1, name: s.x.tenDai,
+          url: base + "/thuc-hanh/" + s.x.slug,
+        })),
+      },
+    ],
+  };
+
+  const html = khung({
+    title: `Thực hành Tin học online — ${tong} bài tập Python, SQL, HTML/CSS, đồ hoạ`,
+    desc: "Bốn xưởng thực hành chạy ngay trong trình duyệt: viết Python, dựng HTML/CSS, truy vấn SQL, thao tác đồ hoạ. Máy chấm tại chỗ, không cần cài đặt.",
+    canonical, body, ld, ogType: "website",
+  });
+  CACHE.set(khoaCache, html);
+  return html;
+}
+
 function goc(req) {
   if (process.env.SITE_URL) return String(process.env.SITE_URL).replace(/\/+$/, "");
   const proto = req.get("x-forwarded-proto") || req.protocol || "https";
@@ -1117,6 +1415,24 @@ function createSeo() {
 
   r.get("/bai", (req, res, next) => {
     try { traHtml(res, trangDanhSach(goc(req))); } catch (e) { next(e); }
+  });
+
+  /* Bốn xưởng thực hành — trang thật cho Google, xem chú thích ở XUONG */
+  r.get("/thuc-hanh", (req, res, next) => {
+    try { traHtml(res, trangXuongDs(goc(req))); } catch (e) { next(e); }
+  });
+
+  r.get("/thuc-hanh/:xuong", (req, res, next) => {
+    try {
+      const key = String(req.params.xuong || "").toLowerCase();
+      const x = XUONG_THEO_SLUG.get(key);
+      if (x) return traHtml(res, trangXuong(x, goc(req)));
+      /* Gọi bằng mã trong ứng dụng (web, gfx) -> chuyển sang URL chuẩn, tránh hai
+         đường dẫn cùng một nội dung. */
+      const theoMa = XUONG.find((y) => y.ma === key || y.lang === key);
+      if (theoMa) return res.redirect(301, "/thuc-hanh/" + theoMa.slug);
+      res.redirect(302, "/thuc-hanh");
+    } catch (e) { next(e); }
   });
 
   r.get("/doi-chieu-sgk", (req, res, next) => {
@@ -1192,6 +1508,8 @@ ${(() => {
           .concat(ds.length > 1 ? ds.map((b) => url(base + "/doi-chieu-sgk/" + b.ma, "0.8", lmBai)) : [])
           .join("\n");
       })()}
+${url(base + "/thuc-hanh", "0.8", lmBai)}
+${XUONG.map((x) => url(base + "/thuc-hanh/" + x.slug, "0.7", lmBai)).join("\n")}
 ${url(base + "/nang-cap", "0.6", lmTinh("nang-cap.html"))}
 ${url(base + "/quyen-rieng-tu", "0.3", lmTinh("quyen-rieng-tu.html"))}
 ${ds.map((m) => url(base + "/bai/" + m.slug, "0.7", lmBai)).join("\n")}

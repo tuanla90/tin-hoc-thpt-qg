@@ -103,6 +103,10 @@ function napKho() {
        tính (chuyên sâu)"). */
     TOPICS: box.TOPICS || null,
     BT: { python: box.EXERCISES || {}, sql: box.SQL_EXERCISES || {}, web: box.WEB_EXERCISES || {} },
+    /* Bài đồ hoạ để RIÊNG, không nhét vào BT: BT là kho mà gia sư AI tra đề + đáp
+       án mẫu (xem layBaiTap), còn bài đồ hoạ là widget kéo/chọn/pha màu, không có
+       "đáp án mẫu" dạng code để giảng. Trang công khai /thuc-hanh dùng khoá này. */
+    GLAB: box.GLAB || {},
   };
   console.log("[lessons] Đã nạp", kho.soBai, "bài,", kho.soCau, "câu hỏi cho gia sư AI.");
   if (hong.length) return kho;   // trả tạm bản thiếu, nhưng không nhớ -> lần sau nạp lại

@@ -39,6 +39,11 @@
     "#gamDash .gam-xp-bar{display:block;height:5px;margin:0;flex:1 1 100%}" +
     "#gamDash .gam-xp-fill{display:block}" +
     "#gamDash .gam-chip{font-size:13px}" +
+    /* Chip XP hôm nay khi CHƯA đạt là một nút hành động, không phải chỉ số — viền
+       và chữ theo màu chính để phân biệt với hai chip chỉ để xem. */
+    "#gamDash .gam-chip-lam{border-color:var(--primary);color:var(--primary-d)}" +
+    "#gamDash .gam-chip-lam:hover{background:var(--primary-soft)}" +
+    "#gamDash .gam-chip-lam:focus-visible{outline:3px solid var(--primary);outline-offset:2px}" +
 
     /* Dưới 900px cho chip cấp chiếm trọn một hàng, nhường CẢ hàng dưới cho ba chip
        chuỗi / XP hôm nay / huy hiệu. Nếu để chip cấp đứng cùng hàng thì nó ăn tới
@@ -498,7 +503,8 @@ var Gam = {
           '<span class="gam-nhan"> ' + gamDonViChuoi() + (coLich ? " · có lịch" : "") + "</span>" +
           (coLich ? '<span class="gam-ngan"> · có lịch</span>' : "") +
         "</div>" +
-        '<div class="gam-chip' + (xong ? " gam-chip-done" : "") + '" title="Mục tiêu XP hôm nay">' + gIco("target", "#ef4444", "🎯") +
+        '<div class="gam-chip' + (xong ? " gam-chip-done" : " gam-chip-lam") + '" id="gamChipHomNay"' +
+          (xong ? ' title="Đã đạt mục tiêu XP hôm nay"' : ' role="button" tabindex="0" title="Bấm để luyện nhanh 10 câu, kiếm XP cho đủ mục tiêu hôm nay"') + ">" + gIco("target", "#ef4444", "🎯") +
           '<span class="gam-nhan">Hôm nay </span><b>' + Math.min(gamDailyXp(), GAM_DAILY_GOAL) + "/" + GAM_DAILY_GOAL + "</b>" +
           '<span class="gam-nhan"> XP</span>' + (xong ? " ✓" : "") +
         "</div>" +
@@ -508,9 +514,24 @@ var Gam = {
         "</div>" +
       "</div>" +
       (window.NhiemVu ? NhiemVu.html() : "");
-    var toAch = function () { if (typeof go === "function") go("achievements"); };
-    var cb = mount.querySelector("#gamChipBadge"); if (cb) cb.onclick = toAch;
-    var cs = mount.querySelector("#gamChipStreak"); if (cs) cs.onclick = toAch;
+    /* Ba chip đi BA chỗ khác nhau. Trước đây chuỗi và huy hiệu cùng sang Thành tựu
+       còn chip XP hôm nay không bấm được gì.
+         huy hiệu  -> Thành tựu (lưới huy hiệu nằm ở đó)
+         chuỗi     -> Hồ sơ (chỗ đặt lịch học, mà lịch mới là thứ quyết định chuỗi)
+         XP hôm nay-> LÀM chứ không xem: chạy luôn Luyện nhanh 10 câu để kiếm XP.
+       Chọn hành động cho chip XP vì Kết quả / Thành tựu / Hồ sơ đều đã có trên menu
+       trên rồi — trỏ chip sang đó nữa thì chẳng thêm đường đi nào mới. */
+    var di = function (v) { return function () { if (typeof go === "function") go(v); }; };
+    var cb = mount.querySelector("#gamChipBadge"); if (cb) cb.onclick = di("achievements");
+    var cs = mount.querySelector("#gamChipStreak"); if (cs) cs.onclick = di("profile");
+    /* Đạt mục tiêu rồi thì chip chỉ còn là trạng thái, KHÔNG gắn hành động: bấm
+       vào lại mở bài làm mới và ăn thêm quota ngày của gói Miễn phí. */
+    var ch = mount.querySelector("#gamChipHomNay");
+    if (ch && !xong) {
+      var lam = function () { if (typeof startQuick === "function") startQuick(); };
+      ch.onclick = lam;
+      ch.onkeydown = function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); lam(); } };
+    }
   },
 
   /* --- Trang Thành tựu --- */
