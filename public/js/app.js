@@ -862,14 +862,19 @@ function renderLessons(data) {
      Năm cột x rơi vào 42 – 80 – 170 – 260 – 298: đúng "tầm 5 ô" theo bề ngang. */
   const lech = (k) => Math.sin((Math.PI * 2 * k) / 8);
 
-  /* Linh vật rải vào khoảng trống bên đối diện node cho bản đồ đỡ trống trải. */
+  /* Linh vật rải vào khoảng trống bên đối diện node cho bản đồ đỡ trống trải.
+     SÁU ẢNH NÀY ĐỀU CÓ CẢ BẢN NỮ LẪN BẢN NAM (xem MASCOT_NAM) — đó là điều kiện
+     bắt buộc, không phải chọn cho đẹp. Danh sách cũ có cheer-pompom, pointing,
+     reading-tablet, magnifier: bốn ảnh chỉ có bản nữ. Hồ sơ chọn "nam" thì
+     mascotSrc() đổi được 2 trong 6 ảnh, còn 4 ảnh kia vẫn ra nhân vật nữ — cuộn
+     bản đồ xuống là thấy lúc nam lúc nữ, trông như hai nhân vật khác nhau. */
   const MASCOT_BANDO = [
-    "asset/mascot/scenes/cheer-pompom.png",
-    "asset/mascot/scenes/pointing.png",
-    "asset/mascot/scenes/thumbs-up.png",
-    "asset/mascot/scenes/reading-tablet.png",
     "asset/mascot/scenes/wave.png",
-    "asset/mascot/scenes/magnifier.png",
+    "asset/mascot/scenes/explaining.png",
+    "asset/mascot/scenes/thumbs-up.png",
+    "asset/mascot/scenes/did-you-know.png",
+    "asset/mascot/scenes/great-job.png",
+    "asset/mascot/scenes/gesture.png",
   ];
 
   const chapHtml = (c, chapIdx) => {
@@ -897,7 +902,8 @@ function renderLessons(data) {
         truoc = k;
         const ben = p.x < CX ? "right:6px" : "left:6px";
         const img = MASCOT_BANDO[(CHANG + chapIdx + ra.length) % MASCOT_BANDO.length];
-        ra.push(`<div class="pmascot" style="${ben};top:${f1(p.y - 42)}px">
+        /* 56 = nửa chiều cao .pmascot (112px) -> linh vật canh giữa ngang tầm ô. */
+        ra.push(`<div class="pmascot" style="${ben};top:${f1(p.y - 56)}px">
             <img src="${mascotSrc(img)}" alt="" aria-hidden="true" draggable="false" loading="lazy" />
           </div>`);
       });
@@ -1212,7 +1218,11 @@ function injectPathCss() {
     /* Khung CỐ ĐỊNH, không để ảnh tự quyết chiều cao: bộ ảnh linh vật có tỉ lệ
        khác nhau (đo được 79px tới 153px cùng bề rộng 74px), thả tự do thì không
        tính trước được nó có chạm vào dòng chữ bậc dưới hay không. */
-    ".pmascot { position: absolute; width: 78px; height: 84px; z-index: 0; pointer-events: none; user-select: none; filter: drop-shadow(0 8px 16px rgba(0,0,0,.16)); animation: pmFloat 5s ease-in-out infinite; }" +
+    /* 104×112 (trước là 78×84). Bề ngang khung là 340px, linh vật đặt sát lề
+       (left/right 6px) và LUÔN ở phía đối diện ô, nên 104px vẫn không đụng ô
+       (ô rộng 68px) lẫn khối chữ 190px canh giữa dưới ô — đã đo ở cả năm cột x.
+       Đổi cỡ thì phải đổi cả độ lệch dọc ở macs (p.y - 56 = nửa chiều cao). */
+    ".pmascot { position: absolute; width: 104px; height: 112px; z-index: 0; pointer-events: none; user-select: none; filter: drop-shadow(0 8px 16px rgba(0,0,0,.16)); animation: pmFloat 5s ease-in-out infinite; }" +
     ".pmascot img { width: 100%; height: 100%; display: block; object-fit: contain; object-position: bottom; }" +
     "@keyframes pmFloat { 0%,100% { transform: translateY(0) rotate(-2.5deg); } 50% { transform: translateY(-10px) rotate(2.5deg); } }" +
 

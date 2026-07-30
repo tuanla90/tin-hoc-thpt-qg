@@ -225,6 +225,16 @@
 
   /* ------------------------------------------------------------ MÀN HÌNH */
 
+  /* Hash của màn VỪA RỜI. Cần vì màn Tổng kết chương có hai lối vào — từ ô "Tổng
+     kết" trên bản đồ chặng, và từ thẻ chương ở màn Ôn nhanh. Nút quay lại đóng
+     cứng về màn Ôn nhanh thì người vào từ bản đồ bấm quay lại bị ném sang một
+     trang khác hẳn chỗ họ vừa đứng. */
+  var hashTruoc = null;
+  window.addEventListener("hashchange", function (e) {
+    var cu = e && e.oldURL && e.oldURL.indexOf("#") >= 0 ? e.oldURL.slice(e.oldURL.indexOf("#")) : null;
+    hashTruoc = cu;
+  });
+
   var app = function () { return document.getElementById("app"); };
   function dat(html) { app().innerHTML = html; }
   function di(hash) { location.hash = hash; }
@@ -294,8 +304,16 @@
     var ds = baiCuaChuong(st, ci);
     var NHAN = { chot: "chốt bài", sodo: "dễ nhầm", canho: "cần nhớ" };
 
+    /* Vào từ bản đồ chặng thì quay lại đúng bản đồ đó; vào từ màn Ôn nhanh thì về
+       màn Ôn nhanh. Chỉ nhận đúng dạng "#/lessons/<số>" chứ không nhận mọi hash
+       cũ: hash lạ (hoặc rỗng khi mở thẳng bằng đường dẫn) thì rơi về mặc định. */
+    var veBanDo = /^#\/lessons\/\d+$/.test(hashTruoc || "");
+    var quayLai = veBanDo ? hashTruoc : "#/on-nhanh/" + st;
+    var tenQuayLai = veBanDo ? "Bản đồ " + tenChang(st).split(" · ")[0] : "Ôn nhanh";
+
     dat(
-      '<button class="back-link" data-di="#/on-nhanh/' + st + '">' + ico("aleft", null, 15) + " Ôn nhanh</button>" +
+      '<button class="back-link" data-di="' + esc(quayLai) + '">' + ico("aleft", null, 15) + " " +
+      esc(tenQuayLai) + "</button>" +
       '<h2 style="margin:8px 0 4px">' + esc(c.name) + "</h2>" +
       '<p style="color:var(--text-soft);font-size:13.5px;margin:0 0 18px">' +
       esc(tenChang(st)) + " · " + ds.length + " bài. Mỗi bài một câu chốt — bấm tên bài để mở bài đầy đủ.</p>" +
