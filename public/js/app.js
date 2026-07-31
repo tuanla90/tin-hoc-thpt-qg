@@ -1466,14 +1466,53 @@ function injectPathCss() {
    trước `**` đóng. Bắt buộc chặt như vậy vì nội dung Python có toán tử luỹ thừa
    `2 ** 3` — luật lỏng sẽ bôi đậm nhầm cả đoạn (đã kiểm: 2.370 cụm đậm thật vẫn
    nhận đủ, 2 chuỗi bị bỏ qua đều đúng là toán tử **). */
+/* THỨ TỰ Ở ĐÂY LÀ TẤT CẢ. Trước đây luật ĐẬM chạy trước luật MÃ, nên nội dung
+   bên trong `dấu nháy ngược` vẫn bị luật đậm ăn vào:
+
+       vào:  ta biểu diễn được `2**n` giá trị (từ 0 đến `2**n - 1`)
+       ra:   ta biểu diễn được 2n  giá trị (từ 0 đến 2n - 1)
+
+   Toán tử luỹ thừa BIẾN MẤT, và thẻ <strong> mở trong ô <code> này lại đóng ở
+   ô <code> kia — trình duyệt tự sắp lại tuỳ ý. Học sinh không biết là hiển thị
+   sai, tưởng công thức đúng. Dính đúng ba chuỗi, nhưng một trong số đó là dòng
+   dạy chính toán tử `**`.
+
+   Cách chữa: rút KHỐI MÃ rồi tới MÃ TRONG DÒNG ra chỗ gửi tạm trước, chạy luật
+   đậm trên phần còn lại, rồi trả chúng về nguyên si. */
 function fmtInline(s) {
-  return esc(s)
-    .replace(/\*\*(?!\s)([^*]+?)(?<!\s)\*\*/g, "<strong>$1</strong>")
-    .replace(/`([^`]+)`/g, '<code class="ic">$1</code>');
+  const gui = [];
+  /* Mốc gửi tạm phải là thứ KHÔNG THỂ có trong nội dung người soạn gõ. Lấy
+     khoảng trắng + chữ số làm mốc là hỏng ngay: một câu bình thường như
+     "có 5 bạn" cũng khớp mốc rồi bị thay bằng phần tử thứ 5 của mảng.
+     U+0000 vừa không gõ được, vừa không bị esc() đụng tới. */
+  const MOC = "\u0000";
+  const giu = (html) => MOC + (gui.push(html) - 1) + MOC;
+
+  let t = String(s == null ? "" : s);
+
+  /* Khối ``` ``` phải rút TRƯỚC mã trong dòng, nếu không ba dấu huyền bị luật
+     một dấu huyền cắn mất cái thứ ba rồi bỏ hai cái đầu làm chữ trần. */
+  t = t.replace(/```[a-zA-Z]*\n?([\s\S]*?)```/g, (m, ma) =>
+    giu('<pre class="q-code">' + esc(ma.replace(/\n$/, "")) + "</pre>"));
+  t = t.replace(/`([^`\n]+)`/g, (m, ma) => giu('<code class="ic">' + esc(ma) + "</code>"));
+
+  /* Luật ĐẬM giữ nguyên độ chặt cũ (không khoảng trắng ngay trong hai dấu sao)
+     và thêm chặn xuống dòng: cụm đậm không được vắt qua nhiều dòng, nếu không
+     hai toán tử ** ở hai dòng khác nhau sẽ bắt cặp với nhau. */
+  t = esc(t).replace(/\*\*(?!\s)([^*\n]+?)(?<!\s)\*\*/g, "<strong>$1</strong>");
+
+  return t.replace(/\u0000(\d+)\u0000/g, (m, i) => gui[+i]);
 }
 
-/* Như trên, thêm giữ xuống dòng — dùng cho câu hỏi và lời giải. */
-function fmtQ(s) { return fmtInline(s).replace(/\n/g, "<br>"); }
+/* Như trên, thêm giữ xuống dòng — dùng cho câu hỏi và lời giải.
+   KHÔNG đụng vào xuống dòng bên trong <pre>: ở đó khoảng trắng đã được giữ
+   nguyên, nhét thêm <br> là mỗi dòng hở gấp đôi. */
+function fmtQ(s) {
+  return fmtInline(s)
+    .split(/(<pre class="q-code">[\s\S]*?<\/pre>)/)
+    .map((phan, i) => (i % 2 ? phan : phan.replace(/\n/g, "<br>")))
+    .join("");
+}
 
 /* Lời giải câu Đúng/Sai viết liền một mạch "(1) ... (2) ... (3) ... (4) ...",
    đọc trên màn hình thành khối chữ đặc, phải dò mắt mới biết ý nào ứng với mệnh
@@ -1507,7 +1546,10 @@ function fmtGiaiThich(s) {
 }
 
 function renderBlocks(sections) {
-  const fi = (s) => fmtInline(s).replace(/\n/g, "<br>");   // giữ xuống dòng trong đoạn văn
+  /* Giữ xuống dòng trong đoạn văn, nhưng KHÔNG đụng vào bên trong <pre> — ở đó
+     khoảng trắng đã được giữ nguyên, thêm <br> là mỗi dòng hở gấp đôi. Đo được
+     32 bài dính trước khi vá. Đây đúng là việc fmtQ làm, nên gọi thẳng nó. */
+  const fi = (s) => fmtQ(s);
   return sections.map((b) => {
     if (b.t === "story") return `<div class="ls-story"><span class="ls-story-icon">${aIco("bulb", "#f59e0b", 18)}</span><div><b>Hình dung nhé:</b> ${fi(b.text)}</div></div>`;
     if (b.t === "text") return `<p class="ls-p">${fi(b.text)}</p>`;
@@ -1515,6 +1557,22 @@ function renderBlocks(sections) {
     if (b.t === "code") return `<pre class="q-code">${esc(b.code)}</pre>`;
     if (b.t === "list") return `${b.text ? `<p class="ls-p">${fi(b.text)}</p>` : ""}<ul class="ls-list">${b.items.map((i) => `<li>${fi(i)}</li>`).join("")}</ul>`;
     if (b.t === "note") return `<div class="ls-note"><b>${aIco("bulb", "#d97706", 15)} Lưu ý:</b> ${fi(b.text)}</div>`;
+    /* BẢNG THẬT thay cho bảng vẽ bằng dấu cách. Khác biệt không nằm ở chỗ "căn
+       thẳng hơn" mà ở chỗ BỎ HẲN nhu cầu căn thẳng: mỗi ô tự xuống dòng riêng,
+       nên bảng 91 cột — trước đây là 2,6 màn hình cuộn ngang ở 360px — chỉ còn
+       cao thêm vài dòng. Và ở màn hẹp mỗi hàng xếp lại thành một thẻ có nhãn
+       kèm giá trị (xem data-nhan bên dưới), đọc được mà không cuộn ngang.
+       CHỈ dùng khi dữ liệu THẬT SỰ là hàng × cột. Những khối cố ý trưng dữ liệu
+       thô lộn xộn để dạy làm sạch dữ liệu thì phải giữ nguyên dạng "code". */
+    if (b.t === "bang") {
+      const dau = (b.head || []).map((h) => `<th>${fi(h)}</th>`).join("");
+      const than = (b.rows || []).map((hang) =>
+        "<tr>" + hang.map((o, i) =>
+          `<td data-nhan="${esc((b.head || [])[i] || "")}">${fi(o)}</td>`).join("") + "</tr>").join("");
+      return `<figure class="ls-bang">${b.text ? `<figcaption>${fi(b.text)}</figcaption>` : ""}` +
+        `<div class="ls-bang-cuon"><table>${dau ? `<thead><tr>${dau}</tr></thead>` : ""}` +
+        `<tbody>${than}</tbody></table></div></figure>`;
+    }
     if (b.t === "example") return `<div class="ls-ex"><div class="ls-ex-tag">Ví dụ</div>${b.text ? `<p class="ls-p">${fi(b.text)}</p>` : ""}${b.code ? `<pre class="q-code">${esc(b.code)}</pre>` : ""}${b.output != null ? `<div class="ls-out">${aIco("play", "#16a34a", 13)} Kết quả: <b>${esc(b.output)}</b></div>` : ""}</div>`;
     return "";
   }).join("");
@@ -1532,6 +1590,41 @@ function injectLsJumpCss() {
   const s = document.createElement("style");
   s.id = "lsJumpCss";
   s.textContent =
+    /* ---- Ba phần của bài học ---- */
+    ".ls-pha{border:1.5px solid var(--border);border-radius:var(--radius);background:var(--bg-card);" +
+      "margin:0 0 14px;overflow:hidden}" +
+    ".ls-pha-d{display:flex;align-items:center;gap:12px;width:100%;text-align:left;cursor:pointer;" +
+      "border:0;background:var(--bg-soft);color:var(--text);padding:12px 15px;font:inherit}" +
+    ".ls-pha-d:hover{background:var(--primary-soft)}" +
+    ".ls-pha-so{flex:none;width:26px;height:26px;border-radius:50%;background:var(--primary);color:#fff;" +
+      "display:flex;align-items:center;justify-content:center;font:900 13px var(--font-mono)}" +
+    ".ls-pha-ten{flex:1;min-width:0;font:800 15px var(--font-display);display:flex;align-items:center;gap:6px;flex-wrap:wrap}" +
+    ".ls-pha-ten small{flex-basis:100%;font:600 12px var(--font-sans);color:var(--text-soft)}" +
+    ".ls-pha-chev{flex:none;color:var(--text-soft);display:inline-flex;transition:transform .2s}" +
+    ".ls-pha.dong .ls-pha-chev{transform:rotate(-90deg)}" +
+    ".ls-pha-than{padding:15px 16px}" +
+    ".ls-pha.dong .ls-pha-than{display:none}" +
+    ".lesson-mo .ls-story{margin-top:0}" +
+    /* ---- Nhóm nhỏ trong phần lý thuyết ---- */
+    ".ls-nhom-thanh{display:flex;justify-content:flex-end;margin:0 0 8px}" +
+    ".ls-nhom-tat{border:1px solid var(--border);background:var(--bg-card);color:var(--text-soft);" +
+      "border-radius:9px;padding:6px 12px;font:700 12px var(--font-sans);cursor:pointer;min-height:34px}" +
+    ".ls-nhom-tat:hover{border-color:var(--primary);color:var(--primary)}" +
+    ".ls-nhom{border-top:1px solid var(--border);margin-top:4px}" +
+    ".ls-nhom:first-of-type{border-top:0;margin-top:0}" +
+    ".ls-nhom-d{display:flex;align-items:center;gap:10px;width:100%;text-align:left;cursor:pointer;" +
+      "border:0;background:none;color:var(--text);padding:11px 0;font:inherit}" +
+    ".ls-nhom-ten{flex:1;min-width:0;font:800 16px var(--font-display);line-height:1.35}" +
+    ".ls-nhom-chev{flex:none;color:var(--text-soft);display:inline-flex;transition:transform .2s}" +
+    ".ls-nhom.dong .ls-nhom-chev{transform:rotate(-90deg)}" +
+    ".ls-nhom.dong .ls-nhom-than{display:none}" +
+    /* Tiêu đề phụ giờ nằm trên nút thu/mở nên .ls-h trong nhóm là thừa */
+    ".ls-nhom-than>.ls-h:first-child{margin-top:0}" +
+    /* ---- Thanh tiến độ đọc ---- */
+    ".ls-tien{position:fixed;left:0;right:0;height:3px;background:transparent;z-index:49;pointer-events:none}" +
+    ".ls-tien i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--primary),var(--info));" +
+      "transition:width .08s linear}" +
+    "@media (prefers-reduced-motion: reduce){.ls-tien i,.ls-pha-chev,.ls-nhom-chev{transition:none}}" +
     ".ls-jump{display:flex;gap:7px;flex-wrap:wrap;margin:0 0 18px}" +
     ".ls-jump-b{display:inline-flex;align-items:center;gap:5px;border:1.5px solid var(--border);" +
       "background:var(--bg-card);color:var(--text-soft);border-radius:999px;padding:7px 13px;" +
@@ -1566,6 +1659,187 @@ function lsJumpBar(l) {
 }
 let LS_JUMP = [];
 
+/* ---------------------------------------------------------------------------
+ *  BA PHẦN CỦA MỘT BÀI HỌC
+ *
+ *  Đo được: một bài dài 6–7,6 màn điện thoại (4874–6152px), trong đó riêng lý
+ *  thuyết chiếm ~55%. Cuộn liên tục không có mốc nào nên không biết còn bao xa,
+ *  cũng không biết chỗ nào bỏ qua được — đó mới là bệnh, chứ không phải "nhiều
+ *  nội dung quá".
+ *
+ *  Chia làm ba phần theo đúng trình tự dạy học, và cả ba đều lắp từ dữ liệu ĐÃ CÓ,
+ *  không phải viết thêm nội dung nào:
+ *    1. Đặt vấn đề  — khối "story" (đo được: 119/119 bài có, và LUÔN đứng đầu) và
+ *                     sơ đồ của bài;
+ *    2. Nội dung chính — phần lý thuyết còn lại, cắt theo tiêu đề phụ `h`
+ *                     (115/119 bài có từ 2 tiêu đề trở lên), cộng khối Cần nhớ;
+ *    3. Củng cố     — chạy thử code, Sai ở đâu, Ôn tập tương tác, Từ vựng.
+ *
+ *  PHẦN 3 THU SẴN, hai phần đầu mở. Đây là chỗ làm trang dài nhất sau lý thuyết,
+ *  mà cũng là phần người học chỉ tới sau khi đọc xong — thu lại là ngắn thật, còn
+ *  tiêu đề vẫn nói rõ bên trong có gì nên không phải "giấu".
+ * ------------------------------------------------------------------------- */
+function phaMo(so, ten, icon, phu, mo) {
+  return `<section class="ls-pha${mo ? "" : " dong"}" data-pha="${so}">
+    <button class="ls-pha-d" type="button" aria-expanded="${mo ? "true" : "false"}">
+      <span class="ls-pha-so">${so}</span>
+      <span class="ls-pha-ten">${aIco(icon, null, 16)} ${esc(ten)}<small>${esc(phu)}</small></span>
+      <span class="ls-pha-chev">${aIco("chevdown", null, 18)}</span>
+    </button>
+    <div class="ls-pha-than">`;
+}
+function phaDong() { return "</div></section>"; }
+
+/* Cắt phần lý thuyết thành các nhóm theo tiêu đề phụ. Khối nào đứng TRƯỚC tiêu đề
+   đầu tiên thì gom vào một nhóm không tên, để không mất nội dung. */
+function nhomLyThuyet(sections) {
+  const nhom = [];
+  (sections || []).forEach((b) => {
+    if (b.t === "h" || !nhom.length) nhom.push({ ten: b.t === "h" ? b.text : "", khoi: [] });
+    if (b.t !== "h") nhom[nhom.length - 1].khoi.push(b);
+  });
+  return nhom.filter((n) => n.ten || n.khoi.length);
+}
+/* Mỗi nhóm là một khối thu/mở được, MẶC ĐỊNH MỞ: người học lần đầu phải đọc được
+   ngay, không phải bấm bốn lần. Thu lại là để người ôn lại gấp lượt hai — nút "Thu
+   gọn tất cả" ở đầu phần 2 biến cả bài thành một mục lục trong một cú bấm. */
+function veThan(sections) {
+  const nhom = nhomLyThuyet(sections);
+  if (nhom.length < 2) return renderBlocks(sections);
+  return `<div class="ls-nhom-thanh">
+      <button class="ls-nhom-tat" type="button" id="thuTatCa">${aIco("layers", null, 14)} Thu gọn tất cả</button>
+    </div>` + nhom.map((n, i) => n.ten
+    ? `<section class="ls-nhom" data-nhom="${i}">
+         <button class="ls-nhom-d" type="button" aria-expanded="true">
+           <span class="ls-nhom-ten">${esc(n.ten)}</span>
+           <span class="ls-nhom-chev">${aIco("chevdown", null, 16)}</span>
+         </button>
+         <div class="ls-nhom-than">${renderBlocks(n.khoi)}</div>
+       </section>`
+    : renderBlocks(n.khoi)).join("");
+}
+
+/* Đưa các khối do tệp khác chèn về đúng phần của nó. Khối cha = tổ tiên gần nhất
+   mà cha của nó chính là #app — các injector đều bọc nội dung trong MỘT div rồi
+   chèn div đó vào #app, nên đi ngược lên tới đó là lấy trọn khối. */
+/* Nhớ người học thích mở hay thu từng PHẦN — theo loại phần, không theo từng bài:
+   ai quen thu phần Củng cố thì bài nào cũng muốn vậy, còn nhớ riêng 119 bài thì kho
+   phình ra mà chẳng ai được lợi. */
+function ganThuMo() {
+  const app = document.getElementById("app");
+  const nho = load("phaMo", {});
+  app.querySelectorAll(".ls-pha").forEach((pha) => {
+    const so = pha.dataset.pha;
+    if (so in nho) pha.classList.toggle("dong", !nho[so]);
+    const nut = pha.querySelector(".ls-pha-d");
+    nut.setAttribute("aria-expanded", pha.classList.contains("dong") ? "false" : "true");
+    nut.onclick = () => {
+      const mo = pha.classList.toggle("dong") === false;
+      nut.setAttribute("aria-expanded", mo ? "true" : "false");
+      const m = load("phaMo", {}); m[so] = mo; save("phaMo", m);
+    };
+  });
+  /* Nhóm nhỏ trong lý thuyết KHÔNG nhớ trạng thái: chúng là chỗ đọc chính, mở sẵn
+     luôn đúng cho lần đầu; thu lại chỉ là thao tác nhất thời lúc ôn. */
+  app.querySelectorAll(".ls-nhom").forEach((n) => {
+    const nut = n.querySelector(".ls-nhom-d");
+    nut.onclick = () => {
+      const mo = n.classList.toggle("dong") === false;
+      nut.setAttribute("aria-expanded", mo ? "true" : "false");
+    };
+  });
+  const tat = document.getElementById("thuTatCa");
+  if (tat) {
+    tat.onclick = () => {
+      const ds = app.querySelectorAll(".ls-nhom");
+      /* Còn nhóm nào đang mở thì THU HẾT; đã thu hết rồi thì mở lại — một nút làm
+         hai chiều, khỏi phải đoán nó đang ở trạng thái nào. */
+      const conMo = [].some.call(ds, (n) => !n.classList.contains("dong"));
+      ds.forEach((n) => {
+        n.classList.toggle("dong", conMo);
+        n.querySelector(".ls-nhom-d").setAttribute("aria-expanded", conMo ? "false" : "true");
+      });
+      tat.innerHTML = (conMo ? aIco("chevdown", null, 14) + " Mở lại tất cả"
+                             : aIco("layers", null, 14) + " Thu gọn tất cả");
+    };
+  }
+}
+
+/* Thanh tiến độ đọc, bám ngay dưới thanh trên cùng. Đo theo phần ĐÃ CUỘN QUA trên
+   tổng chiều cao cuộn được — không đo theo số phần đã mở, vì phần dài ngắn rất khác
+   nhau nên "xong 2/3 phần" không nói lên còn bao nhiêu chữ phải đọc. */
+let goThanhTien = null;
+
+function thanhTienDoDoc() {
+  /* Gỡ hẳn lượt trước. Chuyển bài -> bài thì hash vẫn là #/lesson/... nên
+     doiMan() không kích hoạt; không dọn ở đây thì mỗi lần chuyển bài lại bỏ lại
+     một cặp bộ nghe trỏ vào cái thanh đã bị xoá. */
+  if (goThanhTien) goThanhTien();
+  document.querySelectorAll(".ls-tien").forEach((e) => e.remove());
+  const bar = document.createElement("div");
+  bar.className = "ls-tien";
+  bar.innerHTML = "<i></i>";
+  const top = document.querySelector(".topbar");
+  bar.style.top = (top ? Math.round(top.getBoundingClientRect().height) : 0) + "px";
+  document.body.appendChild(bar);
+  const thanh = bar.firstElementChild;
+  const capNhat = () => {
+    if (!bar.isConnected) return;
+    /* Trang ngắn hơn màn hình thì không có gì để đo — để 0 chứ đừng chia cho 0. */
+    const con = document.documentElement.scrollHeight - window.innerHeight;
+    thanh.style.width = con > 40 ? Math.min(100, (window.scrollY / con) * 100).toFixed(1) + "%" : "0%";
+  };
+  window.addEventListener("scroll", capNhat, { passive: true });
+  window.addEventListener("resize", capNhat);
+  /* Gỡ thanh khi RỜI trang bài. Phải nghe hashchange chứ KHÔNG dựa vào sự kiện
+     cuộn: bản trước dọn dẹp ngay trong hàm xử lí cuộn, nên màn nào ngắn hơn màn
+     hình (trang chủ, kết quả) thì chẳng có cú cuộn nào xảy ra và thanh nằm lại
+     mãi ở đó. Đã đo thấy đúng như vậy. */
+  const go = () => {
+    window.removeEventListener("scroll", capNhat);
+    window.removeEventListener("resize", capNhat);
+    window.removeEventListener("hashchange", doiMan);
+    if (goThanhTien === go) goThanhTien = null;
+    bar.remove();
+  };
+  const doiMan = () => {
+    if (String(location.hash || "").indexOf("#/lesson/") === 0) return;
+    go();
+  };
+  goThanhTien = go;
+  window.addEventListener("hashchange", doiMan);
+  capNhat();
+}
+
+function donVaoPha(l) {
+  const app = document.getElementById("app");
+  const pha1 = app.querySelector('[data-pha="1"] .ls-pha-than');
+  const pha3 = app.querySelector("#phaCungCo");
+  if (!pha1 || !pha3) return;
+  /* Đi ngược lên tới khối bọc ngoài cùng, NHƯNG DỪNG ở ranh giới một phần.
+     Không dừng thì hỏng nặng: sơ đồ được chèn cạnh .lesson-body, mà .lesson-body
+     nay nằm trong phần 2 — đi thẳng lên tới #app sẽ trả về chính SECTION phần 2,
+     và lệnh "chuyển sơ đồ sang phần 1" biến thành "nhét cả phần 2 vào phần 1".
+     Đã đo thấy đúng như vậy: trang phình từ 6152px lên 14302px. */
+  const ranh = (e) => e.classList.contains("ls-pha-than") || e.id === "phaCungCo" || e === app;
+  const khoiCha = (el) => {
+    let e = el;
+    while (e && e.parentElement && !ranh(e.parentElement)) e = e.parentElement;
+    return e && e.parentElement && ranh(e.parentElement) ? e : null;
+  };
+  const chuyen = (sel, dich) => {
+    const el = app.querySelector(sel);
+    const k = el && khoiCha(el);
+    if (k) dich.appendChild(k);
+  };
+  chuyen(".sd", pha1);                     // sơ đồ thuộc phần Đặt vấn đề
+  [".sod", ".clab-host", ".voc-box"].forEach((sel) => chuyen(sel, pha3));
+  /* Phần Củng cố mà rỗng thì ẩn hẳn, đừng để một tiêu đề bấm vào không có gì. */
+  const p3 = app.querySelector('[data-pha="3"]');
+  if (p3 && !p3.querySelector(".ls-pha-than").textContent.trim() &&
+      !p3.querySelector("#lessonPg, .sod, .clab-host, .voc-box, .glab")) p3.hidden = true;
+}
+
 function renderLesson(data) {
   const sorted = LESSONS.slice().sort((a, b) => a.stage - b.stage || a.order - b.order);
   const idx = sorted.findIndex((l) => l.id === data.id);
@@ -1574,6 +1848,11 @@ function renderLesson(data) {
   LESSON_DANG_MO = l; // để robot trợ lý mở gia sư đúng bài này
   const done = isLearned(l.id);
   const prev = sorted[idx - 1], next = sorted[idx + 1];
+  /* "story" luôn là khối mở đầu (đã đo: 119/119 bài) nên tách nó ra làm phần Đặt
+     vấn đề. Vẫn cắt theo ĐIỀU KIỆN chứ không cắt cứng sections[0]: bài nào sau này
+     viết khác thì phần 1 rỗng chứ không lấy nhầm khối lý thuyết. */
+  const mo = (l.sections || []).filter((b, i) => b.t === "story" && i < 2);
+  const than = (l.sections || []).filter((b) => mo.indexOf(b) < 0);
   const runCode = firstRunnableCode(l);
   const webCode = (!runCode && lessonHasWeb(l)) ? WEB_STARTER : null;
 
@@ -1588,20 +1867,28 @@ function renderLesson(data) {
     <p style="color:var(--text-soft);font-size:15px;margin-bottom:14px">${fmtInline(l.intro)}</p>
     ${lsJumpBar(l)}
 
-    <div class="lesson-body">${renderBlocks(l.sections)}</div>
+    ${phaMo("1", "Đặt vấn đề", "bulb", "Vì sao cần học bài này", true)}
+      <div class="lesson-mo">${renderBlocks(mo)}</div>
+    ${phaDong()}
 
-    <div class="ls-keypoints">
-      <b>${aIco("bookmark", "#dc2626", 16)} Cần nhớ</b>
-      <ul>${l.keypoints.map((k) => `<li>${fmtInline(k)}</li>`).join("")}</ul>
-    </div>
+    ${phaMo("2", "Nội dung chính", "book", nhomLyThuyet(than).length + " phần", true)}
+      <div class="lesson-body">${veThan(than)}</div>
+      <div class="ls-keypoints">
+        <b>${aIco("bookmark", "#dc2626", 16)} Cần nhớ</b>
+        <ul>${l.keypoints.map((k) => `<li>${fmtInline(k)}</li>`).join("")}</ul>
+      </div>
+    ${phaDong()}
 
-    ${runCode ? `
-    <div class="section-title" style="margin-top:22px">${aIco("monitor", "#0891b2", 17)} Thực hành ngay</div>
-    <p style="color:var(--text-soft);font-size:13.5px;margin-bottom:10px">Đây là ví dụ của bài — sửa lại tùy ý rồi bấm ${aIco("play", "#16a34a", 13)} Chạy để xem kết quả thay đổi thế nào.</p>
-    <div id="lessonPg"></div>` : webCode ? `
-    <div class="section-title" style="margin-top:22px">${aIco("globe", "#0891b2", 17)} Thử làm trang web</div>
-    <p style="color:var(--text-soft);font-size:13.5px;margin-bottom:10px">Sửa HTML/CSS bên dưới rồi bấm ${aIco("play", "#16a34a", 13)} Xem kết quả — trang web sẽ hiện ra ngay.</p>
-    <div id="lessonPg"></div>` : ""}
+    ${phaMo("3", "Củng cố", "target", "Làm thử để biết mình đã hiểu chưa", false)}
+      ${runCode ? `
+      <div class="section-title">${aIco("monitor", "#0891b2", 17)} Thực hành ngay</div>
+      <p style="color:var(--text-soft);font-size:13.5px;margin-bottom:10px">Đây là ví dụ của bài — sửa lại tùy ý rồi bấm ${aIco("play", "#16a34a", 13)} Chạy để xem kết quả thay đổi thế nào.</p>
+      <div id="lessonPg"></div>` : webCode ? `
+      <div class="section-title">${aIco("globe", "#0891b2", 17)} Thử làm trang web</div>
+      <p style="color:var(--text-soft);font-size:13.5px;margin-bottom:10px">Sửa HTML/CSS bên dưới rồi bấm ${aIco("play", "#16a34a", 13)} Xem kết quả — trang web sẽ hiện ra ngay.</p>
+      <div id="lessonPg"></div>` : ""}
+      <div id="phaCungCo"></div>
+    ${phaDong()}
 
     <div class="ls-actions">
       <button class="btn ${done ? "btn-ghost" : "btn-success"}" id="doneBtn">${aIco("check2", null, 15)} ${done ? "Đã học (bấm để bỏ)" : "Đánh dấu đã học"}</button>
@@ -1648,6 +1935,15 @@ function renderLesson(data) {
   if (typeof injectSaiODau === "function") injectSaiODau(l);
   if (typeof injectMinhHoa === "function") injectMinhHoa(l);
   if (typeof injectVocab === "function") injectVocab(l);
+
+  /* Các khối do tệp khác chèn (sơ đồ, Sai ở đâu, Ôn tập tương tác, Từ vựng) đều
+     tự tìm .lesson-body hoặc .ls-actions rồi chèn cạnh đó, nên chúng rơi ra NGOÀI
+     ba phần. Dồn lại sau khi mọi thứ đã dựng — cách này không phải sửa bốn tệp
+     injector, và nếu tệp nào đổi chỗ chèn thì cùng lắm khối đó nằm ngoài phần chứ
+     không mất. */
+  donVaoPha(l);
+  ganThuMo();
+  thanhTienDoDoc();
 
   /* Gắn sau khi MỌI khối đã dựng: chip cuộn tới .sd / .sod / .voc-box mà mấy khối
      đó do các tệp khác chèn vào sau, gắn sớm thì querySelector trả về null. */

@@ -36,7 +36,9 @@
       /* --- khối code có tô dòng đang chạy --- */
       ".mh3-code{margin:0 auto;max-width:420px;font:600 13.5px/1.75 var(--font-mono);" +
         "background:var(--code-bg,var(--bg-card));border-radius:10px;padding:10px 0;overflow-x:auto}" +
-      ".mh3-d{padding:1px 14px;white-space:pre;border-left:3px solid transparent;transition:all .2s}" +
+      /* xem chú thích .mh7-d: nền dòng đang sáng phải trải hết bề rộng CUỘN */
+      ".mh3-d{padding:1px 14px;white-space:pre;width:max-content;min-width:100%;" +
+        "box-sizing:border-box;border-left:3px solid transparent;transition:all .2s}" +
       ".mh3-d.nay{border-left-color:var(--primary);background:var(--primary-soft)}" +
       ".mh3-d.chay{border-left-color:var(--success);background:var(--success-soft)}" +
       ".mh3-d.bo{opacity:.35}" +
@@ -80,7 +82,13 @@
       ".mh3-khoi{background:var(--primary);color:#fff;border-radius:8px;padding:11px 13px;font:800 13px var(--font-mono);" +
         "transition:all .35s ease;white-space:nowrap}" +
       /* --- ô nhập dạng thanh trượt --- */
-      ".mh input.mh3-range{accent-color:var(--primary);width:150px;height:26px;padding:0;border:0;background:none;min-height:0}" +
+      /* Cao 44px chứ không phải 26px: đây là thứ học sinh phải KÉO, mà 26px chỉ
+         bằng 59% ngón tay. touch-action:manipulation để cú kéo hơi chéo không
+         bị trình duyệt hiểu thành cuộn trang. Ở màn hẹp giãn hết bề ngang —
+         150px trên màn 360px là kéo rất thô. */
+      ".mh input.mh3-range{accent-color:var(--primary);width:150px;max-width:100%;" +
+        "height:44px;padding:0;border:0;background:none;min-height:44px;touch-action:manipulation}" +
+      "@media(max-width:560px){.mh input.mh3-range{width:100%}}" +
       ".mh select.mh3-chon{border:1.5px solid var(--border);background:var(--bg-card);color:var(--text);border-radius:10px;" +
         "padding:8px 10px;font:700 14px var(--font-mono);min-height:40px;max-width:210px}" +
       ".mh select.mh3-chon:focus{outline:none;border-color:var(--primary)}" +

@@ -38,7 +38,15 @@
 
   --font-sans:    'Nunito', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-display: 'Baloo 2', var(--font-sans);
-  --font-mono:    'JetBrains Mono', monospace;
+  /* Chuỗi dự phòng dài là BẮT BUỘC, không phải cho đẹp. Google Fonts cắt
+     JetBrains Mono theo unicode-range và KHÔNG phủ khối vẽ khung (U+2500–257F),
+     mũi tên (U+2190/2192) hay chỉ số dưới (U+2080–2089). Đo được: ASCII rộng
+     8,4px còn "─ │ ├ → ₂" chỉ 7,7px — lệch 8,3%, tức dải 52 dấu gạch ngắn hơn
+     52 chữ tới 4,4 cột, đủ làm mọi bảng kẻ và cây thư mục chạy lệch hàng. Các
+     phông dưới đây đều CÓ những khối ấy và đều đơn cách, nên rơi vào cái nào
+     cũng vẫn thẳng cột. */
+  --font-mono:    'JetBrains Mono', ui-monospace, 'DejaVu Sans Mono',
+                  'Roboto Mono', Menlo, 'Cascadia Mono', 'Courier New', monospace;
 
   /* Mặt phẳng chứa CODE (khung soạn code, ô kết quả, khối code trong bài học).
      Trước đây cắm cứng màu tối, nên giao diện Sáng vẫn có một tảng đen giữa
@@ -286,7 +294,10 @@ select:focus, input[type="text"]:focus, input[type="number"]:focus {
   border-top: 1px solid var(--code-line);
   min-height: 64px;
   overflow-x: auto;
-  white-space: pre-wrap;
+  overscroll-behavior-x: contain;
+  /* pre chứ KHÔNG pre-wrap: đã có khung cuộn ngang ngay trên thì pre-wrap chỉ
+     làm dòng gãy về cột 0, hỏng đúng những bảng học sinh vừa in bằng print(). */
+  white-space: pre;
   display: block;
 }
 
@@ -864,6 +875,9 @@ select:focus, input[type="text"]:focus, input[type="number"]:focus {
   border-right: none;
 }
 
+/* Ô "Kết quả:" của khối ví dụ. TRƯỚC ĐÂY là display:flex + white-space mặc
+   định, nên 49 khối output nhiều dòng — chủ yếu là bảng kết quả truy vấn SQL —
+   bị gộp hết xuống MỘT dòng chữ liền, mất sạch hàng cột. Phải để block + pre. */
 .ls-out {
   padding: 10px 14px;
   background: var(--success-soft);
@@ -872,10 +886,13 @@ select:focus, input[type="text"]:focus, input[type="number"]:focus {
   font-size: 13.5px;
   font-weight: 700;
   border-top: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  gap: 6px;
+  display: block;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
 }
+/* Nhãn "Kết quả:" nằm cùng dòng với icon, phần dữ liệu xuống dòng riêng và
+   giữ nguyên khoảng trắng. */
+.ls-out > b { display: block; white-space: pre; margin-top: 4px; font-weight: 700; }
 
 /* Hộp cần nhớ */
 .ls-keypoints {
@@ -1130,6 +1147,10 @@ code.ic {
   font-size: 15px;
   font-weight: 700;
   margin-bottom: 8px;
+  /* Phải khớp .q-text: thiếu dòng này thì màn Xem lại XOÁ SẠCH thụt lề, mà
+     nhiều câu hỏi lấy chính thụt lề làm đáp án (dòng print nào chạy). Học sinh
+     sai câu đó, mở ra xem lại, thì thứ quyết định đáp án đã biến mất. */
+  white-space: pre-wrap;
   line-height: 1.5;
 }
 
@@ -1300,7 +1321,76 @@ code.ic {
 
   /* Lưới nhảy câu: bấm nhầm là nhảy sai câu giữa lúc tính giờ. */
   .palette-btn { min-width: 44px; min-height: 44px; font-size: 13px; }
+
+  /* --- iOS TỰ PHÓNG TO CẢ TRANG khi chạm vào ô nhập có cỡ chữ dưới 16px.
+     Không phải chuyện thẩm mỹ: phóng rồi thì trang trượt ngang, phải chụm hai
+     ngón kéo lại mới đọc tiếp được. Đo được 14px ở luật select/input chung,
+     13px ở khung soạn code. Một luật ở đây vá hết ~13 chỗ. --- */
+  /* input[type] chứ không phải input trần: luật gốc ở trên dùng
+     input[type="text"] có specificity (0,1,1), luật trần (0,0,1) thua nó. */
+  input, input[type], select, textarea,
+  .pg-editor, #codeArea, .sqx-editor, .wbx-editor, .tt-foot textarea,
+  .mh input.mh-o-nhap, .mh .mh-nhap select { font-size: 16px; }
+
+  /* --- Nút bấm cốt lõi. Khối này trước đây bỏ sót chính .btn — nút bấm nhiều
+     nhất app (Câu trước/Câu sau/Nộp bài, 28 câu mỗi đề), đo được 42,8px và tụt
+     còn 36,6px ở màn ≤400px. --- */
+  .btn, .quiz-nav .btn, .flag-btn, .back-link, .chip, .ptab, .ls-jump-b,
+  .mh-btn, .mh4-nut, .on-chip, .on-tab, .sod-btn, .ac-tab, .ac-mini,
+  .gam-chip, .sqx-chip, .tt-chip, .tt-x, .tt-send, .voc-mode, .voc-vtest,
+  .voc-say, .pay-x, .pay-chep, .um-item, .um-trigger, .glab-mi,
+  .ex-actions .btn, .sqx-actions .btn, .wbx-actions .btn, .glab-actions .btn {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Nhãn ô tích trong mô phỏng: chữ 12,5px + ô 16px = vùng chạm 22px, đúng một
+     nửa chuẩn. 34 chỗ dùng. */
+  .mh3-tick, .mh4-tick, .mh5-tick, .mh6-tick, .mh7-tick { min-height: 44px; padding: 2px 0; }
+  .mh3-tick input, .mh4-tick input, .mh5-tick input,
+  .mh6-tick input, .mh7-tick input { width: 22px; height: 22px; }
+
 }
+/* ===========================================================================
+ *  BẢNG TRONG BÀI HỌC  (khối {t:"bang"})
+ *  Thay cho bảng vẽ bằng dấu cách trong <pre>. Ở màn hẹp KHÔNG cuộn ngang mà
+ *  xếp lại: mỗi hàng thành một thẻ, mỗi ô một dòng "Nhãn — giá trị". Nhãn lấy
+ *  từ data-nhan mà renderBlocks đã gắn sẵn theo tiêu đề cột.
+ * ========================================================================= */
+.ls-bang { margin: 16px 0; }
+.ls-bang figcaption { font-size: 13.5px; color: var(--text-soft); margin-bottom: 7px; line-height: 1.5; }
+.ls-bang-cuon { overflow-x: auto; overscroll-behavior-x: contain; border-radius: 10px; border: 1px solid var(--border); }
+.ls-bang table { border-collapse: collapse; width: 100%; font-size: 14px; }
+.ls-bang th, .ls-bang td { padding: 8px 11px; text-align: left; border-bottom: 1px solid var(--border); vertical-align: top; }
+.ls-bang thead th { background: var(--bg-soft); font-weight: 800; font-size: 13px; white-space: nowrap; }
+.ls-bang tbody tr:last-child td { border-bottom: 0; }
+.ls-bang tbody tr:nth-child(even) { background: var(--bg-soft); }
+
+@media (max-width: 560px) {
+  /* Xếp thẻ. Bảng nhiều cột đọc trên màn 360px mà không phải kéo ngang. */
+  .ls-bang-cuon { border: 0; overflow-x: visible; }
+  .ls-bang table, .ls-bang tbody, .ls-bang tr, .ls-bang td { display: block; width: 100%; }
+  .ls-bang thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .ls-bang tbody tr {
+    border: 1px solid var(--border); border-radius: 10px;
+    margin-bottom: 9px; padding: 4px 2px; background: var(--bg-card);
+  }
+  .ls-bang tbody tr:nth-child(even) { background: var(--bg-card); }
+  .ls-bang td { border-bottom: 0; padding: 5px 11px; display: flex; gap: 10px; }
+  .ls-bang td::before {
+    content: attr(data-nhan) ; flex: 0 0 40%;
+    font-weight: 800; font-size: 12.5px; color: var(--text-soft);
+  }
+  .ls-bang td[data-nhan=""] { display: block; }
+  .ls-bang td[data-nhan=""]::before { content: none; }
+}
+
+/* Thanh trượt sửa thẳng ở .mhN-range trong minh-hoa-3/4/5.js, KHÔNG vá ở đây:
+   luật ".mh input.mh3-range" có specificity (0,2,1) bằng đúng luật tương đương
+   viết được ở tệp này, mà CSS của các đợt lại nạp lúc chạy nên xuống sau và
+   thắng hoà. Vá ở đây là phải dùng !important — thà sửa đúng chỗ. */
 
 /* Nút của linh vật nổi — nhỏ nhất toàn site (đo được 14px và 27px).
    .floating-mascot-bubble có transform:scale(.8) nên kích thước NHÌN THẤY chỉ

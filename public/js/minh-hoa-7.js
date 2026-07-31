@@ -40,7 +40,13 @@
       /* --- khối code, có dòng sáng --- */
       ".mh7-code{background:var(--bg-card);border:1px solid var(--border);border-radius:10px;" +
         "padding:9px 4px;overflow-x:auto}" +
-      ".mh7-d{font:600 12px/1.75 var(--font-mono);white-space:pre;padding:0 8px;border-left:3px solid transparent;" +
+      /* width:max-content BẮT BUỘC: .mh7-d là block con của khung cuộn ngang,
+         nên bề rộng của nó = bề rộng NHÌN THẤY chứ không phải bề rộng cuộn.
+         Chữ thì tràn ra ngoài nhờ pre, còn nền vàng "dòng đang chạy" và vạch
+         màu bên trái chỉ tô hết phần nhìn thấy — cuộn sang phải là mất luôn
+         tín hiệu chính của minh hoạ. min-width:100% để dòng ngắn vẫn tô đủ. */
+      ".mh7-d{font:600 12px/1.75 var(--font-mono);white-space:pre;padding:0 8px;" +
+        "width:max-content;min-width:100%;box-sizing:border-box;border-left:3px solid transparent;" +
         "color:var(--text);transition:background .2s,opacity .2s}" +
       ".mh7-d.nay{background:var(--primary-soft);border-left-color:var(--primary);color:var(--primary)}" +
       ".mh7-d.mo{opacity:.32}" +

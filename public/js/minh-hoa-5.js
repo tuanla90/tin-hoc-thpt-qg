@@ -76,7 +76,10 @@
       ".mh5-so b{color:var(--primary)}" +
       ".mh5-tick{display:inline-flex;align-items:center;gap:6px;font:700 12.5px var(--font-sans);color:var(--text-soft);cursor:pointer}" +
       ".mh5-tick input{accent-color:var(--primary);width:16px;height:16px}" +
-      ".mh input.mh5-range{accent-color:var(--primary);width:132px;height:26px;padding:0;border:0;background:none;min-height:0}" +
+      /* xem chú thích .mh3-range: 44px cho ngón tay, giãn hết bề ngang ở màn hẹp */
+      ".mh input.mh5-range{accent-color:var(--primary);width:132px;max-width:100%;" +
+        "height:44px;padding:0;border:0;background:none;min-height:44px;touch-action:manipulation}" +
+      "@media(max-width:560px){.mh input.mh5-range{width:100%}}" +
       "@media (max-width:560px){.mh5-2{grid-template-columns:1fr}.mh5-r{grid-template-columns:74px 1fr}}";
     (document.head || document.documentElement).appendChild(st);
   }

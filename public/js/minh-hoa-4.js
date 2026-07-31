@@ -78,7 +78,10 @@
       "@keyframes mh4Hien{0%{opacity:0;transform:translateY(-6px)}100%{opacity:1;transform:none}}" +
       ".mh4-tick{display:inline-flex;align-items:center;gap:6px;font:700 12.5px var(--font-sans);color:var(--text-soft);cursor:pointer}" +
       ".mh4-tick input{accent-color:var(--primary);width:16px;height:16px}" +
-      ".mh input.mh4-range{accent-color:var(--primary);width:140px;height:26px;padding:0;border:0;background:none;min-height:0}" +
+      /* xem chú thích .mh3-range: 44px cho ngón tay, giãn hết bề ngang ở màn hẹp */
+      ".mh input.mh4-range{accent-color:var(--primary);width:140px;max-width:100%;" +
+        "height:44px;padding:0;border:0;background:none;min-height:44px;touch-action:manipulation}" +
+      "@media(max-width:560px){.mh input.mh4-range{width:100%}}" +
       ".mh select.mh4-chon{border:1.5px solid var(--border);background:var(--bg-card);color:var(--text);border-radius:10px;" +
         "padding:8px 10px;font:700 14px var(--font-sans);min-height:40px}" +
       ".mh4-ghi{margin:11px auto 0;max-width:440px;border-radius:9px;padding:8px 11px;font-size:12.5px;line-height:1.5;" +

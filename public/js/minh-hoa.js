@@ -28,8 +28,22 @@
       ".mh{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;margin:18px 0}" +
       ".mh h4{margin:0 0 4px;font-family:var(--font-display);font-size:16px}" +
       ".mh-mo{color:var(--text-soft);font-size:13.5px;margin:0 0 14px;line-height:1.55}" +
-      ".mh-khung{background:var(--bg-soft);border-radius:12px;padding:14px 12px;overflow-x:auto}" +
+      /* min-height GIỮ CHỖ SẴN, không phải cho đẹp: hàng nút nằm DƯỚI thân, mà
+         mỗi bước lại bỏ hidden cho một khối mới (211 chỗ bật/tắt hidden trong
+         cả bộ). Đo trên bài C10-07: qua 7 lần bấm thân cao từ 364 lên 1169px,
+         nút "Bước tiếp" TỤT XUỐNG 804px — bấm xong lần nào cũng phải dò lại
+         nút, và dễ trúng "Làm lại" nằm ngay cạnh. */
+      ".mh-khung{background:var(--bg-soft);border-radius:12px;padding:14px 12px;" +
+        "overflow-x:auto;overscroll-behavior-x:contain;min-height:230px}" +
       ".mh-thanh{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px}" +
+      /* Hàng nút DÍNH ĐÁY màn hình khi minh hoạ cao hơn khung nhìn. min-height ở
+         .mh-khung chỉ giữ chỗ được lúc đầu; đo trên C10-07 thân vẫn phình từ
+         364 lên 1169px nên nút tụt khỏi tầm tay. Dính đáy thì nút luôn nằm dưới
+         ngón cái, bấm liên tiếp không phải cuộn đi tìm. Nền đặc để chữ phía sau
+         không lẫn vào. */
+      "@media(max-width:640px){.mh-thanh{position:sticky;bottom:6px;z-index:2;" +
+        "background:var(--bg-card);padding:8px 6px;margin:12px -6px 0;border-radius:10px;" +
+        "box-shadow:0 -2px 10px rgba(0,0,0,.07)}}" +
       ".mh-nhap{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 12px}" +
       ".mh-nhap label{font-size:13px;font-weight:700;color:var(--text-soft)}" +
       /* Chọn bằng ".mh input.mh-o-nhap" (0,2,1) chứ không phải ".mh-o-nhap" (0,1,0):

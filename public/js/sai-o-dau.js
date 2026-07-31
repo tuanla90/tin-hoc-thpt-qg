@@ -45,7 +45,13 @@
       ".sod-d.bat:hover{border-color:var(--success)}" +
       ".sod-d.oan:hover{border-color:var(--danger)}" +
       ".sod-d.hien:hover{border-color:var(--warning)}" +
-      ".sod-ma .sod-d{font-family:var(--font-mono);white-space:pre-wrap;font-size:13px}" +
+      /* pre chứ KHÔNG pre-wrap. Ở 360px khối này chỉ còn ~31 cột, mà 31/109
+         dòng mã trong bộ dữ liệu dài hơn thế. pre-wrap bẻ phần thừa về CỘT 0,
+         nên một dòng thụt 8 dấu cách trông như lệnh ở mức thụt lề 0 — đúng thứ
+         bài "chỉ ra dòng sai" bắt học sinh nhìn. Thà cuộn ngang còn hơn. */
+      ".sod-ma .sod-d{font-family:var(--font-mono);font-size:13px}" +
+      ".sod-ma .sod-d>:last-child{white-space:pre;overflow-x:auto;min-width:0;" +
+        "overscroll-behavior-x:contain}" +
       ".sod-d .sod-so{flex:none;width:21px;height:21px;border-radius:6px;background:var(--bg-card);" +
         "border:1px solid var(--border);display:flex;align-items:center;justify-content:center;" +
         "font:800 11.5px var(--font-mono);color:var(--text-soft)}" +

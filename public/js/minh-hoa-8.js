@@ -28,7 +28,9 @@
       /* --- khối câu lệnh SQL, có dòng sáng --- */
       ".mh8-sql{background:var(--bg-card);border:1px solid var(--border);border-radius:10px;" +
         "padding:9px 4px;overflow-x:auto;margin:0 0 11px}" +
+      /* xem chú thích .mh7-d: nền dòng đang sáng phải trải hết bề rộng CUỘN */
       ".mh8-sd{font:600 12px/1.7 var(--font-mono);white-space:pre;padding:0 8px;" +
+        "width:max-content;min-width:100%;box-sizing:border-box;" +
         "border-left:3px solid transparent;color:var(--text);transition:background .2s,opacity .2s}" +
       ".mh8-sd.nay{background:var(--primary-soft);border-left-color:var(--primary);color:var(--primary)}" +
       ".mh8-sd.mo{opacity:.34}" +
