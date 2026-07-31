@@ -928,49 +928,29 @@ function renderLessons(data) {
 
     const f1 = (v) => v.toFixed(1);
 
-    /* Linh vật đứng NGANG TẦM ô, ở lề phía đối diện ô. Bỏ đường nối rồi thì dải
-       giữa không còn gì chiếm, nhưng khối chữ nằm ngay dưới ô nên vẫn phải tránh:
-       đặt ở tầm ô (y ± 34) thì trên là khối chữ bậc trước đã kết thúc, dưới là
-       khối chữ bậc này còn chưa bắt đầu.
-       Bỏ qua ô nằm sát trục giữa: bên nào cũng chật vì khối chữ 190px canh giữa
-       dưới ô sẽ phủ gần hết bề ngang. */
+    /* LINH VẬT — quy tắc cố định: đứng NGANG ô thứ 3, 7, 11, 15… (đếm từ 1),
+       tức chỉ số 0 là k ≡ 2 (mod 4), và luôn ở phía ĐỐI DIỆN ô đó.
+
+       Vì sao đúng những ô ấy: làn sóng có lech(k) = sin(2πk/8), nên k = 2, 6, 10,
+       14… rơi vào lech = ±1 — hai CỘT NGOÀI CÙNG. Ô ở cột ngoài cùng thì bên đối
+       diện rộng nhất (khối chữ 190px canh giữa ô nằm hẳn về một phía), nên chỗ đặt
+       luôn dư và trái/phải tự đổi luân phiên. Nhờ vậy bỏ được cả ba thứ chắp vá
+       của bản trước: giới hạn 3 con mỗi chương, luật giãn cách "cách nhau ít nhất
+       3 ô", và phép đo chỗ trống rồi bỏ qua khi chật.
+
+       top = p.y - 65 (nửa chiều cao khung 130px) -> khung ảnh canh giữa đúng hàng
+       của ô. Ảnh dùng object-position: bottom nên NHÂN VẬT nằm ở nửa dưới khung,
+       tức hơi thấp hơn ô một chút — đúng dáng Duolingo. */
     const macs = (() => {
       const ra = [];
-      let truoc = -99;
-      /* Bề ngang THẬT của linh vật + lề. Khung CSS 120px, nhưng hiệu ứng trôi xoay
-         ±2,5° làm nó nở ra ~126px (đo được). 132 = 126 + 6px lề. */
-      const LV_CAN = 132;
-      pts.forEach((p, k) => {
-        if (ra.length >= 3 || k > n - 2 || k - truoc < 3) return;
-        /* Chọn bên theo ô mà linh vật THẬT SỰ đứng cạnh — sau khi hạ xuống đúng một
-           STEP thì nó ngang hàng ô k+1, không còn ngang ô k. Lấy nhầm ô là chọn
-           nhầm bên và đâm thẳng vào khối chữ của ô kia.
-           VÀ ĐO CHỖ TRỐNG THẬT thay vì suy từ "ô nằm bên nào so với trục giữa":
-           các cột x của làn sóng không chỉ có mấy giá trị mình nhẩm ra, đã đo thấy
-           có cột x = 212 làm khối chữ bắt đầu ở 117 và đè lên linh vật 12px. Không
-           bên nào đủ chỗ thì BỎ QUA linh vật này — nó chỉ để trang trí, thà thiếu
-           một con còn hơn đè lên tên bài. */
-        const oCanh = pts[k + 1] || p;
-        const trongTrai = oCanh.x - CAP_W / 2;
-        const trongPhai = IW - (oCanh.x + CAP_W / 2);
-        const ben = trongPhai >= LV_CAN ? "right:6px" : trongTrai >= LV_CAN ? "left:6px" : null;
-        if (!ben) return;
-        truoc = k;
+      for (let k = 2; k < n; k += 4) {
+        const p = pts[k];
+        const ben = p.x > CX ? "left:6px" : "right:6px";
         const img = MASCOT_BANDO[(CHANG + chapIdx + ra.length) % MASCOT_BANDO.length];
-        /* CANH THEO KHỐI CHỮ, không theo ô và cũng không theo tâm cụm "ô + chữ".
-           Ba mốc đã thử: tâm ô (p.y - 56) trông nhô hẳn lên trên; tâm cụm ô + chữ
-           (p.y - 30) vẫn còn cao hơn một nấc. Lí do là ảnh linh vật có khoảng trống
-           phía trên đầu, nên tâm KHUNG ẢNH luôn nằm cao hơn tâm NHÂN VẬT.
-           Duolingo đặt linh vật ngang tầm phần chữ dưới ô chứ không ngang ô.
-           184 = ĐÚNG MỘT STEP, tức linh vật đứng ngang hàng ô kế tiếp chứ không
-           ngang ô của nó nữa. Đã hạ bốn lần theo phản hồi: tâm ô -> tâm cụm ô+chữ
-           -> tâm khối chữ -> +104 -> nay +184. Vì thế phải chọn bên theo pts[k+1]
-           (xem oCanh ở trên), không thì đâm vào ô kế tiếp.
-           65 = nửa chiều cao khung ảnh 130px. */
-        ra.push(`<div class="pmascot" style="${ben};top:${f1(p.y + 184 - 65)}px">
+        ra.push(`<div class="pmascot" style="${ben};top:${f1(p.y - 65)}px">
             <img src="${mascotSrc(img)}" alt="" aria-hidden="true" draggable="false" loading="lazy" />
           </div>`);
-      });
+      }
       return ra.join("");
     })();
 
@@ -1020,8 +1000,12 @@ function renderLessons(data) {
       const cungSao = (cx, cy, sang, Rx, Ry) => GOC_SAO.map((g, i) => {
         const r = (g * Math.PI) / 180;
         const x = cx + Rx * Math.cos(r), y = cy + Ry * Math.sin(r);
+        /* Góc xoay đặt qua biến CSS --r thay vì thẳng vào transform: animation
+           "sao mới" (xem .pn-as.moi) cần CỘNG scale vào cùng transform, mà một
+           thuộc tính CSS chỉ nhận một giá trị transform cuối cùng — để lẫn trong
+           inline style thì animation ghi đè mất góc xoay, sao quay ngang loạn. */
         return `<svg class="pn-as${i < sang ? " on" : ""}" viewBox="0 0 24 24" aria-hidden="true"
-            style="left:${f1(x - SAO_NUA)}px;top:${f1(y - SAO_NUA)}px;transform:rotate(${g + 90}deg)">
+            style="left:${f1(x - SAO_NUA)}px;top:${f1(y - SAO_NUA)}px;--r:${g + 90}deg;animation-delay:${i * 110}ms">
             <path d="M12 3l2.6 5.6 6.1.8-4.5 4.2 1.2 6-5.4-3-5.4 3 1.2-6L3.3 9.4l6.1-.8z"/></svg>`;
       }).join("");
 
@@ -1105,7 +1089,7 @@ function renderLessons(data) {
          nhưng đọc bằng màn hình đọc thì không có "ngay dưới" -> nhắc tên bài. */
       const cuaBai = o.l ? " — " + (o.l.title || "").replace(/^Bài\s*\d+[.\s]*/, "") : "";
       const mota = `${dang.nhan}${cuaBai}: ${ten}` + (pre ? " (gói Premium)" : "") + (open ? "" : " (chưa mở)");
-      return `${saoO >= 0 ? `<div class="pn-arc" title="${esc(dang.nhan)}: ${saoO}/3 sao">${cungSao(p.x, p.y, saoO, OPHU_W / 2 + 26, OPHU_H / 2 + 26)}</div>` : ""}
+      return `${saoO >= 0 ? `<div class="pn-arc"${o.idDiem ? ` data-sao-id="${esc(o.idDiem)}"` : ""} title="${esc(dang.nhan)}: ${saoO}/3 sao">${cungSao(p.x, p.y, saoO, OPHU_W / 2 + 26, OPHU_H / 2 + 26)}</div>` : ""}
         <button class="pnode ophu o-${o.loai} ${open ? "open" : "locked"}${pre ? " o-pre" : ""}" data-key="${esc(o.key)}" data-lock="${open ? 0 : 1}" data-khoa="${esc(khoaTxt)}" style="${dat(OPHU_W, OPHU_H)}" title="${esc(mota)}" aria-label="${esc(mota)}">
           <span class="ophu-ic">${ic(open ? dang.icon : "lock")}</span>
           ${pre ? '<span class="ophu-pre">Premium</span>' : ""}
@@ -1401,8 +1385,16 @@ function injectPathCss() {
     /* Sao RỖNG: trắng + viền xám. Trắng trơn chìm trên nền sáng, xám trơn chìm trên
        nền tối; có viền thì đọc được ở cả hai giao diện. */
     ".pn-as { position: absolute; width: 20px; height: 20px; fill: #fff; stroke: #94a3b8; stroke-width: 1.4; " +
-      "stroke-linejoin: round; transition: fill .25s, filter .25s; }" +
+      "stroke-linejoin: round; transform: rotate(var(--r)); transition: fill .25s, filter .25s; }" +
     ".pn-as.on { fill: #ffc107; stroke: #d99e06; filter: drop-shadow(0 2px 5px rgba(255, 193, 7, .55)); }" +
+    /* Sao "vừa đạt được" — bung ra kèm nảy nhẹ, so le từng sao qua animation-delay
+       (đặt ở style inline lúc dựng HTML, xem cungSao). Giữ NGUYÊN góc --r suốt vòng
+       chạy, chỉ động scale/opacity — animation không được phép tự khai transform
+       riêng mà đè mất góc xoay của sao. */
+    "@keyframes saoBung { 0% { transform: rotate(var(--r)) scale(0); opacity: 0; } " +
+      "55% { transform: rotate(var(--r)) scale(1.35); opacity: 1; } 100% { transform: rotate(var(--r)) scale(1); opacity: 1; } }" +
+    ".pn-as.moi { animation: saoBung .5s cubic-bezier(.34,1.56,.64,1) both; }" +
+    "@media (prefers-reduced-motion: reduce) { .pn-as.moi { animation: none; } }" +
     ".pn-stars { display: inline-flex; gap: 3px; }" +
     /* Dấu "đã xem hết mô phỏng" — đứng cùng chỗ với chùm sao trên .pn-top nên phải
        cùng cách canh, không thì dòng nhãn nhảy lên nhảy xuống giữa các ô. */
@@ -2964,7 +2956,11 @@ function renderResult(data) {
        đang học sau khi vừa làm xong ô luyện tập/thi thử.
        CHƯA làm animation sao xuất hiện lúc quay lại bản đồ: chờ chốt cách biểu
        diễn số sao (việc của một phiên khác), làm animation trước dễ phải sửa lại. */
-    document.getElementById("backMapBtn").onclick = () => { State.quiz = null; go("lessons", { stage: changOPhu }); };
+    document.getElementById("backMapBtn").onclick = () => {
+      vuaXongOPhu = Q.lessonId; // báo cho renderLessons biết chạy animation sao cho đúng ô này
+      State.quiz = null;
+      go("lessons", { stage: changOPhu });
+    };
     document.getElementById("continueBtn").onclick = () => {
       State.quiz = null;
       const cur = pathState().cur;
@@ -3133,6 +3129,10 @@ const FLOATING_POSES = [
 
 let mascotBubbleOpen = true;
 let LESSON_DANG_MO = null; // bài học đang mở (đặt ở renderLesson, xoá khi rời trang bài)
+/* idDiem của ô "Luyện tập"/"Thi thử" vừa làm xong, đặt ở nút "Quay lại bản đồ"
+   trong renderResult, đọc và xoá ngay ở renderLessons — để bản đồ biết cần
+   chạy animation sao xuất hiện cho đúng MỘT ô, và chỉ chạy một lần. */
+let vuaXongOPhu = null;
 
 function initFloatingMascot() {
   if (document.getElementById("floatingMascot")) return;
