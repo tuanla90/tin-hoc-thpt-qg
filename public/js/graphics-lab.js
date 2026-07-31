@@ -23,7 +23,9 @@
     ".glab-row input[type=range]{width:100%}" +
     ".glab-row b{text-align:right;font-family:Consolas,monospace;color:var(--text-soft)}" +
     ".glab-layers{margin-top:10px;display:grid;gap:7px}" +
-    ".glab-lyr{display:flex;align-items:center;gap:10px;border:1px solid var(--border);border-radius:9px;padding:7px 10px;background:var(--bg-soft)}" +
+    /* padding 11px chứ không 7px: đo được thẻ cao 38,4px, dưới ngưỡng chạm 44px,
+       mà bước lặp giữa hai lớp chỉ 45,4px nên rất dễ cầm nhầm lớp bên cạnh. */
+    ".glab-lyr{display:flex;align-items:center;gap:10px;border:1px solid var(--border);border-radius:9px;padding:11px 10px;min-height:46px;background:var(--bg-soft)}" +
     ".glab-lyr .sw{width:18px;height:18px;border-radius:4px;flex:0 0 auto;border:1px solid rgba(0,0,0,.2)}" +
     ".glab-lyr .nm{flex:1;font-size:14px;font-weight:600}" +
     ".glab-lyr .tay{display:flex;color:var(--text-soft);flex:0 0 auto}" +
@@ -112,59 +114,139 @@
    *  mũi tên. Nhờ vậy bỏ hẳn được cặp nút mũi tên mà không ai mất đường thao tác.
    * ========================================================================== */
   function ganKeoTha(box, sauKhiDoi) {
-    var dang = null;
+    var NGUONG = 8;          /* px phải đi qua thì mới tính là KÉO, xem chú thích dưới */
+    var dang = null;         /* thẻ đang cầm */
+    var idKeo = null;        /* pointerId của cú kéo — khoá lại để ngón thứ hai không phá */
+    var x0 = 0, y0 = 0;      /* điểm đặt ngón */
+    var thatKeo = false;     /* đã vượt ngưỡng chưa */
 
     function docThuTu() {
       return [].slice.call(box.children).map(function (e) { return +e.dataset.idx; });
     }
     function xong() {
-      if (!dang) return;
-      dang.classList.remove("dang-keo");
-      dang = null;
+      if (dang) {
+        dang.classList.remove("dang-keo");
+        dang.style.transform = "";
+        dang.style.pointerEvents = "";
+      }
+      /* Gỡ theo LỚP chứ không chỉ theo biến: nếu vì lý do nào đó có hai thẻ kịp
+         mang class (ngón thứ hai chen vào), gỡ theo biến sẽ bỏ sót một thẻ và nó
+         kẹt trạng thái to-nghiêng-đổ-bóng cho tới khi tải lại trang. */
+      [].forEach.call(box.querySelectorAll(".dang-keo"), function (e) {
+        e.classList.remove("dang-keo");
+        e.style.transform = "";
+        e.style.pointerEvents = "";
+      });
+      dang = null; idKeo = null; thatKeo = false;
       box.classList.remove("dang-sap");
     }
-    /* Thẻ nằm dưới con trỏ. Duyệt tay theo hình chữ nhật thay vì elementFromPoint:
-       thẻ đang kéo được nhấc lên trên (z-index) nên elementFromPoint luôn trả về
-       chính nó, không bao giờ tìm được thẻ đích. */
-    function theDuoiTro(x, y) {
-      var ds = [].slice.call(box.children);
+
+    /* Thẻ đích = thẻ có TÂM GẦN CON TRỎ NHẤT, không phải thẻ mà con trỏ lọt vào
+       trong hình chữ nhật. Kiểu cũ tạo VÙNG CHẾT: khe hở giữa hai thẻ (4–8px) và
+       khoảng trống ngoài hàng đều trả về null rồi thoát, nên ngón đi chệch vài
+       pixel là "kéo không ăn". Đo được: kéo ngang 200px chỉ đổi chỗ nổi 1 lần.
+
+       Trục so sánh phải tính theo BỐ CỤC THẬT chứ không theo tên lớp: ở màn 360px
+       dãy "sap-ngang" bị flex-wrap bẻ xuống 2–3 hàng (khung 278px mà tổng thẻ
+       451px), lúc đó so mỗi hoành độ là sai hẳn. Nhiều hàng thì đo khoảng cách
+       hai chiều. */
+    function nhieuHang() {
+      var t = null, ds = box.children;
       for (var i = 0; i < ds.length; i++) {
-        if (ds[i] === dang) continue;
-        var r = ds[i].getBoundingClientRect();
-        if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) return ds[i];
+        var y = Math.round(ds[i].getBoundingClientRect().top);
+        if (t === null) t = y; else if (Math.abs(y - t) > 4) return true;
       }
-      return null;
+      return false;
+    }
+    function theGanNhat(x, y) {
+      var ngang = box.classList.contains("sap-ngang");
+      var haiChieu = ngang && nhieuHang();
+      var tot = null, totD = Infinity;
+      [].forEach.call(box.children, function (e) {
+        if (e === dang) return;
+        var r = e.getBoundingClientRect();
+        var cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+        var d = haiChieu ? Math.hypot(x - cx, y - cy) : (ngang ? Math.abs(x - cx) : Math.abs(y - cy));
+        if (d < totD) { totD = d; tot = e; }
+      });
+      return tot;
     }
 
-    box.querySelectorAll("[data-idx]").forEach(function (the) {
+    function keo(e) {
+      if (!dang || e.pointerId !== idKeo) return;
+
+      /* NGƯỠNG: ngón tay trên điện thoại luôn xê dịch vài pixel, thiếu ngưỡng thì
+         mỗi cú chạm đều lập tức thành cú kéo — thẻ phóng to, cả dãy mờ đi, học
+         sinh tưởng mình vừa làm hỏng bài. */
+      if (!thatKeo) {
+        if (Math.abs(e.clientX - x0) + Math.abs(e.clientY - y0) < NGUONG) return;
+        thatKeo = true;
+        dang.classList.add("dang-keo");
+        box.classList.add("dang-sap");
+        if (navigator.vibrate) { try { navigator.vibrate(8); } catch (er) { /* trình duyệt chặn */ } }
+      }
+
+      /* Thẻ ĐI THEO NGÓN. Trước đây nó đứng im rồi thỉnh thoảng nhảy cóc sang ô
+         khác — đo được left giữ nguyên 41 suốt cú kéo rồi mới bật sang 129. Kéo
+         mà không thấy vật mình cầm nhúc nhích thì ai cũng nghĩ là hỏng. */
+      dang.style.transform = "translate(" + (e.clientX - x0) + "px," + (e.clientY - y0) + "px)";
+
+      var dich = theGanNhat(e.clientX, e.clientY);
+      if (!dich) return;
+      var r = dich.getBoundingClientRect();
+      /* Chèn TRƯỚC hay SAU thẻ đích. Ba trường hợp, không gộp được:
+         · dãy dọc  -> so tung độ;
+         · dãy ngang một hàng -> so hoành độ;
+         · dãy ngang bị flex-wrap bẻ thành LƯỚI nhiều hàng -> phải đọc theo thứ
+           tự tài liệu (trái sang phải, trên xuống dưới): cùng hàng thì so hoành
+           độ, khác hàng thì so tung độ. Chỉ so tung độ như trước là cú kéo ngang
+           thuần tuý không đổi được gì — đo được 4 lần đổi chỗ mà cuối cùng thẻ
+           quay về đúng vị trí cũ. */
+      var quaNua;
+      if (!box.classList.contains("sap-ngang")) {
+        quaNua = e.clientY > r.top + r.height / 2;
+      } else if (!nhieuHang()) {
+        quaNua = e.clientX > r.left + r.width / 2;
+      } else {
+        var cungHang = Math.abs(e.clientY - (r.top + r.height / 2)) < r.height / 2;
+        quaNua = cungHang ? (e.clientX > r.left + r.width / 2)
+                          : (e.clientY > r.top + r.height / 2);
+      }
+      var truoc = quaNua ? dich.nextSibling : dich;
+      /* Chèn vào đúng chỗ đang đứng thì THÔI, đừng gọi sauKhiDoi: widget xếp lớp
+         dựng lại cả chuỗi SVG trong đó, mà pointermove bắn 60–120 lần mỗi giây —
+         gọi mù là luồng chính nghẽn và thẻ đi giật cục lệch pha với ngón tay. */
+      if (truoc === dang || dang.nextSibling === truoc) return;
+      box.insertBefore(dang, truoc);
+      sauKhiDoi(docThuTu());
+    }
+
+    /* Gắn move/up/cancel lên BOX chứ không lên từng thẻ. Lý do: dòng insertBefore
+       ở trên gỡ thẻ khỏi DOM rồi cắm lại, mà pointer capture được giải phóng khi
+       phần tử giữ capture rời document — từ đó mọi sự kiện đi tới thẻ NẰM DƯỚI
+       ngón, không phải thẻ đang kéo, nên handler gắn trên thẻ im lặng. box thì
+       không bao giờ bị di chuyển nên không mất capture. */
+    box.addEventListener("pointermove", keo);
+    box.addEventListener("pointerup", xong);
+    box.addEventListener("pointercancel", xong);
+    box.addEventListener("lostpointercapture", xong);
+    /* Ngón trượt ra ngoài box rồi mới nhả: vẫn phải kết thúc cú kéo. */
+    document.addEventListener("pointerup", xong);
+
+    [].forEach.call(box.querySelectorAll("[data-idx]"), function (the) {
       the.setAttribute("tabindex", "0");
       the.setAttribute("role", "button");
 
       the.addEventListener("pointerdown", function (e) {
         /* Nút bên trong thẻ (nếu có) vẫn phải bấm được bình thường. */
-        if (e.target.closest("button")) return;
-        dang = the;
-        the.classList.add("dang-keo");
-        box.classList.add("dang-sap");
-        try { the.setPointerCapture(e.pointerId); } catch (err) { /* trình duyệt cũ */ }
+        if (e.target.closest && e.target.closest("button")) return;
+        if (dang) return;            /* đang kéo rồi thì bỏ qua ngón thứ hai */
+        dang = the; idKeo = e.pointerId;
+        x0 = e.clientX; y0 = e.clientY; thatKeo = false;
+        /* Capture đặt trên BOX, không trên thẻ — xem chú thích ở trên. */
+        try { box.setPointerCapture(e.pointerId); } catch (err) { /* trình duyệt cũ */ }
         e.preventDefault();
       });
-
-      the.addEventListener("pointermove", function (e) {
-        if (dang !== the) return;
-        var dich = theDuoiTro(e.clientX, e.clientY);
-        if (!dich) return;
-        var r = dich.getBoundingClientRect();
-        /* Chèn trước hay sau tuỳ con trỏ đã qua nửa thẻ đích chưa. Xét theo trục
-           mà dãy thật sự trải ra: dãy ngang thì so hoành độ, dãy dọc so tung độ. */
-        var ngang = box.classList.contains("sap-ngang");
-        var quaNua = ngang ? (e.clientX > r.left + r.width / 2) : (e.clientY > r.top + r.height / 2);
-        box.insertBefore(dang, quaNua ? dich.nextSibling : dich);
-        sauKhiDoi(docThuTu());
-      });
-
-      the.addEventListener("pointerup", xong);
-      the.addEventListener("pointercancel", xong);
 
       the.addEventListener("keydown", function (e) {
         var lui = e.key === "ArrowLeft" || e.key === "ArrowUp";
@@ -179,7 +261,6 @@
       });
     });
   }
-
 
   /* Ảnh gốc: cảnh SVG tự vẽ (không dính bản quyền) */
   function scene() {
@@ -236,6 +317,7 @@
     var order = xaoKhacDich(w.layers.length, w.targetOrder || w.layers.map(function (_, i) { return i; }),
       (w.prompt || "").length * 17 + w.layers.length);
     node.innerHTML = '<div class="glab-prompt">' + fmtInline(w.prompt) + "</div>" +
+      '<p class="glab-hint">Chạm giữ rồi kéo thẻ để đổi chỗ.</p>' +
       '<div class="glab-two"><div><div class="glab-cap">Kết quả ghép lớp</div><div class="glab-stage" data-r="comp"></div></div>' +
       '<div><div class="glab-cap">Thứ tự lớp (trên → dưới)</div><div class="glab-layers" data-r="lyrs"></div></div></div>' +
       '<div class="glab-actions"><button class="btn btn-primary" data-a="check">' + ico("check2", null, 14) + ' Kiểm tra</button></div><div class="glab-verdict" hidden></div>';
@@ -361,6 +443,7 @@
     var dich = w.targetOrder || w.items.map(function (_, i) { return i; });
     var order = xaoKhacDich(w.items.length, dich, (w.prompt || "").length * 31 + w.items.length);
     node.innerHTML = '<div class="glab-prompt">' + fmtInline(w.prompt) + "</div>" +
+      '<p class="glab-hint">Chạm giữ rồi kéo thẻ để đổi chỗ.</p>' +
       '<div class="glab-strip" data-r="strip"></div>' +
       '<div class="glab-actions"><button class="btn btn-primary" data-a="check">' + ico("check2", null, 14) + ' Kiểm tra</button></div><div class="glab-verdict" hidden></div>';
     var strip = node.querySelector('[data-r="strip"]'), verdict = node.querySelector(".glab-verdict");

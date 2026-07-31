@@ -49,7 +49,7 @@
       { ten: "Tạo cảm giác gấp gáp", tom: "“khoá trong 24 giờ” — ép bấm trước khi kịp nghĩ",
         noi: "“Tài khoản sẽ bị khoá trong 24 giờ”. Đây không phải thông tin, đây là <b>chiêu</b>: sợ thì người ta bấm trước rồi mới nghĩ. Hễ thư nào hối em làm gì đó <b>ngay lập tức</b>, đó chính là lúc phải chậm lại." },
       { ten: "Liên kết đội lốt", tom: "chữ hiện ra khác hẳn địa chỉ thật",
-        noi: "Dấu hiệu <b>quan trọng nhất</b> cả bài. Chữ hiện trên màn hình là <b>" + MIEN + "</b>, nhưng địa chỉ thật — xem thanh trạng thái bên dưới — là <b>" + LK_THAT + "</b>. <b>Chữ hiển thị của một liên kết không phải địa chỉ thật của nó</b>: người viết thư gõ chữ gì lên đó cũng được. Luôn rê chuột xem địa chỉ thật trước khi bấm." },
+        noi: "Dấu hiệu <b>quan trọng nhất</b> cả bài. Chữ hiện trên màn hình là <b>" + MIEN + "</b>, nhưng địa chỉ thật — xem thanh trạng thái bên dưới — là <b>" + LK_THAT + "</b>. <b>Chữ hiển thị của một liên kết không phải địa chỉ thật của nó</b>: người viết thư gõ chữ gì lên đó cũng được. Ngoài đời cũng phải kiểm trước khi bấm: trên máy tính thì <b>rê chuột</b> lên liên kết, trên điện thoại thì <b>nhấn giữ</b> liên kết — địa chỉ thật sẽ hiện ra." },
       { ten: "Đòi thông tin nhạy cảm", tom: "hỏi mật khẩu và mã OTP",
         noi: "Thư đòi em nhập <b>mật khẩu</b> và <b>mã OTP</b>. Nhớ đúng câu này là tránh được gần hết mọi vụ lừa: <b>không ngân hàng nào hỏi mật khẩu hay OTP</b> — không qua thư, không qua tin nhắn, không qua điện thoại. Ai hỏi là kẻ lừa đảo, <b>không có ngoại lệ</b>." },
       { ten: "Tệp đính kèm lạ", tom: "đuôi kép " + TEP + " — thật ra là tệp chạy được",
@@ -81,8 +81,8 @@
 
     var node = MH.el(MH.khung("Soi một lá thư lừa đảo: sáu chỗ tố cáo nó là giả",
       "Lá thư bên dưới trông <b>rất chuyên nghiệp</b> — đó chính là vấn đề. <b>Bấm vào từng chỗ em thấy " +
-      "đáng ngờ</b> trong thư (có 6 chỗ), hoặc bấm “Bước tiếp” để lộ dần. Nhớ <b>rê chuột lên liên kết</b> " +
-      "và nhìn thanh trạng thái.",
+      "đáng ngờ</b> trong thư (có 6 chỗ), hoặc bấm “Bước tiếp” để lộ dần. Nhớ <b>chạm vào liên kết</b> " +
+      "rồi nhìn thanh trạng thái bên dưới.",
       '<div class="mh7-doi">' +
       '<div class="mh7-panel"><p class="mh7-nhan">Thư vừa nhận</p>' +
       '<div class="mh7-xem"><div class="mh7-tab"><i></i><span data-mh="tab"></span></div>' +
@@ -152,10 +152,21 @@
       }
       return h + "</table></div>";
     }
+    /* Thanh trạng thái đọc từ TRẠNG THÁI (tim[3]) chứ không từ con trỏ. Trước
+       đây địa chỉ thật chỉ hiện lúc rê chuột — mà điện thoại KHÔNG có trạng
+       thái rê chuột. Tệ hơn: cú chạm sinh mouseover giả rồi click ngay sau đó,
+       click gọi ve() -> veOut() ghi đè lại, nên địa chỉ thật bị xoá TRONG CÙNG
+       một loạt sự kiện, không kịp vẽ lấy một khung hình. Học sinh điện thoại
+       đọc mãi dòng "rê chuột" trỏ vào một ô không bao giờ có chữ.
+       Nay soi ra rồi thì địa chỉ thật ở lại luôn, cả chuột lẫn cảm ứng. */
     function veOut() {
-      oOut.innerHTML = oThat.checked
-        ? '<span class="trong">Thư thật không có liên kết nào để bấm.</span>'
-        : '<span class="trong">Rê chuột lên liên kết trong thư để xem địa chỉ thật của nó.</span>';
+      if (oThat.checked) {
+        oOut.innerHTML = '<span class="trong">Thư thật không có liên kết nào để bấm.</span>';
+      } else if (tim[3]) {
+        oOut.innerHTML = '<span class="loi">' + esc(LK_THAT) + "</span>";
+      } else {
+        oOut.innerHTML = '<span class="trong">Chạm vào liên kết trong thư để xem địa chỉ thật của nó.</span>';
+      }
     }
 
     function ve() {
@@ -170,6 +181,8 @@
             var j = Number(e.getAttribute("data-i"));
             e.onclick = function (ev) { ev.preventDefault(); moDh(j); };   /* chặn điều hướng thật */
             if (e.tagName === "A") {
+              /* Rê chuột giờ chỉ là XEM TRƯỚC cho người dùng chuột; nội dung
+                 thật đã nằm trong veOut() theo trạng thái nên cảm ứng không mất gì. */
               e.onmouseover = function () { oOut.innerHTML = '<span class="loi">' + esc(LK_THAT) + "</span>"; };
               e.onmouseout = veOut;
             }
