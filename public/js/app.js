@@ -937,22 +937,37 @@ function renderLessons(data) {
     const macs = (() => {
       const ra = [];
       let truoc = -99;
+      /* Bề ngang THẬT của linh vật + lề. Khung CSS 120px, nhưng hiệu ứng trôi xoay
+         ±2,5° làm nó nở ra ~126px (đo được). 132 = 126 + 6px lề. */
+      const LV_CAN = 132;
       pts.forEach((p, k) => {
         if (ra.length >= 3 || k > n - 2 || k - truoc < 3) return;
-        if (Math.abs(p.x - CX) < 60) return;
+        /* Chọn bên theo ô mà linh vật THẬT SỰ đứng cạnh — sau khi hạ xuống đúng một
+           STEP thì nó ngang hàng ô k+1, không còn ngang ô k. Lấy nhầm ô là chọn
+           nhầm bên và đâm thẳng vào khối chữ của ô kia.
+           VÀ ĐO CHỖ TRỐNG THẬT thay vì suy từ "ô nằm bên nào so với trục giữa":
+           các cột x của làn sóng không chỉ có mấy giá trị mình nhẩm ra, đã đo thấy
+           có cột x = 212 làm khối chữ bắt đầu ở 117 và đè lên linh vật 12px. Không
+           bên nào đủ chỗ thì BỎ QUA linh vật này — nó chỉ để trang trí, thà thiếu
+           một con còn hơn đè lên tên bài. */
+        const oCanh = pts[k + 1] || p;
+        const trongTrai = oCanh.x - CAP_W / 2;
+        const trongPhai = IW - (oCanh.x + CAP_W / 2);
+        const ben = trongPhai >= LV_CAN ? "right:6px" : trongTrai >= LV_CAN ? "left:6px" : null;
+        if (!ben) return;
         truoc = k;
-        const ben = p.x < CX ? "right:6px" : "left:6px";
         const img = MASCOT_BANDO[(CHANG + chapIdx + ra.length) % MASCOT_BANDO.length];
         /* CANH THEO KHỐI CHỮ, không theo ô và cũng không theo tâm cụm "ô + chữ".
            Ba mốc đã thử: tâm ô (p.y - 56) trông nhô hẳn lên trên; tâm cụm ô + chữ
            (p.y - 30) vẫn còn cao hơn một nấc. Lí do là ảnh linh vật có khoảng trống
            phía trên đầu, nên tâm KHUNG ẢNH luôn nằm cao hơn tâm NHÂN VẬT.
            Duolingo đặt linh vật ngang tầm phần chữ dưới ô chứ không ngang ô.
-           104 = thấp hơn tâm khối chữ (khối chữ bắt đầu ở p.y + CAP_DY = +52) — đã
-           hạ ba lần theo phản hồi: tâm ô -> tâm cụm ô+chữ -> tâm khối chữ -> nay
-           thấp hơn nữa, vì ảnh còn khoảng trống trên đầu nhân vật;
+           184 = ĐÚNG MỘT STEP, tức linh vật đứng ngang hàng ô kế tiếp chứ không
+           ngang ô của nó nữa. Đã hạ bốn lần theo phản hồi: tâm ô -> tâm cụm ô+chữ
+           -> tâm khối chữ -> +104 -> nay +184. Vì thế phải chọn bên theo pts[k+1]
+           (xem oCanh ở trên), không thì đâm vào ô kế tiếp.
            65 = nửa chiều cao khung ảnh 130px. */
-        ra.push(`<div class="pmascot" style="${ben};top:${f1(p.y + 104 - 65)}px">
+        ra.push(`<div class="pmascot" style="${ben};top:${f1(p.y + 184 - 65)}px">
             <img src="${mascotSrc(img)}" alt="" aria-hidden="true" draggable="false" loading="lazy" />
           </div>`);
       });
@@ -989,8 +1004,9 @@ function renderLessons(data) {
          không có gì cho biết bài này chấm được mấy sao — mất hẳn cái đích để nhắm.
          Sao rỗng tô TRẮNG kèm viền xám: trắng trơn thì chìm mất trên nền sáng, mà
          xám trơn thì chìm trên nền tối; có viền thì đọc được ở cả hai giao diện.
-         Ba góc -122° / -90° / -58°: cụm sát nhau hơn bản đầu (-138/-90/-42 trông
-         rời rạc), mỗi sao xoay theo tiếp tuyến nên cả cụm ôm đúng mép ô.
+         Ba góc -112° / -90° / -68°: cụm sát nhau (đã đi qua -138/-90/-42 rồi
+         -122/-90/-58, cả hai còn rời rạc). Tâm hai sao kề nhau cách ~22px, sao rộng
+         20px nên chúng gần chạm nhau — đúng kiểu Candy Crush, mỗi sao xoay theo tiếp tuyến nên cả cụm ôm đúng mép ô.
          HAI BÁN KÍNH chứ không một: ô nay là ELIP (bẹt hơn chiều cao), nên cung
          sao cũng phải elip theo, không thì sao trên đỉnh sát ô mà sao hai bên lại
          hở toác. Rx/Ry = bán trục của ô cộng cùng một khoảng hở.
@@ -999,7 +1015,7 @@ function renderLessons(data) {
          mép theo hướng chéo xa hơn -> 26. Đo lại bằng khoảng cách tâm-tới-tâm trừ
          nửa đường chéo sao, KHÔNG ướm bằng hình chữ nhật bao (hình chữ nhật bao
          một ô cong báo chồng ở bốn góc trống, sai hoàn toàn). */
-      const GOC_SAO = [-122, -90, -58];
+      const GOC_SAO = [-112, -90, -68];
       const SAO_NUA = 10;                       // nửa cạnh sao (.pn-as 20px)
       const cungSao = (cx, cy, sang, Rx, Ry) => GOC_SAO.map((g, i) => {
         const r = (g * Math.PI) / 180;
