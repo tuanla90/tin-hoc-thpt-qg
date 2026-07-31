@@ -74,8 +74,12 @@
       /* Ô chọn trong hàng điều khiển: styles.css chỉ tạo dáng cho input, select
          để trơn thì lạc hẳn khỏi phần còn lại. Cỡ chữ 16px để iOS khỏi tự phóng
          to trang lúc chạm vào — phóng rồi là kẹt ở trạng thái trượt ngang. */
+      /* max-width BẮT BUỘC: thẻ select tự giãn theo option DÀI NHẤT, nên một
+         nhãn kiểu "Hằng tuần — mỗi Chủ nhật" là đẩy select rộng 368px và làm
+         tràn ngang cả trang trên điện thoại. */
       ".mh .mh-nhap select{border:1.5px solid var(--border);background:var(--bg-card);color:var(--text);" +
-        "border-radius:10px;padding:8px 10px;font:700 16px var(--font-sans);min-height:40px}" +
+        "border-radius:10px;padding:8px 10px;font:700 16px var(--font-sans);min-height:40px;" +
+        "max-width:100%}" +
       ".mh .mh-nhap select:focus{outline:none;border-color:var(--primary)}" +
       ".mh9-tron{width:150px;height:150px;border-radius:50%;margin:8px auto}" +
 
