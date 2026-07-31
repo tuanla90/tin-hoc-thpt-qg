@@ -445,6 +445,28 @@ function renderHome() {
   // Bài đang học: lấy đúng bài mà trang Lộ trình đang mở, để hai nơi không lệch nhau
   const curL = pathState().cur;
   const contTitle = curL ? esc((curL.title || "").replace(/^Bài\s*\d+[.\s]*/, "")) : "";
+  /* Ô "Ôn hôm nay" — chỉ hiện khi THẬT SỰ có câu tới hẹn. Hiện cả lúc rỗng thì
+     nó thành một ô "0 câu" nằm chình ình mỗi ngày, người học quen mắt rồi bỏ qua
+     luôn cả những hôm có việc thật. */
+  const onHomNayHtml = () => {
+    if (!window.OnTap) return "";
+    const sl = OnTap.soLieu();
+    if (!sl.denHan) return "";
+    const so = sl.trongSo;
+    return `<div class="continue-card" id="onHomNay" role="button" tabindex="0"
+        style="display:flex;align-items:center;gap:14px;background:var(--warning-soft);
+          border:1px solid var(--warning);border-radius:var(--radius);padding:13px 16px;margin:2px 0 18px;cursor:pointer">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:700;color:#b45309;letter-spacing:.02em">ÔN HÔM NAY</div>
+          <b style="display:block;font-size:16px;color:var(--text);margin:2px 0 0">${sl.denHan} câu tới hẹn ôn lại</b>
+          <small style="color:var(--text-soft);font-size:12.5px">${
+            so ? so + " câu trong sổ sai được hỏi trước" : "Ôn đúng lúc sắp quên thì nhớ lâu nhất"
+          }</small>
+        </div>
+        ${aIco("clock", "#b45309", 26)}
+      </div>`;
+  };
+
   const continueHtml = curL
     ? `<div class="continue-card" id="continueCard" data-id="${curL.id}" role="button" tabindex="0" style="display:flex;align-items:center;gap:14px;background:var(--primary-soft);border:1px solid var(--primary);border-radius:var(--radius);padding:13px 16px;margin:2px 0 18px;cursor:pointer">
         <div style="flex:1;min-width:0">
@@ -491,6 +513,7 @@ function renderHome() {
     ${khachHtml}
     ${gioiThieuHtml}
     ${continueHtml}
+    ${onHomNayHtml()}
 
     <div id="gamDash"></div>
     <div id="skillCard"></div>
@@ -561,6 +584,14 @@ function renderHome() {
   if (gl) gl.onclick = () => go("account");
   if (typeof Gam !== "undefined") Gam.renderDashboard(document.getElementById("gamDash"));
   if (typeof skillRenderCard === "function") skillRenderCard();
+  const oOn = document.getElementById("onHomNay");
+  if (oOn) {
+    /* Tên VIEW là "practiceSetup" (hash mới là "#/practice") — gọi go("practice")
+       thì viewToHash không khớp case nào, hash không đổi và trang đứng yên. */
+    const moOn = () => { setupCfg.tab = "hom-nay"; go("practiceSetup"); };
+    oOn.onclick = moOn;
+    oOn.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); moOn(); } };
+  }
 }
 
 /* ===========================================================================
@@ -1929,6 +1960,10 @@ const PRACTICE_TABS = [
   { id: "chude", nhan: "Theo chủ đề", ic: "target", mo: "Ôn một mạch kiến thức xuyên suốt các lớp — hợp khi luyện thi tốt nghiệp." },
   { id: "lop", nhan: "Theo lớp", ic: "cap", mo: "Ôn tổng hợp cả một lớp — hợp khi thi học kì." },
   { id: "yeu", nhan: "Chỗ yếu", ic: "flame", mo: "Ôn đúng chủ đề bạn đang yếu, ưu tiên những câu đã từng làm sai." },
+  /* Hai tab dưới đây KHÔNG lọc theo chủ đề/lớp như bốn tab trên — chúng lấy câu
+     theo LỊCH ÔN của từng câu, nên phần chọn bộ lọc bị ẩn đi khi chọn chúng. */
+  { id: "hom-nay", nhan: "Ôn hôm nay", ic: "clock", mo: "Những câu tới hẹn ôn lại hôm nay — càng để lâu càng dễ quên." },
+  { id: "so-sai", nhan: "Câu sai", ic: "warn", mo: "Sổ câu đã từng làm sai. Mỗi câu phải làm đúng 2 lần vào 2 NGÀY khác nhau mới được xoá khỏi sổ." },
 ];
 const setupCfg = { tab: "chude", topic: "all", grade: "all", type: "all", level: "all", lesson: "all", chapter: "", chapterStage: 0, weakTopic: "", count: 10, _gradeSynced: false };
 
@@ -2027,6 +2062,34 @@ function renderPracticeSetup(data) {
           <span style="color:var(--text-soft);font-size:13.5px">Hãy làm vài bài luyện tập trước — mỗi chủ đề cần ít nhất 5 câu thì mới biết bạn yếu chỗ nào.</span>
         </div></div>`;
 
+  } else if (tab === "hom-nay" || tab === "so-sai") {
+    /* Hai tab này KHÔNG có bộ lọc để chọn: danh sách câu do lịch ôn quyết định.
+       Thay vào đó hiện SỐ LIỆU, để người học biết mình đang đứng ở đâu. */
+    const sl = window.OnTap ? OnTap.soLieu() : { danhGia: 0, denHan: 0, trongSo: 0, daThuoc: 0 };
+    const trong = tab === "hom-nay" ? sl.denHan === 0 : sl.trongSo === 0;
+    const oSo = (nhan, so, mau) =>
+      `<div style="flex:1;min-width:104px;border:1.5px solid var(--border);border-radius:12px;
+        background:var(--bg-card);padding:10px 12px">
+        <div style="font:900 22px var(--font-display);color:${mau}">${so}</div>
+        <div style="font:700 11.5px var(--font-sans);color:var(--text-soft)">${esc(nhan)}</div></div>`;
+    phanChinh = `
+      <div class="config-row"><label>Tình hình ôn tập</label>
+        <div style="display:flex;gap:9px;flex-wrap:wrap">
+          ${oSo("tới hẹn hôm nay", sl.denHan, "var(--primary)")}
+          ${oSo("đang trong sổ sai", sl.trongSo, "var(--danger)")}
+          ${oSo("đã thuộc", sl.daThuoc, "var(--success)")}
+          ${oSo("câu đã làm", sl.danhGia, "var(--text-soft)")}
+        </div>
+      </div>
+      ${trong ? `<div class="config-row"><label>${tab === "hom-nay" ? "Hôm nay nghỉ" : "Sổ trống"}</label>
+        <div class="chip-group"><span style="color:var(--text-soft);font-size:13.5px">${
+          sl.danhGia === 0
+            ? "Chưa có câu nào để ôn — hãy làm một lượt luyện tập ở tab khác trước, những câu đó sẽ tự vào lịch ôn."
+            : tab === "hom-nay"
+              ? "Không có câu nào tới hẹn hôm nay. Cứ nghỉ — ôn sớm hơn lịch thì tốn thời gian mà nhớ không lâu hơn."
+              : "Không còn câu nào trong sổ sai. Câu đã sai chỉ ra khỏi sổ khi làm đúng 2 lần vào 2 ngày khác nhau."
+        }</span></div></div>` : ""}`;
+
   } else { /* tab === "lop" */
     phanChinh = `
       <div class="config-row">
@@ -2122,6 +2185,8 @@ function practiceNguon() {
   if (setupCfg.tab === "yeu") {
     return setupCfg.weakTopic ? "Chỗ yếu: " + TOPICS[setupCfg.weakTopic] : "Chưa xác định chỗ yếu";
   }
+  if (setupCfg.tab === "hom-nay") return "Câu tới hẹn ôn lại hôm nay";
+  if (setupCfg.tab === "so-sai") return "Sổ câu đã từng làm sai";
   const t = setupCfg.topic === "all" ? "Tất cả chủ đề" : `${setupCfg.topic}. ${TOPICS[setupCfg.topic]}`;
   return t + (setupCfg.grade === "all" ? "" : " · lớp " + setupCfg.grade);
 }
@@ -2162,6 +2227,15 @@ function filterPool() {
     // Chủ đề yếu: chỉ lấy câu của chủ đề đó; thứ tự ưu tiên do skillPickWeak lo
     if (!setupCfg.weakTopic) return [];
     return QUESTION_BANK.filter((q) => q.topic === setupCfg.weakTopic && phu(q));
+  }
+  /* Hai tab theo LỊCH ÔN: danh sách câu do OnTap quyết định, KHÔNG áp bộ lọc dạng
+     câu / mức độ. Lọc thêm ở đây là bỏ sót đúng những câu tới hẹn — mà tới hẹn thì
+     phải hỏi lại, không phụ thuộc nó là câu dạng gì. */
+  if (setupCfg.tab === "hom-nay") {
+    return window.OnTap ? OnTap.cauTheoId(OnTap.denHan(60)) : [];
+  }
+  if (setupCfg.tab === "so-sai") {
+    return window.OnTap ? OnTap.cauTheoId(OnTap.dsSoSai().map((x) => x.id)) : [];
   }
   return QUESTION_BANK.filter((q) =>
     (setupCfg.topic === "all" || q.topic === setupCfg.topic) &&
@@ -2891,6 +2965,9 @@ function doSubmit(timeUp) {
       dung: isAnswerCorrect(q, Q.answers[i]),
     })),
   };
+  /* Ghi vào kho lặp giãn cách TRƯỚC khi cắt lịch sử: kho đó mới là nơi giữ trí
+     nhớ dài hạn của từng câu, còn State.history chỉ để xem lại mấy lượt gần đây. */
+  if (window.OnTap) OnTap.ghiNhanLuot(record.detail);
   State.history.unshift(record);
   State.history = State.history.slice(0, 50);
   save("history", State.history);
