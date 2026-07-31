@@ -26,9 +26,7 @@
     ".glab-lyr{display:flex;align-items:center;gap:10px;border:1px solid var(--border);border-radius:9px;padding:7px 10px;background:var(--bg-soft)}" +
     ".glab-lyr .sw{width:18px;height:18px;border-radius:4px;flex:0 0 auto;border:1px solid rgba(0,0,0,.2)}" +
     ".glab-lyr .nm{flex:1;font-size:14px;font-weight:600}" +
-    ".glab-lyr .mv{display:flex;gap:4px}" +
-    ".glab-lyr .mv button{border:1px solid var(--border);background:var(--bg-card);border-radius:7px;width:30px;height:28px;cursor:pointer;font-size:14px;color:var(--text)}" +
-    ".glab-lyr .mv button:disabled{opacity:.35;cursor:default}" +
+    ".glab-lyr .tay{display:flex;color:var(--text-soft);flex:0 0 auto}" +
     ".glab-cropwrap{position:relative;max-width:340px;margin:0 auto}" +
     ".glab-crop-ov{position:absolute;inset:0;width:100%;height:100%;cursor:crosshair;touch-action:none}" +
     ".glab-sw{height:64px;border-radius:10px;border:1px solid var(--border)}" +
@@ -39,11 +37,25 @@
     ".glab-mi .bdg{width:20px;height:20px;border-radius:50%;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;background:var(--text-soft);visibility:hidden}" +
     ".glab-mi.paired .bdg{visibility:visible}" +
     ".glab-strip{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}" +
+    /* ---- Kéo thả để sắp thứ tự (xem ganKeoTha) ----
+       touch-action:none là BẮT BUỘC, không phải cho đẹp: thiếu nó thì trên điện
+       thoại cú vuốt bị trình duyệt hiểu là cuộn trang, và thẻ không nhúc nhích.
+       user-select:none để kéo không bôi đen chữ trong thẻ. */
+    ".glab-tile,.glab-lyr{cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;" +
+      "transition:transform .12s,box-shadow .12s,border-color .12s}" +
+    ".glab-tile:focus-visible,.glab-lyr:focus-visible{outline:none;border-color:var(--primary);" +
+      "box-shadow:0 0 0 3px var(--primary-soft)}" +
+    ".glab-tile:hover,.glab-lyr:hover{border-color:var(--primary)}" +
+    /* Thẻ đang kéo nhấc lên trên và nghiêng nhẹ — mắt bám được nó giữa dãy. */
+    ".glab-tile.dang-keo,.glab-lyr.dang-keo{cursor:grabbing;border-color:var(--primary);" +
+      "box-shadow:0 10px 22px rgba(0,0,0,.22);transform:scale(1.05) rotate(-1.5deg);z-index:5;position:relative}" +
+    /* Trong lúc kéo, các thẻ CÒN LẠI mờ đi để thấy rõ chỗ trống sắp chèn vào. */
+    ".dang-sap .glab-tile:not(.dang-keo),.dang-sap .glab-lyr:not(.dang-keo){opacity:.62}" +
+    "@media (prefers-reduced-motion: reduce){.glab-tile,.glab-lyr{transition:none}" +
+      ".glab-tile.dang-keo,.glab-lyr.dang-keo{transform:none}}" +
     ".glab-tile{border:1px solid var(--border);border-radius:9px;background:var(--bg-soft);padding:8px 6px;min-width:78px;text-align:center;font-size:12.5px}" +
     ".glab-tile .tn{font-weight:800;color:var(--primary);font-size:13px}" +
-    ".glab-tile .mv{display:flex;gap:4px;justify-content:center;margin-top:5px}" +
-    ".glab-tile .mv button{border:1px solid var(--border);background:var(--bg-card);border-radius:6px;width:26px;height:24px;cursor:pointer;color:var(--text)}" +
-    ".glab-tile .mv button:disabled{opacity:.35;cursor:default}" +
+
     ".glab-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}" +
     ".glab-actions .btn{padding:8px 14px;font-size:13.5px}" +
     ".glab-verdict{margin-top:10px;padding:11px 14px;border-radius:8px;font-size:14.5px}" +
@@ -77,6 +89,97 @@
     else if (Gam.onWidgetDung) Gam.onWidgetDung();
     else if (Gam.onExercisePass) Gam.onExercisePass({ prompt: w.prompt });
   }
+
+  /* ============================================================================
+   *  KÉO THẢ ĐỂ SẮP THỨ TỰ — dùng chung cho widget "xếp lớp" và "sắp trình tự"
+   *
+   *  Trước đây hai widget này sắp thứ tự bằng cặp nút ◀ ▶ (và ▲ ▼): muốn đưa thẻ
+   *  cuối lên đầu phải bấm bốn lần, và mỗi lần bấm là một lần vẽ lại nên mắt phải
+   *  dò lại từ đầu xem thẻ mình đang theo dõi giờ ở đâu. Kéo thẳng bằng chuột đúng
+   *  với cách người ta nghĩ về việc sắp xếp.
+   *
+   *  DÙNG POINTER EVENTS chứ không phải mouse* hay HTML5 drag-and-drop:
+   *    · pointer* chạy chung một đường cho CHUỘT, CẢM ỨNG và bút — học sinh phần
+   *      lớn dùng điện thoại, mà HTML5 drag-and-drop thì cảm ứng gần như không có;
+   *    · setPointerCapture giữ được sự kiện kể cả khi con trỏ chạy ra ngoài thẻ.
+   *
+   *  KHÔNG VẼ LẠI CẢ DÃY khi đổi chỗ, mà DI CHUYỂN chính nút DOM đang kéo: vẽ lại
+   *  sẽ huỷ phần tử đang giữ con trỏ, mất luôn pointer capture và cú kéo đứt giữa
+   *  chừng. Thứ tự mới đọc NGƯỢC lại từ DOM sau mỗi lần chuyển, nên không phải tự
+   *  tính chỉ số — chỗ dễ sai nhất của kiểu bài này.
+   *
+   *  BÀN PHÍM vẫn dùng được: mỗi thẻ nhận được tiêu điểm và di chuyển bằng phím
+   *  mũi tên. Nhờ vậy bỏ hẳn được cặp nút mũi tên mà không ai mất đường thao tác.
+   * ========================================================================== */
+  function ganKeoTha(box, sauKhiDoi) {
+    var dang = null;
+
+    function docThuTu() {
+      return [].slice.call(box.children).map(function (e) { return +e.dataset.idx; });
+    }
+    function xong() {
+      if (!dang) return;
+      dang.classList.remove("dang-keo");
+      dang = null;
+      box.classList.remove("dang-sap");
+    }
+    /* Thẻ nằm dưới con trỏ. Duyệt tay theo hình chữ nhật thay vì elementFromPoint:
+       thẻ đang kéo được nhấc lên trên (z-index) nên elementFromPoint luôn trả về
+       chính nó, không bao giờ tìm được thẻ đích. */
+    function theDuoiTro(x, y) {
+      var ds = [].slice.call(box.children);
+      for (var i = 0; i < ds.length; i++) {
+        if (ds[i] === dang) continue;
+        var r = ds[i].getBoundingClientRect();
+        if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) return ds[i];
+      }
+      return null;
+    }
+
+    box.querySelectorAll("[data-idx]").forEach(function (the) {
+      the.setAttribute("tabindex", "0");
+      the.setAttribute("role", "button");
+
+      the.addEventListener("pointerdown", function (e) {
+        /* Nút bên trong thẻ (nếu có) vẫn phải bấm được bình thường. */
+        if (e.target.closest("button")) return;
+        dang = the;
+        the.classList.add("dang-keo");
+        box.classList.add("dang-sap");
+        try { the.setPointerCapture(e.pointerId); } catch (err) { /* trình duyệt cũ */ }
+        e.preventDefault();
+      });
+
+      the.addEventListener("pointermove", function (e) {
+        if (dang !== the) return;
+        var dich = theDuoiTro(e.clientX, e.clientY);
+        if (!dich) return;
+        var r = dich.getBoundingClientRect();
+        /* Chèn trước hay sau tuỳ con trỏ đã qua nửa thẻ đích chưa. Xét theo trục
+           mà dãy thật sự trải ra: dãy ngang thì so hoành độ, dãy dọc so tung độ. */
+        var ngang = box.classList.contains("sap-ngang");
+        var quaNua = ngang ? (e.clientX > r.left + r.width / 2) : (e.clientY > r.top + r.height / 2);
+        box.insertBefore(dang, quaNua ? dich.nextSibling : dich);
+        sauKhiDoi(docThuTu());
+      });
+
+      the.addEventListener("pointerup", xong);
+      the.addEventListener("pointercancel", xong);
+
+      the.addEventListener("keydown", function (e) {
+        var lui = e.key === "ArrowLeft" || e.key === "ArrowUp";
+        var tien = e.key === "ArrowRight" || e.key === "ArrowDown";
+        if (!lui && !tien) return;
+        e.preventDefault();
+        if (lui && the.previousElementSibling) box.insertBefore(the, the.previousElementSibling);
+        else if (tien && the.nextElementSibling) box.insertBefore(the.nextElementSibling, the);
+        else return;
+        the.focus();
+        sauKhiDoi(docThuTu());
+      });
+    });
+  }
+
 
   /* Ảnh gốc: cảnh SVG tự vẽ (không dính bản quyền) */
   function scene() {
@@ -151,9 +254,20 @@
         '</defs><rect width="200" height="140" fill="url(#gl-check)"/>';
       order.slice().reverse().forEach(function (idx) { svg += dl(w.layers[idx].draw); });
       comp.innerHTML = svg + "</svg>";
-      lyrs.innerHTML = order.map(function (idx, pos) { var l = w.layers[idx]; return '<div class="glab-lyr"><span class="sw" style="background:' + l.color + '"></span><span class="nm">' + esc(l.name) + '</span><span class="mv"><button data-p="' + pos + '" data-d="-1"' + (pos === 0 ? " disabled" : "") + '>▲</button><button data-p="' + pos + '" data-d="1"' + (pos === order.length - 1 ? " disabled" : "") + ">▼</button></span></div>"; }).join("");
-      lyrs.querySelectorAll(".mv button").forEach(function (b) { b.onclick = function () { var p = +b.dataset.p, t = p + (+b.dataset.d), tmp = order[p]; order[p] = order[t]; order[t] = tmp; verdict.hidden = true; draw(); }; });
     }
+    /* Danh sách lớp dựng MỘT LẦN rồi kéo thả, còn draw() chỉ vẽ lại phần ẢNH ghép.
+       Trước đây draw() dựng lại cả danh sách nên không kéo được. */
+    lyrs.innerHTML = order.map(function (idx) {
+      var l = w.layers[idx];
+      return '<div class="glab-lyr" data-idx="' + idx + '"><span class="sw" style="background:' + l.color +
+        '"></span><span class="nm">' + esc(l.name) + "</span>" +
+        '<span class="tay" aria-hidden="true">' + ico("layers", "var(--text-soft)", 15) + "</span></div>";
+    }).join("");
+    [].slice.call(lyrs.children).forEach(function (e) {
+      e.setAttribute("aria-label", w.layers[+e.dataset.idx].name +
+        ". Kéo để đổi thứ tự lớp, hoặc dùng phím mũi tên lên/xuống.");
+    });
+    ganKeoTha(lyrs, function (moi) { order = moi; verdict.hidden = true; draw(); });
     draw();
     node.querySelector('[data-a="check"]').onclick = function () { var ok = JSON.stringify(order) === JSON.stringify(w.targetOrder); if (ok) done(w, node); verdict.hidden = false; verdict.className = "glab-verdict " + (ok ? "ok" : "no"); verdict.innerHTML = ok ? "<b>Chính xác! Thứ tự lớp đã đúng.</b>" : "<b>Chưa đúng.</b> Nhớ: lớp ở TRÊN che lớp ở DƯỚI."; };
   }
@@ -250,12 +364,23 @@
       '<div class="glab-strip" data-r="strip"></div>' +
       '<div class="glab-actions"><button class="btn btn-primary" data-a="check">' + ico("check2", null, 14) + ' Kiểm tra</button></div><div class="glab-verdict" hidden></div>';
     var strip = node.querySelector('[data-r="strip"]'), verdict = node.querySelector(".glab-verdict");
-    function draw() {
-      strip.innerHTML = order.map(function (idx, pos) { return '<div class="glab-tile"><div class="tn">' + (pos + 1) + '</div><div>' + esc(w.items[idx].label) + '</div><div class="mv"><button data-p="' + pos + '" data-d="-1"' + (pos === 0 ? " disabled" : "") + '>◀</button><button data-p="' + pos + '" data-d="1"' + (pos === order.length - 1 ? " disabled" : "") + ">▶</button></div></div>"; }).join("");
-      strip.querySelectorAll(".mv button").forEach(function (b) { b.onclick = function () { var p = +b.dataset.p, t = p + (+b.dataset.d), tmp = order[p]; order[p] = order[t]; order[t] = tmp; verdict.hidden = true; draw(); }; });
+    /* Đánh lại số thứ tự sau mỗi lần đổi chỗ. Chỉ sửa chữ trong thẻ, KHÔNG dựng
+       lại cả dãy — dựng lại giữa cú kéo là mất phần tử đang giữ con trỏ. */
+    function danhSo() {
+      [].slice.call(strip.children).forEach(function (e, i) {
+        e.querySelector(".tn").textContent = i + 1;
+        e.setAttribute("aria-label", "Vị trí " + (i + 1) + ": " + w.items[+e.dataset.idx].label +
+          ". Kéo để đổi chỗ, hoặc dùng phím mũi tên trái/phải.");
+      });
     }
-    draw();
-    node.querySelector('[data-a="check"]').onclick = function () { var ok = JSON.stringify(order) === JSON.stringify(w.targetOrder); if (ok) done(w, node); verdict.hidden = false; verdict.className = "glab-verdict " + (ok ? "ok" : "no"); verdict.innerHTML = ok ? "<b>Chính xác! Thứ tự đã đúng.</b>" : "<b>Chưa đúng.</b> Dùng ◀ ▶ để sắp lại cho đúng trình tự."; };
+    strip.classList.add("sap-ngang");
+    strip.innerHTML = order.map(function (idx, pos) {
+      return '<div class="glab-tile" data-idx="' + idx + '"><div class="tn">' + (pos + 1) + "</div>" +
+        "<div>" + esc(w.items[idx].label) + "</div></div>";
+    }).join("");
+    danhSo();
+    ganKeoTha(strip, function (moi) { order = moi; verdict.hidden = true; danhSo(); });
+    node.querySelector('[data-a="check"]').onclick = function () { var ok = JSON.stringify(order) === JSON.stringify(w.targetOrder); if (ok) done(w, node); verdict.hidden = false; verdict.className = "glab-verdict " + (ok ? "ok" : "no"); verdict.innerHTML = ok ? "<b>Chính xác! Thứ tự đã đúng.</b>" : "<b>Chưa đúng.</b> Kéo các thẻ để sắp lại cho đúng trình tự."; };
   }
 
   /* ============ 7) HOTSPOT (bấm đúng công cụ/vùng) ============ */
