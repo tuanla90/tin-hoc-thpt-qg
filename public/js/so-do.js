@@ -77,8 +77,10 @@
       ".sd-tang>.sd-o{text-align:left;display:flex;gap:10px;align-items:baseline;justify-content:space-between}" +
       ".sd-tang>.sd-o b{display:inline;font-size:13px}" +
       ".sd-tang>.sd-o span{display:inline;margin:0;text-align:right;flex:1 1 auto}" +
-      ".sd-tang-nhan{display:flex;justify-content:space-between;font:700 11px var(--font-sans);" +
-        "color:var(--text-soft);max-width:430px;margin:0 auto 6px}" +
+      /* Nhãn đầu trục — chữ nghiêng, nhạt màu để không lẫn với tên các bậc thật. */
+      ".sd-tang-dau{font:700 italic 11px var(--font-sans);color:var(--text-soft);" +
+        "max-width:430px;margin:0 auto 6px;padding-left:2px}" +
+      ".sd-tang-dau.duoi{margin:6px auto 0}" +
 
       /* ---- cay: một gốc, nhiều nhánh ---- */
       ".sd-cay{display:grid;justify-items:center;gap:0}" +
@@ -156,13 +158,16 @@
   }
   function veTang(d) {
     /* Nhãn hai đầu để người đọc biết trục dọc nghĩa là gì — thiếu nó thì một chồng
-       thanh xám không nói lên điều gì, và người học không biết đọc từ trên hay dưới. */
-    var nhan = d.tren || d.duoi
-      ? '<div class="sd-tang-nhan"><span>' + esc(d.tren || "") + "</span><span>" + esc(d.duoi || "") + "</span></div>"
-      : "";
-    return nhan + '<div class="sd-tang">' +
+       thanh xám không nói lên điều gì, và người học không biết đọc từ trên hay dưới.
+       "tren"/"duoi" (trên/dưới) là hai đầu của một TRỤC DỌC — trước đây render
+       thành một hàng NGANG (trái/phải) phía trên cả khối, đọc vào thấy nhãn nói
+       một chiều mà các thanh lại xếp chiều khác hẳn. Giờ tách "tren" thành dòng
+       trên cùng, "duoi" thành dòng dưới cùng, đúng với chiều xếp của các thanh. */
+    var dauTren = d.tren ? '<div class="sd-tang-dau">' + esc(d.tren) + "</div>" : "";
+    var dauDuoi = d.duoi ? '<div class="sd-tang-dau duoi">' + esc(d.duoi) + "</div>" : "";
+    return dauTren + '<div class="sd-tang">' +
       d.muc.map(function (m, i) { return o(m, i === 0 || i === d.muc.length - 1 ? "dam" : ""); }).join("") +
-      "</div>";
+      "</div>" + dauDuoi;
   }
   function veCay(d) {
     return '<div class="sd-cay">' + o(d.goc, "dam") +
