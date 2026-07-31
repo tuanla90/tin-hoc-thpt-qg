@@ -795,14 +795,10 @@ function renderLessons(data) {
   const CHAPTERS = LESSON_CHAPTERS;
   const chapterOf = chapterOfLesson;
 
-  // Điểm luyện tập tốt nhất theo từng bài (để tính sao mastery)
-  const scoreByLesson = {};
-  State.history.forEach((h) => {
-    if (h && h.lessonId && h.total) {
-      const s = h.correctCount / h.total;
-      if (!(h.lessonId in scoreByLesson) || s > scoreByLesson[h.lessonId]) scoreByLesson[h.lessonId] = s;
-    }
-  });
+  /* Điểm tốt nhất của một bài hoặc một ô phụ ("LT:22:1", "TT:22"), lấy từ kho
+     THÀNH TÍCH BỀN chứ không quét lại lịch sử: lịch sử chỉ giữ 50 lượt nên bài học
+     từ lâu sẽ mất sao. Xem js/thanh-tich.js. */
+  const diemO = (id) => (window.ThanhTich ? ThanhTich.diem(id) : null);
   // Gom chương -> bài, chỉ trong chặng đang xem (giữ nguyên thứ tự)
   const chaps = [];
   baiChang.forEach(({ l, i }) => {
@@ -833,25 +829,10 @@ function renderLessons(data) {
     }
     return null;
   };
-  /* Điểm tốt nhất của một ô phụ — lấy từ lịch sử làm bài qua id tổng hợp
-     ("LT:22:1", "TT:22"). Dùng chung đường ghi với luyện tập theo bài nên không
-     phải thêm chỗ lưu mới, và đăng nhập rồi thì theo lên máy chủ luôn. */
-  const diemO = (id) => {
-    let best = null;
-    State.history.forEach((h) => {
-      if (h && h.lessonId === id && h.total) {
-        const s = h.correctCount / h.total;
-        if (best == null || s > best) best = s;
-      }
-    });
-    return best;
-  };
   /* Số đề THI THỬ TRONG LỘ TRÌNH đã làm (id tổng hợp bắt đầu bằng "TT:"). Chỉ đếm
      đề của lộ trình, không đếm đề ở mục Thi thử: mỗi đường có quyền lợi free
      riêng, trộn vào nhau thì làm 1 đề ở mục kia là mất luôn ô này. */
-  const soDeDaThi = State.history.filter(
-    (h) => h && h.mode === "exam" && typeof h.lessonId === "string" && h.lessonId.indexOf("TT:") === 0
-  ).length;
+  const soDeDaThi = window.ThanhTich ? ThanhTich.soDeThiThu() : 0;
   const traGoi = typeof Plan !== "undefined" && Plan.paid();
   /* Mốc mở ô thi thử: học xong 2/3 số bài của chặng. "Thời gian đầu chưa học đủ
      thì thi thử làm gì" — nên ô này phải là cửa ải cuối, không mở sẵn từ bài 1. */
@@ -1049,7 +1030,7 @@ function renderLessons(data) {
         const hasQuiz = l.quiz && l.quiz.length;
         /* Sao lấy từ điểm luyện tập của bài. CHƯA học cũng vẫn vẽ đủ ba sao rỗng —
            đó là cái đích để nhắm; chỉ bài chưa mở khoá mới mờ đi. */
-        const stars = hasQuiz ? Math.max(0, starsFor(scoreByLesson[l.id])) : -1;
+        const stars = hasQuiz ? Math.max(0, starsFor(diemO(l.id))) : -1;
         /* Bài khoá phải nói RÕ phải học xong bài nào mới mở, chứ "hãy hoàn thành bài
            trước" thì học sinh còn phải tự đi tìm bài trước là bài nào. */
         const truoc = open ? null : sorted[gi - 1];
@@ -2968,6 +2949,7 @@ function doSubmit(timeUp) {
   /* Ghi vào kho lặp giãn cách TRƯỚC khi cắt lịch sử: kho đó mới là nơi giữ trí
      nhớ dài hạn của từng câu, còn State.history chỉ để xem lại mấy lượt gần đây. */
   if (window.OnTap) OnTap.ghiNhanLuot(record.detail);
+  if (window.ThanhTich) ThanhTich.ghiLuot(record);
   State.history.unshift(record);
   State.history = State.history.slice(0, 50);
   save("history", State.history);

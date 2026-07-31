@@ -58,6 +58,41 @@
 
   /* ---------------- đọc dữ liệu trên máy ---------------- */
   function localHistory() { return (typeof State !== "undefined" && State.history) || []; }
+
+  /* Những khoá đi qua kho khoá-giá trị chung trên máy chủ. Cố ý là DANH SÁCH
+     TRẮNG chứ không phải "mọi khoá": "settings" (giao diện sáng/tối, âm thanh) là
+     lựa chọn của TỪNG MÁY, đồng bộ nó thì đổi nền tối ở máy tính sẽ đổi luôn trên
+     điện thoại. Máy chủ cũng chặn theo đúng danh sách này. */
+  var KHOA_DONG_BO = ["srs", "thanhTich", "mophongXem"];
+  var KHOA_MOC = "stTs";     // mốc thời gian ghi lần cuối của từng khoá, KHÔNG đồng bộ
+
+  function docKhoa(k) {
+    try { return (typeof load === "function") ? load(k, null) : null; } catch (e) { return null; }
+  }
+  function docMoc() {
+    try { return (typeof load === "function" && load(KHOA_MOC, {})) || {}; } catch (e) { return {}; }
+  }
+  function datMoc(k, ts) {
+    try {
+      var m = docMoc(); m[k] = ts;
+      if (typeof mutedSave === "function") mutedSave(KHOA_MOC, m);
+    } catch (e) { /* hết chỗ lưu thì thôi */ }
+  }
+
+  /* Gói dữ liệu vào { v, _ts } chứ KHÔNG trộn _ts vào chính dữ liệu: kho "srs" là
+     một đối tượng khoá theo MÃ CÂU HỎI, nhét thêm _ts vào đó thì Object.keys() ở
+     on-tap.js đếm nó thành một câu hỏi — sai cả số câu tới hẹn lẫn số câu đã làm.
+     Mảng ("mophongXem") cũng cần bọc vì máy chủ chỉ nhận đối tượng.
+     Mốc thời gian giữ ở khoá riêng "stTs", và khoá đó KHÔNG nằm trong danh sách
+     đồng bộ — nếu đồng bộ chính nó thì lại cần một mốc nữa để so, quay vòng. */
+  function dayKhoa(k, val) {
+    if (!Account.user || !Account.profileId || val == null) return;
+    var ts = Date.now();
+    api("/state/" + encodeURIComponent(k), "PUT",
+        { profileId: Account.profileId, data: { v: val, _ts: ts } })
+      .then(function () { datMoc(k, ts); })
+      .catch(function () { /* mất mạng thì lần lưu sau đẩy lại */ });
+  }
   function localLearned() { return (typeof State !== "undefined" && State.learned) || []; }
   function localGam() {
     try { return JSON.parse(localStorage.getItem(window.GAM_KEY || "tinhoc_gam_v1")) || null; } catch (e) { return null; }
@@ -96,6 +131,22 @@
         mutedSave("history", mergedHist);
         if (typeof State !== "undefined") State.history = mergedHist;
       }
+
+      /* progress: kho khoá-giá trị chung (lịch ôn, thành tích bền, đã xem mô phỏng).
+         Gộp kiểu "bản MỚI HƠN thắng cả khoá" — xem chú thích bảng progress ở
+         server/db.js. So bằng dấu thời gian ghi ở máy, giữ trong chính dữ liệu
+         (trường _ts) để không phải thêm khoá lưu trữ riêng. */
+      var pro = srv.progress || {}, moc = docMoc();
+      KHOA_DONG_BO.forEach(function (k) {
+        var xa = pro[k] && pro[k].data, gan = docKhoa(k);
+        /* Mốc của bản trên máy chủ lấy từ chính gói dữ liệu (_ts do máy đã ghi nó
+           đóng dấu), KHÔNG lấy updated_at của hàng: hai máy lệch giờ thì updated_at
+           chỉ nói máy chủ nhận lúc nào, không nói dữ liệu mới tới đâu. */
+        var tsXa = (xa && xa._ts) || -1;
+        var tsGan = gan == null ? -1 : (moc[k] || 0);
+        if (tsXa > tsGan && xa && "v" in xa) mutedSave(k, xa.v);
+        else if (gan != null && tsGan > tsXa) dayKhoa(k, gan);
+      });
 
       /* hồ sơ: máy chủ là nguồn chuẩn (hồ sơ do người dùng sửa ở trang Hồ sơ) */
       if (srv.profile && typeof State !== "undefined") {
@@ -142,6 +193,10 @@
       debounce("learned", 1500, function () {
         api("/learned", "PUT", { profileId: pid, ids: localLearned() }).catch(function () {});
       });
+    } else if (KHOA_DONG_BO.indexOf(key) >= 0) {
+      /* Gộp nhiều lần ghi liên tiếp: lịch ôn được ghi mỗi lần nộp bài, thành tích
+         cũng vậy — đẩy ngay từng lần là mỗi lượt làm bài tốn vài lượt gọi mạng. */
+      debounce("st:" + key, 2500, function () { dayKhoa(key, val); });
     } else if (key === "profile") {
       debounce("profile", 1200, function () {
         var p = (typeof State !== "undefined" && State.profile) || {};

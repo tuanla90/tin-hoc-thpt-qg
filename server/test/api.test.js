@@ -136,6 +136,34 @@ test("tiến độ tách riêng theo từng hồ sơ", async () => {
   assert.equal(s2.data.profile.name, "Bình");
 });
 
+test("kho tiến độ chung: ghi, đọc lại, tách theo hồ sơ, chặn khoá lạ", async () => {
+  const srs = { "CC-mc-101": { l: 2, h: 20300, s: 1, k: 1, n: 20295 } };
+  const r1 = await req("/api/state/srs", { method: "PUT", body: { profileId: hoSo1, data: { v: srs, _ts: 111 } } });
+  assert.equal(r1.status, 200);
+
+  const s1 = await req("/api/sync?profileId=" + hoSo1);
+  assert.equal(s1.data.progress.srs.data._ts, 111);
+  assert.deepEqual(s1.data.progress.srs.data.v, srs);
+
+  // Hồ sơ khác không thấy dữ liệu của hồ sơ này
+  const s2 = await req("/api/sync?profileId=" + hoSo2);
+  assert.equal(s2.data.progress.srs, undefined);
+
+  // Ghi đè cùng khoá thì thay hẳn, không nhân bản hàng
+  await req("/api/state/srs", { method: "PUT", body: { profileId: hoSo1, data: { v: {}, _ts: 222 } } });
+  const s3 = await req("/api/sync?profileId=" + hoSo1);
+  assert.equal(s3.data.progress.srs.data._ts, 222);
+
+  /* Danh sách trắng: khoá ngoài danh sách phải bị từ chối, nếu không thì một
+     client lỗi có thể nhồi dữ liệu tuỳ ý vào cơ sở dữ liệu. */
+  const xau = await req("/api/state/linhtinh", { method: "PUT", body: { profileId: hoSo1, data: { v: 1 } } });
+  assert.equal(xau.status, 400);
+
+  // Thiếu dữ liệu cũng phải bị từ chối
+  const thieu = await req("/api/state/srs", { method: "PUT", body: { profileId: hoSo1 } });
+  assert.equal(thieu.status, 400);
+});
+
 test("không truy cập được hồ sơ của tài khoản khác", async () => {
   const cu = cookie;
   await req("/api/auth/logout", { method: "POST" });

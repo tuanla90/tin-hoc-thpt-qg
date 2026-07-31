@@ -249,17 +249,47 @@ function createApi(pool) {
   r.get("/sync", async (req, res, next) => {
     try {
       const p = await needProfile(req, res); if (!p) return;
-      const [att, lea, gam] = await Promise.all([
+      const [att, lea, gam, pro] = await Promise.all([
         q("SELECT detail FROM attempts WHERE profile_id = $1 ORDER BY client_ts DESC LIMIT 500", [p.id]),
         q("SELECT lesson_id FROM learned WHERE profile_id = $1", [p.id]),
         q("SELECT data FROM gamify WHERE profile_id = $1", [p.id]),
+        q("SELECT key, data, EXTRACT(EPOCH FROM updated_at) * 1000 AS ts FROM progress WHERE profile_id = $1", [p.id]),
       ]);
+      const progress = {};
+      pro.rows.forEach((x) => { progress[x.key] = { data: asObj(x.data, null), ts: Number(x.ts) || 0 }; });
       res.json({
         attempts: att.rows.map((x) => asObj(x.detail, {})),
         learned: lea.rows.map((x) => x.lesson_id),
         gamify: gam.rows[0] ? asObj(gam.rows[0].data, null) : null,
+        progress,
         profile: publicProfile(p),
       });
+    } catch (e) { next(e); }
+  });
+
+  /* Kho khoá-giá trị chung cho tiến độ thêm về sau — xem chú thích bảng `progress`
+     ở server/db.js. Chỉ nhận những khoá trong danh sách trắng: mở cho mọi khoá thì
+     một client lỗi (hoặc cố tình) có thể nhồi dữ liệu tuỳ ý vào cơ sở dữ liệu. */
+  const KHOA_CHO_PHEP = new Set(["srs", "thanhTich", "mophongXem"]);
+
+  r.put("/state/:key", async (req, res, next) => {
+    try {
+      const p = await needProfile(req, res); if (!p) return;
+      const key = String(req.params.key || "");
+      if (!KHOA_CHO_PHEP.has(key)) return res.status(400).json({ error: "Khoá không hợp lệ." });
+      const data = (req.body && req.body.data);
+      if (data == null || typeof data !== "object") return res.status(400).json({ error: "Thiếu dữ liệu." });
+      /* Chặn theo kích thước, không theo số mục: kho lịch ôn có thể tới 2052 câu,
+         nhưng mỗi câu chỉ vài chục byte nên 1MB là dư gấp nhiều lần. */
+      const chuoi = JSON.stringify(data);
+      if (chuoi.length > 1048576) return res.status(413).json({ error: "Dữ liệu quá lớn." });
+      await q(
+        `INSERT INTO progress (profile_id, key, data, updated_at)
+         VALUES ($1, $2, $3, now())
+         ON CONFLICT (profile_id, key) DO UPDATE SET data = EXCLUDED.data, updated_at = now()`,
+        [p.id, key, chuoi]
+      );
+      res.json({ ok: true });
     } catch (e) { next(e); }
   });
 

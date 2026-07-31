@@ -10,7 +10,17 @@ const { Pool } = require("pg");
 
 /* Bảng `profiles`: một TÀI KHOẢN có thể có NHIỀU HỒ SƠ học tập (nhà có hai anh
    em, hoặc một giáo viên kèm vài học sinh). Toàn bộ tiến độ — attempts, learned,
-   gamify — gắn vào HỒ SƠ chứ không gắn vào tài khoản.
+   gamify, progress — gắn vào HỒ SƠ chứ không gắn vào tài khoản.
+
+   Bảng `progress` là KHO KHOÁ-GIÁ TRỊ CHUNG cho mọi tiến độ thêm về sau (lịch ôn
+   giãn cách, thành tích bền, đã xem mô phỏng…). Ba bảng kia mỗi loại một bảng
+   riêng, nên thêm một tính năng là thêm bảng + endpoint + nhánh đồng bộ ở client
+   — tốn dần. Với `progress` thì thêm tính năng chỉ cần gọi save() bằng một khoá
+   mới, không phải động vào máy chủ nữa.
+   ĐÁNH ĐỔI đã biết: gộp theo kiểu "bản mới hơn thắng cả khoá", nên hai máy cùng
+   sửa một khoá thì bên ghi sau đè bên ghi trước. Chấp nhận được vì một học sinh
+   hiếm khi học song song hai máy; muốn chuẩn hơn phải gộp theo từng mục, đắt hơn
+   nhiều.
    LƯU Ý: không đặt chú thích dạng khối bên trong chuỗi SQL dưới đây — pg-mem
    (dùng cho test và chế độ dev) không parse được, tuy Postgres thật chấp nhận. */
 const SCHEMA_SQL = `
@@ -67,6 +77,14 @@ CREATE TABLE IF NOT EXISTS gamify (
   profile_id INT PRIMARY KEY REFERENCES profiles(id) ON DELETE CASCADE,
   data       JSONB NOT NULL DEFAULT '{}',
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS progress (
+  profile_id INT NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  key        TEXT NOT NULL,
+  data       JSONB NOT NULL DEFAULT '{}',
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (profile_id, key)
 );
 
 CREATE TABLE IF NOT EXISTS licenses (

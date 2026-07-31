@@ -16,10 +16,9 @@
  *  mỗi ngày một lượt là mất dữ liệu sau ~50 ngày, đúng lúc gần thi. Kho ở đây tách
  *  riêng và rất gọn — mỗi câu vài chục byte, 2052 câu cũng chỉ khoảng 60KB.
  *
- *  CHƯA ĐỒNG BỘ LÊN MÁY CHỦ: account.js xử lí đồng bộ theo TỪNG khoá có tên cụ
- *  thể (history / learned / profile), không có nhánh chung. Khoá "srs" vì vậy chỉ
- *  nằm trong máy — đổi máy là mất lịch ôn. Muốn đồng bộ phải thêm endpoint ở
- *  server và một nhánh trong onSaved().
+ *  ĐỒNG BỘ: khoá "srs" nằm trong danh sách trắng KHOA_DONG_BO của js/account.js
+ *  nên tự đẩy lên bảng `progress` của máy chủ và kéo về khi đăng nhập ở máy khác.
+ *  Chưa đăng nhập thì vẫn chạy đủ, chỉ là dữ liệu nằm trong máy.
  * ==========================================================================*/
 (function () {
   if (typeof window === "undefined") return;
