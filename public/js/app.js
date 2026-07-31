@@ -741,6 +741,12 @@ const O_PHU = {
   thi: { nhan: "Thi thử", icon: "flag", mau: "#dc2626" },
 };
 
+/* Quy đổi tỉ lệ đúng -> số sao (0-3), và vẽ một ngôi sao. Ở SCOPE NGOÀI vì cả
+   bản đồ lộ trình (renderLessons) lẫn màn kết quả (renderResult) đều cần —
+   đặt trùng công thức ở hai nơi thì có ngày một chỗ đổi ngưỡng, chỗ kia quên. */
+const starsFor = (s) => (s == null ? 0 : s >= 0.9 ? 3 : s >= 0.6 ? 2 : s > 0 ? 1 : 0);
+const starSvg = (on, cls) => `<svg viewBox="0 0 24 24" class="${cls || "pn-star"}${on ? " on" : ""}" aria-hidden="true"><path d="M12 3l2.6 5.6 6.1.8-4.5 4.2 1.2 6-5.4-3-5.4 3 1.2-6L3.3 9.4l6.1-.8z"/></svg>`;
+
 function renderLessons(data) {
   if (!data || !data.stage) { renderChonChang(); return; }
   injectPathCss();
@@ -766,9 +772,6 @@ function renderLessons(data) {
       if (!(h.lessonId in scoreByLesson) || s > scoreByLesson[h.lessonId]) scoreByLesson[h.lessonId] = s;
     }
   });
-  const starsFor = (s) => (s == null ? 0 : s >= 0.9 ? 3 : s >= 0.6 ? 2 : s > 0 ? 1 : 0);
-  const starSvg = (on) => `<svg viewBox="0 0 24 24" class="pn-star${on ? " on" : ""}" aria-hidden="true"><path d="M12 3l2.6 5.6 6.1.8-4.5 4.2 1.2 6-5.4-3-5.4 3 1.2-6L3.3 9.4l6.1-.8z"/></svg>`;
-
   // Gom chương -> bài, chỉ trong chặng đang xem (giữ nguyên thứ tự)
   const chaps = [];
   baiChang.forEach(({ l, i }) => {
@@ -930,13 +933,14 @@ function renderLessons(data) {
         truoc = k;
         const ben = p.x < CX ? "right:6px" : "left:6px";
         const img = MASCOT_BANDO[(CHANG + chapIdx + ra.length) % MASCOT_BANDO.length];
-        /* 56 = nửa chiều cao .pmascot (112px). Cộng thêm 26 để canh KHÔNG PHẢI
-           theo tâm ô mà theo tâm của cả khối "ô + khối chữ" bên dưới nó — đo
-           trên trình duyệt thấy tâm khối chữ lệch xuống dưới tâm ô 22-33px (tuỳ
-           ô 68px hay 76px và chữ 1-3 dòng), 26 là mức giữa. Không cộng thì linh
-           vật canh đúng tâm ô nhưng nhìn lệch hẳn lên trên so với cả cụm gồm ô
-           và tên bài/tên ô phía dưới. */
-        ra.push(`<div class="pmascot" style="${ben};top:${f1(p.y - 56 + 26)}px">
+        /* CANH THEO KHỐI CHỮ, không theo ô và cũng không theo tâm cụm "ô + chữ".
+           Ba mốc đã thử: tâm ô (p.y - 56) trông nhô hẳn lên trên; tâm cụm ô + chữ
+           (p.y - 30) vẫn còn cao hơn một nấc. Lí do là ảnh linh vật có khoảng trống
+           phía trên đầu, nên tâm KHUNG ẢNH luôn nằm cao hơn tâm NHÂN VẬT.
+           Duolingo đặt linh vật ngang tầm phần chữ dưới ô chứ không ngang ô.
+           82 = tâm khối chữ (bắt đầu ở p.y + CAP_DY = +52, cao khoảng 60px);
+           65 = nửa chiều cao khung ảnh 130px. */
+        ra.push(`<div class="pmascot" style="${ben};top:${f1(p.y + 82 - 65)}px">
             <img src="${mascotSrc(img)}" alt="" aria-hidden="true" draggable="false" loading="lazy" />
           </div>`);
       });
@@ -967,6 +971,30 @@ function renderLessons(data) {
           <span class="pn-name">${ten}</span>
         </div>`;
 
+      /* BA SAO XẾP THÀNH CUNG ÔM PHÍA TRÊN Ô — kiểu Candy Crush / Duolingo.
+         Luôn hiện đủ ba sao: chưa đạt thì sao rỗng, đạt tới đâu tô vàng tới đó. Bản
+         trước chỉ hiện sao SAU KHI học xong và đặt cạnh tên bài, nên trước khi học
+         không có gì cho biết bài này chấm được mấy sao — mất hẳn cái đích để nhắm.
+         Sao rỗng tô TRẮNG kèm viền xám: trắng trơn thì chìm mất trên nền sáng, mà
+         xám trơn thì chìm trên nền tối; có viền thì đọc được ở cả hai giao diện.
+         Ba góc -138° / -90° / -42°: cung đủ rộng để sao ngoài không đè lên bóng đổ
+         của ô, và mỗi sao xoay theo tiếp tuyến nên cả cụm ôm đúng vòng tròn.
+         BÁN KÍNH tính theo hình học chứ không ướm mắt: sao 16px xoay đi thì nửa
+         đường chéo là 16·√2/2 ≈ 11,3px, nên tâm sao phải cách tâm ô ít nhất
+         (bán kính ô + 11,3 + lề). Ô bài là hình tròn bán kính 34 -> 52 là đủ hở
+         ~7px. Ô phụ là vuông 76px bo góc 24px, mép theo hướng chéo xa tới
+         √2·(38−24)+24 ≈ 44 -> 66 mới hở. Đã đo lại bằng khoảng cách tâm-tới-tâm
+         trừ nửa đường chéo sao, không ướm bằng hình chữ nhật bao (hình chữ nhật
+         bao một ô TRÒN báo chồng ở bốn góc trống, sai hoàn toàn). */
+      const GOC_SAO = [-138, -90, -42];
+      const cungSao = (cx, cy, sang, banKinh) => GOC_SAO.map((g, i) => {
+        const r = (g * Math.PI) / 180;
+        const x = cx + banKinh * Math.cos(r), y = cy + banKinh * Math.sin(r);
+        return `<svg class="pn-as${i < sang ? " on" : ""}" viewBox="0 0 24 24" aria-hidden="true"
+            style="left:${f1(x - 8)}px;top:${f1(y - 8)}px;transform:rotate(${g + 90}deg)">
+            <path d="M12 3l2.6 5.6 6.1.8-4.5 4.2 1.2 6-5.4-3-5.4 3 1.2-6L3.3 9.4l6.1-.8z"/></svg>`;
+      }).join("");
+
       if (o.loai === "bai") {
         const gi = o.gi, l = o.l, done = learned[gi], open = unlocked[gi], cur = gi === currentIdx;
         const cls = done ? "done" : open ? "open" : "locked";
@@ -974,25 +1002,30 @@ function renderLessons(data) {
         const name = esc((l.title || "").replace(/^Bài\s*\d+[.\s]*/, ""));
         const stTxt = done ? "đã học" : open ? "đang học" : "chưa mở khóa";
         const hasQuiz = l.quiz && l.quiz.length;
-        const stars = done && hasQuiz ? starsFor(scoreByLesson[l.id]) : -1;
-        const starsHtml = stars >= 0 ? `<span class="pn-stars" title="Mastery: ${stars}/3 sao">${[0, 1, 2].map((i) => starSvg(i < stars)).join("")}</span>` : "";
+        /* Sao lấy từ điểm luyện tập của bài. CHƯA học cũng vẫn vẽ đủ ba sao rỗng —
+           đó là cái đích để nhắm; chỉ bài chưa mở khoá mới mờ đi. */
+        const stars = hasQuiz ? Math.max(0, starsFor(scoreByLesson[l.id])) : -1;
         /* Bài khoá phải nói RÕ phải học xong bài nào mới mở, chứ "hãy hoàn thành bài
            trước" thì học sinh còn phải tự đi tìm bài trước là bài nào. */
         const truoc = open ? null : sorted[gi - 1];
         const khoaBai = truoc
           ? `Học xong Bài ${truoc.order} — ${(truoc.title || "").replace(/^Bài\s*\d+[.\s]*/, "")} thì bài này mở`
           : "Bài này chưa mở khoá trong lộ trình tuần tự";
-        return `<button class="pnode ${cls}${cur ? " cur" : ""}" data-key="${esc(o.key)}" data-lock="${open ? 0 : 1}" data-khoa="${esc(khoaBai)}" style="${dat(CELL / 2)}" title="${esc(l.title)}" aria-label="Bài ${l.order}: ${name} — ${stTxt}">
+        return `${stars >= 0 ? `<div class="pn-arc${open ? "" : " mo"}" title="Mastery: ${stars}/3 sao">${cungSao(p.x, p.y, stars, CELL / 2 + 18)}</div>` : ""}
+          <button class="pnode ${cls}${cur ? " cur" : ""}" data-key="${esc(o.key)}" data-lock="${open ? 0 : 1}" data-khoa="${esc(khoaBai)}" style="${dat(CELL / 2)}" title="${esc(l.title)}" aria-label="Bài ${l.order}: ${name} — ${stTxt}, ${stars}/3 sao">
             ${cur ? `<span class="pn-bubble">${ICON("flame", 13)} BẮT ĐẦU</span>` : ""}
             <span class="pnode-inner-icon">${glyph}</span>
           </button>
-          ${capHtml("Bài " + l.order, null, name, starsHtml)}`;
+          ${capHtml("Bài " + l.order, null, name, "")}`;
       }
 
       // ---- Ô phụ: mô phỏng / thực hành / luyện tập / thi thử ----
       const dang = O_PHU[o.loai];
       let open = true, ten = "", nhan = dang.nhan, khoaTxt = "";
       let starsHtml = "", pre = false;
+      /* Số sao của ô phụ, -1 nghĩa là ô này không chấm sao (mô phỏng, tổng kết).
+         Vẽ thành CUNG giống ô bài, không phải chùm sao nhỏ cạnh nhãn. */
+      let saoO = -1;
 
       /* Ô phụ nằm trong trang bài học nên bài chưa mở thì nó cũng chưa mở — nói rõ
          như vậy, đừng để học sinh đoán tại sao bấm không vào được. */
@@ -1015,14 +1048,8 @@ function renderLessons(data) {
         khoaTxt = vBai;
         pre = typeof Plan !== "undefined" && !Plan.xuongMo(o.xuong, o.l);
         /* SAO theo số bài làm đúng — xưởng thực hành có máy chấm nên đo được thật.
-           Chỉ hiện khi đã làm được ít nhất một bài: ô nào cũng kèm ba sao rỗng thì
-           bản đồ đầy sao xám, mất luôn tác dụng báo hiệu. */
-        if (open && !pre && window.ManRieng) {
-          const st = ManRieng.saoThucHanh(o.l.id);
-          if (st.xong > 0) {
-            starsHtml = `<span class="pn-stars" title="Thực hành: ${st.xong}/${st.tong} bài đúng">${[0, 1, 2].map((i) => starSvg(i < st.sao)).join("")}</span>`;
-          }
-        }
+           Vẽ đủ ba sao (rỗng khi chưa làm) như ô bài, để nhìn là biết ô này chấm sao. */
+        if (open && !pre && window.ManRieng) saoO = ManRieng.saoThucHanh(o.l.id).sao;
       } else if (o.loai === "tongket") {
         /* Mở ngay từ đầu, KHÔNG đòi học xong bài nào: đây là bản rút gọn để ôn
            gấp, mà lúc ôn gấp thì học sinh cần vào thẳng chứ không đi lại lộ trình. */
@@ -1033,8 +1060,7 @@ function renderLessons(data) {
         open = daHoc >= 1;
         ten = open ? "Ôn lại cả chương, biết đáp án ngay" : "Học xong 1 bài để mở";
         khoaTxt = "Học xong ít nhất 1 bài trong chương rồi quay lại ô luyện tập này nhé";
-        const st = starsFor(diemO(o.idDiem));
-        if (open) starsHtml = `<span class="pn-stars" title="Luyện tập: ${st}/3 sao">${[0, 1, 2].map((i) => starSvg(i < st)).join("")}</span>`;
+        if (open) saoO = Math.max(0, starsFor(diemO(o.idDiem)));
       } else if (o.loai === "thi") {
         open = doneCount >= mocThi;
         pre = open && !traGoi && soDeDaThi >= 1;
@@ -1049,7 +1075,8 @@ function renderLessons(data) {
          nhưng đọc bằng màn hình đọc thì không có "ngay dưới" -> nhắc tên bài. */
       const cuaBai = o.l ? " — " + (o.l.title || "").replace(/^Bài\s*\d+[.\s]*/, "") : "";
       const mota = `${dang.nhan}${cuaBai}: ${ten}` + (pre ? " (gói Premium)" : "") + (open ? "" : " (chưa mở)");
-      return `<button class="pnode ophu o-${o.loai} ${open ? "open" : "locked"}${pre ? " o-pre" : ""}" data-key="${esc(o.key)}" data-lock="${open ? 0 : 1}" data-khoa="${esc(khoaTxt)}" style="${dat(38)}" title="${esc(mota)}" aria-label="${esc(mota)}">
+      return `${saoO >= 0 ? `<div class="pn-arc" title="${esc(dang.nhan)}: ${saoO}/3 sao">${cungSao(p.x, p.y, saoO, 38 + 28)}</div>` : ""}
+        <button class="pnode ophu o-${o.loai} ${open ? "open" : "locked"}${pre ? " o-pre" : ""}" data-key="${esc(o.key)}" data-lock="${open ? 0 : 1}" data-khoa="${esc(khoaTxt)}" style="${dat(38)}" title="${esc(mota)}" aria-label="${esc(mota)}">
           <span class="ophu-ic">${ic(open ? dang.icon : "lock")}</span>
           ${pre ? '<span class="ophu-pre">Premium</span>' : ""}
         </button>
@@ -1279,11 +1306,12 @@ function injectPathCss() {
     /* Khung CỐ ĐỊNH, không để ảnh tự quyết chiều cao: bộ ảnh linh vật có tỉ lệ
        khác nhau (đo được 79px tới 153px cùng bề rộng 74px), thả tự do thì không
        tính trước được nó có chạm vào dòng chữ bậc dưới hay không. */
-    /* 104×112 (trước là 78×84). Bề ngang khung là 340px, linh vật đặt sát lề
-       (left/right 6px) và LUÔN ở phía đối diện ô, nên 104px vẫn không đụng ô
-       (ô rộng 68px) lẫn khối chữ 190px canh giữa dưới ô — đã đo ở cả năm cột x.
-       Đổi cỡ thì phải đổi cả độ lệch dọc ở macs (p.y - 56 = nửa chiều cao). */
-    ".pmascot { position: absolute; width: 104px; height: 112px; z-index: 0; pointer-events: none; user-select: none; filter: drop-shadow(0 8px 16px rgba(0,0,0,.16)); animation: pmFloat 5s ease-in-out infinite; }" +
+    /* 120×130 (78×84 -> 104×112 -> nay). CHỌN CỠ PHẢI TÍNH CẢ PHÉP XOAY: hiệu ứng
+       trôi pmFloat xoay ±2,5°, làm bề ngang THẬT của khung lớn hơn con số CSS —
+       đo được 132px ra thành 138px. Chữ dưới ô gần nhất bắt đầu ở x=136 trong khung
+       340px, nên 132 đè lên chữ 5px, còn 120 (thật ~126) thì chừa được 7px.
+       Đổi cỡ thì phải đổi cả độ lệch dọc ở macs (nửa chiều cao = 65). */
+    ".pmascot { position: absolute; width: 120px; height: 130px; z-index: 0; pointer-events: none; user-select: none; filter: drop-shadow(0 8px 16px rgba(0,0,0,.16)); animation: pmFloat 5s ease-in-out infinite; }" +
     ".pmascot img { width: 100%; height: 100%; display: block; object-fit: contain; object-position: bottom; }" +
     "@keyframes pmFloat { 0%,100% { transform: translateY(0) rotate(-2.5deg); } 50% { transform: translateY(-10px) rotate(2.5deg); } }" +
 
@@ -1335,6 +1363,16 @@ function injectPathCss() {
     ".pn-num.pn-chu { font-family: var(--font-sans); letter-spacing: 0; }" +
     ".pn-name { font-size: 12.5px; font-weight: 800; color: var(--text); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; margin-top: 3px; font-family: var(--font-sans); }" +
     ".pn-top { display: flex; align-items: center; justify-content: center; gap: 6px; line-height: 1; margin-bottom: 2px; }" +
+    /* Cung ba sao ôm phía trên ô. z-index 2: dưới ô (3) nên bóng đổ của ô vẫn phủ
+       lên chân sao đúng thứ tự lớp, nhưng trên khối chữ (.pn-cap cũng 2, sao đứng
+       sau trong DOM nên thắng) — mà hai thứ này không chồng nhau nên không sao. */
+    ".pn-arc { position: absolute; inset: 0; pointer-events: none; z-index: 2; }" +
+    ".pn-arc.mo { opacity: .38; }" +
+    /* Sao RỖNG: trắng + viền xám. Trắng trơn chìm trên nền sáng, xám trơn chìm trên
+       nền tối; có viền thì đọc được ở cả hai giao diện. */
+    ".pn-as { position: absolute; width: 16px; height: 16px; fill: #fff; stroke: #94a3b8; stroke-width: 1.4; " +
+      "stroke-linejoin: round; transition: fill .25s, filter .25s; }" +
+    ".pn-as.on { fill: #ffc107; stroke: #d99e06; filter: drop-shadow(0 2px 5px rgba(255, 193, 7, .55)); }" +
     ".pn-stars { display: inline-flex; gap: 3px; }" +
     /* Dấu "đã xem hết mô phỏng" — đứng cùng chỗ với chùm sao trên .pn-top nên phải
        cùng cách canh, không thì dòng nhãn nhảy lên nhảy xuống giữa các ô. */
@@ -2829,7 +2867,18 @@ function renderResult(data) {
   const isExam = Q.mode === "exam";
   const scoreOn10 = isExam ? result.score : Math.round((result.correctCount / result.total) * 1000) / 100;
   const pctScore = isExam ? (result.score / 10) : (result.correctCount / result.total);
+
+  /* Ô "Luyện tập" / "Thi thử" trên bản đồ lộ trình gắn lessonId tổng hợp
+     "LT:<chặng>:<chỉ số chương>" / "TT:<chặng>" (xem batDauLuyenChuong,
+     batDauThiChang) — nhận ra bằng tiền tố này để đổi màn kết quả sang NGÔN NGỮ
+     SAO, khớp với chính cái ô đó đang hiển thị trên bản đồ, thay vì vòng tròn
+     phần trăm chỉ hợp với bài luyện/thi độc lập ngoài trang chủ. */
+  const oPhuMatch = typeof Q.lessonId === "string" && /^(LT|TT):(\d+)/.exec(Q.lessonId);
+  const changOPhu = oPhuMatch ? Number(oPhuMatch[2]) : null;
+  const stars = oPhuMatch ? starsFor(pctScore) : null;
+
   const ring = ringSVG(pctScore, isExam ? result.score.toFixed(2) : `${result.correctCount}/${result.total}`, isExam ? "/ 10 điểm" : "câu đúng");
+  const starHero = `<div class="result-stars">${[0, 1, 2].map((i) => starSvg(i < stars, "result-star")).join("")}</div>`;
 
   const msg = pctScore >= 0.9 ? aIco("trophy", "#eab308", 20) + " Xuất sắc!" : pctScore >= 0.7 ? aIco("star", "#f59e0b", 20) + " Tốt lắm!" : pctScore >= 0.5 ? aIco("flame", "#f97316", 20) + " Khá ổn, cố lên!" : aIco("book", "#3b82f6", 20) + " Cần ôn thêm nhé!";
   const mm = Math.floor(record.durationSec / 60), ss = record.durationSec % 60;
@@ -2845,7 +2894,7 @@ function renderResult(data) {
 
   app.innerHTML = `
     <div class="result-hero">
-      <div class="score-ring">${ring}</div>
+      ${oPhuMatch ? starHero : `<div class="score-ring">${ring}</div>`}
       <div class="result-msg">${msg}</div>
       ${record.timeUp ? `<p style="color:var(--danger);margin-top:6px;font-weight:600">${aIco("clock", "#dc2626", 15)} Đã hết giờ làm bài</p>` : ""}
     </div>
@@ -2868,19 +2917,40 @@ function renderResult(data) {
     <div class="quiz-nav" style="margin-bottom:22px">
       <button class="btn btn-ghost" id="retryBtn">${aIco("refresh", null, 15)} Làm lại</button>
       <div class="quiz-nav-left">
-        <button class="btn btn-ghost" id="homeBtn">${aIco("home", null, 15)} Trang chủ</button>
-        <button class="btn btn-primary" id="toggleReview">${aIco("eye", null, 15)} Xem lời giải chi tiết</button>
+        ${oPhuMatch
+          ? `<button class="btn btn-ghost" id="backMapBtn">${aIco("aleft", null, 15)} Quay lại bản đồ</button>
+             <button class="btn btn-primary" id="continueBtn">${aIco("aright", null, 15)} Học tiếp</button>`
+          : `<button class="btn btn-ghost" id="homeBtn">${aIco("home", null, 15)} Trang chủ</button>`}
+        <button class="btn ${oPhuMatch ? "btn-ghost" : "btn-primary"}" id="toggleReview">${aIco("eye", null, 15)} Xem lời giải chi tiết</button>
       </div>
     </div>
 
     <div id="reviewArea" hidden></div>
   `;
 
-  document.getElementById("homeBtn").onclick = () => { State.quiz = null; go("home"); };
+  if (oPhuMatch) {
+    /* "Quay lại bản đồ": về đúng chặng của ô vừa làm. "Học tiếp": đi thẳng tới
+       bài đang học dở của lộ trình — không bắt học sinh tự tìm lại chỗ mình
+       đang học sau khi vừa làm xong ô luyện tập/thi thử.
+       CHƯA làm animation sao xuất hiện lúc quay lại bản đồ: chờ chốt cách biểu
+       diễn số sao (việc của một phiên khác), làm animation trước dễ phải sửa lại. */
+    document.getElementById("backMapBtn").onclick = () => { State.quiz = null; go("lessons", { stage: changOPhu }); };
+    document.getElementById("continueBtn").onclick = () => {
+      State.quiz = null;
+      const cur = pathState().cur;
+      if (cur) go("lesson", { id: cur.id });
+      else go("lessons", { stage: changOPhu });
+    };
+  } else {
+    document.getElementById("homeBtn").onclick = () => { State.quiz = null; go("home"); };
+  }
   document.getElementById("retryBtn").onclick = () => {
     if (isExam && Q.code && typeof startExamCode === "function") startExamCode(Q.code);
     else if (isExam) startExam();
-    else { State.quiz = newQuiz(shuffle(Q.questions), Q.mode, { title: Q.title, minutes: Q.minutes }); go("quiz"); }
+    /* Giữ lessonId khi làm lại: thiếu dòng này thì làm lại ô "Luyện tập"/"Thi thử"
+       xong nộp bài lại rơi về màn kết quả kiểu thường (vòng tròn %), mất luôn
+       sao — vì màn kết quả nhận diện ô phụ qua CHÍNH lessonId này. */
+    else { State.quiz = newQuiz(shuffle(Q.questions), Q.mode, { title: Q.title, minutes: Q.minutes, lessonId: Q.lessonId }); go("quiz"); }
   };
   const rev = document.getElementById("reviewArea");
   const tglRev = document.getElementById("toggleReview");
