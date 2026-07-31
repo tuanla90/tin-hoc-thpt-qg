@@ -619,7 +619,7 @@ function baiCoMinhHoa() {
   if (MH_CO) return MH_CO;
   MH_CO = new Set();
   ["minh-hoa.js", "minh-hoa-2.js", "minh-hoa-3.js", "minh-hoa-4.js", "minh-hoa-5.js",
-    "minh-hoa-6.js", "minh-hoa-7.js", "minh-hoa-8.js"].forEach((ten) => {
+    "minh-hoa-6.js", "minh-hoa-7.js", "minh-hoa-8.js", "minh-hoa-9.js"].forEach((ten) => {
     try {
       const src = fs.readFileSync(path.join(__dirname, "..", "public", "js", ten), "utf8");
       // khớp cả 'dangKy("C10-22"' lẫn '"C10-23": nhiPhan' trong bảng THEO_BAI
@@ -631,7 +631,7 @@ function baiCoMinhHoa() {
 }
 
 /* Khối minh hoạ trên trang công khai.
-   Trang này CỐ Ý không nạp bundle của app (nặng ~1,2MB). Tám tệp minh hoạ thì
+   Trang này CỐ Ý không nạp bundle của app (nặng ~1,2MB). Chín tệp minh hoạ thì
    độc lập hoàn toàn — không đụng State, LESSONS hay QUESTION_BANK — nên nạp
    riêng được, và chỉ nạp ở những bài thật có minh hoạ. Số bài đo bằng
    baiCoMinhHoa().size lúc build, đừng chép tay con số vào đây — chắc chắn có
@@ -656,6 +656,7 @@ function minhHoaHtml(muc) {
 <script src="/js/minh-hoa-6.js" defer></script>
 <script src="/js/minh-hoa-7.js" defer></script>
 <script src="/js/minh-hoa-8.js" defer></script>
+<script src="/js/minh-hoa-9.js" defer></script>
 <script>window.addEventListener("load",function(){var h=document.getElementById("mhMount");` +
     `if(h&&window.MinhHoa)window.MinhHoa.veVao(h,h.dataset.bai)});</script>`;
   return { than, them };

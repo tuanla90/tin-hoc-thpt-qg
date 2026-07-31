@@ -251,4 +251,21 @@
     ],
     ghi: "Nhớ một cặp: **trung bình** bị một giá trị cực đoan kéo lệch, **trung vị** thì không. Bảng lương có một người thu nhập rất cao thì trung bình vô nghĩa — phải nhìn trung vị. Và tương quan **không phải** nhân quả: hai đại lượng cùng tăng chưa chắc cái này gây ra cái kia.",
   });
+
+  /* Bài này không có cơ chế nào để bấm từng bước — nó là chuẩn mực ứng xử, chứ
+     không phải một quy trình máy chạy. Ép làm mô phỏng chỉ ra hình thức, nên
+     dùng "cay" để phân loại: cái được phép, cái phải xin phép, cái cấm hẳn. */
+  G("C10-08", {
+    kieu: "cay", mau: "warning",
+    ten: "Dùng lại sản phẩm của người khác: được, phải xin phép, hay cấm?",
+    mo: "Câu hỏi cần trả lời trước khi tải, chép hay đăng lại bất cứ thứ gì: **mình có quyền gì với thứ này?**",
+    goc: { t: "Một sản phẩm số trên mạng", p: "ảnh, nhạc, phim, phần mềm, bài viết, mã nguồn" },
+    muc: [
+      { t: "Tự do dùng", p: "hết hạn bảo hộ, hoặc tác giả ghi rõ **miễn phí dùng lại** (giấy phép mở, phạm vi công cộng)" },
+      { t: "Dùng được nhưng **có điều kiện**", p: "giấy phép **Creative Commons**: thường buộc **ghi tên tác giả**, có loại cấm dùng để kiếm tiền, có loại cấm sửa đổi" },
+      { t: "Phải **xin phép** hoặc **trả tiền**", p: "phần mềm thương mại, nhạc, phim, ảnh có bản quyền — mua giấy phép mới được dùng" },
+      { t: "**Cấm** dù có xin phép", p: "bẻ khoá, phát tán bản lậu, đăng lại thông tin riêng tư của người khác" },
+    ],
+    ghi: "Ba chỗ hay hiểu sai. **(1)** “Tải được về” không có nghĩa là “được phép dùng” — không khoá không phải là cho phép. **(2)** **Ghi nguồn không thay được xin phép**: dẫn nguồn là phép lịch sự và là yêu cầu của một số giấy phép, nhưng với sản phẩm có bản quyền thì vẫn phải xin phép. **(3)** Dùng cho **mục đích học tập** cũng không tự động miễn trừ; nó chỉ được nới ở phạm vi rất hẹp. Ở Việt Nam, quyền tác giả do **Luật Sở hữu trí tuệ** bảo hộ, và hành vi trên mạng còn chịu **Luật An ninh mạng**.",
+  });
 })();
