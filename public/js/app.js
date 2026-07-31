@@ -861,7 +861,13 @@ function renderLessons(data) {
      rộng 68px nên tâm hai ô ngoài cùng cách nhau 4 ô; lấy biên độ 128 (thay vì
      136 đúng chằn) để chừa 8px lề, không thì vành nhấp nháy của ô đang học tràn
      ra khỏi thẻ. */
-  const CELL = 68;                     // đường kính một ô
+  const CELL = 68;                     // BƯỚC hình học của bản đồ (dùng tính A, không phải cỡ ô)
+  /* Ô HƠI BẸT chứ không tròn hẳn — Duolingo cũng vậy, và đó là thứ tạo cảm giác
+     nhìn từ trên chếch xuống. Tròn hẳn + cạnh dày bên dưới thì cạnh đó đọc ra như
+     một vệt bóng dán vào, không ra khối. Tỉ lệ ~1,15 : 1 là mức thấy được mà chưa
+     thành bầu dục. Đổi hai số này thì phải đổi cả bán kính cung sao ở cungSao(). */
+  const NODE_W = 76, NODE_H = 66;      // ô bài
+  const OPHU_W = 82, OPHU_H = 72;      // ô phụ (mô phỏng / thực hành / luyện tập / thi thử)
   const CAP_W = 190;                   // 190px/3 dòng: không cắt tên bài nào trong 119 bài
 
   /* BỀ NGANG KHUNG THEO MÀN HÌNH, và BIÊN ĐỘ SÓNG SUY TỪ NÓ.
@@ -879,7 +885,11 @@ function renderLessons(data) {
      khối chữ − 4px lề. Trần 2·CELL−8 giữ đúng ý "sóng rộng khoảng 5 ô" của bản
      đầu, và chừa 8px cho vành nhấp nháy của ô đang học. */
   const A = Math.min(2 * CELL - 8, CX - CAP_W / 2 - 4);
-  const STEP = 176, PADTOP = 78;
+  /* STEP 176 -> 184: chữ 3 dòng của ô TRÊN chạm vào cung sao của ô DƯỚI đúng 3px.
+     Nới bước 8px thì hở 5px ở mọi trường hợp — chắc chắn hơn hẳn cách bào bớt cỡ
+     sao hay kéo cung sát ô, hai cách đó chỉ còn hở 1-2px nên tên bài dài thêm một
+     dòng là lại vỡ. Bản đồ cao thêm ~5%, đổi lại mất hẳn một LOẠI va chạm. */
+  const STEP = 184, PADTOP = 78;
   const CAP_DY = 52;                   // hở từ tâm ô xuống đầu khối chữ (qua bóng nổi + vành)
   const CAP_BOT = 133;                 // chỗ chừa dưới ô cuối cho khối chữ của nó
   const ic = (name) => (typeof ICON === "function" ? ICON(name) : "");
@@ -938,9 +948,11 @@ function renderLessons(data) {
            (p.y - 30) vẫn còn cao hơn một nấc. Lí do là ảnh linh vật có khoảng trống
            phía trên đầu, nên tâm KHUNG ẢNH luôn nằm cao hơn tâm NHÂN VẬT.
            Duolingo đặt linh vật ngang tầm phần chữ dưới ô chứ không ngang ô.
-           82 = tâm khối chữ (bắt đầu ở p.y + CAP_DY = +52, cao khoảng 60px);
+           104 = thấp hơn tâm khối chữ (khối chữ bắt đầu ở p.y + CAP_DY = +52) — đã
+           hạ ba lần theo phản hồi: tâm ô -> tâm cụm ô+chữ -> tâm khối chữ -> nay
+           thấp hơn nữa, vì ảnh còn khoảng trống trên đầu nhân vật;
            65 = nửa chiều cao khung ảnh 130px. */
-        ra.push(`<div class="pmascot" style="${ben};top:${f1(p.y + 82 - 65)}px">
+        ra.push(`<div class="pmascot" style="${ben};top:${f1(p.y + 104 - 65)}px">
             <img src="${mascotSrc(img)}" alt="" aria-hidden="true" draggable="false" loading="lazy" />
           </div>`);
       });
@@ -958,7 +970,7 @@ function renderLessons(data) {
       const capStyle = `left:${f1(capL)}px;top:${f1(p.y + CAP_DY)}px`;
       /* Nửa bề ngang ô, để đặt left = tâm - nửa. Phải bằng ĐÚNG nửa bề rộng CSS
          (ô bài 68px, ô phụ 76px), không thì hai ô lẽ ra đối xứng lại lệch nhau. */
-      const dat = (bk) => `left:${f1(p.x - bk)}px;top:${f1(p.y - bk)}px;--cc:${C}`;
+      const dat = (w, h) => `left:${f1(p.x - w / 2)}px;top:${f1(p.y - h / 2)}px;--cc:${C}`;
       /* mauNhan chỉ được truyền cho ô phụ (mô phỏng/thực hành/luyện tập/thi thử) —
          dùng chính điều kiện đó để đổi font: .pn-num vốn font-mono cho vừa nhãn
          "Bài 12" (số, hợp monospace), nhưng nhãn ô phụ là CHỮ VIỆT NHIỀU DẤU
@@ -977,21 +989,23 @@ function renderLessons(data) {
          không có gì cho biết bài này chấm được mấy sao — mất hẳn cái đích để nhắm.
          Sao rỗng tô TRẮNG kèm viền xám: trắng trơn thì chìm mất trên nền sáng, mà
          xám trơn thì chìm trên nền tối; có viền thì đọc được ở cả hai giao diện.
-         Ba góc -138° / -90° / -42°: cung đủ rộng để sao ngoài không đè lên bóng đổ
-         của ô, và mỗi sao xoay theo tiếp tuyến nên cả cụm ôm đúng vòng tròn.
-         BÁN KÍNH tính theo hình học chứ không ướm mắt: sao 16px xoay đi thì nửa
-         đường chéo là 16·√2/2 ≈ 11,3px, nên tâm sao phải cách tâm ô ít nhất
-         (bán kính ô + 11,3 + lề). Ô bài là hình tròn bán kính 34 -> 52 là đủ hở
-         ~7px. Ô phụ là vuông 76px bo góc 24px, mép theo hướng chéo xa tới
-         √2·(38−24)+24 ≈ 44 -> 66 mới hở. Đã đo lại bằng khoảng cách tâm-tới-tâm
-         trừ nửa đường chéo sao, không ướm bằng hình chữ nhật bao (hình chữ nhật
-         bao một ô TRÒN báo chồng ở bốn góc trống, sai hoàn toàn). */
-      const GOC_SAO = [-138, -90, -42];
-      const cungSao = (cx, cy, sang, banKinh) => GOC_SAO.map((g, i) => {
+         Ba góc -122° / -90° / -58°: cụm sát nhau hơn bản đầu (-138/-90/-42 trông
+         rời rạc), mỗi sao xoay theo tiếp tuyến nên cả cụm ôm đúng mép ô.
+         HAI BÁN KÍNH chứ không một: ô nay là ELIP (bẹt hơn chiều cao), nên cung
+         sao cũng phải elip theo, không thì sao trên đỉnh sát ô mà sao hai bên lại
+         hở toác. Rx/Ry = bán trục của ô cộng cùng một khoảng hở.
+         Khoảng hở tính theo hình học: sao 20px xoay đi thì nửa đường chéo là
+         20·√2/2 ≈ 14,1px, cộng lề ~7 -> 21 cho ô bài. Ô phụ là chữ nhật bo góc nên
+         mép theo hướng chéo xa hơn -> 26. Đo lại bằng khoảng cách tâm-tới-tâm trừ
+         nửa đường chéo sao, KHÔNG ướm bằng hình chữ nhật bao (hình chữ nhật bao
+         một ô cong báo chồng ở bốn góc trống, sai hoàn toàn). */
+      const GOC_SAO = [-122, -90, -58];
+      const SAO_NUA = 10;                       // nửa cạnh sao (.pn-as 20px)
+      const cungSao = (cx, cy, sang, Rx, Ry) => GOC_SAO.map((g, i) => {
         const r = (g * Math.PI) / 180;
-        const x = cx + banKinh * Math.cos(r), y = cy + banKinh * Math.sin(r);
+        const x = cx + Rx * Math.cos(r), y = cy + Ry * Math.sin(r);
         return `<svg class="pn-as${i < sang ? " on" : ""}" viewBox="0 0 24 24" aria-hidden="true"
-            style="left:${f1(x - 8)}px;top:${f1(y - 8)}px;transform:rotate(${g + 90}deg)">
+            style="left:${f1(x - SAO_NUA)}px;top:${f1(y - SAO_NUA)}px;transform:rotate(${g + 90}deg)">
             <path d="M12 3l2.6 5.6 6.1.8-4.5 4.2 1.2 6-5.4-3-5.4 3 1.2-6L3.3 9.4l6.1-.8z"/></svg>`;
       }).join("");
 
@@ -1011,8 +1025,8 @@ function renderLessons(data) {
         const khoaBai = truoc
           ? `Học xong Bài ${truoc.order} — ${(truoc.title || "").replace(/^Bài\s*\d+[.\s]*/, "")} thì bài này mở`
           : "Bài này chưa mở khoá trong lộ trình tuần tự";
-        return `${stars >= 0 ? `<div class="pn-arc${open ? "" : " mo"}" title="Mastery: ${stars}/3 sao">${cungSao(p.x, p.y, stars, CELL / 2 + 18)}</div>` : ""}
-          <button class="pnode ${cls}${cur ? " cur" : ""}" data-key="${esc(o.key)}" data-lock="${open ? 0 : 1}" data-khoa="${esc(khoaBai)}" style="${dat(CELL / 2)}" title="${esc(l.title)}" aria-label="Bài ${l.order}: ${name} — ${stTxt}, ${stars}/3 sao">
+        return `${stars >= 0 ? `<div class="pn-arc${open ? "" : " mo"}" title="Mastery: ${stars}/3 sao">${cungSao(p.x, p.y, stars, NODE_W / 2 + 21, NODE_H / 2 + 21)}</div>` : ""}
+          <button class="pnode ${cls}${cur ? " cur" : ""}" data-key="${esc(o.key)}" data-lock="${open ? 0 : 1}" data-khoa="${esc(khoaBai)}" style="${dat(NODE_W, NODE_H)}" title="${esc(l.title)}" aria-label="Bài ${l.order}: ${name} — ${stTxt}, ${stars}/3 sao">
             ${cur ? `<span class="pn-bubble">${ICON("flame", 13)} BẮT ĐẦU</span>` : ""}
             <span class="pnode-inner-icon">${glyph}</span>
           </button>
@@ -1075,8 +1089,8 @@ function renderLessons(data) {
          nhưng đọc bằng màn hình đọc thì không có "ngay dưới" -> nhắc tên bài. */
       const cuaBai = o.l ? " — " + (o.l.title || "").replace(/^Bài\s*\d+[.\s]*/, "") : "";
       const mota = `${dang.nhan}${cuaBai}: ${ten}` + (pre ? " (gói Premium)" : "") + (open ? "" : " (chưa mở)");
-      return `${saoO >= 0 ? `<div class="pn-arc" title="${esc(dang.nhan)}: ${saoO}/3 sao">${cungSao(p.x, p.y, saoO, 38 + 28)}</div>` : ""}
-        <button class="pnode ophu o-${o.loai} ${open ? "open" : "locked"}${pre ? " o-pre" : ""}" data-key="${esc(o.key)}" data-lock="${open ? 0 : 1}" data-khoa="${esc(khoaTxt)}" style="${dat(38)}" title="${esc(mota)}" aria-label="${esc(mota)}">
+      return `${saoO >= 0 ? `<div class="pn-arc" title="${esc(dang.nhan)}: ${saoO}/3 sao">${cungSao(p.x, p.y, saoO, OPHU_W / 2 + 26, OPHU_H / 2 + 26)}</div>` : ""}
+        <button class="pnode ophu o-${o.loai} ${open ? "open" : "locked"}${pre ? " o-pre" : ""}" data-key="${esc(o.key)}" data-lock="${open ? 0 : 1}" data-khoa="${esc(khoaTxt)}" style="${dat(OPHU_W, OPHU_H)}" title="${esc(mota)}" aria-label="${esc(mota)}">
           <span class="ophu-ic">${ic(open ? dang.icon : "lock")}</span>
           ${pre ? '<span class="ophu-pre">Premium</span>' : ""}
         </button>
@@ -1317,7 +1331,7 @@ function injectPathCss() {
 
     /* Ô bài học nổi khối — z-index phải CAO HƠN .pn-cap để vòng tròn
        không bao giờ bị dòng chữ vẽ chồng lên (khoảng cách đã đủ, đây là chốt hạ) */
-    ".pnode { position: absolute; width: 68px; height: 68px; border-radius: 50%; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 3; padding: 0; transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1); outline: none; }" +
+    ".pnode { position: absolute; width: 76px; height: 66px; border-radius: 50%; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 3; padding: 0; transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1); outline: none; }" +
     ".pnode-inner-icon svg { width: 32px; height: 32px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.25)); }" +
     ".pnode.done { background: linear-gradient(180deg, #58cc02 0%, #46a302 100%); color: #fff; box-shadow: 0 9px 0 #3b8a02, 0 15px 25px rgba(88, 204, 2, 0.45); border: 3px solid #79e622; }" +
     ".pnode.open { background: linear-gradient(180deg, #ff007f 0%, #d8006c 100%); color: #fff; box-shadow: 0 9px 0 #9e004f, 0 15px 25px rgba(255, 0, 127, 0.45); border: 3px solid #ff66c4; }" +
@@ -1326,7 +1340,7 @@ function injectPathCss() {
     /* Ô phụ (mô phỏng / thực hành / luyện tập / thi thử): VUÔNG bo góc và to hơn
        ô bài học 8px, để phân biệt được cả khi không nhìn màu — người mù màu vẫn
        thấy đây không phải một bài học. Màu lấy theo từng loại ở O_PHU. */
-    ".pnode.ophu { width: 76px; height: 76px; border-radius: 24px; }" +
+    ".pnode.ophu { width: 82px; height: 72px; border-radius: 26px; }" +
     ".ophu-ic { display: flex; color: #fff; }" +
     ".ophu-ic svg { width: 34px; height: 34px; stroke-width: 2.2; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.3)); }" +
     ".pnode.ophu.locked .ophu-ic { color: #9ca3af; }" +
@@ -1370,7 +1384,7 @@ function injectPathCss() {
     ".pn-arc.mo { opacity: .38; }" +
     /* Sao RỖNG: trắng + viền xám. Trắng trơn chìm trên nền sáng, xám trơn chìm trên
        nền tối; có viền thì đọc được ở cả hai giao diện. */
-    ".pn-as { position: absolute; width: 16px; height: 16px; fill: #fff; stroke: #94a3b8; stroke-width: 1.4; " +
+    ".pn-as { position: absolute; width: 20px; height: 20px; fill: #fff; stroke: #94a3b8; stroke-width: 1.4; " +
       "stroke-linejoin: round; transition: fill .25s, filter .25s; }" +
     ".pn-as.on { fill: #ffc107; stroke: #d99e06; filter: drop-shadow(0 2px 5px rgba(255, 193, 7, .55)); }" +
     ".pn-stars { display: inline-flex; gap: 3px; }" +
