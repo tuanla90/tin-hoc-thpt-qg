@@ -100,13 +100,21 @@
   function loiCua(node) { return function (t) { node.querySelector('[data-mh="loi"]').innerHTML = t; }; }
   /* Thanh trượt và ô chọn phải huỷ chế độ Tự chạy: bấm hộ nút "Làm lại", vì
      ganTuChay đã gắn hàm dừng vào chính nút đó. Giống hệt minh-hoa-3.js. */
-  function ganDatLai(node, ds, lamLai) {
+  /* veTaiCho: xem chú thích cùng tên ở js/minh-hoa-3.js — đổi dữ liệu vào thì vẽ
+     lại TẠI BƯỚC ĐANG ĐỨNG thay vì quay về đầu, dùng cho những mô phỏng mà đổi dữ
+     liệu không làm hỏng các bước đã đi. */
+  function ganDatLai(node, ds, lamLai, veTaiCho) {
     var lai = node.querySelector('[data-mh="lai"]');
     lai.onclick = lamLai;
     ds.forEach(function (o) {
       if (!o) return;
       var su = o.tagName === "SELECT" || o.type === "checkbox" ? "change" : "input";
-      o.addEventListener(su, function () { lai.click(); });
+      o.addEventListener(su, function () {
+        if (!veTaiCho) { lai.click(); return; }
+        lai.onclick = veTaiCho;
+        lai.click();
+        lai.onclick = lamLai;
+      });
     });
   }
 
@@ -689,7 +697,14 @@
         "chỉ có việc <b>đổi khung liên tục</b> tạo ra cảm giác chuyển động.");
     };
     function lamLai() { k = 0; ve(); loi("Đang ở khung 1. Bấm “Bước tiếp”, hoặc bấm <b>Tự chạy</b> để xem nó động thật."); }
-    ganDatLai(node, ["n", "tre"].map(function (x) { return node.querySelector('[data-mh="' + x + '"]'); }), lamLai);
+    /* Đổi số khung hay độ trễ thì GIỮ khung đang xem, chỉ kẹp lại cho khỏi vượt số
+       khung mới. Đây là bài người ta kéo qua kéo lại để so mượt/nhẹ, quay về khung 1
+       mỗi lần nhích thanh trượt thì không so được gì. */
+    function veTaiCho() {
+      if (k >= soKhung()) k = soKhung() - 1;
+      ve();
+    }
+    ganDatLai(node, ["n", "tre"].map(function (x) { return node.querySelector('[data-mh="' + x + '"]'); }), lamLai, veTaiCho);
     host.appendChild(node); lamLai();
   });
 

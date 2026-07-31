@@ -377,11 +377,17 @@ function renderFromHashThat() {
   if (hashTruoc && hashTruoc !== location.hash) scrollNho.set(hashTruoc, prevY);
   hashTruoc = location.hash;
   const yCu = keepScroll ? prevY : scrollNho.get(location.hash);
-  if (!keepScroll && yCu == null) window.scrollTo({ top: 0, behavior: "smooth" });
   (viewRenderer(view))(d);
-  /* Đặt lại SAU khi DOM mới dựng xong: thay innerHTML có thể làm trang co lại rồi
-     tụt cuộn, đặt trước thì mất tác dụng. */
+  /* CUỘN SAU KHI DỰNG XONG, và cuộn TỨC THÌ chứ không mượt.
+     Bản trước gọi scrollTo({behavior:"smooth"}) TRƯỚC khi thay innerHTML: cú cuộn
+     mượt là một hoạt ảnh kéo dài vài trăm mili giây, mà ngay sau đó cả trang bị
+     thay nội dung — trình duyệt huỷ hoạt ảnh giữa chừng nên trang đứng nguyên ở
+     chỗ cũ. Đó chính là lỗi "bấm Bài tiếp theo mà ĐÔI KHI không lên đầu": lúc lên
+     lúc không tuỳ nội dung mới dựng nhanh hay chậm.
+     Đổi màn hình thì cuộn tức thì mới đúng — cuộn mượt qua một trang đã biến mất
+     chẳng để làm gì. */
   if (yCu != null) window.scrollTo(0, yCu);
+  else if (!keepScroll) window.scrollTo(0, 0);
 }
 
 window.addEventListener("hashchange", renderFromHash);
@@ -1615,8 +1621,13 @@ function renderLesson(data) {
   document.getElementById("practiceBtn").onclick = () => practiceLesson(l);
   // Nút gia sư chỉ hiện khi máy chủ đã bật AI (Tutor tự gỡ nút nếu chưa bật)
   if (typeof Tutor !== "undefined") Tutor.batNut(document.getElementById("tutorBtn"), () => Tutor.moBai(l));
-  document.getElementById("prevBtn").onclick = () => prev && go("lesson", { id: prev.id });
-  document.getElementById("nextBtn").onclick = () => next && go("lesson", { id: next.id });
+  /* Sang bài khác thì LUÔN mở ở đầu trang. Bộ nhớ chỗ cuộn (scrollNho) có ích khi
+     quay LẠI một màn đã ghé — nhưng bấm "Bài tiếp theo" là đi TỚI, mà nếu bài đó
+     từng đọc dở thì router lại thả người học xuống lưng trang, trông như app cuộn
+     bừa. Quên chỗ đã nhớ của bài đích trước khi chuyển. */
+  const sangBai = (id) => { scrollNho.delete("#/lesson/" + encodeURIComponent(id)); go("lesson", { id: id }); };
+  document.getElementById("prevBtn").onclick = () => prev && sangBai(prev.id);
+  document.getElementById("nextBtn").onclick = () => next && sangBai(next.id);
   attachRunButtons(app.querySelector(".lesson-body"));
   if (runCode) buildEditor(document.getElementById("lessonPg"), runCode);
   else if (webCode) buildWebEditor(document.getElementById("lessonPg"), webCode);

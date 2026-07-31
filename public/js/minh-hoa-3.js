@@ -132,14 +132,29 @@
     return function (t) { node.querySelector('[data-mh="loi"]').innerHTML = t; };
   }
   /* Thanh trượt và ô chọn cũng phải huỷ chế độ Tự chạy như ô .mh-o-nhap. Cách
-     rẻ nhất: bấm hộ nút "Làm lại" — ganTuChay đã gắn hàm dừng vào chính nút đó. */
-  function ganDatLai(node, ds, lamLai) {
+     rẻ nhất: bấm hộ nút "Làm lại" — ganTuChay đã gắn hàm dừng vào chính nút đó.
+
+     veTaiCho (tuỳ chọn): đổi dữ liệu vào thì VẼ LẠI TẠI BƯỚC ĐANG ĐỨNG thay vì
+     quay về bước 0. Chỉ dùng được khi đổi dữ liệu KHÔNG làm hỏng các bước đã đi —
+     ví dụ bài tính dung lượng ảnh, kéo thanh "rộng" thì cả năm phép tính vẫn đúng,
+     chỉ khác con số. Còn bài dò từng ô của một dãy thì đổi dãy là mọi bước trước
+     thành vô nghĩa, phải quay về đầu.
+     Trước đây MỌI mô phỏng đều quay về đầu, nên đi tới bước 4 rồi lỡ tay nhích
+     thanh trượt là mất sạch chỗ đang đứng. */
+  function ganDatLai(node, ds, lamLai, veTaiCho) {
     var lai = node.querySelector('[data-mh="lai"]');
     lai.onclick = lamLai;
     ds.forEach(function (o) {
       if (!o) return;
       var su = o.tagName === "SELECT" || o.type === "checkbox" ? "change" : "input";
-      o.addEventListener(su, function () { lai.click(); });
+      o.addEventListener(su, function () {
+        /* Vẫn phải bấm "Làm lại" để dừng chế độ Tự chạy, nhưng nếu giữ được bước
+           thì gắn tạm hàm khác vào nút rồi trả lại ngay. */
+        if (!veTaiCho) { lai.click(); return; }
+        lai.onclick = veTaiCho;
+        lai.click();
+        lai.onclick = lamLai;
+      });
     });
   }
 
@@ -324,26 +339,40 @@
         "Một thẻ nhớ 32 GB chứa được khoảng <b>" + so(soAnh) + "</b> tấm cỡ này.";
     }
 
-    node.querySelector('[data-mh="tien"]').onclick = function () {
+    /* Lời giải thích của từng bước, tính LẠI theo thông số hiện tại mỗi lần gọi —
+       nhờ vậy kéo thanh trượt xong thì câu chữ cũng mang con số mới, không phải câu
+       cũ của kích thước cũ. */
+    function loiBuoc(b) {
       var t = thongSo();
+      return [
+        "Ảnh là một lưới điểm. Nhân rộng với cao ra <b>" + so(t.diem) + "</b> điểm ảnh — chỉ riêng con số này đã lớn.",
+        "Mỗi điểm cần <b>" + t.m.bit + " bit</b> để ghi màu. Càng nhiều màu càng nhiều bit, nên ảnh đen trắng nhẹ hơn hẳn.",
+        "Đơn vị dung lượng là <b>byte</b>, mà 1 byte = 8 bit, nên chia cho 8.",
+        "<b>" + goiMB(t.mb) + "</b> cho MỘT tấm ảnh chưa nén. Chụp 100 tấm là hết " + goiMB(t.mb * 100) + ".",
+        "Tệp <b>JPG</b> nén xuống còn khoảng một phần mười. Nén kiểu này làm mất một ít chi tiết — gọi là nén <b>có mất mát</b>.",
+      ][b];
+    }
+
+    node.querySelector('[data-mh="tien"]').onclick = function () {
       if (k >= 4) {
         loi("Thử kéo <b>rộng</b> và <b>cao</b> xuống một nửa: dung lượng không giảm một nửa mà giảm " +
           "<b>bốn lần</b>, vì cả hai chiều đều bị nhân vào. Đó là ý nghĩa của “giảm độ phân giải”.");
         return;
       }
       k++; ve();
-      var noi = [
-        "Ảnh là một lưới điểm. Nhân rộng với cao ra <b>" + so(t.diem) + "</b> điểm ảnh — chỉ riêng con số này đã lớn.",
-        "Mỗi điểm cần <b>" + t.m.bit + " bit</b> để ghi màu. Càng nhiều màu càng nhiều bit, nên ảnh đen trắng nhẹ hơn hẳn.",
-        "Đơn vị dung lượng là <b>byte</b>, mà 1 byte = 8 bit, nên chia cho 8.",
-        "<b>" + goiMB(t.mb) + "</b> cho MỘT tấm ảnh chưa nén. Chụp 100 tấm là hết " + goiMB(t.mb * 100) + ".",
-        "Tệp <b>JPG</b> nén xuống còn khoảng một phần mười. Nén kiểu này làm mất một ít chi tiết — gọi là nén <b>có mất mát</b>.",
-      ];
-      loi(noi[k]);
+      loi(loiBuoc(k));
     };
 
     function lamLai() { k = -1; ve(); loi("Bấm “Bước tiếp” để tính dung lượng theo từng phép một."); }
-    ganDatLai(node, ["r", "c", "m"].map(function (x) { return node.querySelector('[data-mh="' + x + '"]'); }), lamLai);
+    /* Kéo thanh trượt thì GIỮ NGUYÊN bước đang đứng, chỉ tính lại con số và viết
+       lại lời giải thích của đúng bước đó. Năm phép tính không phụ thuộc nhau nên
+       đổi kích thước giữa chừng vẫn đúng — mà đây lại là bài người ta muốn kéo qua
+       kéo lại nhất để xem dung lượng đổi thế nào. */
+    function veTaiCho() {
+      ve();
+      if (k >= 0) loi(loiBuoc(k));
+    }
+    ganDatLai(node, ["r", "c", "m"].map(function (x) { return node.querySelector('[data-mh="' + x + '"]'); }), lamLai, veTaiCho);
     host.appendChild(node); lamLai();
   });
 
