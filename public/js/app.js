@@ -1223,9 +1223,41 @@ function renderLessons(data) {
     };
   });
 
-  // Tự cuộn tới bài đang học
-  const curEl = app.querySelector(".pnode.cur");
-  if (curEl && doneCount > 0) requestAnimationFrame(() => curEl.scrollIntoView({ block: "center" }));
+  /* Vừa quay lại từ màn kết quả của MỘT ô "Luyện tập"/"Thi thử" (đặt ở nút "Quay
+     lại bản đồ" trong renderResult) — mở đúng chương chứa ô đó (mặc định có thể
+     đang đóng, vì chương mở sẵn là chương có bài ĐANG HỌC, chưa chắc là chương
+     vừa ôn), cuộn tới, rồi mới cho sao "bung" ra. Việc này THAY vì cuộn tới bài
+     đang học ở dưới — quay lại đúng lúc phải thấy ngay thành quả vừa đạt, không
+     phải đi tìm. */
+  const vuaXong = vuaXongOPhu;
+  vuaXongOPhu = null;
+  const arcVuaXong = vuaXong ? app.querySelector(`.pn-arc[data-sao-id="${CSS.escape(vuaXong)}"]`) : null;
+  if (arcVuaXong) {
+    const the = arcVuaXong.closest(".pchap-accordion-card");
+    if (the && !the.classList.contains("is-open")) {
+      const hdr = the.querySelector(".pchap-acc-header");
+      the.classList.add("is-open");
+      the.querySelector(".pchap-acc-body").hidden = false;
+      if (hdr) hdr.setAttribute("aria-expanded", "true");
+    }
+    setTimeout(() => {
+      /* Cuộn TỨC THÌ (behavior mặc định), không "smooth": cuộn mượt chạy bằng
+         animation frame — tab đứng nền (mở app ở tab khác rồi quay lại) trình
+         duyệt ngừng cấp animation frame, cú cuộn coi như không chạy, sao bung ra
+         mà học sinh vẫn đang nhìn chỗ cũ. Cuộn tức thì không phụ thuộc animation
+         frame nên luôn chắc ăn; đổi lại thì sao TỰ bung ra 380ms sau đã đủ mềm
+         cho mắt, không cần thêm cú trượt trang làm gì. */
+      const r = arcVuaXong.getBoundingClientRect();
+      window.scrollTo(0, Math.max(0, window.scrollY + r.top - window.innerHeight / 2));
+      /* Đợi cuộn xong rồi mới bung sao — bung ngay lúc chuyển màn thì học sinh
+         chưa kịp nhìn tới, animation coi như phí. */
+      setTimeout(() => arcVuaXong.querySelectorAll(".pn-as").forEach((s) => s.classList.add("moi")), 380);
+    }, 60);
+  } else {
+    // Tự cuộn tới bài đang học — hành vi cũ, chỉ chạy khi KHÔNG vừa xong ô phụ
+    const curEl = app.querySelector(".pnode.cur");
+    if (curEl && doneCount > 0) requestAnimationFrame(() => curEl.scrollIntoView({ block: "center" }));
+  }
 }
 
 /* CSS cho màn chọn chặng và bản đồ lộ trình (kiểu Duolingo) */
