@@ -718,6 +718,12 @@ select:focus, input[type="text"]:focus, input[type="number"]:focus {
 .score-ring .score-num b { font-family: var(--font-display); font-size: 40px; line-height: 1; font-weight: 800; }
 .score-ring .score-num span { font-size: 13px; color: var(--text-soft); }
 
+/* Màn kết quả của ô "Luyện tập"/"Thi thử" trên bản đồ lộ trình — sao thay vòng
+   tròn %, khớp đúng ngôn ngữ mà chính ô đó đang hiển thị trên bản đồ. */
+.result-stars { display: flex; justify-content: center; gap: 10px; margin: 0 auto 18px; }
+.result-star { width: 56px; height: 56px; fill: var(--border); flex: none; }
+.result-star.on { fill: #ffc107; filter: drop-shadow(0 3px 7px rgba(255, 193, 7, 0.55)); }
+
 .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 14px; margin-bottom: 24px; }
 .stat-box { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 18px; text-align: center; }
 .stat-box b { font-family: var(--font-display); font-size: 26px; display: block; font-weight: 800; }
