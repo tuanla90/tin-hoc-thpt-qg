@@ -137,7 +137,7 @@ function gamLevel(xp) {
 
 /* --- Thống kê (đọc từ State/LESSONS + GAM) --- */
 function gamStats() {
-  var lessons = 0, totalLessons = 0, exams = 0, bestExam = 0, quizzes = 0;
+  var lessons = 0, totalLessons = 0, exams = 0, bestExam = 0, quizzes = 0, perfect10 = 0;
   var g = { 10: { d: 0, t: 0 }, 11: { d: 0, t: 0 }, 12: { d: 0, t: 0 } };
   try {
     if (typeof LESSONS !== "undefined") {
@@ -152,14 +152,14 @@ function gamStats() {
     if (typeof State !== "undefined" && State.history) {
       quizzes = State.history.length;
       State.history.forEach(function (h) {
-        if (h.mode === "exam") { exams++; if (h.score > bestExam) bestExam = h.score; }
+        if (h.mode === "exam") { exams++; if (h.score > bestExam) bestExam = h.score; if (h.score >= 10) perfect10++; }
       });
     }
   } catch (e) {}
   var gradeDone = function (o) { return o.t > 0 && o.d >= o.t; };
   return {
     xp: GAM.xp, lessons: lessons, totalLessons: totalLessons, correct: GAM.correct,
-    exams: exams, bestExam: bestExam, quizzes: quizzes, streak: gamStreakSong(), bestStreak: GAM.bestStreak,
+    exams: exams, bestExam: bestExam, perfect10: perfect10, quizzes: quizzes, streak: gamStreakSong(), bestStreak: GAM.bestStreak,
     exDone: GAM.exDone.length, vocab: GAM.vocab.length, badges: GAM.badges.length,
     tin10Done: gradeDone(g[10]), tin11Done: gradeDone(g[11]), tin12Done: gradeDone(g[12]),
     lvl: gamLevel(GAM.xp).lvl,
@@ -195,23 +195,30 @@ var GAM_BADGES = [
   { id: "code_5", cat: "practice", ic: "🧑‍💻", name: "Tập viết code", desc: "Làm đúng 5 bài tập code", chk: function (s) { return s.exDone >= 5; } },
   { id: "code_10", cat: "practice", ic: "💻", name: "Lập trình viên", desc: "Làm đúng 10 bài tập code", chk: function (s) { return s.exDone >= 10; } },
   { id: "code_25", cat: "practice", ic: "🖥️", name: "Cao thủ code", desc: "Làm đúng 25 bài tập code", chk: function (s) { return s.exDone >= 25; } },
-  /* 📝 Thi thử */
+  { id: "code_50", cat: "practice", rare: true, ic: "🛠️", name: "Kiến trúc sư code", desc: "Làm đúng 50 bài tập code", chk: function (s) { return s.exDone >= 50; } },
+  /* 📝 Thi thử — 2 nhánh 5 mốc: số lượt thi và điểm số */
   { id: "exam_first", cat: "exam", ic: "📝", name: "Thử sức", desc: "Hoàn thành 1 bài thi thử", chk: function (s) { return s.exams >= 1; } },
   { id: "exam_5", cat: "exam", ic: "📄", name: "Quen trận", desc: "Hoàn thành 5 bài thi thử", chk: function (s) { return s.exams >= 5; } },
   { id: "exam_10", cat: "exam", ic: "🗄️", name: "Dày dạn", desc: "Hoàn thành 10 bài thi thử", chk: function (s) { return s.exams >= 10; } },
+  { id: "exam_25", cat: "exam", ic: "📚", name: "Luyện đề bền bỉ", desc: "Hoàn thành 25 bài thi thử", chk: function (s) { return s.exams >= 25; } },
+  { id: "exam_50", cat: "exam", rare: true, ic: "🗂️", name: "Chiến binh phòng thi", desc: "Hoàn thành 50 bài thi thử", chk: function (s) { return s.exams >= 50; } },
+  { id: "exam_pass7", cat: "exam", ic: "🔓", name: "Vượt ngưỡng", desc: "Thi thử đạt từ 7 điểm", chk: function (s) { return s.bestExam >= 7; } },
   { id: "exam_pass8", cat: "exam", ic: "⭐", name: "Học sinh giỏi", desc: "Thi thử đạt từ 8 điểm", chk: function (s) { return s.bestExam >= 8; } },
   { id: "exam_pass9", cat: "exam", ic: "🌟", name: "Xuất sắc", desc: "Thi thử đạt từ 9 điểm", chk: function (s) { return s.bestExam >= 9; } },
   { id: "exam_perfect", cat: "exam", rare: true, ic: "💯", name: "Điểm tuyệt đối", desc: "Thi thử đạt 10 điểm", chk: function (s) { return s.bestExam >= 10; } },
+  { id: "exam_perfect_3", cat: "exam", rare: true, ic: "🎇", name: "Không phải may mắn", desc: "Đạt 10 điểm ở 3 bài thi thử", chk: function (s) { return s.perfect10 >= 3; } },
   /* 🔥 Chăm chỉ */
   { id: "streak_3", cat: "streak", ic: "📅", name: "Đều đặn", desc: "3 buổi học liên tiếp theo lịch", chk: function (s) { return s.bestStreak >= 3; } },
   { id: "streak_7", cat: "streak", ic: "🔥", name: "Kiên trì", desc: "7 buổi học liên tiếp theo lịch", chk: function (s) { return s.bestStreak >= 7; } },
   { id: "streak_14", cat: "streak", ic: "🗓️", name: "Hai tuần liền", desc: "14 buổi liên tiếp — hai tuần đều đặn", chk: function (s) { return s.bestStreak >= 14; } },
   { id: "streak_30", cat: "streak", rare: true, ic: "🏅", name: "Cả tháng không nghỉ", desc: "30 buổi liên tiếp — không bỏ buổi nào", chk: function (s) { return s.bestStreak >= 30; } },
+  { id: "streak_60", cat: "streak", rare: true, ic: "🌋", name: "Hai tháng bền bỉ", desc: "60 buổi liên tiếp — cả một mùa ôn thi", chk: function (s) { return s.bestStreak >= 60; } },
   /* ⭐ Cấp độ */
   { id: "level_3", cat: "level", ic: "⚡", name: "Vào guồng", desc: "Đạt cấp độ 3", chk: function (s) { return s.lvl >= 3; } },
   { id: "level_5", cat: "level", ic: "🚀", name: "Lên hạng", desc: "Đạt cấp độ 5", chk: function (s) { return s.lvl >= 5; } },
   { id: "level_7", cat: "level", rare: true, ic: "👑", name: "Huyền thoại", desc: "Đạt cấp độ tối đa (7)", chk: function (s) { return s.lvl >= 7; } },
   { id: "xp_1000", cat: "level", ic: "💎", name: "Nghìn XP", desc: "Tích lũy 1000 XP", chk: function (s) { return s.xp >= 1000; } },
+  { id: "xp_3000", cat: "level", rare: true, ic: "☄️", name: "Vượt trần", desc: "Tích lũy 3000 XP — quá cả mốc cấp tối đa", chk: function (s) { return s.xp >= 3000; } },
 ];
 var GAM_BADGE_CATS = [
   { key: "lesson", label: "Học tập", ic: "cap", color: "#3b82f6" },
