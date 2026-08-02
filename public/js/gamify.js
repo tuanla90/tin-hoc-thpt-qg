@@ -218,7 +218,7 @@ var GAM_BADGES = [
   { id: "level_5", cat: "level", ic: "🚀", name: "Lên hạng", desc: "Đạt cấp độ 5", chk: function (s) { return s.lvl >= 5; } },
   { id: "level_7", cat: "level", rare: true, ic: "👑", name: "Huyền thoại", desc: "Đạt cấp độ tối đa (7)", chk: function (s) { return s.lvl >= 7; } },
   { id: "xp_1000", cat: "level", ic: "💎", name: "Nghìn XP", desc: "Tích lũy 1000 XP", chk: function (s) { return s.xp >= 1000; } },
-  { id: "xp_3000", cat: "level", rare: true, ic: "☄️", name: "Vượt trần", desc: "Tích lũy 3000 XP — quá cả mốc cấp tối đa", chk: function (s) { return s.xp >= 3000; } },
+  { id: "xp_5000", cat: "level", rare: true, ic: "☄️", name: "Vượt trần", desc: "Tích lũy 5000 XP — gần bằng toàn bộ nội dung ba năm", chk: function (s) { return s.xp >= 5000; } },
 ];
 var GAM_BADGE_CATS = [
   { key: "lesson", label: "Học tập", ic: "cap", color: "#3b82f6" },

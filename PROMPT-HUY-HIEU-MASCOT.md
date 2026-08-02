@@ -551,7 +551,7 @@ Full body, centred, facing the viewer, square 1:1, 1024x1024, character fills ab
 Negative: no white background, no transparent background, no text, no letters, no numbers, no watermark, no logo, no signature, no scenery, no ground shadow, no frame, no border, no drop shadow, not photorealistic, no extra characters, no cut-off limbs.
 ```
 
-#### `xp_3000` · Vượt trần ⭐ · S6
+#### `xp_5000` · Vượt trần ⭐ · S6
 
 ```
 Chibi anime mascot, 3-heads-tall, short silver-white bob hair with soft inner shadow, very large expressive cyan-teal eyes with white highlights, small rounded nose, warm friendly face, light skin. White and light-grey futuristic tech bodysuit with glowing teal seam lines, a small round teal gem at the collar, dark grey fingerless gloves. Oversized white headphones with teal ear pads and a thin teal light strip. Clean thin dark-navy line art, flat cel shading with soft gradients, bright friendly style for a children's educational app.
@@ -576,7 +576,7 @@ phong cách hơn nhảy qua nhảy lại:
 | S3 | 8 | `lessons_50` `vocab_50` `correct_100` `code_10` `exam_10` `exam_pass7` `streak_7` `level_3` |
 | S4 | 8 | `lessons_75` `tin10_done` `vocab_100` `correct_200` `exam_25` `exam_pass8` `streak_14` `xp_1000` |
 | S5 | 6 | `tin11_done` `code_25` `exam_50` `exam_pass9` `streak_30` `level_5` |
-| S6 | 9 | `lessons_all` `tin12_done` `vocab_200` `correct_500` `code_50` `exam_perfect` `exam_perfect_3` `streak_60` `xp_3000` |
+| S6 | 9 | `lessons_all` `tin12_done` `vocab_200` `correct_500` `code_50` `exam_perfect` `exam_perfect_3` `streak_60` `xp_5000` |
 | S7 | 1 | `level_7` |
 
 Tổng 6+7+8+8+6+9+1 = **45**.
