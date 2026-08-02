@@ -101,7 +101,7 @@ var GAM_KEY = window.GAM_KEY || "tinhoc_gam_v1";   /* theo hồ sơ đang dùng,
 function gamLoad() {
   /* lastActive = ngày gần nhất có hoạt động (mọi ngày)
      lastSession = ngày gần nhất học ĐÚNG BUỔI theo lịch -> dùng để tính chuỗi */
-  var def = { xp: 0, lastActive: null, lastSession: null, streak: 0, bestStreak: 0, correct: 0, exDone: [], vocab: [], badges: [], dayDate: null, dayXp: 0, goalDate: null };
+  var def = { xp: 0, lastActive: null, lastSession: null, streak: 0, bestStreak: 0, correct: 0, exDone: [], vocab: [], badges: [], dayDate: null, dayXp: 0, goalDate: null, lessonXp: [], lessonXpSeeded: false };
   try {
     var o = JSON.parse(localStorage.getItem(GAM_KEY));
     if (o && typeof o === "object") {
@@ -446,8 +446,38 @@ function gRingIcon(lv) {
   return (typeof ICON === "function") ? ICON(lv.ic, 28, lv.color) : lv.icon;
 }
 
+/* Trả về true nếu bài này CHƯA từng được thưởng XP.
+   State.learned bật tắt được, nên trước đây bỏ đánh dấu rồi đánh dấu lại là được
+   cộng thêm 25 XP, lặp bao nhiêu lần cũng được — đo thấy 45/70/95 sau ba vòng
+   trên cùng một bài. Nay ghi mã bài đã thưởng vào GAM, đúng cách exDone và vocab
+   đang chống cộng trùng. Việc bỏ đánh dấu để học lại vẫn cho phép, chỉ là không
+   được thưởng lần hai. */
+function gamNhanXpBai(id) {
+  if (!id) return true;              /* chỗ gọi cũ không truyền mã bài: giữ nguyên như trước */
+  /* Hồ sơ có từ trước bản vá chưa có danh sách này. Coi mọi bài ĐANG đánh dấu đã
+     học là đã được thưởng rồi — trừ chính bài vừa bấm, vì markLearned() đã đẩy nó
+     vào State.learned trước khi gọi tới đây. Thiếu bước này thì người học cũ được
+     cộng lại từ đầu toàn bộ bài đã học. */
+  if (!GAM.lessonXpSeeded) {
+    GAM.lessonXpSeeded = true;
+    try {
+      if (typeof State !== "undefined" && State.learned) {
+        GAM.lessonXp = State.learned.filter(function (x) { return x !== id; });
+      }
+    } catch (e) {}
+  }
+  if (GAM.lessonXp.indexOf(id) >= 0) return false;
+  GAM.lessonXp.push(id);
+  gamSave();
+  return true;
+}
+
 var Gam = {
-  onLessonDone: function () { gamTouchStreak(); gamAward(25); gamCheckBadges(); },
+  onLessonDone: function (id) {
+    gamTouchStreak();
+    if (gamNhanXpBai(id)) gamAward(25);
+    gamCheckBadges();
+  },
   onQuizDone: function (record) {
     gamTouchStreak();
     var correct = (record && record.correctCount) || 0;
