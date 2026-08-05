@@ -1582,17 +1582,15 @@ function renderBlocks(sections) {
   }).join("");
 }
 
-/* Thanh chip ngay dưới câu dẫn của bài: cho biết bài này có sẵn những gì và mở
-   thẳng tới đó. Mô phỏng và Thực hành mở sang MÀN RIÊNG (địa chỉ riêng, có tiến độ
-   riêng); Sơ đồ, Sai ở đâu và Từ vựng nằm trong trang này nên chỉ cuộn tới.
-   Chỉ hiện chip của thứ bài này THẬT SỰ có — bài nào cũng đủ năm chip thì thanh này
-   thành đồ trang trí, không còn nói lên điều gì. */
 /* CSS riêng, KHÔNG gộp vào injectPathCss(): hàm đó chỉ chạy khi mở bản đồ lộ trình,
-   nên mở thẳng một bài bằng đường dẫn thì thanh chip sẽ mất hết kiểu dáng. */
-function injectLsJumpCss() {
-  if (document.getElementById("lsJumpCss")) return;
+   nên mở thẳng một bài bằng đường dẫn thì cả ba phần sẽ mất hết kiểu dáng.
+   Gọi VÔ ĐIỀU KIỆN từ renderLesson. Trước đây hàm này nằm lọt bên trong thanh chip
+   và chỉ chạy khi bài có ít nhất một chip — bài nào không có chip nào thì toàn bộ
+   khung ba phần hiện ra trần trụi. Lỗi này càng lộ ra khi thanh chip bị rút gọn. */
+function injectLsPhaCss() {
+  if (document.getElementById("lsPhaCss")) return;
   const s = document.createElement("style");
-  s.id = "lsJumpCss";
+  s.id = "lsPhaCss";
   s.textContent =
     /* ---- Ba phần của bài học ---- */
     ".ls-pha{border:1.5px solid var(--border);border-radius:var(--radius);background:var(--bg-card);" +
@@ -1637,6 +1635,14 @@ function injectLsJumpCss() {
   (document.head || document.documentElement).appendChild(s);
 }
 
+/* Thanh chip ngay dưới câu dẫn của bài: mở sang những MÀN RIÊNG mà bài này có
+   (Mô phỏng, Thực hành) — hai màn có địa chỉ riêng và tiến độ riêng, không nằm
+   trong trang bài nên phải có lối vào.
+   BỎ HẲN các chip "cuộn nhanh xuống Sơ đồ / Sai ở đâu / Từ vựng": ba khối đó nằm
+   ngay trong bài, người học cuộn tới trong vài giây, còn chip thì luôn chiếm chỗ
+   ngay dưới câu dẫn — chỗ đắt nhất của trang. Ở chế độ Thẻ chúng còn sai hẳn:
+   khối đích nằm trong một thẻ CHƯA mở nên bấm vào là cuộn tới hư không.
+   Chỉ hiện chip của thứ bài này THẬT SỰ có. */
 function lsJumpBar(l) {
   const co = (f) => { try { return !!f(); } catch (e) { return false; } };
   const chips = [];
@@ -1645,23 +1651,96 @@ function lsJumpBar(l) {
   }
   const x = co(() => window.ManRieng) ? ManRieng.xuongCuaBai(l.id) : null;
   if (x) chips.push({ ic: x.icon, ten: "Thực hành", di: () => go("thucHanh", { id: l.id }) });
-  if (co(() => window.SoDo && SoDo.coBai().indexOf(l.id) >= 0)) {
-    chips.push({ ic: "layers", ten: "Sơ đồ", cuon: ".sd" });
-  }
-  if (co(() => window.SaiODau && SaiODau.coBai().indexOf(l.id) >= 0)) {
-    chips.push({ ic: "search", ten: "Sai ở đâu?", cuon: ".sod" });
-  }
-  if (co(() => window.VOCAB && VOCAB[l.id] && VOCAB[l.id].length)) {
-    chips.push({ ic: "letters", ten: "Từ vựng", cuon: ".voc-box" });
-  }
   if (!chips.length) return "";
-  injectLsJumpCss();
   LS_JUMP = chips;
   return '<div class="ls-jump">' + chips.map((c, i) =>
     `<button class="ls-jump-b" data-j="${i}">${aIco(c.ic, null, 14)} ${esc(c.ten)}</button>`
   ).join("") + "</div>";
 }
 let LS_JUMP = [];
+
+/* ---------------------------------------------------------------------------
+ *  CHẾ ĐỘ ĐỌC BÀI — cấu hình trong menu tài khoản, không phải nút rời trong bài
+ *
+ *  "auto" : điện thoại đọc theo Thẻ, máy tính cuộn dài (mặc định, hợp cả hai bên)
+ *  "the"  : luôn chia thẻ
+ *  "cuon" : luôn cuộn dài
+ *
+ *  Trước đây có một nút bật/tắt nằm ngay trong trang bài: mỗi bài lại phải bấm
+ *  lại vì nó không nhớ gì, và nó chiếm một dòng ở đầu MỌI bài chỉ để phục vụ một
+ *  lựa chọn mà người học chọn một lần rồi thôi. Đó đúng là thứ thuộc về Cài đặt.
+ * ------------------------------------------------------------------------- */
+const DOC_BAI = ["auto", "the", "cuon"];
+function docBaiCauHinh() {
+  const v = (State.settings && State.settings.docBai) || "auto";
+  return DOC_BAI.includes(v) ? v : "auto";
+}
+function datDocBai(v) {
+  if (!DOC_BAI.includes(v)) return;
+  State.settings.docBai = v;
+  save("settings", State.settings);
+  capNhatNutDocBai();
+  // Đang đọc dở một bài thì vẽ lại NGAY để thấy kết quả, khỏi phải thoát ra vào lại.
+  if (State.view === "lesson" && LESSON_DANG_MO) go("lesson", { id: LESSON_DANG_MO.id });
+}
+function dungCheDoThe() {
+  const v = docBaiCauHinh();
+  return v === "the" || (v === "auto" && window.innerWidth <= 768);
+}
+const DOC_BAI_GIAI_THICH = {
+  auto: "Máy tính cuộn dài, điện thoại chia thẻ.",
+  the: "Mỗi phần của bài là một thẻ, đọc xong bấm Thẻ tiếp.",
+  cuon: "Cả bài trên một trang, cuộn từ đầu đến cuối.",
+};
+function capNhatNutDocBai() {
+  const seg = document.getElementById("umDocBai");
+  if (!seg) return;
+  const v = docBaiCauHinh();
+  seg.querySelectorAll("button[data-doc]").forEach((b) => {
+    b.setAttribute("aria-checked", b.dataset.doc === v ? "true" : "false");
+  });
+  const hint = document.getElementById("umDocBaiHint");
+  if (hint) hint.textContent = DOC_BAI_GIAI_THICH[v] || "";
+}
+
+/* ---------------------------------------------------------------------------
+ *  KHOÁ NÚT "ĐÁNH DẤU ĐÃ HỌC" CHO ĐẾN KHI ĐỌC HẾT BÀI
+ *
+ *  Nút này cộng XP, mở bài kế trong lộ trình tuần tự và tính vào nhiệm vụ tuần —
+ *  mà trước đây bấm được ngay từ dòng đầu tiên, nên "đã học 119 bài" chẳng bảo
+ *  đảm điều gì. Mở khoá khi người học THẬT SỰ đi hết bài:
+ *    - chế độ Thẻ  : xem tới thẻ cuối;
+ *    - chế độ cuộn : cuộn tới cuối trang (thanhTienDoDoc gọi sang).
+ *  Bài ĐÃ học rồi thì không khoá: lúc đó nút mang nghĩa "bấm để bỏ đánh dấu",
+ *  khoá lại là nhốt người học vào một dấu tích không gỡ được.
+ * ------------------------------------------------------------------------- */
+let nutDoneMo = null;      // hàm mở khoá của bài đang mở (null = không còn khoá)
+let doneTheoCuon = false;  // true = mở khoá bằng cách cuộn hết trang
+
+function khoaNutDone(l) {
+  nutDoneMo = null;
+  doneTheoCuon = false;
+  const btn = document.getElementById("doneBtn");
+  if (!btn || isLearned(l.id)) return;
+  btn.disabled = true;
+  btn.classList.add("btn-cho");
+  btn.innerHTML = `${aIco("lock", null, 15)} Đọc hết bài rồi đánh dấu`;
+  btn.title = "Đi hết bài học rồi mới đánh dấu được";
+  nutDoneMo = (bao) => {
+    nutDoneMo = null;
+    if (!btn.isConnected) return;
+    btn.disabled = false;
+    btn.classList.remove("btn-cho");
+    btn.innerHTML = `${aIco("check2", null, 15)} Đánh dấu đã học`;
+    btn.title = "";
+    /* Báo một tiếng: nút vừa đổi trạng thái lại nằm cuối trang, không nói thì
+       người học đang ở giữa bài không biết là đã mở.
+       KHÔNG báo khi mở khoá ngay lúc dựng trang (bài ngắn hơn màn hình, không có
+       cú cuộn nào để chờ) — vừa vào bài đã bị mắng "đã đọc hết bài" thì vô lý. */
+    if (bao) toast("Đã đọc hết bài — giờ đánh dấu đã học được rồi");
+  };
+}
+function moKhoaNutDone(bao) { if (nutDoneMo) nutDoneMo(bao); }
 
 /* ---------------------------------------------------------------------------
  *  BA PHẦN CỦA MỘT BÀI HỌC
@@ -1787,11 +1866,19 @@ function thanhTienDoDoc() {
   bar.style.top = (top ? Math.round(top.getBoundingClientRect().height) : 0) + "px";
   document.body.appendChild(bar);
   const thanh = bar.firstElementChild;
+  let lanDau = true;
   const capNhat = () => {
     if (!bar.isConnected) return;
     /* Trang ngắn hơn màn hình thì không có gì để đo — để 0 chứ đừng chia cho 0. */
     const con = document.documentElement.scrollHeight - window.innerHeight;
     thanh.style.width = con > 40 ? Math.min(100, (window.scrollY / con) * 100).toFixed(1) + "%" : "0%";
+    /* Cuộn tới cuối = đã đi hết bài -> mở nút "Đánh dấu đã học". Ở chế độ Thẻ thì
+       KHÔNG tính theo cuộn (trang chỉ dài bằng một thẻ, cuộn hết vẫn còn mấy thẻ
+       chưa xem) — thẻ tự mở khoá khi tới thẻ cuối.
+       Trang ngắn hơn màn hình thì mở luôn: không có cú cuộn nào để chờ. */
+    if (doneTheoCuon && nutDoneMo &&
+        (con <= 40 || window.scrollY >= con - 120)) moKhoaNutDone(!lanDau);
+    lanDau = false;
   };
   window.addEventListener("scroll", capNhat, { passive: true });
   window.addEventListener("resize", capNhat);
@@ -1859,6 +1946,7 @@ function renderLesson(data) {
   const than = (l.sections || []).filter((b) => mo.indexOf(b) < 0);
   const runCode = firstRunnableCode(l);
   const webCode = (!runCode && lessonHasWeb(l)) ? WEB_STARTER : null;
+  injectLsPhaCss();
 
   app.innerHTML = `
     <button class="back-link" id="back">${aIco("aleft", null, 15)} Danh sách bài học</button>
@@ -1947,19 +2035,10 @@ function renderLesson(data) {
      không mất. */
   donVaoPha(l);
   ganThuMo();
-  thanhTienDoDoc();
 
-  /* Gắn sau khi MỌI khối đã dựng: chip cuộn tới .sd / .sod / .voc-box mà mấy khối
-     đó do các tệp khác chèn vào sau, gắn sớm thì querySelector trả về null. */
   app.querySelectorAll(".ls-jump-b").forEach((b) => {
     const c = LS_JUMP[+b.dataset.j];
-    if (!c) return;
-    b.onclick = () => {
-      if (c.di) { c.di(); return; }
-      const o = app.querySelector(c.cuon);
-      if (!o) { toast("Phần này chưa dựng xong, thử lại sau một nhịp"); return; }
-      window.scrollTo({ top: Math.max(0, window.scrollY + o.getBoundingClientRect().top - 78), behavior: "smooth" });
-    };
+    if (c) b.onclick = c.di;
   });
   const sgkT = document.getElementById("sgkToggle");
   if (sgkT) sgkT.onclick = () => {
@@ -1968,102 +2047,117 @@ function renderLesson(data) {
     sgkT.querySelector(".sgk-chev").innerHTML = aIco(p.hidden ? "play" : "chevdown", null, 14);
   };
 
-  initStoryDeck(app, l);
+  /* Khoá TRƯỚC khi dựng thẻ: bài chỉ có một phần thì dungTheBai() bỏ qua, lúc đó
+     rơi về mở khoá theo cuộn. */
+  khoaNutDone(l);
+  doneTheoCuon = !(dungCheDoThe() && dungTheBai(app, l));
+  /* Dựng thanh tiến độ đọc SAU CÙNG: lần cập nhật đầu tiên của nó cũng là lần
+     kiểm tra "đã cuộn hết chưa" — phải đo trên trang đã dựng xong, không thì bài
+     ngắn vẫn bị khoá nút cho tới khi người học vẩy chuột một cái. */
+  thanhTienDoDoc();
 }
 
-function initStoryDeck(app, l) {
-  const isMobile = window.innerWidth <= 768;
-  const phas = Array.from(app.querySelectorAll(".ls-pha"));
-  if (phas.length <= 1) return;
+/* ---------------------------------------------------------------------------
+ *  CHẾ ĐỘ THẺ — mỗi phần của bài là một thẻ, đi tới bằng nút Thẻ tiếp
+ *
+ *  Bản trước NHÂN BẢN (cloneNode) ba phần vào thẻ. Bản sao của một nút DOM không
+ *  mang theo bộ nghe sự kiện nào, nên trong thẻ thì nút Chạy, ô soạn code, "Sai ở
+ *  đâu?", từ vựng, thu/mở từng mục... bấm đều không ăn — đúng thứ người học cần
+ *  dùng nhất lại là thứ chết trước. Bản sao còn trùng id với bản gốc
+ *  (#lessonPg, #thuTatCa), mà bản gốc chỉ bị display:none chứ vẫn nằm trong DOM,
+ *  nên getElementById trả về bản đang bị ẩn.
+ *  Nay CHUYỂN THẲNG phần thật vào thẻ: di chuyển một nút DOM giữ nguyên mọi bộ
+ *  nghe đã gắn, không sinh bản sao nào, và trang chỉ còn một bản duy nhất của
+ *  mỗi khối.
+ *
+ *  Trả về true nếu dựng được thẻ (bài có từ 2 phần trở lên).
+ * ------------------------------------------------------------------------- */
+function dungTheBai(app, l) {
+  /* Phần Củng cố rỗng đã bị donVaoPha() ẩn đi — đừng dựng một thẻ trắng cho nó. */
+  const phas = Array.from(app.querySelectorAll(".ls-pha")).filter((p) => !p.hidden);
+  if (phas.length <= 1) return false;
 
-  const jumpBar = app.querySelector(".ls-jump");
-  if (!jumpBar) return;
-
-  // Story Mode Toggle Button
-  const toggleBtn = document.createElement("button");
-  toggleBtn.className = "story-view-toggle";
-  toggleBtn.innerHTML = aIco("sparkles", "#4f46e5", 14) + " Chế độ Thẻ (Wondering)";
-  jumpBar.parentNode.insertBefore(toggleBtn, jumpBar.nextSibling);
-
-  // Deck Wrap Container
-  const deckWrap = document.createElement("div");
-  deckWrap.className = "story-deck-wrap";
-  
-  let curCardIdx = 0;
-  const totalCards = phas.length;
-
-  deckWrap.innerHTML = `
-    <div class="story-header">
-      <div class="story-progress-track">
-        <div class="story-progress-fill" style="width: ${100 / totalCards}%"></div>
-      </div>
-      <span class="story-step-badge">Thẻ 1/${totalCards}</span>
+  let cur = 0, xaNhat = 0;
+  const tong = phas.length;
+  const deck = document.createElement("div");
+  deck.className = "the-deck";
+  deck.innerHTML = `
+    <div class="the-head">
+      <div class="the-track"><i style="width:${(100 / tong).toFixed(1)}%"></i></div>
+      <span class="the-dem">Thẻ 1/${tong}</span>
     </div>
-    <div class="story-card-list"></div>
-    <div class="story-controls">
-      <button class="btn btn-ghost" id="storyPrevBtn" disabled>${aIco("aleft", null, 14)} Thẻ trước</button>
-      <button class="btn btn-primary" id="storyNextBtn">Thẻ tiếp ▶</button>
-    </div>
-  `;
+    <div class="the-list"></div>
+    <div class="the-nav">
+      <button class="btn btn-ghost the-lui" type="button" disabled>${aIco("aleft", null, 14)} Thẻ trước</button>
+      <div class="the-cham" role="tablist"></div>
+      <button class="btn btn-primary the-toi" type="button">Thẻ tiếp ${aIco("aright", null, 14)}</button>
+    </div>`;
+  phas[0].parentNode.insertBefore(deck, phas[0]);
 
-  const listContainer = deckWrap.querySelector(".story-card-list");
+  const list = deck.querySelector(".the-list");
+  const chams = deck.querySelector(".the-cham");
   phas.forEach((pha, i) => {
-    const cardBody = document.createElement("div");
-    cardBody.className = "story-card-body" + (i === 0 ? " active" : "");
-    const clonedPha = pha.cloneNode(true);
-    clonedPha.querySelectorAll(".ls-pha-bd").forEach((bd) => { bd.style.display = "block"; bd.hidden = false; });
-    cardBody.appendChild(clonedPha);
-    listContainer.appendChild(cardBody);
+    const the = document.createElement("div");
+    the.className = "the-card" + (i ? "" : " hien");
+    /* Trong thẻ thì phần LUÔN mở: cả thẻ chỉ có mỗi nó, thu lại là còn thẻ trắng.
+       Tiêu đề phần giữ nguyên làm tên thẻ, nhưng thôi vai trò nút thu/mở. */
+    pha.classList.remove("dong");
+    const dau = pha.querySelector(".ls-pha-d");
+    if (dau) {
+      dau.setAttribute("aria-expanded", "true");
+      dau.disabled = true;
+      dau.classList.add("ls-pha-d-tinh");
+    }
+    the.appendChild(pha);            // CHUYỂN, không cloneNode
+    list.appendChild(the);
+
+    const cham = document.createElement("button");
+    cham.type = "button";
+    cham.className = "the-cham-b" + (i ? "" : " hien");
+    cham.setAttribute("aria-label", `Thẻ ${i + 1}: ${(pha.querySelector(".ls-pha-ten") || {}).textContent || ""}`.trim());
+    cham.onclick = () => veThe(i);
+    chams.appendChild(cham);
   });
 
-  const firstPha = phas[0];
-  if (firstPha && firstPha.parentNode) {
-    firstPha.parentNode.insertBefore(deckWrap, firstPha);
-  }
+  const lui = deck.querySelector(".the-lui");
+  const toi = deck.querySelector(".the-toi");
+  const dem = deck.querySelector(".the-dem");
+  const vach = deck.querySelector(".the-track i");
 
-  const updateCard = () => {
-    const fill = deckWrap.querySelector(".story-progress-fill");
-    const badge = deckWrap.querySelector(".story-step-badge");
-    if (fill) fill.style.width = ((curCardIdx + 1) / totalCards * 100) + "%";
-    if (badge) badge.textContent = `Thẻ ${curCardIdx + 1}/${totalCards}`;
-    
-    const bodies = deckWrap.querySelectorAll(".story-card-body");
-    bodies.forEach((b, i) => b.classList.toggle("active", i === curCardIdx));
-    
-    const prevB = deckWrap.querySelector("#storyPrevBtn");
-    const nextB = deckWrap.querySelector("#storyNextBtn");
-    if (prevB) prevB.disabled = curCardIdx === 0;
-    if (nextB) nextB.textContent = curCardIdx === totalCards - 1 ? "Hoàn thành Thẻ 🏆" : "Thẻ tiếp ▶";
-  };
-
-  const toggleView = (enableDeck) => {
-    deckWrap.hidden = !enableDeck;
-    phas.forEach((p) => p.style.display = enableDeck ? "none" : "");
-    toggleBtn.classList.toggle("active", enableDeck);
-    toggleBtn.style.color = enableDeck ? "var(--primary)" : "var(--text-soft)";
-  };
-
-  toggleBtn.onclick = () => toggleView(deckWrap.hidden);
-
-  // On mobile (screen <= 768px), default to Story Deck view
-  if (isMobile) {
-    toggleView(true);
-  } else {
-    toggleView(false);
-  }
-
-  deckWrap.querySelector("#storyPrevBtn").onclick = () => {
-    if (curCardIdx > 0) { curCardIdx--; updateCard(); }
-  };
-  deckWrap.querySelector("#storyNextBtn").onclick = () => {
-    if (curCardIdx < totalCards - 1) {
-      curCardIdx++;
-      updateCard();
-    } else {
-      const doneBtn = document.getElementById("doneBtn");
-      if (doneBtn) doneBtn.scrollIntoView({ behavior: "smooth" });
+  function veThe(i, cuonLen) {
+    cur = Math.max(0, Math.min(tong - 1, i));
+    xaNhat = Math.max(xaNhat, cur);
+    list.querySelectorAll(".the-card").forEach((c, k) => c.classList.toggle("hien", k === cur));
+    chams.querySelectorAll(".the-cham-b").forEach((c, k) => {
+      c.classList.toggle("hien", k === cur);
+      c.classList.toggle("qua", k < xaNhat && k !== cur);
+    });
+    vach.style.width = ((cur + 1) / tong * 100).toFixed(1) + "%";
+    dem.textContent = `Thẻ ${cur + 1}/${tong}`;
+    lui.disabled = cur === 0;
+    toi.innerHTML = cur === tong - 1
+      ? `${aIco("flag", null, 14)} Xong bài`
+      : `Thẻ tiếp ${aIco("aright", null, 14)}`;
+    /* Xem tới thẻ cuối = đã đi hết bài -> mở nút "Đánh dấu đã học". Tới được đây
+       luôn là do người học tự bấm (thẻ đầu không bao giờ là thẻ cuối vì bộ thẻ
+       chỉ dựng khi có từ 2 phần), nên báo một tiếng là đúng lúc. */
+    if (xaNhat >= tong - 1) moKhoaNutDone(true);
+    /* Đổi thẻ thì đưa mép trên của bộ thẻ về đầu màn: thẻ vừa đọc có thể dài hơn
+       một màn hình, không kéo lên thì thẻ mới mở ra ở lưng chừng chỗ đang đứng. */
+    if (cuonLen) {
+      const y = window.scrollY + deck.getBoundingClientRect().top - 78;
+      if (window.scrollY > y) window.scrollTo({ top: Math.max(0, y), behavior: "smooth" });
     }
+  }
+
+  lui.onclick = () => veThe(cur - 1, true);
+  toi.onclick = () => {
+    if (cur < tong - 1) { veThe(cur + 1, true); return; }
+    const nut = document.getElementById("doneBtn");
+    if (nut) nut.scrollIntoView({ behavior: "smooth", block: "center" });
   };
+  veThe(0);
+  return true;
 }
 
 function practiceLesson(l) {
@@ -3821,6 +3915,15 @@ function initUserMenu() {
       if (!duong.includes(btn)) btn.click();
     });
   });
+  // Dải chọn "Cách hiển thị bài học". Không đóng menu khi bấm: người học vừa đổi
+  // là bài đang mở phía sau vẽ lại ngay, xem thử rồi đổi tiếp cũng được.
+  const seg = document.getElementById("umDocBai");
+  if (seg) {
+    seg.querySelectorAll("button[data-doc]").forEach((b) => {
+      b.onclick = (e) => { e.stopPropagation(); datDocBai(b.dataset.doc); };
+    });
+    capNhatNutDocBai();
+  }
   // "Đổi hồ sơ": dùng lại đúng màn chọn hồ sơ ở lúc đăng nhập (Account.renderProfilePicker),
   // qua guardLeave vì đây là đổi cả danh tính đang dùng, không phải chuyển trang thường.
   const switchBtn = document.getElementById("umSwitchBtn");

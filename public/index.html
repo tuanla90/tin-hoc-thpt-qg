@@ -84,6 +84,18 @@
             <span class="um-row-txt">Giao diện tối</span>
             <button class="um-switch" id="themeToggle" type="button" title="Chế độ sáng/tối"></button>
           </div>
+          <!-- Cách hiển thị bài học: chọn MỘT LẦN ở đây rồi mọi bài đều theo, thay
+               cho nút bật/tắt cũ nằm trong từng trang bài (bấm lại từng bài, không
+               nhớ gì). Ba lựa chọn nên dùng dải chọn chứ không phải công tắc. -->
+          <div class="um-block">
+            <span class="um-row-txt">Cách hiển thị bài học</span>
+            <div class="um-seg" id="umDocBai" role="radiogroup" aria-label="Cách hiển thị bài học">
+              <button type="button" data-doc="auto" role="radio" aria-checked="true" title="Điện thoại chia thẻ, máy tính cuộn dài">Tự động</button>
+              <button type="button" data-doc="the" role="radio" aria-checked="false" title="Mỗi phần của bài là một thẻ, đi tới bằng nút Thẻ tiếp">Thẻ</button>
+              <button type="button" data-doc="cuon" role="radio" aria-checked="false" title="Cả bài trên một trang, cuộn từ đầu đến cuối">Cuộn dài</button>
+            </div>
+            <small class="um-hint" id="umDocBaiHint"></small>
+          </div>
           <div class="um-sep" id="umSepOut" hidden></div>
           <button class="um-item" id="umSwitchBtn" type="button" hidden><span class="um-item-ic" data-ic="refresh"></span>Đổi hồ sơ</button>
           <button class="um-item um-danger" id="umAuthBtn" type="button" hidden>Đăng xuất</button>
@@ -97,7 +109,7 @@
     <!-- Nội dung được render bằng JavaScript -->
   </main>
 
-  <!-- ===================== THANH ĐIỀU HƯỚNG DI ĐỘNG (MOBILE BOTTOM NAV - WONDERING STYLE) ===================== -->
+  <!-- ===================== THANH ĐIỀU HƯỚNG DI ĐỘNG ===================== -->
   <nav class="bottom-nav" id="bottomNav">
     <button class="bnav-btn active" data-nav="home"><span class="bnav-ic" data-ic="home"></span><span>Trang chủ</span></button>
     <button class="bnav-btn" data-nav="lessons"><span class="bnav-ic" data-ic="book"></span><span>Bài học</span></button>

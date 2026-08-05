@@ -1511,6 +1511,28 @@ code.ic {
 .um-switch[aria-pressed="true"] { background: var(--primary-soft); border-color: var(--primary); color: var(--primary); }
 .um-switch .ic { width: 14px; height: 14px; }
 
+/* Hàng cài đặt có BA lựa chọn: nhãn và dải chọn xếp chồng chứ không cùng một
+   hàng như .um-row — menu chỉ rộng 268px, nhét ba nút cạnh nhãn thì mỗi nút còn
+   chưa tới 40px, chữ "Cuộn dài" bị cắt. */
+.um-block { padding: 7px 10px 9px; }
+.um-block .um-row-txt { display: block; margin-bottom: 7px; }
+.um-seg {
+  display: flex; gap: 3px; padding: 3px; border-radius: 10px;
+  background: var(--bg-soft); border: 1px solid var(--border);
+}
+.um-seg button {
+  flex: 1; min-width: 0; padding: 6px 4px; border: 0; border-radius: 7px;
+  background: none; color: var(--text-soft); cursor: pointer;
+  font: 700 12px var(--font-sans); white-space: nowrap;
+}
+.um-seg button:hover { color: var(--primary); }
+.um-seg button[aria-checked="true"] {
+  background: var(--bg-card); color: var(--primary);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+.um-seg button:focus-visible { outline: 2px solid var(--primary); outline-offset: 1px; }
+.um-hint { display: block; margin-top: 6px; font-size: 11.5px; line-height: 1.45; color: var(--text-soft); }
+
 @media (max-width: 560px) {
   .um-name { display: none; }
   .um-trigger { padding: 5px; }
@@ -1583,7 +1605,7 @@ pre code {
 }
 
 /* ============================================================================
- * WONDERING.APP STYLE - MOBILE BOTTOM NAV & STORY CARD CHUNKING
+ * THANH ĐIỀU HƯỚNG DƯỚI (DI ĐỘNG) & CHẾ ĐỘ ĐỌC BÀI THEO THẺ
  * ========================================================================== */
 
 /* Mobile Bottom Navigation Bar */
@@ -1645,43 +1667,34 @@ pre code {
   background: var(--primary-soft);
 }
 
-/* Story Mode Card Chunking (Wondering.app Deck) */
-.story-deck-wrap {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 20px;
-  margin: 16px 0;
-  box-shadow: var(--shadow);
-}
-
-.story-header {
+/* --- Chế độ đọc bài theo THẺ (bật/tắt trong menu tài khoản) -----------------
+   Bộ thẻ KHÔNG có khung riêng bao ngoài: mỗi phần (.ls-pha) tự đã là một thẻ có
+   viền và nền rồi, bọc thêm một lớp nữa thành hai lớp viền lồng nhau, mà trên
+   điện thoại hai lớp đệm ăn mất ~40px bề ngang của phần chữ. */
+.the-head {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 12px;
-  margin-bottom: 16px;
+  margin: 0 0 12px;
 }
-
-.story-progress-track {
+.the-track {
   flex: 1;
   height: 8px;
   background: var(--bg-soft);
+  border: 1px solid var(--border);
   border-radius: 999px;
   overflow: hidden;
 }
-
-.story-progress-fill {
+.the-track i {
+  display: block;
   height: 100%;
-  background: linear-gradient(90deg, var(--primary), var(--accent-teal, #14b8a6));
+  background: linear-gradient(90deg, var(--primary), var(--info));
   border-radius: 999px;
   transition: width 0.3s ease;
 }
-
-.story-step-badge {
-  font-size: 12px;
-  font-weight: 800;
-  font-family: var(--font-mono);
+.the-dem {
+  flex: none;
+  font: 800 12px var(--font-mono);
   color: var(--primary);
   background: var(--primary-soft);
   padding: 3px 10px;
@@ -1689,48 +1702,71 @@ pre code {
   white-space: nowrap;
 }
 
-.story-card-body {
-  min-height: 240px;
-  display: none;
-  animation: cardFade 0.25s ease-in-out;
-}
-
-.story-card-body.active {
-  display: block;
-}
-
-@keyframes cardFade {
+.the-card { display: none; }
+.the-card.hien { display: block; animation: theHien 0.22s ease-out; }
+@keyframes theHien {
   from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+  to { opacity: 1; transform: none; }
 }
+/* Trong thẻ, đầu phần chỉ còn là TÊN THẺ — hết vai trò nút thu/mở, nên bỏ luôn
+   mũi tên và mọi tín hiệu "bấm được" để không mời bấm một nút không làm gì. */
+.the-card .ls-pha { margin-bottom: 0; }
+.the-card .ls-pha-d-tinh { cursor: default; opacity: 1; }
+.the-card .ls-pha-d-tinh:hover { background: var(--bg-soft); }
+.the-card .ls-pha-chev { display: none; }
 
-.story-controls {
+.the-nav {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  margin-top: 20px;
-  padding-top: 16px;
-  border-top: 1px solid var(--border);
+  gap: 10px;
+  margin-top: 14px;
 }
-
-.story-view-toggle {
-  display: inline-flex;
+.the-nav .btn { flex: none; }
+.the-cham {
+  display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 5px 12px;
-  border-radius: 999px;
-  background: var(--bg-soft);
-  border: 1px solid var(--border);
-  color: var(--text-soft);
-  font-size: 12.5px;
-  font-weight: 700;
-  cursor: pointer;
-  margin-bottom: 14px;
+  justify-content: center;
+  gap: 7px;
+  flex: 1;
 }
-.story-view-toggle:hover {
-  color: var(--primary);
-  border-color: var(--primary);
+.the-cham-b {
+  width: 9px;
+  height: 9px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--border);
+  cursor: pointer;
+  transition: width 0.2s, background 0.2s;
+}
+.the-cham-b.qua { background: var(--primary-soft); }
+.the-cham-b.hien { width: 22px; border-radius: 999px; background: var(--primary); }
+.the-cham-b:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+/* Chấm tròn 9px là mục tiêu bấm quá nhỏ trên điện thoại (khuyến nghị 44px).
+   Nới vùng bấm bằng ::after trong suốt, giữ nguyên chấm nhìn thấy được. */
+@media (max-width: 768px) {
+  .the-cham-b { position: relative; }
+  .the-cham-b::after {
+    content: "";
+    position: absolute;
+    inset: -16px -6px;
+  }
+  .the-nav .btn { min-width: 0; padding-left: 12px; padding-right: 12px; }
 }
 
+/* Nút đang chờ mở khoá ("Đọc hết bài rồi đánh dấu"). Không dùng [disabled] trơn
+   vì trình duyệt làm mờ hẳn thành ra như nút hỏng; ở đây nó là nút SẼ dùng được,
+   nên giữ chữ đọc rõ và chỉ bỏ mọi tín hiệu bấm được. */
+.btn.btn-cho,
+.btn.btn-cho:hover {
+  background: var(--bg-soft);
+  border: 1.5px dashed var(--border);
+  color: var(--text-soft);
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+  opacity: 1;
+}
 
