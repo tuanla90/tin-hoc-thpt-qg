@@ -1762,8 +1762,10 @@ function moKhoaNutDone(bao) { if (nutDoneMo) nutDoneMo(bao); }
  *  mà cũng là phần người học chỉ tới sau khi đọc xong — thu lại là ngắn thật, còn
  *  tiêu đề vẫn nói rõ bên trong có gì nên không phải "giấu".
  * ------------------------------------------------------------------------- */
+/* data-ten/data-icon để chế độ Thẻ lấy lại tên phần mà không phải mò trong chuỗi
+   của .ls-pha-ten (chuỗi đó dính cả icon lẫn dòng phụ trong <small>). */
 function phaMo(so, ten, icon, phu, mo) {
-  return `<section class="ls-pha${mo ? "" : " dong"}" data-pha="${so}">
+  return `<section class="ls-pha${mo ? "" : " dong"}" data-pha="${so}" data-ten="${esc(ten)}" data-icon="${esc(icon)}">
     <button class="ls-pha-d" type="button" aria-expanded="${mo ? "true" : "false"}">
       <span class="ls-pha-so">${so}</span>
       <span class="ls-pha-ten">${aIco(icon, null, 16)} ${esc(ten)}<small>${esc(phu)}</small></span>
@@ -2079,15 +2081,145 @@ function renderLesson(data) {
  *  nghe đã gắn, không sinh bản sao nào, và trang chỉ còn một bản duy nhất của
  *  mỗi khối.
  *
- *  Trả về true nếu dựng được thẻ (bài có từ 2 phần trở lên).
+ *  CẮT NHỎ TỚI TỪNG KHỐI, KHÔNG PHẢI TỪNG PHẦN. Ba phần là quá thô: đo trên 8 bài
+ *  thì phần "Nội dung chính" ra 4,8–10,8 màn điện thoại một thẻ — cuộn mãi trong
+ *  một thẻ thì đúng bằng cuộn cả bài, chế độ Thẻ chẳng giải quyết được gì. Nay cắt
+ *  ở RANH GIỚI KHỐI có sẵn trong bài (mỗi mục lý thuyết, Cần nhớ, ô chạy thử, Sai ở
+ *  đâu, Từ vựng...) rồi dồn các khối liền nhau vào một thẻ cho tới khi chạm ngưỡng
+ *  ~1,4 màn hình. Không bao giờ cắt ĐÔI một khối: nửa cái bảng hay nửa đoạn mã thì
+ *  vô nghĩa, nên khối nào tự nó đã cao hơn ngưỡng vẫn được để nguyên một thẻ.
+ *
+ *  Trả về true nếu cắt được từ 2 thẻ trở lên.
  * ------------------------------------------------------------------------- */
+
+/* Hai khối này là HỘP ĐỰNG, không phải một mạch đọc: bên trong là nhiều mạch xếp
+   chồng nên trải phẳng ra để cắt được. Khối khác giữ nguyên. */
+const THE_HOP = ".lesson-body, #phaCungCo";
+
+/* Tên thẻ tra theo khối "nặng" đầu tiên nằm trong nó. Cụ thể đứng trước, chung
+   đứng sau; không khớp cái nào thì lấy tên của phần. */
+const THE_TEN = [
+  [".ls-keypoints", "Cần nhớ"],
+  ["#lessonPg", "Thực hành ngay"],
+  [".sd", "Sơ đồ của bài"],
+  [".sod-host, .sod", "Sai ở đâu?"],
+  [".clab-host", "Ôn tập tương tác"],
+  [".voc-box", "Từ vựng"],
+  [".ex-host", "Bài tập"],
+  [".glab", "Xưởng đồ hoạ"],
+];
+
+/* Tiêu đề sẵn có của một khối, nếu khối đó tự mang một cái. Chỉ đi theo con ĐẦU
+   TIÊN và tối đa ba tầng: tiêu đề của khối luôn nằm ngay đầu khối, còn quét bừa
+   bằng querySelector("h4") thì vớ phải một tiêu đề nào đó lọt giữa nội dung. */
+function dauKhoi(k) {
+  let e = k;
+  for (let i = 0; i < 3 && e; i++) {
+    if (e.classList.contains("ls-nhom-ten") || e.classList.contains("section-title")) return e;
+    if (/^H[1-4]$/.test(e.tagName)) return e;
+    /* Khối "Cần nhớ" mở đầu bằng <b> chứ không phải thẻ tiêu đề — vẫn là tên của
+       khối, vẫn nên lên đầu thẻ thay vì hiện lại lần nữa ngay bên dưới. */
+    if (e.tagName === "B" && e.parentElement && e.parentElement.classList.contains("ls-keypoints")) return e;
+    e = e.firstElementChild;
+  }
+  return null;
+}
+
+/* Đặt tên cho một thẻ. CÓ TÁC DỤNG PHỤ có chủ ý: tên lấy từ tiêu đề nào thì ẩn
+   luôn tiêu đề đó đi — để nguyên thì cùng một dòng chữ hiện hai lần, cách nhau
+   đúng một đường kẻ. */
+function tenThe(khoi, phaTen) {
+  for (const k of khoi) {
+    const d = dauKhoi(k);
+    const ten = d ? d.textContent.trim() : "";
+    if (ten) {
+      /* Mục lý thuyết: ẩn cả HÀNG tiêu đề (nút thu/mở kèm mũi tên), không chỉ
+         mỗi chữ — bỏ lại cái nút rỗng thì thành một vệt bấm được mà không làm gì. */
+      if (d.classList.contains("ls-nhom-ten")) k.classList.add("the-an-dau");
+      else d.classList.add("the-dau-an");
+      return ten;
+    }
+    for (const [sel, t] of THE_TEN) {
+      if (k.matches(sel) || k.querySelector(sel)) return t;
+    }
+  }
+  return phaTen;
+}
+
 function dungTheBai(app, l) {
   /* Phần Củng cố rỗng đã bị donVaoPha() ẩn đi — đừng dựng một thẻ trắng cho nó. */
   const phas = Array.from(app.querySelectorAll(".ls-pha")).filter((p) => !p.hidden);
-  if (phas.length <= 1) return false;
+  if (!phas.length) return false;
+
+  /* Mở hết TRƯỚC KHI ĐO. ganThuMo() có thể đã thu phần Củng cố theo thói quen đã
+     lưu, mà khối đang bị thu thì offsetHeight bằng 0 — đo lúc đó sẽ dồn cả phần
+     vào chung một thẻ vì tưởng nó chẳng cao gì cả. */
+  phas.forEach((p) => p.classList.remove("dong"));
+
+  /* Ngưỡng một thẻ: 1,4 màn hình. Đúng bằng một mạch giải thích trọn vẹn mà cuộn
+     thêm non nửa màn là hết thẻ. Sàn 560px để màn hình thấp (điện thoại nằm
+     ngang) không bị băm ra hàng chục thẻ vụn. */
+  const nguong = Math.max(560, Math.round(window.innerHeight * 1.4));
+  const dsThe = [];
+  phas.forEach((pha) => {
+    const than = pha.querySelector(".ls-pha-than");
+    if (!than) return;
+    const so = pha.dataset.pha || "";
+    const phaTen = pha.dataset.ten || "";
+    const manh = [];
+    const themKhoi = (c) => {
+      /* Một mục lý thuyết mà TỰ NÓ đã cao hơn ngưỡng thì cắt tiếp ở ranh giới các
+         khối con của nó (đoạn văn, ví dụ, bảng, danh sách, khung lưu ý). Vẫn là
+         ranh giới có sẵn trong bài, vẫn không khối nào bị cắt đôi. Đo được: mục
+         "Lệnh print()" của C10-11 dài 3,9 màn — cắt ra thành hai, ba thẻ đọc thở
+         được, mà mạch vẫn liền vì các thẻ đó cùng mang tên mục. */
+      if (c.classList.contains("ls-nhom") && (c.offsetHeight || 0) > nguong) {
+        const t = c.querySelector(".ls-nhom-ten");
+        const than2 = c.querySelector(".ls-nhom-than");
+        if (than2 && than2.children.length > 1) {
+          const ten = t ? t.textContent.trim() : "";
+          Array.from(than2.children).forEach((x) => manh.push({ el: x, ten }));
+          return;
+        }
+      }
+      manh.push({ el: c });
+    };
+    Array.from(than.children).forEach((c) => {
+      if (c.matches(THE_HOP)) Array.from(c.children).forEach(themKhoi);
+      else themKhoi(c);
+    });
+
+    let the = null;
+    manh.forEach((m) => {
+      /* Nút "Thu gọn tất cả" mất nghĩa khi mỗi mục đã là một thẻ riêng. */
+      if (m.el.classList.contains("ls-nhom-thanh")) return;
+      const cao = m.el.offsetHeight || 0;
+      /* Thẻ đang mở còn rỗng thì luôn nhận, kể cả khối cao hơn cả ngưỡng — không
+         thì sinh ra một thẻ trắng rồi khối vẫn phải nằm ở thẻ sau. */
+      if (!the || (the.cao > 0 && the.cao + cao > nguong)) {
+        the = { so, phaTen, tenEp: m.ten || "", khoi: [], cao: 0 };
+        dsThe.push(the);
+      }
+      the.khoi.push(m.el);
+      the.cao += cao;
+    });
+  });
+  if (dsThe.length <= 1) return false;
+
+  /* Đánh số các thẻ cắt ra từ CÙNG một mục: "(2/4)" nói rõ đang ở đâu trong mục,
+     chứ ba thẻ liền nhau cùng ghi "(tiếp)" thì nhìn y hệt nhau, đọc xong thẻ 4
+     không biết mình đã qua thẻ 3 hay chưa. */
+  for (let i = 0; i < dsThe.length;) {
+    const ep = dsThe[i].tenEp;
+    if (!ep) { i++; continue; }
+    let j = i;
+    while (j < dsThe.length && dsThe[j].tenEp === ep) j++;
+    if (j - i > 1) for (let k = i; k < j; k++) dsThe[k].phan = `${k - i + 1}/${j - i}`;
+    i = j;
+  }
 
   let cur = 0, xaNhat = 0;
-  const tong = phas.length;
+  const tong = dsThe.length;
   const deck = document.createElement("div");
   deck.className = "the-deck";
   deck.innerHTML = `
@@ -2105,28 +2237,35 @@ function dungTheBai(app, l) {
 
   const list = deck.querySelector(".the-list");
   const chams = deck.querySelector(".the-cham");
-  phas.forEach((pha, i) => {
+  /* Quá nhiều thẻ thì hàng chấm thành một vệt lấm tấm không bấm trúng cái nào —
+     lúc đó thanh tiến độ và số "Thẻ 7/14" đã nói đủ. */
+  const coCham = tong <= 12;
+  dsThe.forEach((t, i) => {
+    /* Thẻ cắt ra từ một mục quá dài mang sẵn tên mục (tenEp) kèm số phần. */
+    const ten = (t.tenEp || tenThe(t.khoi, t.phaTen)) + (t.phan ? ` (${t.phan})` : "");
     const the = document.createElement("div");
     the.className = "the-card" + (i ? "" : " hien");
-    /* Trong thẻ thì phần LUÔN mở: cả thẻ chỉ có mỗi nó, thu lại là còn thẻ trắng.
-       Tiêu đề phần giữ nguyên làm tên thẻ, nhưng thôi vai trò nút thu/mở. */
-    pha.classList.remove("dong");
-    const dau = pha.querySelector(".ls-pha-d");
-    if (dau) {
-      dau.setAttribute("aria-expanded", "true");
-      dau.disabled = true;
-      dau.classList.add("ls-pha-d-tinh");
-    }
-    the.appendChild(pha);            // CHUYỂN, không cloneNode
+    /* Tên thẻ trùng tên phần (phần chỉ cắt được một thẻ) thì bỏ dòng nhỏ đi —
+       viết "ĐẶT VẤN ĐỀ / Đặt vấn đề" chồng lên nhau chẳng thêm được gì. */
+    the.innerHTML = `<div class="the-dau">
+        <span class="the-so">${esc(t.so)}</span>
+        <span class="the-tit">${ten === t.phaTen ? "" : `<small>${esc(t.phaTen)}</small>`}<b>${esc(ten)}</b></span>
+      </div><div class="the-than"></div>`;
+    const than = the.querySelector(".the-than");
+    t.khoi.forEach((k) => than.appendChild(k));   // CHUYỂN, không cloneNode
     list.appendChild(the);
 
+    if (!coCham) return;
     const cham = document.createElement("button");
     cham.type = "button";
     cham.className = "the-cham-b" + (i ? "" : " hien");
-    cham.setAttribute("aria-label", `Thẻ ${i + 1}: ${(pha.querySelector(".ls-pha-ten") || {}).textContent || ""}`.trim());
-    cham.onclick = () => veThe(i);
+    cham.setAttribute("aria-label", `Thẻ ${i + 1}: ${ten}`);
+    cham.onclick = () => veThe(i, true);
     chams.appendChild(cham);
   });
+  /* Vỏ .ls-pha giờ rỗng ruột (mọi khối đã sang thẻ) và tiêu đề của nó đã được
+     đầu thẻ thay thế — bỏ hẳn, để lại thì thành ba cái khung trống dưới bộ thẻ. */
+  phas.forEach((p) => p.remove());
 
   const lui = deck.querySelector(".the-lui");
   const toi = deck.querySelector(".the-toi");
@@ -2149,7 +2288,7 @@ function dungTheBai(app, l) {
       : `Thẻ tiếp ${aIco("aright", null, 14)}`;
     /* Xem tới thẻ cuối = đã đi hết bài -> mở nút "Đánh dấu đã học". Tới được đây
        luôn là do người học tự bấm (thẻ đầu không bao giờ là thẻ cuối vì bộ thẻ
-       chỉ dựng khi có từ 2 phần), nên báo một tiếng là đúng lúc. */
+       chỉ dựng khi cắt được từ 2 thẻ), nên báo một tiếng là đúng lúc. */
     if (xaNhat >= tong - 1) moKhoaNutDone(true);
     /* Đổi thẻ thì đưa mép trên của bộ thẻ về đầu màn: thẻ vừa đọc có thể dài hơn
        một màn hình, không kéo lên thì thẻ mới mở ra ở lưng chừng chỗ đang đứng. */

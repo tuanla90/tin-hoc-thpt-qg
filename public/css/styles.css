@@ -1703,17 +1703,58 @@ pre code {
 }
 
 .the-card { display: none; }
-.the-card.hien { display: block; animation: theHien 0.22s ease-out; }
+.the-card.hien {
+  display: block;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-card);
+  overflow: hidden;
+  animation: theHien 0.22s ease-out;
+}
 @keyframes theHien {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: none; }
 }
-/* Trong thẻ, đầu phần chỉ còn là TÊN THẺ — hết vai trò nút thu/mở, nên bỏ luôn
-   mũi tên và mọi tín hiệu "bấm được" để không mời bấm một nút không làm gì. */
-.the-card .ls-pha { margin-bottom: 0; }
-.the-card .ls-pha-d-tinh { cursor: default; opacity: 1; }
-.the-card .ls-pha-d-tinh:hover { background: var(--bg-soft); }
-.the-card .ls-pha-chev { display: none; }
+
+/* Đầu thẻ: số PHẦN + tên phần ở dòng nhỏ, tên khối ở dòng lớn. Một thẻ giờ chỉ là
+   một khối trong phần chứ không còn là cả phần, nên phải nói rõ đang ở phần nào —
+   không thì đọc tới thẻ 6 là mất hẳn mạch. Đây là NHÃN, không phải nút: không có
+   mũi tên, không đổi màu khi rê chuột. */
+.the-dau {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 11px 14px;
+  background: var(--bg-soft);
+  border-bottom: 1px solid var(--border);
+}
+.the-so {
+  flex: none;
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  background: var(--primary); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font: 900 13px var(--font-mono);
+}
+.the-tit { min-width: 0; display: flex; flex-direction: column; }
+.the-tit small {
+  font: 700 11px var(--font-sans);
+  color: var(--text-soft);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.the-tit b { font: 800 15.5px var(--font-display); line-height: 1.3; }
+.the-than { padding: 15px 16px; }
+
+/* Khối đứng đầu thẻ đã cho tên cho cả thẻ — ẩn tiêu đề riêng của nó đi, không thì
+   cùng một dòng chữ hiện hai lần chồng nhau. Cần đặc trưng (0,2,0) để thắng luật
+   display của chính các tiêu đề đó (.section-title, .mh h4). */
+.the-an-dau > .ls-nhom-d { display: none; }
+.the-than .the-dau-an { display: none; }
+/* Khối đầu tiên trong thẻ không cần gạch ngăn phía trên: cạnh trên của nó chính
+   là đường viền dưới của đầu thẻ. */
+.the-than > .ls-nhom:first-child { border-top: 0; margin-top: 0; }
+.the-than > *:last-child { margin-bottom: 0; }
 
 .the-nav {
   display: flex;
