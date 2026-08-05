@@ -4051,7 +4051,21 @@ function initNav() {
   document.getElementById("themeToggle").onclick = toggleTheme;
   document.getElementById("homeLink").onclick = () => guardLeave(() => go("home"));
   document.getElementById("homeLink").onkeydown = (e) => { if (e.key === "Enter") go("home"); };
-  document.querySelectorAll(".nav-btn[data-nav], .bottom-nav .bnav-btn[data-nav]").forEach((b) => b.onclick = () => guardLeave(() => go(b.dataset.nav)));
+  document.querySelectorAll(".nav-btn[data-nav], .bottom-nav .bnav-btn[data-nav]").forEach((b) => {
+    b.onclick = () => {
+      if (b.dataset.nav === "tutor") {
+        if (typeof Tutor !== "undefined") {
+          if (State.view === "lesson" && typeof LESSON_DANG_MO !== "undefined" && LESSON_DANG_MO) {
+            Tutor.moBai(LESSON_DANG_MO);
+          } else {
+            Tutor.moChung();
+          }
+        }
+        return;
+      }
+      guardLeave(() => go(b.dataset.nav));
+    };
+  });
   initUserMenu();
 }
 

@@ -760,10 +760,10 @@ select:focus, input[type="text"]:focus, input[type="number"]:focus {
   .topnav .nav-btn { padding: 8px 7px; flex: none; }
   .hero { padding: 24px; }
   .hero h1 { font-size: 24px; }
-  .floating-mascot-container { bottom: 16px; right: 16px; }
+  .floating-mascot-container { bottom: 80px; right: 14px; z-index: 99; }
   .floating-mascot-bubble { max-width: 220px; font-size: 12.5px; }
-  .floating-mascot-btn { width: 56px; height: 56px; }
-  .floating-mascot-img { width: 48px; height: 48px; }
+  .floating-mascot-btn { width: 52px; height: 52px; }
+  .floating-mascot-img { width: 44px; height: 44px; }
 }
 
 /* ===========================================================================
@@ -1545,7 +1545,7 @@ code.ic {
 
 @media (max-width: 560px) {
   .um-name { display: none; }
-  .um-trigger { padding: 5px; }
+  .um-trigger { padding: 4px 8px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 999px; }
   .um-menu { right: -6px; }
 }
 

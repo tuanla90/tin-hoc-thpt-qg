@@ -61,7 +61,18 @@
       ".mh-btn.chinh{background:var(--primary);color:#fff;border-color:var(--primary)}" +
       ".mh-btn.dang{background:var(--accent-amber,#d97706);color:#fff;border-color:var(--accent-amber,#d97706)}" +
       ".mh-btn:disabled{opacity:.45;cursor:default}" +
-      ".mh-loi{flex:1;min-width:190px;font-size:13.5px;color:var(--text-soft);line-height:1.5}" +
+      /* Lời giải thích chiếm TRỌN MỘT DÒNG RIÊNG, nằm TRÊN hàng nút.
+         Trước đây nó là một ô co giãn nằm CÙNG hàng với năm nút (flex:1), nên bề
+         ngang còn lại sau nút chỉ đủ ~190px: câu giải thích bị bóp thành một cột
+         chữ hẹp cao bốn năm dòng, ngắt giữa chừng những chỗ vô lí. Mà đây mới là
+         thứ nói cho học sinh biết vừa xảy ra chuyện gì.
+         Vẫn để NGUYÊN trong .mh-thanh chứ không tách ra ngoài: ở màn hẹp cả hàng
+         này dính đáy màn hình (position:sticky bên dưới), tách ra thì lời giải
+         thích trôi mất khỏi tầm nhìn trong khi nút vẫn nằm đó — mất đúng phần
+         quan trọng nhất. order:-1 đưa nó lên đầu, flex-basis:100% đẩy nút xuống
+         dòng dưới; cả khối vẫn dính đáy nguyên vẹn. */
+      ".mh-loi{order:-1;flex:0 0 100%;font-size:13.5px;color:var(--text-soft);line-height:1.5}" +
+      ".mh-loi:empty{display:none}" +
       ".mh-loi b{color:var(--text)}" +
       /* --- nhị phân --- */
       ".mh-bits{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}" +
@@ -122,7 +133,7 @@
       '<div class="mh-khung">' + than + "</div>" +
       '<div class="mh-thanh">' +
       '<button class="mh-btn" data-mh="lui" disabled title="Lùi lại 1 bước">' + mhIco("aleft", 14) + ' Lùi</button>' +
-      '<button class="mh-btn chinh" data-mh="tien">Bước tiếp →</button>' +
+      '<button class="mh-btn chinh" data-mh="tien">Bước tiếp ' + mhIco("aright", 14) + "</button>" +
       '<button class="mh-btn" data-mh="auto">' + mhIco("play", 14) + ' Tự chạy</button>' +
       '<select class="mh-toc-do" data-mh="tocdo" title="Tốc độ tự chạy">' +
       '<option value="1500">0.5x (Chậm)</option>' +
