@@ -154,7 +154,7 @@ sang chế độ "cày" (ôn kiểm tra giữa/cuối kì lớp 10–11, ôn thi
 | **Quỹ câu luyện có chấm/ngày** — gồm: quiz cuối bài, trung tâm Luyện tập (theo bài/chương/chủ đề/lớp), Luyện nhanh 10 câu, Luyện Đúng/Sai | **30 câu/ngày** (đủ nhịp học hằng ngày + đạt mục tiêu 80 XP; cày ôn kiểm tra là hết) | Không giới hạn |
 | Tab **"Chỗ yếu"** + luyện theo chỗ yếu | Khoá (radar năng lực vẫn XEM được — làm teaser) | Đầy đủ |
 | **Thi thử** (không tính vào quỹ câu) | 3 đề cố định: TC1 + mã 101, 102 (làm lại thoải mái) | 13 đề + đề random không giới hạn |
-| **Xưởng thực hành có chấm** (327 bài) | ~15% bài đầu mỗi xưởng: Python 20/151 · Web 8/49 · SQL 6/40 · Đồ hoạ 3/13 (concept lab thuộc phần học, free hết) | Toàn bộ |
+| **Xưởng thực hành có chấm** (283 bài — 8/2026: Python 161 · Web 49 · SQL 40 · Đồ hoạ 33) | ~15% bài đầu mỗi xưởng: Python 20/161 · Web 8/49 · SQL 6/40 · Đồ hoạ 3/33 (concept lab thuộc phần học, free hết) | Toàn bộ |
 | **Gia sư AI** (cả "Vì sao tôi sai?") | 5 lượt/ngày (`AI_FREE_PER_DAY`, đã enforce server) | 25 lượt/ngày + nút "giải thích kỹ hơn" (model sâu) CHỈ premium |
 | Hồ sơ học tập trong 1 tài khoản | 1 hồ sơ | 3 hồ sơ (nhà 2 con, GV dùng thử) |
 

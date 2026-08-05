@@ -860,8 +860,8 @@ ${khoi}
 
 <div class="pg-card" style="text-align:center;margin-top:34px">
   <h2>Học đầy đủ trong ứng dụng</h2>
-  <p class="pg-note">${ds.length} bài giảng, ${kho.soCau} câu hỏi, 13 đề thi thử, 250+ bài thực hành máy tự chấm
-  (Python, SQL, HTML/CSS) và gia sư AI kèm riêng.</p>
+  <p class="pg-note">${ds.length} bài giảng, ${kho.soCau} câu hỏi, 13 đề thi thử, 280+ bài thực hành máy tự chấm
+  (Python, SQL, HTML/CSS, đồ hoạ) và gia sư AI kèm riêng.</p>
   <p style="margin-top:14px"><a class="btn btn-primary btn-lg" href="/hoc">Bắt đầu học miễn phí</a></p>
 </div>`;
 
