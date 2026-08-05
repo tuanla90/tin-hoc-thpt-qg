@@ -43,6 +43,14 @@
       padding: 24px 20px;
     }
 
+    /* SVG Icon Alignment */
+    .icon-inline {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      vertical-align: middle;
+    }
+
     /* Header Banner */
     .header-card {
       background: linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.98)),
@@ -199,8 +207,10 @@
     }
 
     .pill-badge {
-      display: inline-block;
-      padding: 3px 10px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
       border-radius: 6px;
       font-size: 11.5px;
       font-weight: 700;
@@ -445,7 +455,10 @@
     
     <!-- HEADER BANNER -->
     <div class="header-card">
-      <span class="badge-label">🔥 Master Sales Playbook & Kế Hoạch Marketing 30 Ngày</span>
+      <span class="badge-label">
+        <svg class="icon-inline" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 3z"/></svg>
+        Master Sales Playbook &amp; Kế Hoạch Marketing 30 Ngày
+      </span>
       <h1>Nền Tảng Ôn Thi Tin Học THPT Quốc Gia (GDPT 2018)</h1>
       <p class="subtitle">Bản tổng hợp phân tích khả thi thương mại, Bộ 6 kịch bản Zalo 1-Click Copy, Ma trận bẻ gãy từ chối và Lịch trình đăng bài 30 ngày cho chiến dịch Mở bán.</p>
       
@@ -456,11 +469,11 @@
         </div>
         <div class="kpi-card">
           <div class="kpi-value green">2.000+</div>
-          <div class="kpi-desc">Câu hỏi & Bài tập chuẩn BỘ</div>
+          <div class="kpi-desc">Câu hỏi &amp; Bài tập chuẩn BỘ</div>
         </div>
         <div class="kpi-card">
           <div class="kpi-value purple">100% Visual</div>
-          <div class="kpi-desc">Mô phỏng & Sơ đồ trực quan</div>
+          <div class="kpi-desc">Mô phỏng &amp; Sơ đồ trực quan</div>
         </div>
         <div class="kpi-card">
           <div class="kpi-value amber">75% - 85%</div>
@@ -480,26 +493,38 @@
 
     <div class="grid-4">
       <div class="card highlight">
-        <span class="pill-badge amber">Trụ cột 1 · Thời điểm vàng</span>
-        <h3>⏳ Nhu cầu Thị trường Bùng nổ (Timing)</h3>
-        <p style="font-size:13.5px; color:var(--text-muted);">2025 là <strong>năm ĐẦU TIÊN</strong> áp dụng đề thi Tốt nghiệp THPT Quốc gia theo GDPT 2018. Môn Tin học chính thức trở thành môn thi tốt nghiệp & nằm trong các tổ hợp xét tuyển Đại học top đầu (A00, A01, A10, A11...). Hơn 1 triệu học sinh lớp 12 đang <strong>khao khát đề thi thử chuẩn và công cụ ôn tập bám sát ma trận mới</strong>.</p>
+        <span class="pill-badge amber">
+          <svg class="icon-inline" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          Trụ cột 1 · Thời điểm vàng
+        </span>
+        <h3>Nhu cầu Thị trường Bùng nổ (Timing)</h3>
+        <p style="font-size:13.5px; color:var(--text-muted);">2025 là <strong>năm ĐẦU TIÊN</strong> áp dụng đề thi Tốt nghiệp THPT Quốc gia theo GDPT 2018. Môn Tin học chính thức trở thành môn thi tốt nghiệp &amp; nằm trong các tổ hợp xét tuyển Đại học top đầu (A00, A01, A10, A11...). Hơn 1 triệu học sinh lớp 12 đang <strong>khao khát đề thi thử chuẩn và công cụ ôn tập bám sát ma trận mới</strong>.</p>
       </div>
 
       <div class="card highlight">
-        <span class="pill-badge teal">Trụ cột 2 · Vũ khí Độc bản</span>
-        <h3>📊 2.000+ Câu Hỏi & Mô Phỏng Visual</h3>
-        <p style="font-size:13.5px; color:var(--text-muted);">Sở hữu kho <strong>2.000+ câu hỏi & bài tập</strong> bám sát SGK. Đặc biệt có <strong>Tính năng Mô phỏng & Sơ đồ trực quan</strong> (Stack/Queue, SQL Tables, TCP/IP Network, Python Logic Gate) giúp học sinh hiểu bản chất trong 5 giây mà không cần học thuộc vẹt.</p>
+        <span class="pill-badge teal">
+          <svg class="icon-inline" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          Trụ cột 2 · Vũ khí Độc bản
+        </span>
+        <h3>2.000+ Câu Hỏi &amp; Mô Phỏng Visual</h3>
+        <p style="font-size:13.5px; color:var(--text-muted);">Sở hữu kho <strong>2.000+ câu hỏi &amp; bài tập</strong> bám sát SGK. Đặc biệt có <strong>Tính năng Mô phỏng &amp; Sơ đồ trực quan</strong> (Stack/Queue, SQL Tables, TCP/IP Network, Python Logic Gate) giúp học sinh hiểu bản chất trong 5 giây mà không cần học thuộc vẹt.</p>
       </div>
 
       <div class="card highlight">
-        <span class="pill-badge green">Trụ cột 3 · Tài chính vững mạnh</span>
-        <h3>💰 Lợi Nhuận Cao & Giá Siêu Rẻ</h3>
+        <span class="pill-badge green">
+          <svg class="icon-inline" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          Trụ cột 3 · Tài chính vững mạnh
+        </span>
+        <h3>Lợi Nhuận Cao &amp; Giá Siêu Rẻ</h3>
         <p style="font-size:13.5px; color:var(--text-muted);">Mức giá <strong>249k - 349k/năm</strong> cực kỳ vừa túi tiền cả phụ huynh nông thôn lẫn thành thị. Chi phí vận hành AI API rất thấp (~35k-50k/học sinh/năm) mang lại <strong>Biên lợi nhuận gộp đạt 75% - 85%</strong>.</p>
       </div>
 
       <div class="card highlight">
-        <span class="pill-badge purple">Trụ cột 4 · Tự động 100%</span>
-        <h3>⚡ Cỗ Máy Vận Hành Tự Động</h3>
+        <span class="pill-badge purple">
+          <svg class="icon-inline" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          Trụ cột 4 · Tự động 100%
+        </span>
+        <h3>Cỗ Máy Vận Hành Tự Động</h3>
         <p style="font-size:13.5px; color:var(--text-muted);">Tích hợp SePay VietQR tự động: Tiền vào ngân hàng là hệ thống <strong>tự mở gói Premium trong 3 giây</strong>. Không tốn chi phí thuê nhân sự trực chat hay duyệt đơn thủ công 24/7.</p>
       </div>
     </div>
@@ -512,8 +537,11 @@
     <div class="grid-3">
       <!-- Persona 1 -->
       <div class="card">
-        <span class="pill-badge teal">Persona 1 · Học sinh Lớp 12</span>
-        <h3>🧑‍🎓 Học Sinh Ôn Thi THPT Quốc Gia</h3>
+        <span class="pill-badge teal">
+          <svg class="icon-inline" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+          Persona 1 · Học sinh Lớp 12
+        </span>
+        <h3>Học Sinh Ôn Thi THPT Quốc Gia</h3>
         <ul class="feat-list">
           <li><strong>Nỗi đau lớn nhất:</strong> Chương trình GDPT 2018 mới, cú pháp Python/SQL đọc SGK không hiểu gì, học thuộc vẹt dễ đứt đoạn. Thiếu chỗ cày đề chuẩn ma trận BỘ 2025.</li>
           <li><strong>Tâm lý thầm kín:</strong> Muốn học nhanh, hiểu ngay, gõ code có máy chấm ngay trên điện thoại để không bị tụt lại so với bạn bè.</li>
@@ -523,8 +551,11 @@
 
       <!-- Persona 2 -->
       <div class="card">
-        <span class="pill-badge amber">Persona 2 · Phụ huynh Học sinh</span>
-        <h3>👨‍👩‍👧 Phụ Huynh Chi Trả Tài Chính</h3>
+        <span class="pill-badge amber">
+          <svg class="icon-inline" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Persona 2 · Phụ huynh Học sinh
+        </span>
+        <h3>Phụ Huynh Chi Trả Tài Chính</h3>
         <ul class="feat-list">
           <li><strong>Nỗi đau lớn nhất:</strong> Tốn hàng triệu đồng học thêm Toán, Lý, Hóa. Sợ con cầm máy tính/điện thoại chỉ để chơi game chứ không chịu học.</li>
           <li><strong>Tâm lý thầm kín:</strong> Muốn con tự giác học, có công cụ đo lường tiến độ rõ ràng và chi phí phải chăng, an toàn.</li>
@@ -534,8 +565,11 @@
 
       <!-- Persona 3 -->
       <div class="card">
-        <span class="pill-badge purple">Persona 3 · Giáo viên Tin học</span>
-        <h3>👨‍🏫 Giáo Viên Tin Học THPT (Đại lý B2B)</h3>
+        <span class="pill-badge purple">
+          <svg class="icon-inline" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          Persona 3 · Giáo viên Tin học
+        </span>
+        <h3>Giáo Viên Tin Học THPT (Đại lý B2B)</h3>
         <ul class="feat-list">
           <li><strong>Nỗi đau lớn nhất:</strong> Mất quá nhiều thời gian ra đề thi thử, chấm bài Python/SQL thủ công cho 40-50 học sinh/lớp.</li>
           <li><strong>Tâm lý thầm kín:</strong> Cần công cụ tạo lớp học, giao bài tập tự động chấm code để giảm tải công việc và có thêm thu nhập thụ động.</li>
@@ -546,22 +580,28 @@
 
     <!-- PHẦN 3: VŨ KHÍ SẢN PHẨM & MÔ PHỎNG VISUAL -->
     <div class="section-title">
-      <span>3</span> Vũ Khí Sản Phẩm & Tính Năng Đột Phá (Product Moat)
+      <span>3</span> Vũ Khí Sản Phẩm &amp; Tính Năng Đột Phá (Product Moat)
     </div>
 
     <div class="grid-2">
       <div class="card">
-        <h3>🚀 4 Điểm Khác Biệt Vượt Trội (USP)</h3>
+        <h3>
+          <svg class="icon-inline" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.71.79-1.81.79-1.81l-1.98-1.98s-1.1.08-1.81.79z"/><path d="M15 8s-4 1-7 4l2.5 2.5c3-3 4-7 4-7z"/><path d="M9.5 14.5L16 8l-3-3 6.5-2.5L17 9l-3 3 6.5 6.5-3.5 1.5z"/></svg>
+          4 Điểm Khác Biệt Vượt Trội (USP)
+        </h3>
         <ul class="feat-list">
-          <li><strong>2.000+ câu hỏi & bài tập bám sát 100% GDPT 2018:</strong> Đầy đủ 3 lớp (10, 11, 12) + 2 định hướng KHMT (Python/Thuật toán) & ICT (SQL/Web).</li>
-          <li><strong>Mô phỏng tương tác & Sơ đồ trực quan:</strong> Trực quan hóa Cấu trúc dữ liệu Ngăn xếp Stack, Hàng đợi Queue, Truy vấn SQL, Giao thức Mạng TCP/IP và Luồng chạy đệ quy.</li>
+          <li><strong>2.000+ câu hỏi &amp; bài tập bám sát 100% GDPT 2018:</strong> Đầy đủ 3 lớp (10, 11, 12) + 2 định hướng KHMT (Python/Thuật toán) &amp; ICT (SQL/Web).</li>
+          <li><strong>Mô phỏng tương tác &amp; Sơ đồ trực quan:</strong> Trực quan hóa Cấu trúc dữ liệu Ngăn xếp Stack, Hàng đợi Queue, Truy vấn SQL, Giao thức Mạng TCP/IP và Luồng chạy đệ quy.</li>
           <li><strong>4 Xưởng thực hành 327+ bài code:</strong> Chạy trực tiếp Python, SQL, HTML/CSS, Đồ họa Inkscape ngay trên điện thoại/trình duyệt, không cần cài đặt phức tạp.</li>
           <li><strong>Gia sư AI 24/7 kèm riêng:</strong> Phân tích "Vì sao tôi sai?", đưa gợi ý theo đúng chương trình học, không trả lời đáp án vẹt.</li>
         </ul>
       </div>
 
       <div class="card">
-        <h3>🛡️ An Tâm Tuyệt Đối Cho Phụ Huynh & Học Sinh</h3>
+        <h3>
+          <svg class="icon-inline" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-teal)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          An Tâm Tuyệt Đối Cho Phụ Huynh &amp; Học Sinh
+        </h3>
         <ul class="feat-list">
           <li><strong>Thi thử đúng ma trận BỘ 2025:</strong> 13 đề thi thử chuẩn 24 câu trắc nghiệm MCQ + 4 câu Đúng/Sai 4 phát biểu.</li>
           <li><strong>Học thử Miễn phí 100% không giới hạn bài giảng:</strong> Toàn bộ 119 bài giảng SGK mở tự do mãi mãi.</li>
@@ -573,7 +613,7 @@
 
     <!-- PHẦN 4: BẢNG GIÁ & HOA HỒNG -->
     <div class="section-title">
-      <span>4</span> Bảng Giá, Gói Học & Cơ Cấu Hoa Hồng Đại Lý / Sale
+      <span>4</span> Bảng Giá, Gói Học &amp; Cơ Cấu Hoa Hồng Đại Lý / Sale
     </div>
 
     <div class="table-container">
@@ -622,13 +662,16 @@
 
     <!-- PHẦN 5: BỘ 6 KỊCH BẢN TẮT KÝ & ZALO -->
     <div class="section-title">
-      <span>5</span> Bộ 6 Kịch Bản Telesale & Zalo Chốt Đơn (1-Click Copy)
+      <span>5</span> Bộ 6 Kịch Bản Telesale &amp; Zalo Chốt Đơn (1-Click Copy)
     </div>
 
     <div class="grid-2">
       <!-- Script 1 -->
       <div class="card">
-        <h3>💬 Script 1: Nhắn Zalo Ngay Khi Học Sinh Tạo Tài Khoản Free</h3>
+        <h3>
+          <svg class="icon-inline" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          Script 1: Nhắn Zalo Ngay Khi Học Sinh Tạo Tài Khoản Free
+        </h3>
         <p style="font-size:13px; color:var(--text-muted); margin-bottom:8px;">Gửi ngay khi hệ thống báo có tài khoản mới tạo.</p>
         
         <div class="script-box">
@@ -638,13 +681,16 @@
           </div>
           <div class="script-content" id="s1">Chào em, anh/chị là trợ lý từ App Ôn thi Tin học THPT đây. 
 
-Thấy em vừa tạo tài khoản học thử, em đang chuẩn bị thi lớp 10, 11 hay lớp 12 vậy? Mục tiêu môn Tin học của em là mấy điểm để anh tư vấn lộ trình học chắc điểm nhất cho em nhé? 🔥</div>
+Thấy em vừa tạo tài khoản học thử, em đang chuẩn bị thi lớp 10, 11 hay lớp 12 vậy? Mục tiêu môn Tin học của em là mấy điểm để anh tư vấn lộ trình học chắc điểm nhất cho em nhé?</div>
         </div>
       </div>
 
       <!-- Script 2 -->
       <div class="card">
-        <h3>🔥 Script 2: Khi Học Sinh Chạm Trần 30 Câu Free / Ngày</h3>
+        <h3>
+          <svg class="icon-inline" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-amber)" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          Script 2: Khi Học Sinh Chạm Trần 30 Câu Free / Ngày
+        </h3>
         <p style="font-size:13px; color:var(--text-muted); margin-bottom:8px;">Gửi khi học sinh cày hăng và bị giới hạn lượt luyện tập.</p>
         
         <div class="script-box">
@@ -654,7 +700,7 @@ Thấy em vừa tạo tài khoản học thử, em đang chuẩn bị thi lớp 
           </div>
           <div class="script-content" id="s2">Chúc mừng em đã hoàn thành chỉ tiêu 30 câu hôm nay! 👏
 
-Em thấy phần Mô phỏng sơ đồ trực quan & Gia sư AI giải thích lỗi sai có dễ hiểu không? 
+Em thấy phần Mô phỏng sơ đồ trực quan &amp; Gia sư AI giải thích lỗi sai có dễ hiểu không? 
 
 Hiện app đang mở 50 suất "Giá Sáng Lập" giảm 100k (chỉ còn 249k/cả năm học — cày đề 2.000+ câu không giới hạn). Nếu em nâng cấp hôm nay anh tặng thêm bộ Flashcard từ vựng độc quyền nhé. 
 
@@ -664,7 +710,10 @@ Em có muốn nhận ưu đãi này không anh gửi mã thanh toán QR tự đ�
 
       <!-- Script 3 -->
       <div class="card">
-        <h3>🎁 Script 3: Downsell Gói 3 Tháng 149k (Ngày thứ 7)</h3>
+        <h3>
+          <svg class="icon-inline" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-rose)" stroke-width="2"><path d="M20 12v10H4V12"/><path d="M2 7h20v5H2z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
+          Script 3: Downsell Gói 3 Tháng 149k (Ngày thứ 7)
+        </h3>
         <p style="font-size:13px; color:var(--text-muted); margin-bottom:8px;">Gửi cho học sinh đã học thử 7 ngày nhưng chưa nâng cấp gói năm.</p>
         
         <div class="script-box">
@@ -682,7 +731,10 @@ Gói này vẫn có đủ 2.000+ câu hỏi, 13 đề thi thử và Gia sư AI k
 
       <!-- Script 4 -->
       <div class="card">
-        <h3>👨‍👩‍👧 Script 4: Nhắn Tin Trực Tiếp Cho Phụ Huynh Học Sinh</h3>
+        <h3>
+          <svg class="icon-inline" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-teal)" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Script 4: Nhắn Tin Trực Tiếp Cho Phụ Huynh Học Sinh
+        </h3>
         <p style="font-size:13px; color:var(--text-muted); margin-bottom:8px;">Dùng khi trao đổi trực tiếp với phụ huynh để chốt đơn.</p>
         
         <div class="script-box">
@@ -698,14 +750,17 @@ Thay vì tốn 1-2 triệu đi học thêm trung tâm, gói Premium của app ch
         </div>
       </div>
 
-      <!-- Script 5 (NEW) -->
+      <!-- Script 5 -->
       <div class="card">
-        <h3>🎉 Script 5: Chăm Sóc Sau Mua & Mời Giới Thiệu Bạn Học</h3>
+        <h3>
+          <svg class="icon-inline" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          Script 5: Chăm Sóc Sau Mua &amp; Mời Giới Thiệu Bạn Học
+        </h3>
         <p style="font-size:13px; color:var(--text-muted); margin-bottom:8px;">Gửi ngay sau khi thanh toán thành công để kích hoạt referral.</p>
         
         <div class="script-box">
           <div class="script-header">
-            <span class="script-title">Zalo Script #5 (Onboarding & Referral)</span>
+            <span class="script-title">Zalo Script #5 (Onboarding &amp; Referral)</span>
             <button class="btn-copy" onclick="copyText('s5')">📋 Sao chép</button>
           </div>
           <div class="script-content" id="s5">🎉 Chúc mừng em đã nâng cấp Premium thành công! Tài khoản của em đã mở toàn bộ 2.000+ câu hỏi và 13 đề thi thử.
@@ -719,9 +774,12 @@ Thay vì tốn 1-2 triệu đi học thêm trung tâm, gói Premium của app ch
         </div>
       </div>
 
-      <!-- Script 6 (NEW) -->
+      <!-- Script 6 -->
       <div class="card">
-        <h3>👨‍🏫 Script 6: Chào Hợp Tác Đại Lý Giáo Viên Tin Học THPT</h3>
+        <h3>
+          <svg class="icon-inline" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          Script 6: Chào Hợp Tác Đại Lý Giáo Viên Tin Học THPT
+        </h3>
         <p style="font-size:13px; color:var(--text-muted); margin-bottom:8px;">Dùng gửi Zalo / Facebook cho Giáo viên môn Tin học cấp 3.</p>
         
         <div class="script-box">
@@ -781,23 +839,23 @@ Nếu Thầy/Cô quan tâm, em xin phép gửi link trải nghiệm thử ạ!</
         <span class="obj-question">"App online sợ lừa đảo / Không tin tưởng..."</span>
       </div>
       <div class="obj-answer">
-        👉 <strong>Kịch bản ứng xử:</strong> "Em hoàn toàn yên tâm nhé! Anh gửi em thông tin Tác giả biên soạn là anh Lê Anh Tuấn (10+ năm Data/AI, cựu quản lý Viettel & VNPAY). Ngoài ra khi chuyển khoản qua mã VietQR SePay tự động, gói Premium mở ngay sau 3 giây. Nếu trong 7 ngày dùng thử không ưng, anh sẵn sàng hoàn lại 100% tiền ngay lập tức!"
+        👉 <strong>Kịch bản ứng xử:</strong> "Em hoàn toàn yên tâm nhé! Anh gửi em thông tin Tác giả biên soạn là anh Lê Anh Tuấn (10+ năm Data/AI, cựu quản lý Viettel &amp; VNPAY). Ngoài ra khi chuyển khoản qua mã VietQR SePay tự động, gói Premium mở ngay sau 3 giây. Nếu trong 7 ngày dùng thử không ưng, anh sẵn sàng hoàn lại 100% tiền ngay lập tức!"
       </div>
     </div>
 
     <!-- PHẦN 6: KẾ HOẠCH MARKETING 30 NGÀY (30-DAY MARKETING PLAN) -->
     <div class="section-title">
-      <span>6</span> Kế Hoạch Marketing & Lịch Đăng Bài 30 Ngày (30-Day Content Calendar)
+      <span>6</span> Kế Hoạch Marketing &amp; Lịch Đăng Bài 30 Ngày (30-Day Content Calendar)
     </div>
 
     <div class="mkt-week-card">
       <div class="mkt-week-header">
         <span class="mkt-week-tag">Tuần 1</span>
-        <span class="mkt-week-title">Gây Chú Ý & Định Vị Nỗi Đau (Awareness & Problem Focus)</span>
+        <span class="mkt-week-title">Gây Chú Ý &amp; Định Vị Nỗi Đau (Awareness &amp; Problem Focus)</span>
       </div>
       <ul class="feat-list">
         <li><strong>Thứ 2 [TikTok/Reels]:</strong> Video ngắn "3 Lỗi sai cực dễ mắc khi viết vòng lặp Python thi THPT 2025".</li>
-        <li><strong>Thứ 4 [Group FB 2k7/2k8]:</strong> Phân tích ma trận đề thi Tin học GDPT 2018 của Bộ GD&ĐT kèm link thi thử miễn phí trên app.</li>
+        <li><strong>Thứ 4 [Group FB 2k7/2k8]:</strong> Phân tích ma trận đề thi Tin học GDPT 2018 của Bộ GD&amp;ĐT kèm link thi thử miễn phí trên app.</li>
         <li><strong>Thứ 6 [Shorts/Reels]:</strong> "Hack" điểm SQL phần truy vấn với bí kíp Mô phỏng trực quan trên Xưởng thực hành.</li>
       </ul>
     </div>
@@ -805,7 +863,7 @@ Nếu Thầy/Cô quan tâm, em xin phép gửi link trải nghiệm thử ạ!</
     <div class="mkt-week-card">
       <div class="mkt-week-header">
         <span class="mkt-week-tag">Tuần 2</span>
-        <span class="mkt-week-title">Showcase Giải Pháp & Bằng Chứng Xã Hội (Proof & Solution)</span>
+        <span class="mkt-week-title">Showcase Giải Pháp &amp; Bằng Chứng Xã Hội (Proof &amp; Solution)</span>
       </div>
       <ul class="feat-list">
         <li><strong>Thứ 2 [Fanpage/Group]:</strong> "Đọc sách Tin học mãi không nhớ? Giới thiệu tính năng Sơ đồ trực quan 5 giây ngộ bài".</li>
@@ -817,7 +875,7 @@ Nếu Thầy/Cô quan tâm, em xin phép gửi link trải nghiệm thử ạ!</
     <div class="mkt-week-card">
       <div class="mkt-week-header">
         <span class="mkt-week-tag">Tuần 3</span>
-        <span class="mkt-week-title">Mở Bán Chính Thức & Đẩy Khan Hiếm (Conversion & Urgency)</span>
+        <span class="mkt-week-title">Mở Bán Chính Thức &amp; Đẩy Khan Hiếm (Conversion &amp; Urgency)</span>
       </div>
       <ul class="feat-list">
         <li><strong>Thứ 2 [Post Bán Hàng]:</strong> MỞ BÁN CHÍNH THỨC 50 Suất "Giá Sáng Lập" 249.000đ/năm (Tiết kiệm 100k).</li>
@@ -829,7 +887,7 @@ Nếu Thầy/Cô quan tâm, em xin phép gửi link trải nghiệm thử ạ!</
     <div class="mkt-week-card">
       <div class="mkt-week-header">
         <span class="mkt-week-tag">Tuần 4</span>
-        <span class="mkt-week-title">Chăm Sóc Lại & Giới Thiệu Bạn Học (Retargeting & Referral)</span>
+        <span class="mkt-week-title">Chăm Sóc Lại &amp; Giới Thiệu Bạn Học (Retargeting &amp; Referral)</span>
       </div>
       <ul class="feat-list">
         <li><strong>Thứ 2 [Đếm ngược]:</strong> 24 giờ cuối cùng săn ưu đãi 249k trước khi về lại giá niêm yết 349k.</li>
