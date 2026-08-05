@@ -1448,93 +1448,62 @@ code.ic {
 .um-avatar img, .um-head-ava img { width: 100%; height: 100%; object-fit: cover; }
 
 .um-menu {
-  position: absolute; top: calc(100% + 10px); right: 0; z-index: 1000;
-  width: 268px; max-width: calc(100vw - 20px); box-sizing: border-box;
+  position: absolute; top: calc(100% + 8px); right: 0; z-index: 1000;
+  width: 250px; max-width: calc(100vw - 16px); box-sizing: border-box;
   background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px;
-  box-shadow: var(--shadow-lg); padding: 8px; animation: umPop 0.15s ease;
+  box-shadow: var(--shadow-lg); padding: 6px; animation: umPop 0.15s ease;
+  max-height: calc(100vh - 76px); overflow-y: auto; scrollbar-width: thin;
 }
 @keyframes umPop { from { opacity: 0; transform: translateY(-6px) scale(0.98); } to { opacity: 1; transform: none; } }
 
-.um-head { display: flex; align-items: center; gap: 12px; padding: 8px 10px 12px; }
+.um-head { display: flex; align-items: center; gap: 10px; padding: 6px 8px 8px; }
 .um-head-txt { min-width: 0; }
-.um-head-txt b { display: block; font-size: 14.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-/* Email và chip gói xếp CHỒNG (cột), không nằm chung một hàng: đo thử với email
-   ngắn "bug-dongbo@test.vn" (19 kí tự) đã thấy bị cắt — hai bên chung một hàng
-   174px thì chip gói ăn mất khoảng 65px, email chỉ còn ~109px trong khi cần
-   112px. Email thật ngoài đời còn dài hơn nhiều, nên tách hẳn ra hai dòng cho
-   mỗi bên toàn quyền bề ngang thay vì giằng co. */
-.um-head-txt small { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; color: var(--text-soft); font-size: 12px; margin-top: 3px; max-width: 100%; }
+.um-head-txt b { display: block; font-size: 13.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.um-head-txt small { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; color: var(--text-soft); font-size: 11.5px; margin-top: 2px; max-width: 100%; }
 .um-email { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .um-plan {
-  flex: none; font-size: 10.5px; font-weight: 800; letter-spacing: 0.02em; padding: 2px 7px;
+  flex: none; font-size: 10px; font-weight: 800; letter-spacing: 0.02em; padding: 1px 6px;
   border-radius: 999px; background: var(--bg-soft); border: 1px solid var(--border); color: var(--text-soft);
 }
 .um-plan-pre { background: color-mix(in srgb, #b45309 15%, transparent); border-color: #b45309; color: #b45309; }
 
-/* #umMenu .um-item (ID + lớp = đặc trưng 1,1,0) chứ không phải .um-item trơn
-   (0,1,0): "Hồ sơ"/"Tài khoản" còn mang cả lớp .nav-btn, mà .topnav .nav-btn ở
-   màn hẹp đã đặc trưng 0,2,0 — đo trên máy thấy padding/display của .um-item bị
-   đè thành 8px 7px / flex:none dù đặt luật ở cuối tệp. Đặc trưng mới thắng cuộc,
-   thứ tự trong tệp KHÔNG thắng được đặc trưng thấp hơn — đây là chỗ suy luận sai
-   lúc đầu, phải đo lại mới thấy. Một ID luôn thắng mọi tổ hợp lớp thuần tuý nên
-   không phụ thuộc thứ tự trong tệp nữa, kể cả sau này có ai chỉnh .nav-btn. */
-/* Đủ bộ reset nút (border/background/font/màu) ngay tại đây, không dựa vào
-   .nav-btn cho việc này: "Hồ sơ"/"Tài khoản" có thêm .nav-btn nên trước đây
-   trông ổn, nhưng #umAuthBtn (Đăng xuất) chỉ mang .um-item + .um-danger, không
-   có .nav-btn, nên lộ nguyên khung nút mặc định của trình duyệt — nền xám/trắng,
-   viền outset, phông hệ thống, không theo theme tối. */
 #umMenu .um-item {
-  display: flex; align-items: center; gap: 10px; width: 100%; text-align: left;
-  padding: 9px 10px; border-radius: 9px; font-size: 13.5px; font-weight: 650;
+  display: flex; align-items: center; gap: 8px; width: 100%; text-align: left;
+  padding: 6px 8px; border-radius: 7px; font-size: 13px; font-weight: 650;
   border: none; background: none; color: var(--text); cursor: pointer; font-family: var(--font-sans);
 }
 .um-item-ic { display: flex; color: var(--text-soft); flex: none; }
-/* #umMenu (không phải .um-danger trơn): #umMenu .um-item vừa thêm ở trên đã tự
-   đặt color:var(--text) làm nền nếu không có .nav-btn để dựa vào — cùng lỗi
-   suy luận sai lúc trước, đặc trưng (0,1,0) của .um-danger trơn thua hẳn
-   (1,1,0) của #umMenu .um-item nên "Đăng xuất" đo ra vẫn màu chữ thường,
-   không đỏ. Đo được rồi mới thấy, không phải chỉ đoán. */
-/* --danger (#f43f5e) trên nền thẻ trắng chỉ 3,67:1 — dưới ngưỡng chữ thường
-   4,5:1. Đây là màu chung của cả trang (dùng cả cho viền/nền cảnh báo, không
-   riêng chữ) nên không đổi thẳng --danger — chỉ đổi RIÊNG màu chữ nút này ở
-   giao diện Sáng. Tối thì --danger (#fb7185) đã đủ sáng, 6,32:1, giữ nguyên. */
 #umMenu .um-danger { color: #be123c; }
 [data-theme="dark"] #umMenu .um-danger { color: var(--danger, #fb7185); }
 .um-danger:hover { background: color-mix(in srgb, var(--danger, #dc2626) 10%, transparent); }
 
-/* Viền lấy tiêu điểm mặc định của trình duyệt (Chrome: -webkit-focus-ring-color)
-   không theo theme — trên nền thẻ tối nó hiện thành một viền trắng/xanh nhạt
-   lạc quẻ. Đổi hẳn sang viền màu chính, cùng một kiểu ở mọi nút trong khối này. */
 .um-item:focus-visible, .um-switch:focus-visible, .um-trigger:focus-visible {
   outline: 2px solid var(--primary); outline-offset: 2px;
 }
 
-.um-sep { height: 1px; background: var(--border); margin: 6px 4px; }
+.um-sep { height: 1px; background: var(--border); margin: 4px 2px; }
 
-.um-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 7px 10px; border-radius: 9px; cursor: pointer; }
+.um-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 5px 8px; border-radius: 7px; cursor: pointer; }
 .um-row:hover { background: var(--bg-soft); }
-.um-row-txt { font-size: 13.5px; font-weight: 650; color: var(--text); }
+.um-row-txt { font-size: 12.5px; font-weight: 650; color: var(--text); }
 .um-switch {
-  flex: none; width: 42px; height: 25px; border-radius: 999px; border: 1.5px solid var(--border);
+  flex: none; width: 36px; height: 22px; border-radius: 999px; border: 1.5px solid var(--border);
   background: var(--bg-soft); display: flex; align-items: center; justify-content: center;
   cursor: pointer; padding: 0; color: var(--text-soft);
 }
 .um-switch[aria-pressed="true"] { background: var(--primary-soft); border-color: var(--primary); color: var(--primary); }
-.um-switch .ic { width: 14px; height: 14px; }
+.um-switch .ic { width: 13px; height: 13px; }
 
-/* Hàng cài đặt có BA lựa chọn: nhãn và dải chọn xếp chồng chứ không cùng một
-   hàng như .um-row — menu chỉ rộng 268px, nhét ba nút cạnh nhãn thì mỗi nút còn
-   chưa tới 40px, chữ "Cuộn dài" bị cắt. */
-.um-block { padding: 7px 10px 9px; }
-.um-block .um-row-txt { display: block; margin-bottom: 7px; }
+.um-block { padding: 5px 8px 6px; }
+.um-block .um-row-txt { display: block; margin-bottom: 5px; }
 .um-seg {
-  display: flex; gap: 3px; padding: 3px; border-radius: 10px;
+  display: flex; gap: 2px; padding: 2px; border-radius: 8px;
   background: var(--bg-soft); border: 1px solid var(--border);
 }
 .um-seg button {
-  flex: 1; min-width: 0; padding: 6px 4px; border: 0; border-radius: 7px;
+  flex: 1; min-width: 0; padding: 4px 2px; border: 0; border-radius: 6px;
   background: none; color: var(--text-soft); cursor: pointer;
-  font: 700 12px var(--font-sans); white-space: nowrap;
+  font: 700 11.5px var(--font-sans); white-space: nowrap;
 }
 .um-seg button:hover { color: var(--primary); }
 .um-seg button[aria-checked="true"] {
@@ -1542,7 +1511,7 @@ code.ic {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
 }
 .um-seg button:focus-visible { outline: 2px solid var(--primary); outline-offset: 1px; }
-.um-hint { display: block; margin-top: 6px; font-size: 11.5px; line-height: 1.45; color: var(--text-soft); }
+.um-hint { display: block; margin-top: 4px; font-size: 11px; line-height: 1.4; color: var(--text-soft); }
 
 @media (max-width: 560px) {
   .um-name { display: none; }
