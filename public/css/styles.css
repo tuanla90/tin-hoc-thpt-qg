@@ -654,6 +654,12 @@ select:focus, input[type="text"]:focus, input[type="number"]:focus {
   font-size: 14px; padding: 16px 18px; border-radius: 12px; margin: 16px 0;
   white-space: pre; overflow-x: auto; line-height: 1.55; border: 1px solid var(--code-line);
 }
+/* Khối mã KHÔNG phải hình vẽ / bảng căn cột (maXuongDong() quyết định lúc dựng)
+   thì cho tự xuống dòng thay vì bắt cuộn ngang. Vẫn là pre-wrap nên thụt đầu dòng
+   của Python còn nguyên; chỉ dòng nào dài quá mép mới bị gấp xuống.
+   overflow-wrap để một chuỗi dài không có khoảng trắng (đường dẫn, tên biến dài)
+   cũng gấp được, chứ nó thì pre-wrap bó tay và vẫn tràn. */
+.q-code.q-code-wrap { white-space: pre-wrap; overflow-wrap: anywhere; }
 
 /* Lựa chọn trắc nghiệm */
 .options { display: grid; gap: 12px; margin-top: 18px; }
@@ -893,6 +899,10 @@ select:focus, input[type="text"]:focus, input[type="number"]:focus {
 /* Nhãn "Kết quả:" nằm cùng dòng với icon, phần dữ liệu xuống dòng riêng và
    giữ nguyên khoảng trắng. */
 .ls-out > b { display: block; white-space: pre; margin-top: 4px; font-weight: 700; }
+/* Kết quả là CÂU VĂN chứ không phải bảng căn cột (maXuongDong() quyết định lúc
+   dựng) thì cho xuống dòng. pre-wrap chứ không phải normal: vẫn giữ nguyên khoảng
+   trắng và các dấu xuống dòng người soạn đã gõ, chỉ thêm việc tự ngắt khi chạm mép. */
+.ls-out > b.ls-out-wrap { white-space: pre-wrap; overflow-wrap: anywhere; }
 
 /* Hộp cần nhớ */
 .ls-keypoints {
@@ -1335,7 +1345,7 @@ code.ic {
   /* --- Nút bấm cốt lõi. Khối này trước đây bỏ sót chính .btn — nút bấm nhiều
      nhất app (Câu trước/Câu sau/Nộp bài, 28 câu mỗi đề), đo được 42,8px và tụt
      còn 36,6px ở màn ≤400px. --- */
-  .btn, .quiz-nav .btn, .flag-btn, .back-link, .chip, .ptab, .ls-jump-b,
+  .btn, .quiz-nav .btn, .flag-btn, .back-link, .chip, .ptab,
   .mh-btn, .mh4-nut, .on-chip, .on-tab, .sod-btn, .ac-tab, .ac-mini,
   .gam-chip, .sqx-chip, .tt-chip, .tt-x, .tt-send, .voc-mode, .voc-vtest,
   .voc-say, .pay-x, .pay-chep, .um-item, .um-trigger, .glab-mi,

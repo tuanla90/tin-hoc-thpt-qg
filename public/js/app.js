@@ -1483,6 +1483,37 @@ function injectPathCss() {
 
    Cách chữa: rút KHỐI MÃ rồi tới MÃ TRONG DÒNG ra chỗ gửi tạm trước, chạy luật
    đậm trên phần còn lại, rồi trả chúng về nguyên si. */
+
+/* ---------------------------------------------------------------------------
+ *  KHỐI MÃ: XUỐNG DÒNG HAY CUỘN NGANG?
+ *
+ *  Mặc định XUỐNG DÒNG. Đo trên 16 bài ở màn 375px: 22/38 khối mã và 21/25 ô
+ *  "Kết quả" bị tràn ngang, chỗ tràn xa nhất tới 3656px. Mà phần lớn nội dung
+ *  tràn lại là CÂU VĂN XUÔI viết trong khung mã — "Kết quả: Từ máy tính bỏ túi
+ *  nhỏ gọn đến siêu máy tính, ..." — chứ không phải mã thật. Bắt cuộn ngang một
+ *  câu văn thì mỗi lần chỉ đọc được nửa câu, mà thanh cuộn ngang nằm lọt trong
+ *  một thẻ đang cuộn dọc lại rất khó bắt trúng trên điện thoại.
+ *
+ *  NGOẠI LỆ giữ nguyên một dòng: hình vẽ bằng kí tự và bảng căn cột — xuống dòng
+ *  là nát hình, lúc đó cuộn ngang mới là đúng.
+ * ------------------------------------------------------------------------- */
+const MA_VE_HINH = /[│├└┌┐┘┤┬┴┼─━┃╔╗╚╝║═▲▼◄►]/;
+function maXuongDong(s) {
+  const t = String(s == null ? "" : s);
+  if (MA_VE_HINH.test(t)) return false;
+  /* Từ HAI dòng trở lên có khoảng trắng BA ô trở lên ở GIỮA dòng = đang căn cột
+     thành bảng. Một dòng lẻ thì chưa phải bảng, chỉ là gõ thưa tay.
+     Ngưỡng ba ô chứ không phải hai: hai ô còn là lối gõ thoáng bình thường quanh
+     dấu gạch ngang ("Ảnh 1  —  CC BY"), mà nhận nhầm kiểu đó là bảng thì cả khối
+     văn xuôi bên dưới bị khoá lại, không xuống dòng được. Đo trên C10-27 đúng như
+     vậy: khối tràn ngang 289px chỉ vì bốn dòng tiêu đề có hai dấu cách. */
+  return t.split("\n").filter((d) => /\S {3,}\S/.test(d)).length < 2;
+}
+/* Dựng thẻ <pre> cho một đoạn mã, tự quyết định có cho xuống dòng hay không. */
+function preCode(code) {
+  return `<pre class="q-code${maXuongDong(code) ? " q-code-wrap" : ""}">${esc(code)}</pre>`;
+}
+
 function fmtInline(s) {
   const gui = [];
   /* Mốc gửi tạm phải là thứ KHÔNG THỂ có trong nội dung người soạn gõ. Lấy
@@ -1497,7 +1528,7 @@ function fmtInline(s) {
   /* Khối ``` ``` phải rút TRƯỚC mã trong dòng, nếu không ba dấu huyền bị luật
      một dấu huyền cắn mất cái thứ ba rồi bỏ hai cái đầu làm chữ trần. */
   t = t.replace(/```[a-zA-Z]*\n?([\s\S]*?)```/g, (m, ma) =>
-    giu('<pre class="q-code">' + esc(ma.replace(/\n$/, "")) + "</pre>"));
+    giu(preCode(ma.replace(/\n$/, ""))));
   t = t.replace(/`([^`\n]+)`/g, (m, ma) => giu('<code class="ic">' + esc(ma) + "</code>"));
 
   /* Luật ĐẬM giữ nguyên độ chặt cũ (không khoảng trắng ngay trong hai dấu sao)
@@ -1513,7 +1544,7 @@ function fmtInline(s) {
    nguyên, nhét thêm <br> là mỗi dòng hở gấp đôi. */
 function fmtQ(s) {
   return fmtInline(s)
-    .split(/(<pre class="q-code">[\s\S]*?<\/pre>)/)
+    .split(/(<pre class="q-code[^"]*">[\s\S]*?<\/pre>)/)
     .map((phan, i) => (i % 2 ? phan : phan.replace(/\n/g, "<br>")))
     .join("");
 }
@@ -1558,7 +1589,7 @@ function renderBlocks(sections) {
     if (b.t === "story") return `<div class="ls-story"><span class="ls-story-icon">${aIco("bulb", "#f59e0b", 18)}</span><div><b>Hình dung nhé:</b> ${fi(b.text)}</div></div>`;
     if (b.t === "text") return `<p class="ls-p">${fi(b.text)}</p>`;
     if (b.t === "h") return `<h3 class="ls-h">${esc(b.text)}</h3>`;
-    if (b.t === "code") return `<pre class="q-code">${esc(b.code)}</pre>`;
+    if (b.t === "code") return preCode(b.code);
     if (b.t === "list") return `${b.text ? `<p class="ls-p">${fi(b.text)}</p>` : ""}<ul class="ls-list">${b.items.map((i) => `<li>${fi(i)}</li>`).join("")}</ul>`;
     if (b.t === "note") return `<div class="ls-note"><b>${aIco("bulb", "#d97706", 15)} Lưu ý:</b> ${fi(b.text)}</div>`;
     /* BẢNG THẬT thay cho bảng vẽ bằng dấu cách. Khác biệt không nằm ở chỗ "căn
@@ -1577,7 +1608,7 @@ function renderBlocks(sections) {
         `<div class="ls-bang-cuon"><table>${dau ? `<thead><tr>${dau}</tr></thead>` : ""}` +
         `<tbody>${than}</tbody></table></div></figure>`;
     }
-    if (b.t === "example") return `<div class="ls-ex"><div class="ls-ex-tag">Ví dụ</div>${b.text ? `<p class="ls-p">${fi(b.text)}</p>` : ""}${b.code ? `<pre class="q-code">${esc(b.code)}</pre>` : ""}${b.output != null ? `<div class="ls-out">${aIco("play", "#16a34a", 13)} Kết quả: <b>${esc(b.output)}</b></div>` : ""}</div>`;
+    if (b.t === "example") return `<div class="ls-ex"><div class="ls-ex-tag">Ví dụ</div>${b.text ? `<p class="ls-p">${fi(b.text)}</p>` : ""}${b.code ? preCode(b.code) : ""}${b.output != null ? `<div class="ls-out">${aIco("play", "#16a34a", 13)} Kết quả: <b class="${maXuongDong(b.output) ? "ls-out-wrap" : ""}">${esc(b.output)}</b></div>` : ""}</div>`;
     return "";
   }).join("");
 }
@@ -1626,38 +1657,34 @@ function injectLsPhaCss() {
     ".ls-tien{position:fixed;left:0;right:0;height:3px;background:transparent;z-index:49;pointer-events:none}" +
     ".ls-tien i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--primary),var(--info));" +
       "transition:width .08s linear}" +
-    "@media (prefers-reduced-motion: reduce){.ls-tien i,.ls-pha-chev,.ls-nhom-chev{transition:none}}" +
-    ".ls-jump{display:flex;gap:7px;flex-wrap:wrap;margin:0 0 18px}" +
-    ".ls-jump-b{display:inline-flex;align-items:center;gap:5px;border:1.5px solid var(--border);" +
-      "background:var(--bg-card);color:var(--text-soft);border-radius:999px;padding:7px 13px;" +
-      "font:700 12.5px var(--font-sans);cursor:pointer;min-height:36px}" +
-    ".ls-jump-b:hover{border-color:var(--primary);color:var(--primary)}";
+    "@media (prefers-reduced-motion: reduce){.ls-tien i,.ls-pha-chev,.ls-nhom-chev{transition:none}}";
   (document.head || document.documentElement).appendChild(s);
 }
 
-/* Thanh chip ngay dưới câu dẫn của bài: mở sang những MÀN RIÊNG mà bài này có
-   (Mô phỏng, Thực hành) — hai màn có địa chỉ riêng và tiến độ riêng, không nằm
-   trong trang bài nên phải có lối vào.
-   BỎ HẲN các chip "cuộn nhanh xuống Sơ đồ / Sai ở đâu / Từ vựng": ba khối đó nằm
-   ngay trong bài, người học cuộn tới trong vài giây, còn chip thì luôn chiếm chỗ
-   ngay dưới câu dẫn — chỗ đắt nhất của trang. Ở chế độ Thẻ chúng còn sai hẳn:
-   khối đích nằm trong một thẻ CHƯA mở nên bấm vào là cuộn tới hư không.
-   Chỉ hiện chip của thứ bài này THẬT SỰ có. */
-function lsJumpBar(l) {
+/* Lối vào các MÀN RIÊNG của bài (Mô phỏng, Thực hành): hai màn có địa chỉ riêng
+   và tiến độ riêng nên không nằm trong trang bài, phải có nút mở.
+   ĐẶT Ở CUỐI BÀI, cùng hàng với "Đánh dấu đã học" — không phải thanh chip dưới
+   câu dẫn như trước. Nằm trên đầu thì nó mời người học rời bài NGAY KHI vừa mở,
+   mà đi rồi quay lại là mất chỗ đang đọc (vào bằng đường dẫn khác nên trang bài
+   dựng lại từ đầu). Mô phỏng và thực hành chỉ có nghĩa sau khi đã đọc xong, nên
+   chỗ của chúng là hàng lựa chọn cuối bài.
+   Đã bỏ hẳn các chip "cuộn nhanh xuống Sơ đồ / Sai ở đâu / Từ vựng": ba khối đó
+   nằm ngay trong bài, cuộn tới trong vài giây; ở chế độ Thẻ chúng còn sai hẳn vì
+   khối đích nằm trong một thẻ chưa mở. */
+function lsManKhac(l) {
   const co = (f) => { try { return !!f(); } catch (e) { return false; } };
-  const chips = [];
+  const ds = [];
   if (co(() => window.MinhHoa && MinhHoa.coBai().indexOf(l.id) >= 0)) {
-    chips.push({ ic: "bulb", ten: "Mô phỏng", di: () => go("moPhong", { id: l.id }) });
+    ds.push({ ic: "bulb", ten: "Mô phỏng", di: () => go("moPhong", { id: l.id }) });
   }
   const x = co(() => window.ManRieng) ? ManRieng.xuongCuaBai(l.id) : null;
-  if (x) chips.push({ ic: x.icon, ten: "Thực hành", di: () => go("thucHanh", { id: l.id }) });
-  if (!chips.length) return "";
-  LS_JUMP = chips;
-  return '<div class="ls-jump">' + chips.map((c, i) =>
-    `<button class="ls-jump-b" data-j="${i}">${aIco(c.ic, null, 14)} ${esc(c.ten)}</button>`
-  ).join("") + "</div>";
+  if (x) ds.push({ ic: x.icon, ten: "Thực hành", di: () => go("thucHanh", { id: l.id }) });
+  LS_MAN = ds;
+  return ds.map((c, i) =>
+    `<button class="btn btn-ghost ls-man-b" data-m="${i}">${aIco(c.ic, null, 16)} ${esc(c.ten)}</button>`
+  ).join("");
 }
-let LS_JUMP = [];
+let LS_MAN = [];
 
 /* ---------------------------------------------------------------------------
  *  CHẾ ĐỘ ĐỌC BÀI — cấu hình trong menu tài khoản, không phải nút rời trong bài
@@ -1967,8 +1994,7 @@ function renderLesson(data) {
       <span class="pill">~${l.minutes} phút</span>
     </div>
     <h2 style="margin-bottom:8px">${esc(l.title)}</h2>
-    <p style="color:var(--text-soft);font-size:15px;margin-bottom:14px">${fmtInline(l.intro)}</p>
-    ${lsJumpBar(l)}
+    <p style="color:var(--text-soft);font-size:15px;margin-bottom:18px">${fmtInline(l.intro)}</p>
 
     ${phaMo("1", "Đặt vấn đề", "bulb", "Vì sao cần học bài này", true)}
       <div class="lesson-mo">${renderBlocks(mo)}</div>
@@ -1996,6 +2022,7 @@ function renderLesson(data) {
     <div class="ls-actions">
       <button class="btn ${done ? "btn-ghost" : "btn-success"}" id="doneBtn">${aIco("check2", null, 15)} ${done ? "Đã học (bấm để bỏ)" : "Đánh dấu đã học"}</button>
       <button class="btn btn-primary" id="practiceBtn">${aIco("target", null, 16)} Luyện tập bài này</button>
+      ${lsManKhac(l)}
       <button class="btn btn-ghost" id="tutorBtn" style="display:none">${aIco("bulb", "#d97706", 16)} Hỏi gia sư</button>
     </div>
 
@@ -2047,8 +2074,8 @@ function renderLesson(data) {
   donVaoPha(l);
   ganThuMo();
 
-  app.querySelectorAll(".ls-jump-b").forEach((b) => {
-    const c = LS_JUMP[+b.dataset.j];
+  app.querySelectorAll(".ls-man-b").forEach((b) => {
+    const c = LS_MAN[+b.dataset.m];
     if (c) b.onclick = c.di;
   });
   const sgkT = document.getElementById("sgkToggle");
@@ -2095,6 +2122,10 @@ function renderLesson(data) {
 /* Hai khối này là HỘP ĐỰNG, không phải một mạch đọc: bên trong là nhiều mạch xếp
    chồng nên trải phẳng ra để cắt được. Khối khác giữ nguyên. */
 const THE_HOP = ".lesson-body, #phaCungCo";
+
+/* Đang đọc tới thẻ nào của từng bài. CHỈ nhớ trong phiên, không lưu xuống máy:
+   quay lại bài sau vài hôm là một lượt đọc mới, thả thẳng vào giữa bài mới là lạ. */
+const theDangDoc = new Map();
 
 /* Tên thẻ tra theo khối "nặng" đầu tiên nằm trong nó. Cụ thể đứng trước, chung
    đứng sau; không khớp cái nào thì lấy tên của phần. */
@@ -2218,8 +2249,11 @@ function dungTheBai(app, l) {
     i = j;
   }
 
-  let cur = 0, xaNhat = 0;
   const tong = dsThe.length;
+  /* Quay lại bài thì mở đúng thẻ đang đọc dở, không thả về thẻ 1. Rời bài sang màn
+     Mô phỏng / Thực hành là đổi địa chỉ nên trang bài dựng lại từ đầu — không nhớ
+     thì đọc tới thẻ 9 rồi bấm Mô phỏng, quay về phải bấm "Thẻ tiếp" tám lần. */
+  let cur = Math.min(theDangDoc.get(l.id) || 0, tong - 1), xaNhat = cur;
   const deck = document.createElement("div");
   deck.className = "the-deck";
   deck.innerHTML = `
@@ -2272,9 +2306,10 @@ function dungTheBai(app, l) {
   const dem = deck.querySelector(".the-dem");
   const vach = deck.querySelector(".the-track i");
 
-  function veThe(i, cuonLen) {
+  function veThe(i, cuonLen, imLang) {
     cur = Math.max(0, Math.min(tong - 1, i));
     xaNhat = Math.max(xaNhat, cur);
+    theDangDoc.set(l.id, cur);
     list.querySelectorAll(".the-card").forEach((c, k) => c.classList.toggle("hien", k === cur));
     chams.querySelectorAll(".the-cham-b").forEach((c, k) => {
       c.classList.toggle("hien", k === cur);
@@ -2288,8 +2323,9 @@ function dungTheBai(app, l) {
       : `Thẻ tiếp ${aIco("aright", null, 14)}`;
     /* Xem tới thẻ cuối = đã đi hết bài -> mở nút "Đánh dấu đã học". Tới được đây
        luôn là do người học tự bấm (thẻ đầu không bao giờ là thẻ cuối vì bộ thẻ
-       chỉ dựng khi cắt được từ 2 thẻ), nên báo một tiếng là đúng lúc. */
-    if (xaNhat >= tong - 1) moKhoaNutDone(true);
+       chỉ dựng khi cắt được từ 2 thẻ), nên báo một tiếng là đúng lúc — trừ lượt
+       dựng đầu, lúc đó chỉ là mở lại thẻ đang đọc dở chứ chưa đọc thêm gì. */
+    if (xaNhat >= tong - 1) moKhoaNutDone(!imLang);
     /* Đổi thẻ thì đưa mép trên của bộ thẻ về đầu màn: thẻ vừa đọc có thể dài hơn
        một màn hình, không kéo lên thì thẻ mới mở ra ở lưng chừng chỗ đang đứng. */
     if (cuonLen) {
@@ -2304,7 +2340,7 @@ function dungTheBai(app, l) {
     const nut = document.getElementById("doneBtn");
     if (nut) nut.scrollIntoView({ behavior: "smooth", block: "center" });
   };
-  veThe(0);
+  veThe(cur, false, true);   // cur = thẻ đang đọc dở đã nhớ, không phải luôn thẻ 1
   return true;
 }
 
@@ -3292,7 +3328,7 @@ function renderQuiz() {
     <div class="question-card">
       <div class="q-number">Câu ${Q.index + 1} / ${Q.questions.length}</div>
       <div class="q-text">${fmtQ(q.question)}</div>
-      ${q.code ? `<pre class="q-code">${esc(q.code)}</pre>` : ""}
+      ${q.code ? preCode(q.code) : ""}
       <div id="answerArea"></div>
       <div id="explainArea"></div>
     </div>
@@ -3743,7 +3779,7 @@ function renderReviewList(result) {
     return `
       <div class="review-item ${d.fullyCorrect ? "ok" : "no"}">
         <div class="review-q">Câu ${i + 1}. ${fmtQ(q.question)}</div>
-        ${q.code ? `<pre class="q-code">${esc(q.code)}</pre>` : ""}
+        ${q.code ? preCode(q.code) : ""}
         <div style="font-size:14px;margin:6px 0">
           <div>Bạn trả lời: <b style="color:${d.fullyCorrect ? "var(--success)" : "var(--danger)"}">${userAns}</b>
             ${q.type === "tf" ? ` — <span style="color:var(--text-soft)">${d.subCorrect}/${q.statements.length} ý đúng (${d.pts.toFixed(2)}đ)</span>` : ""}</div>
