@@ -1672,16 +1672,33 @@ function injectLsPhaCss() {
    nằm ngay trong bài, cuộn tới trong vài giây; ở chế độ Thẻ chúng còn sai hẳn vì
    khối đích nằm trong một thẻ chưa mở. */
 function lsManKhac(l) {
-  const co = (f) => { try { return !!f(); } catch (e) { return false; } };
+  const co = (f) => { try { return f(); } catch (e) { return null; } };
   const ds = [];
   if (co(() => window.MinhHoa && MinhHoa.coBai().indexOf(l.id) >= 0)) {
-    ds.push({ ic: "bulb", ten: "Mô phỏng", di: () => go("moPhong", { id: l.id }) });
+    /* Kèm trạng thái ĐÃ XEM. Mô phỏng và thực hành nay chỉ nằm ở màn riêng, nên
+       đọc xong bài mà nút không nói gì thì không biết mình đã làm hay chưa —
+       hoặc bỏ sót, hoặc làm lại lần hai. Trạng thái lấy đúng nguồn mà bản đồ lộ
+       trình dùng, để hai nơi không bao giờ nói khác nhau. */
+    const xong = !!co(() => window.ManRieng && ManRieng.daXemMoPhong(l.id));
+    ds.push({
+      ic: xong ? "check2" : "bulb", ten: "Mô phỏng", xong: xong,
+      phu: xong ? "đã xem" : "", di: () => go("moPhong", { id: l.id }),
+    });
   }
-  const x = co(() => window.ManRieng) ? ManRieng.xuongCuaBai(l.id) : null;
-  if (x) ds.push({ ic: x.icon, ten: "Thực hành", di: () => go("thucHanh", { id: l.id }) });
+  const x = co(() => window.ManRieng && ManRieng.xuongCuaBai(l.id));
+  if (x) {
+    const s = co(() => ManRieng.saoThucHanh(l.id)) || { sao: 0, xong: 0, tong: x.so };
+    ds.push({
+      ic: s.sao >= 3 ? "check2" : x.icon, ten: "Thực hành", xong: s.sao >= 3,
+      phu: s.xong ? `${s.xong}/${s.tong} bài` : `${x.so} bài`,
+      di: () => go("thucHanh", { id: l.id }),
+    });
+  }
   LS_MAN = ds;
   return ds.map((c, i) =>
-    `<button class="btn btn-ghost ls-man-b" data-m="${i}">${aIco(c.ic, null, 16)} ${esc(c.ten)}</button>`
+    `<button class="btn btn-ghost ls-man-b${c.xong ? " xong" : ""}" data-m="${i}">` +
+    `${aIco(c.ic, c.xong ? "var(--success)" : null, 16)} ${esc(c.ten)}` +
+    `${c.phu ? `<small>${esc(c.phu)}</small>` : ""}</button>`
   ).join("");
 }
 let LS_MAN = [];
@@ -1964,9 +1981,13 @@ function donVaoPha(l) {
   chuyen(".sd", pha1);                     // sơ đồ thuộc phần Đặt vấn đề
   [".sod", ".clab-host", ".voc-box"].forEach((sel) => chuyen(sel, pha3));
   /* Phần Củng cố mà rỗng thì ẩn hẳn, đừng để một tiêu đề bấm vào không có gì. */
+  /* Bỏ ".glab" khỏi danh sách vì xưởng đồ hoạ nay chỉ dựng ở màn Thực hành riêng.
+     Không mất gì: khối .glab CÒN LẠI trong trang bài đều là trò Ôn tập tương tác
+     (concept-lab dùng chung tên lớp này), mà chúng luôn nằm trong .clab-host —
+     đã có sẵn trong danh sách. */
   const p3 = app.querySelector('[data-pha="3"]');
   if (p3 && !p3.querySelector(".ls-pha-than").textContent.trim() &&
-      !p3.querySelector("#lessonPg, .sod, .clab-host, .voc-box, .glab")) p3.hidden = true;
+      !p3.querySelector("#lessonPg, .sod, .clab-host, .voc-box")) p3.hidden = true;
 }
 
 function renderLesson(data) {
@@ -2010,7 +2031,10 @@ function renderLesson(data) {
 
     ${phaMo("3", "Củng cố", "target", "Làm thử để biết mình đã hiểu chưa", false)}
       ${runCode ? `
-      <div class="section-title">${aIco("monitor", "#0891b2", 17)} Thực hành ngay</div>
+      <!-- KHÔNG gọi là "Thực hành": cuối bài nay có nút "Thực hành" mở sang xưởng
+           bài tập có máy chấm, hai thứ trùng tên thì không ai biết bấm cái nào.
+           Ô này chỉ là chỗ nghịch lại ĐÚNG ví dụ của bài, không chấm điểm. -->
+      <div class="section-title">${aIco("monitor", "#0891b2", 17)} Chạy thử ví dụ của bài</div>
       <p style="color:var(--text-soft);font-size:13.5px;margin-bottom:10px">Đây là ví dụ của bài — sửa lại tùy ý rồi bấm ${aIco("play", "#16a34a", 13)} Chạy để xem kết quả thay đổi thế nào.</p>
       <div id="lessonPg"></div>` : webCode ? `
       <div class="section-title">${aIco("globe", "#0891b2", 17)} Thử làm trang web</div>
@@ -2048,22 +2072,21 @@ function renderLesson(data) {
   attachRunButtons(app.querySelector(".lesson-body"));
   if (runCode) buildEditor(document.getElementById("lessonPg"), runCode);
   else if (webCode) buildWebEditor(document.getElementById("lessonPg"), webCode);
-  /* Xưởng thực hành: gói free chỉ mở các bài thuộc chương đầu mỗi xưởng
-     (plan.js quyết định); bài khoá thay bằng hộp Premium đứng đúng vị trí đó.
-     Concept lab thuộc PHẦN HỌC nên luôn mở. */
-  const xuongBiKhoa = (loai, ds) => {
-    if (!ds || !ds.length || typeof Plan === "undefined" || Plan.xuongMo(loai, l)) return false;
-    Plan.khoaXuongBox(loai, l, ds);   // truyền cả mảng để hộp khoá còn hiện được ĐỀ
-    return true;
-  };
-  if (typeof injectExercises === "function" && !xuongBiKhoa("python", (window.EXERCISES || {})[l.id])) injectExercises(l);
-  if (typeof injectSqlExercises === "function" && !xuongBiKhoa("sql", (window.SQL_EXERCISES || {})[l.id])) injectSqlExercises(l);
-  if (typeof injectWebExercises === "function" && !xuongBiKhoa("web", (window.WEB_EXERCISES || {})[l.id])) injectWebExercises(l);
-  if (typeof injectGraphicsLab === "function" && !xuongBiKhoa("gfx", (window.GLAB || {})[l.id])) injectGraphicsLab(l);
+  /* MÔ PHỎNG và XƯỞNG THỰC HÀNH KHÔNG dựng ở đây nữa — mỗi thứ chỉ còn MỘT chỗ.
+     Trước đây trang bài gọi injectMinhHoa + bốn injectExercises*, mà màn riêng
+     (#/mo-phong, #/thuc-hanh) lại gọi ĐÚNG những hàm đó với cùng dữ liệu: một nội
+     dung dựng ở hai nơi, học sinh làm xong ở nơi này vẫn thấy nơi kia còn nguyên.
+     Riêng mô phỏng còn tệ hơn: dấu "đã xem" (ManRieng.ghiDaXem) chỉ gắn trong
+     renderMoPhong, nên bấm hết các bước NGAY TRONG BÀI thì ô Mô phỏng trên bản đồ
+     vẫn xám — đo trên C11-09 đúng như vậy: trong bài false, màn riêng true. Học
+     một lần mà không được tính, phải làm lại lần hai mới xong.
+     Bản đồ lộ trình vốn đã có ô riêng cho cả hai (loai "mophong" / "thuchanh"),
+     và cuối bài có nút mở thẳng sang (lsManKhac) — nên bỏ bản trong bài là hết
+     trùng, không mất lối vào nào.
+     Bốn khối dưới đây GIỮ LẠI vì chúng không có màn riêng nào khác. */
   if (typeof injectSoDo === "function") injectSoDo(l);   // đặt TRƯỚC lý thuyết
   if (typeof injectConceptLab === "function") injectConceptLab(l);
   if (typeof injectSaiODau === "function") injectSaiODau(l);
-  if (typeof injectMinhHoa === "function") injectMinhHoa(l);
   if (typeof injectVocab === "function") injectVocab(l);
 
   /* Các khối do tệp khác chèn (sơ đồ, Sai ở đâu, Ôn tập tương tác, Từ vựng) đều
@@ -2131,7 +2154,7 @@ const theDangDoc = new Map();
    đứng sau; không khớp cái nào thì lấy tên của phần. */
 const THE_TEN = [
   [".ls-keypoints", "Cần nhớ"],
-  ["#lessonPg", "Thực hành ngay"],
+  ["#lessonPg", "Chạy thử ví dụ của bài"],
   [".sd", "Sơ đồ của bài"],
   [".sod-host, .sod", "Sai ở đâu?"],
   [".clab-host", "Ôn tập tương tác"],

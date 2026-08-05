@@ -1792,6 +1792,19 @@ pre code {
 /* Nút đang chờ mở khoá ("Đọc hết bài rồi đánh dấu"). Không dùng [disabled] trơn
    vì trình duyệt làm mờ hẳn thành ra như nút hỏng; ở đây nó là nút SẼ dùng được,
    nên giữ chữ đọc rõ và chỉ bỏ mọi tín hiệu bấm được. */
+/* Nút mở Mô phỏng / Thực hành ở cuối bài, kèm trạng thái đã làm tới đâu. */
+.ls-man-b small {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--text-soft);
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--bg-soft);
+}
+.ls-man-b.xong { border-color: var(--success); color: var(--success); }
+.ls-man-b.xong small { background: var(--success-soft); color: var(--success); }
+
 .btn.btn-cho,
 .btn.btn-cho:hover {
   background: var(--bg-soft);
