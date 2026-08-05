@@ -1314,8 +1314,8 @@ function injectPathCss() {
     ".pathroot { padding-bottom: 60px; }" +
 
     /* Chú giải loại ô — đứng trên danh sách chương, tự xuống dòng trên điện thoại */
-    ".path-chugiai { max-width: 520px; margin: -8px auto 14px; display: flex; flex-wrap: wrap; gap: 6px 14px; justify-content: center; }" +
-    ".pcg { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 800; color: var(--text-soft); }" +
+    ".path-chugiai { max-width: 680px; margin: 16px auto 18px; display: flex; flex-wrap: wrap; gap: 6px 12px; justify-content: center; align-items: center; }" +
+    ".pcg { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 800; color: var(--text-soft); white-space: nowrap; }" +
     ".pcg-ic { width: 24px; height: 24px; border-radius: 8px; display: grid; place-items: center; flex: none; color: #fff; }" +
     ".pcg-ic svg { width: 14px; height: 14px; }" +
     ".pcg-bai { border-radius: 50%; background: linear-gradient(180deg, #ff007f, #d8006c); color: #fff; }" +
