@@ -46,7 +46,10 @@
 
       /* ---- Ô cơ bản, dùng chung cho cả năm kiểu ---- */
       ".sd-o{border:1.5px solid var(--sd-vien,var(--border-strong));border-radius:10px;background:var(--bg-card);" +
-        "padding:9px 11px;text-align:center}" +
+        "padding:9px 11px;text-align:center;cursor:pointer;transition:all .2s cubic-bezier(.4,0,.2,1)}" +
+      ".sd-o:hover{border-color:var(--primary);transform:translateY(-2px);box-shadow:0 4px 12px rgba(79,70,229,.15)}" +
+      ".sd-o.active-step{border-color:var(--primary);background:var(--primary-soft);box-shadow:0 0 0 3px rgba(79,70,229,.25)}" +
+      ".sd-step-detail{margin-top:12px;padding:10px 14px;background:var(--bg-card);border-left:3.5px solid var(--primary);border-radius:8px;font-size:13px;color:var(--text);animation:cardFade .2s ease}" +
       ".sd-o b{display:block;font:800 13px/1.35 var(--font-sans);color:var(--text)}" +
       ".sd-o span{display:block;margin-top:3px;font:600 11.5px/1.45 var(--font-sans);color:var(--text-soft)}" +
       ".sd-o.dam{background:var(--sd-nen,var(--primary-soft));border-color:var(--sd-mau,var(--primary))}" +
@@ -204,6 +207,26 @@
         (d.mo ? '<p class="sd-mo">' + fmt(d.mo) + "</p>" : "") +
         '<div class="sd-khung">' + VE[d.kieu](d) + "</div>" +
         (d.ghi ? '<p class="sd-ghi">' + fmt(d.ghi) + "</p>" : "");
+
+      // Bổ sung sự kiện click tương tác từng bước cho ô sơ đồ
+      box.querySelectorAll(".sd-o").forEach(function (o, idx) {
+        o.setAttribute("role", "button");
+        o.setAttribute("tabindex", "0");
+        o.title = "Bấm để xem chi tiết bước này";
+        o.onclick = function () {
+          box.querySelectorAll(".sd-o").forEach(function (el) { el.classList.remove("active-step"); });
+          o.classList.add("active-step");
+          var detailBox = box.querySelector(".sd-step-detail");
+          if (!detailBox) {
+            detailBox = document.createElement("div");
+            detailBox.className = "sd-step-detail";
+            box.querySelector(".sd-khung").appendChild(detailBox);
+          }
+          var bEl = o.querySelector("b"), sEl = o.querySelector("span");
+          var bTxt = bEl ? bEl.innerText : "", sTxt = sEl ? sEl.innerText : "";
+          detailBox.innerHTML = "<strong>📍 Bước " + (idx + 1) + ": " + bTxt + "</strong>" + (sTxt ? "<br/><span style='color:var(--text-soft)'>" + sTxt + "</span>" : "");
+        };
+      });
     } catch (e) {
       console.error("[so-do] Không dựng được sơ đồ của " + id + ":", e);
       return false;

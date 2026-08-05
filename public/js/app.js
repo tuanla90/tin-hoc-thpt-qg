@@ -1866,8 +1866,7 @@ function thanhTienDoDoc() {
   bar.style.top = (top ? Math.round(top.getBoundingClientRect().height) : 0) + "px";
   document.body.appendChild(bar);
   const thanh = bar.firstElementChild;
-  let lanDau = true;
-  const capNhat = () => {
+  const capNhat = (bao) => {
     if (!bar.isConnected) return;
     /* Trang ngắn hơn màn hình thì không có gì để đo — để 0 chứ đừng chia cho 0. */
     const con = document.documentElement.scrollHeight - window.innerHeight;
@@ -1877,18 +1876,18 @@ function thanhTienDoDoc() {
        chưa xem) — thẻ tự mở khoá khi tới thẻ cuối.
        Trang ngắn hơn màn hình thì mở luôn: không có cú cuộn nào để chờ. */
     if (doneTheoCuon && nutDoneMo &&
-        (con <= 40 || window.scrollY >= con - 120)) moKhoaNutDone(!lanDau);
-    lanDau = false;
+        (con <= 40 || window.scrollY >= con - 120)) moKhoaNutDone(bao);
   };
-  window.addEventListener("scroll", capNhat, { passive: true });
-  window.addEventListener("resize", capNhat);
+  const khiCuon = () => capNhat(true);
+  window.addEventListener("scroll", khiCuon, { passive: true });
+  window.addEventListener("resize", khiCuon);
   /* Gỡ thanh khi RỜI trang bài. Phải nghe hashchange chứ KHÔNG dựa vào sự kiện
      cuộn: bản trước dọn dẹp ngay trong hàm xử lí cuộn, nên màn nào ngắn hơn màn
      hình (trang chủ, kết quả) thì chẳng có cú cuộn nào xảy ra và thanh nằm lại
      mãi ở đó. Đã đo thấy đúng như vậy. */
   const go = () => {
-    window.removeEventListener("scroll", capNhat);
-    window.removeEventListener("resize", capNhat);
+    window.removeEventListener("scroll", khiCuon);
+    window.removeEventListener("resize", khiCuon);
     window.removeEventListener("hashchange", doiMan);
     if (goThanhTien === go) goThanhTien = null;
     bar.remove();
@@ -1899,7 +1898,17 @@ function thanhTienDoDoc() {
   };
   goThanhTien = go;
   window.addEventListener("hashchange", doiMan);
-  capNhat();
+  /* Đo lần đầu Ở NHỊP SAU, không đo ngay tại đây. Hàm này chạy giữa lúc
+     renderLesson đang dựng, mà lệnh cuộn của router (window.scrollTo về đầu
+     trang, hoặc về chỗ đọc dở đã nhớ) đứng SAU đó — đo ngay bây giờ thì
+     window.scrollY vẫn là chỗ đứng ở BÀI TRƯỚC. Đã đo thấy đúng như vậy: đọc hết
+     bài 1 rồi bấm "Bài tiếp theo", bài 2 vừa hiện ra là nút "Đánh dấu đã học" đã
+     tự mở, đúng cái lỗ hổng mà khoá này sinh ra để bịt.
+     Lần đo đầu KHÔNG báo toast — người học vừa mở bài chứ chưa đọc gì.
+     Dùng setTimeout chứ không requestAnimationFrame: rAF không chạy khi thẻ đang
+     ở nền (trình duyệt ngừng dựng khung hình), nên mở bài trong thẻ nền rồi quay
+     lại là thanh tiến độ trống trơn cho tới cú cuộn đầu tiên. */
+  setTimeout(() => capNhat(false), 0);
 }
 
 function donVaoPha(l) {
