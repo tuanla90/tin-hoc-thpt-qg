@@ -1467,6 +1467,18 @@ code.ic {
 }
 .um-plan-pre { background: color-mix(in srgb, #b45309 15%, transparent); border-color: #b45309; color: #b45309; }
 
+.um-grid-2 {
+  display: flex; gap: 4px; width: 100%;
+}
+.um-grid-2 #umMenu .um-item,
+.um-grid-2 .um-item {
+  flex: 1; min-width: 0; justify-content: center;
+  padding: 6px 4px; font-size: 12.5px; white-space: nowrap;
+}
+.um-grid-2 .um-item:hover {
+  background: var(--bg-soft);
+}
+
 #umMenu .um-item {
   display: flex; align-items: center; gap: 8px; width: 100%; text-align: left;
   padding: 6px 8px; border-radius: 7px; font-size: 13px; font-weight: 650;
