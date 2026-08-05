@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Master Sales Playbook — Ôn thi Tin học THPT Quốc gia (GDPT 2018)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --card: #151d30;
+      --card-hover: #1c2742;
+      --border: #23314d;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+      --primary-glow: rgba(99, 102, 241, 0.25);
+      --accent-teal: #14b8a6;
+      --accent-green: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-rose: #f43f5e;
+      --font-sans: 'Plus Jakarta Sans', system-ui, sans-serif;
+      --font-heading: 'Outfit', var(--font-sans);
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+      line-height: 1.65;
+      padding-bottom: 80px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px 20px;
+    }
+
+    /* Header Banner */
+    .header-card {
+      background: linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.98)),
+                  radial-gradient(circle at top right, rgba(99, 102, 241, 0.4), transparent 65%);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 40px 32px;
+      margin-bottom: 32px;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .header-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; width: 6px; height: 100%;
+      background: linear-gradient(to bottom, var(--primary), var(--accent-teal));
+    }
+
+    .badge-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 14px;
+      border-radius: 999px;
+      font-size: 12.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      background: rgba(99, 102, 241, 0.18);
+      color: #818cf8;
+      border: 1px solid rgba(99, 102, 241, 0.35);
+      margin-bottom: 14px;
+    }
+
+    h1 {
+      font-family: var(--font-heading);
+      font-size: clamp(28px, 4.5vw, 42px);
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 10px;
+      line-height: 1.2;
+    }
+
+    .subtitle {
+      font-size: 16px;
+      color: var(--text-muted);
+      margin-bottom: 28px;
+      max-width: 900px;
+    }
+
+    /* KPI Grid */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 16px;
+    }
+
+    .kpi-card {
+      background: rgba(15, 23, 42, 0.75);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px 16px;
+      text-align: center;
+    }
+
+    .kpi-value {
+      font-family: var(--font-heading);
+      font-size: 30px;
+      font-weight: 800;
+      color: var(--accent-teal);
+    }
+    .kpi-value.purple { color: #c084fc; }
+    .kpi-value.green { color: var(--accent-green); }
+    .kpi-value.amber { color: var(--accent-amber); }
+    .kpi-value.rose { color: var(--accent-rose); }
+
+    .kpi-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 600;
+      margin-top: 4px;
+    }
+
+    /* Section Titles */
+    .section-title {
+      font-family: var(--font-heading);
+      font-size: 24px;
+      font-weight: 800;
+      color: #fff;
+      margin: 42px 0 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .section-title span {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: var(--primary-glow);
+      color: #818cf8;
+      font-size: 18px;
+      font-weight: 800;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 22px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 18px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 26px;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+
+    .card:hover {
+      border-color: rgba(99, 102, 241, 0.45);
+    }
+
+    .card.highlight {
+      background: linear-gradient(135deg, rgba(21, 29, 48, 1), rgba(30, 41, 59, 0.85));
+      border: 1px solid rgba(99, 102, 241, 0.4);
+    }
+
+    .card h3 {
+      font-family: var(--font-heading);
+      font-size: 19px;
+      color: #fff;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .pill-badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 6px;
+      font-size: 11.5px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+    .pill-badge.amber { background: rgba(245, 158, 11, 0.15); color: var(--accent-amber); }
+    .pill-badge.teal { background: rgba(20, 184, 166, 0.15); color: var(--accent-teal); }
+    .pill-badge.purple { background: rgba(192, 132, 252, 0.15); color: #c084fc; }
+    .pill-badge.green { background: rgba(16, 185, 129, 0.15); color: var(--accent-green); }
+    .pill-badge.rose { background: rgba(244, 63, 94, 0.15); color: var(--accent-rose); }
+
+    /* Feature List */
+    .feat-list {
+      list-style: none;
+    }
+
+    .feat-list li {
+      position: relative;
+      padding-left: 26px;
+      margin-bottom: 12px;
+      font-size: 14.5px;
+      color: var(--text-muted);
+    }
+
+    .feat-list li strong { color: var(--text); }
+
+    .feat-list li::before {
+      content: '✓';
+      position: absolute;
+      left: 0;
+      color: var(--accent-green);
+      font-weight: bold;
+      font-size: 16px;
+    }
+
+    /* Pricing Table */
+    .table-container {
+      width: 100%;
+      overflow-x: auto;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      margin-top: 14px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 14.5px;
+    }
+
+    th, td {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      background: rgba(15, 23, 42, 0.9);
+      color: #fff;
+      font-weight: 700;
+      font-family: var(--font-heading);
+      font-size: 15px;
+    }
+
+    td { color: var(--text-muted); }
+    td strong { color: var(--text); }
+
+    .price-tag {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      color: var(--accent-green);
+      font-size: 16px;
+    }
+
+    .badge-pill {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .badge-pill.green { background: rgba(16, 185, 129, 0.15); color: var(--accent-green); }
+    .badge-pill.purple { background: rgba(168, 85, 247, 0.15); color: #c084fc; }
+
+    /* Interactive Copy Box for Scripts */
+    .script-box {
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px;
+      margin-top: 14px;
+      position: relative;
+    }
+
+    .script-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .script-title {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--accent-teal);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .btn-copy {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      padding: 7px 14px;
+      border-radius: 8px;
+      font-size: 12.5px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.2s;
+    }
+
+    .btn-copy:hover {
+      background: var(--primary-hover);
+    }
+
+    .script-content {
+      font-size: 14.5px;
+      color: #e2e8f0;
+      white-space: pre-wrap;
+      line-height: 1.6;
+    }
+
+    /* Objection Matrix Table */
+    .obj-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+
+    .obj-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .obj-tag {
+      background: rgba(244, 63, 94, 0.15);
+      color: var(--accent-rose);
+      font-size: 12.5px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 6px;
+    }
+
+    .obj-question {
+      font-weight: 700;
+      color: #fff;
+      font-size: 16px;
+    }
+
+    .obj-answer {
+      font-size: 14.5px;
+      color: var(--text-muted);
+      background: rgba(15, 23, 42, 0.6);
+      padding: 14px 18px;
+      border-radius: 10px;
+      border-left: 4px solid var(--accent-green);
+      line-height: 1.6;
+    }
+
+    #toast {
+      position: fixed;
+      bottom: 28px;
+      right: 28px;
+      background: var(--accent-green);
+      color: #fff;
+      padding: 14px 24px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 14.5px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.3s;
+      pointer-events: none;
+      z-index: 100;
+    }
+    #toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    
+    <!-- HEADER BANNER -->
+    <div class="header-card">
+      <span class="badge-label">🔥 Master Sales Playbook & Huấn Luyện Chốt Đơn</span>
+      <h1>Nền Tảng Ôn Thi Tin Học THPT Quốc Gia (GDPT 2018)</h1>
+      <p class="subtitle">Bản phân tích tính khả thi thương mại chuyên sâu, kịch bản Telesale/Zalo 1-Click Copy cho 5 tệp khách hàng, ma trận xử lý 6 từ chối và chiến lược hợp tác đại lý Giáo viên.</p>
+      
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-value">9.5 / 10</div>
+          <div class="kpi-desc">Điểm Khả thi Thương mại</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-value green">2.000+</div>
+          <div class="kpi-desc">Câu hỏi & Bài tập chuẩn BỘ</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-value purple">100% Visual</div>
+          <div class="kpi-desc">Mô phỏng & Sơ đồ trực quan</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-value amber">75% - 85%</div>
+          <div class="kpi-desc">Tỷ lệ Lợi nhuận Gộp</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-value rose">30%</div>
+          <div class="kpi-desc">Hoa hồng Đại lý / CTV</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PHẦN 1: BỨC TRANH KHẢ THI KINH DOANH CHUYÊN SÂU -->
+    <div class="section-title">
+      <span>1</span> Phân Tích Chuyên Sâu: Tại Sao Dự Án CỰC KỲ KHẢ THI (Commercial Feasibility)
+    </div>
+
+    <div class="grid-4">
+      <div class="card highlight">
+        <span class="pill-badge amber">Trụ cột 1 · Thời điểm vàng</span>
+        <h3>⏳ Nhu cầu Thị trường Bùng nổ (Timing)</h3>
+        <p style="font-size:13.5px; color:var(--text-muted);">2025 là <strong>năm ĐẦU TIÊN</strong> áp dụng đề thi Tốt nghiệp THPT Quốc gia theo GDPT 2018. Môn Tin học chính thức trở thành môn thi tốt nghiệp & nằm trong các tổ hợp xét tuyển Đại học top đầu (A00, A01, A10, A11...). Hơn 1 triệu học sinh lớp 12 đang <strong>khao khát đề thi thử chuẩn và công cụ ôn tập bám sát ma trận mới</strong>.</p>
+      </div>
+
+      <div class="card highlight">
+        <span class="pill-badge teal">Trụ cột 2 · Vũ khí Độc bản</span>
+        <h3>📊 2.000+ Câu Hỏi & Mô Phỏng Visual</h3>
+        <p style="font-size:13.5px; color:var(--text-muted);">Sở hữu kho <strong>2.000+ câu hỏi & bài tập</strong> bám sát SGK. Đặc biệt có <strong>Tính năng Mô phỏng & Sơ đồ trực quan</strong> (Stack/Queue, SQL Tables, TCP/IP Network, Python Logic Gate) giúp học sinh hiểu bản chất trong 5 giây mà không cần học thuộc vẹt.</p>
+      </div>
+
+      <div class="card highlight">
+        <span class="pill-badge green">Trụ cột 3 · Tài chính vững mạnh</span>
+        <h3>💰 Lợi Nhuận Cao & Giá Siêu Rẻ</h3>
+        <p style="font-size:13.5px; color:var(--text-muted);">Mức giá <strong>249k - 349k/năm</strong> cực kỳ vừa túi tiền cả phụ huynh nông thôn lẫn thành thị. Chi phí vận hành AI API rất thấp (~35k-50k/học sinh/năm) mang lại <strong>Biên lợi nhuận gộp đạt 75% - 85%</strong>.</p>
+      </div>
+
+      <div class="card highlight">
+        <span class="pill-badge purple">Trụ cột 4 · Tự động 100%</span>
+        <h3>⚡ Cỗ Máy Vận Hành Tự Động</h3>
+        <p style="font-size:13.5px; color:var(--text-muted);">Tích hợp SePay VietQR tự động: Tiền vào ngân hàng là hệ thống <strong>tự mở gói Premium trong 3 giây</strong>. Không tốn chi phí thuê nhân sự trực chat hay duyệt đơn thủ công 24/7.</p>
+      </div>
+    </div>
+
+    <!-- PHẦN 2: CHÂN DUNG KHÁCH HÀNG CHUYÊN SÂU -->
+    <div class="section-title">
+      <span>2</span> Phân Tích Chân Dung Khách Hàng (Deep-Dive Personas)
+    </div>
+
+    <div class="grid-3">
+      <!-- Persona 1 -->
+      <div class="card">
+        <span class="pill-badge teal">Persona 1 · Học sinh Lớp 12</span>
+        <h3>🧑‍🎓 Học Sinh Ôn Thi THPT Quốc Gia</h3>
+        <ul class="feat-list">
+          <li><strong>Nỗi đau lớn nhất:</strong> Chương trình GDPT 2018 mới, cú pháp Python/SQL đọc SGK không hiểu gì, học thuộc vẹt dễ đứt đoạn. Thiếu chỗ cày đề chuẩn ma trận BỘ 2025.</li>
+          <li><strong>Tâm lý thầm kín:</strong> Muốn học nhanh, hiểu ngay, gõ code có máy chấm ngay trên điện thoại để không bị tụt lại so me bạn bè.</li>
+          <li><strong>Ngôn từ chạm đúng nút bấm:</strong> "Chuẩn đề Bộ 2025", "Dễ hiểu như chơi game", "Có Sơ đồ trực quan 5 giây là ngộ ra", "Gia sư AI gỡ lỗi 24/7".</li>
+        </ul>
+      </div>
+
+      <!-- Persona 2 -->
+      <div class="card">
+        <span class="pill-badge amber">Persona 2 · Phụ huynh Học sinh</span>
+        <h3>👨‍👩‍👧 Phụ Huynh Chi Trả Tài Chính</h3>
+        <ul class="feat-list">
+          <li><strong>Nỗi đau lớn nhất:</strong> Tốn hàng triệu đồng học thêm Toán, Lý, Hóa. Sợ con cầm máy tính/điện thoại chỉ để chơi game chứ không chịu học.</li>
+          <li><strong>Tâm lý thầm kín:</strong> Muốn con tự giác học, có công cụ đo lường tiến độ rõ ràng và chi phí phải chăng, an toàn.</li>
+          <li><strong>Ngôn từ chạm đúng nút bấm:</strong> "Tiết kiệm hàng triệu tiền học thêm", "Chỉ 20k/tháng bằng 1 ly trà sữa", "Cam kết hoàn tiền 100% trong 7 ngày nếu không ưng".</li>
+        </ul>
+      </div>
+
+      <!-- Persona 3 -->
+      <div class="card">
+        <span class="pill-badge purple">Persona 3 · Giáo viên Tin học</span>
+        <h3>👨‍🏫 Giáo Viên Tin Học THPT (Đại lý B2B)</h3>
+        <ul class="feat-list">
+          <li><strong>Nỗi đau lớn nhất:</strong> Mất quá nhiều thời gian ra đề thi thử, chấm bài Python/SQL thủ công cho 40-50 học sinh/lớp.</li>
+          <li><strong>Tâm lý thầm kín:</strong> Cần công cụ tạo lớp học, giao bài tập tự động chấm code để giảm tải công việc và có thêm thu nhập thụ động.</li>
+          <li><strong>Ngôn từ chạm đúng nút bấm:</strong> "Tự động chấm code 100%", "Cấp tài khoản Admin Giáo viên MIỄN PHÍ", "Hoa hồng 30% khi giới thiệu học sinh".</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- PHẦN 3: VŨ KHÍ SẢN PHẨM & MÔ PHỎNG VISUAL -->
+    <div class="section-title">
+      <span>3</span> Vũ Khí Sản Phẩm & Tính Năng Đột Phá (Product Moat)
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <h3>🚀 4 Điểm Khác Biệt Vượt Trội (USP)</h3>
+        <ul class="feat-list">
+          <li><strong>2.000+ câu hỏi & bài tập bám sát 100% GDPT 2018:</strong> Đầy đủ 3 lớp (10, 11, 12) + 2 định hướng KHMT (Python/Thuật toán) & ICT (SQL/Web).</li>
+          <li><strong>Mô phỏng tương tác & Sơ đồ trực quan:</strong> Trực quan hóa Cấu trúc dữ liệu Ngăn xếp Stack, Hàng đợi Queue, Truy vấn SQL, Giao thức Mạng TCP/IP và Luồng chạy đệ quy.</li>
+          <li><strong>4 Xưởng thực hành 327+ bài code:</strong> Chạy trực tiếp Python, SQL, HTML/CSS, Đồ họa Inkscape ngay trên điện thoại/trình duyệt, không cần cài đặt phức tạp.</li>
+          <li><strong>Gia sư AI 24/7 kèm riêng:</strong> Phân tích "Vì sao tôi sai?", đưa gợi ý theo đúng chương trình học, không trả lời đáp án vẹt.</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>🛡️ An Tâm Tuyệt Đối Cho Phụ Huynh & Học Sinh</h3>
+        <ul class="feat-list">
+          <li><strong>Thi thử đúng ma trận BỘ 2025:</strong> 13 đề thi thử chuẩn 24 câu trắc nghiệm MCQ + 4 câu Đúng/Sai 4 phát biểu.</li>
+          <li><strong>Học thử Miễn phí 100% không giới hạn bài giảng:</strong> Toàn bộ 119 bài giảng SGK mở tự do mãi mãi.</li>
+          <li><strong>Cam kết hoàn tiền 100% trong 7 ngày:</strong> Nếu mua xong thấy không hợp, gửi yêu cầu là được hoàn lại đủ 100% tiền không cần lý do.</li>
+          <li><strong>Đồng bộ đa thiết bị:</strong> 1 tài khoản mở 3 hồ sơ học tập, học mượt trên Điện thoại, Máy tính bảng và PC.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- PHẦN 4: BẢNG GIÁ & HOA HỒNG -->
+    <div class="section-title">
+      <span>4</span> Bảng Giá, Gói Học & Cơ Cấu Hoa Hồng Đại Lý / Sale
+    </div>
+
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Tên Gói Học</th>
+            <th>Mức Giá Bán</th>
+            <th>Thời Gian Dùng</th>
+            <th>Quyền Lợi Độc Quyền</th>
+            <th>Hoa Hồng Sale (30%)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Gói Miễn Phí (Free)</strong></td>
+            <td><span class="price-tag" style="color:var(--text-muted)">0đ</span></td>
+            <td>Vĩnh viễn</td>
+            <td>119 bài lý thuyết + 30 câu luyện/ngày + 5 lượt hỏi AI/ngày + Sân chơi Code</td>
+            <td>—</td>
+          </tr>
+          <tr>
+            <td><strong>Gói Nước Rút (3 Tháng)</strong></td>
+            <td><span class="price-tag">149.000đ</span></td>
+            <td>3 Tháng</td>
+            <td>Full cày đề + Thi thử + 280+ bài thực hành + Gia sư AI 25 lượt/ngày</td>
+            <td><span class="badge-pill green">+45.000đ / đơn</span></td>
+          </tr>
+          <tr>
+            <td><strong>Gói Cả Năm (Sáng lập)</strong></td>
+            <td><span class="price-tag">249.000đ</span> <s style="font-size:12px; opacity:0.6">349.000đ</s></td>
+            <td>1 Năm Học</td>
+            <td>Full toàn bộ 2.000+ câu + Radar chỗ yếu + Mô phỏng visual + 3 hồ sơ</td>
+            <td><span class="badge-pill green">+75.000đ / đơn</span></td>
+          </tr>
+          <tr>
+            <td><strong>Gói Mua Nhóm / Lớp (từ 20 bạn trở lên)</strong></td>
+            <td><span class="price-tag">149.000đ</span> / bạn</td>
+            <td>1 Năm Học</td>
+            <td>Dành cho Giáo viên mua cho cả lớp (Tài khoản Admin Giáo viên miễn phí)</td>
+            <td><span class="badge-pill purple">+45.000đ / học sinh</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- PHẦN 5: KỊCH BẢN CHỐT ĐƠN 1-CLICK COPY -->
+    <div class="section-title">
+      <span>5</span> Bộ Kịch Bản Telesale & Zalo Chốt Đơn (1-Click Copy)
+    </div>
+
+    <div class="grid-2">
+      <!-- Script 1 -->
+      <div class="card">
+        <h3>💬 Script 1: Nhắn Zalo Ngay Khi Học Sinh Tạo Tài Khoản Free</h3>
+        <p style="font-size:13px; color:var(--text-muted); margin-bottom:8px;">Gửi ngay khi hệ thống báo có tài khoản mới tạo.</p>
+        
+        <div class="script-box">
+          <div class="script-header">
+            <span class="script-title">Zalo Script #1</span>
+            <button class="btn-copy" onclick="copyText('s1')">📋 Sao chép</button>
+          </div>
+          <div class="script-content" id="s1">Chào em, anh/chị là trợ lý từ App Ôn thi Tin học THPT đây. 
+
+Thấy em vừa tạo tài khoản học thử, em đang chuẩn bị thi lớp 10, 11 hay lớp 12 vậy? Mục tiêu môn Tin học của em là mấy điểm để anh tư vấn lộ trình học chắc điểm nhất cho em nhé? 🔥</div>
+        </div>
+      </div>
+
+      <!-- Script 2 -->
+      <div class="card">
+        <h3>🔥 Script 2: Khi Học Sinh Chạm Trần 30 Câu Free / Ngày</h3>
+        <p style="font-size:13px; color:var(--text-muted); margin-bottom:8px;">Gửi khi học sinh cày hăng và bị giới hạn lượt luyện tập.</p>
+        
+        <div class="script-box">
+          <div class="script-header">
+            <span class="script-title">Zalo Script #2</span>
+            <button class="btn-copy" onclick="copyText('s2')">📋 Sao chép</button>
+          </div>
+          <div class="script-content" id="s2">Chúc mừng em đã hoàn thành chỉ tiêu 30 câu hôm nay! 👏
+
+Em thấy phần Mô phỏng sơ đồ trực quan & Gia sư AI giải thích lỗi sai có dễ hiểu không? 
+
+Hiện app đang mở 50 suất "Giá Sáng Lập" giảm 100k (chỉ còn 249k/cả năm học — cày đề 2.000+ câu không giới hạn). Nếu em nâng cấp hôm nay anh tặng thêm bộ Flashcard từ vựng độc quyền nhé. 
+
+Em có muốn nhận ưu đãi này không anh gửi mã thanh toán QR tự động nhé?</div>
+        </div>
+      </div>
+
+      <!-- Script 3 -->
+      <div class="card">
+        <h3>🎁 Script 3: Downsell Gói 3 Tháng 149k (Ngày thứ 7)</h3>
+        <p style="font-size:13px; color:var(--text-muted); margin-bottom:8px;">Gửi cho học sinh đã học thử 7 ngày nhưng chưa nâng cấp gói năm.</p>
+        
+        <div class="script-box">
+          <div class="script-header">
+            <span class="script-title">Zalo Script #3 (Downsell)</span>
+            <button class="btn-copy" onclick="copyText('s3')">📋 Sao chép</button>
+          </div>
+          <div class="script-content" id="s3">Chào em, sắp tới kỳ thi quan trọng rồi, em chuẩn bị bài đến đâu rồi? 
+
+Nếu gói 1 năm 249k chưa tiện với em lúc này, bên anh mới mở thêm Gói Nước Rút 3 tháng giá chỉ 149k để em kịp cày đề và củng cố kiến thức giai đoạn này đấy. 
+
+Gói này vẫn có đủ 2.000+ câu hỏi, 13 đề thi thử và Gia sư AI kèm riêng nhé. Em có muốn nhận suất 149k này không anh gửi mã nhé?</div>
+        </div>
+      </div>
+
+      <!-- Script 4 -->
+      <div class="card">
+        <h3>👨‍👩‍👧 Script 4: Nhắn Tin Cho Phụ Huynh Học Sinh</h3>
+        <p style="font-size:13px; color:var(--text-muted); margin-bottom:8px;">Dùng khi trao đổi trực tiếp với phụ huynh để chốt đơn.</p>
+        
+        <div class="script-box">
+          <div class="script-header">
+            <span class="script-title">Zalo Script #4 (Phụ huynh)</span>
+            <button class="btn-copy" onclick="copyText('s4')">📋 Sao chép</button>
+          </div>
+          <div class="script-content" id="s4">Kính chào phụ huynh cháu [Tên học sinh], em là chuyên viên tư vấn từ Nền tảng Ôn thi Tin học THPT Quốc gia. 
+
+Cháu đã trải nghiệm phần học miễn phí và có tiến bộ rất tốt. Năm nay kỳ thi tốt nghiệp theo GDPT 2018 mới, môn Tin học được nhiều trường đại học lấy xét tuyển. 
+
+Thay vì tốn 1-2 triệu đi học thêm trung tâm, gói Premium của app chỉ 249.000đ/cả năm học giúp cháu tự giác học tại nhà với Gia sư AI. App có cam kết hoàn tiền 100% trong 7 ngày nếu anh/chị không hài lòng. Em xin phép gửi mã VietQR để anh/chị kích hoạt cho cháu nhé!</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PHẦN 6: MA TRẬN XỬ LÝ TỪ CHỐI -->
+    <div class="section-title">
+      <span>6</span> Ma Trận Bẻ Gãy Từ Chối (Objection Handling Matrix)
+    </div>
+
+    <div class="obj-card">
+      <div class="obj-header">
+        <span class="obj-tag">Từ chối #1</span>
+        <span class="obj-question">"Em chưa có tiền / Đợi em xin tiền mẹ đã..."</span>
+      </div>
+      <div class="obj-answer">
+        👉 <strong>Kịch bản ứng xử:</strong> "Anh hiểu, xin tiền học ba mẹ hay lo. Anh gửi em tấm ảnh Bảng điểm tiến độ + Bảng so sánh chi phí mua app (249k) với tiền đi học thêm (2 triệu). Em gửi mẹ xem nhé, app có <strong>Cam kết hoàn tiền 100% trong 7 ngày</strong> nếu mẹ xem xong không ưng nha!"
+      </div>
+    </div>
+
+    <div class="obj-card">
+      <div class="obj-header">
+        <span class="obj-tag">Từ chối #2</span>
+        <span class="obj-question">"Sắp thi rồi em sợ học không kịp / Muộn rồi..."</span>
+      </div>
+      <div class="obj-answer">
+        👉 <strong>Kịch bản ứng xử:</strong> "Chính vì sát thi nên em mới cần app đó! App có tính năng <strong>Mô phỏng sơ đồ trực quan</strong> giúp hiểu bài trong 5 giây, kèm mục <strong>'Radar Chỗ Yếu'</strong> chỉ ra đúng 3 chủ đề em hay sai để cày đúng chỗ đó, tiết kiệm 70% thời gian so với cày lại từ đầu. Ngoài ra còn gói Nước Rút 3 tháng chỉ 149k cực hợp cho giai đoạn này đấy."
+      </div>
+    </div>
+
+    <div class="obj-card">
+      <div class="obj-header">
+        <span class="obj-tag">Từ chối #3</span>
+        <span class="obj-question">"Em đang đi học thêm chỗ thầy cô trên lớp rồi..."</span>
+      </div>
+      <div class="obj-answer">
+        👉 <strong>Kịch bản ứng xử:</strong> "Tuyệt vời, học thêm càng chắc kiến thức! Nhưng trên lớp thầy cô không thể chấm code Python/SQL ngay 11h đêm cho em được. Em cứ dùng app để chạy thử code và hỏi Gia sư AI lúc tự học ở nhà nhé, rất bổ trợ cho bài trên lớp đó."
+      </div>
+    </div>
+
+    <div class="obj-card">
+      <div class="obj-header">
+        <span class="obj-tag">Từ chối #4</span>
+        <span class="obj-question">"App online sợ lừa đảo / Không tin tưởng..."</span>
+      </div>
+      <div class="obj-answer">
+        👉 <strong>Kịch bản ứng xử:</strong> "Em hoàn toàn yên tâm nhé! Anh gửi em thông tin Tác giả biên soạn là anh Lê Anh Tuấn (10+ năm Data/AI, cựu quản lý Viettel & VNPAY). Ngoài ra khi chuyển khoản qua mã VietQR SePay tự động, gói Premium mở ngay sau 3 giây. Nếu trong 7 ngày dùng thử không ưng, anh sẵn sàng hoàn lại 100% tiền ngay lập tức!"
+      </div>
+    </div>
+
+    <!-- PHẦN 7: CHƯƠNG TRÌNH HỢP TÁC GIÁO VIÊN B2B -->
+    <div class="section-title">
+      <span>7</span> Hợp Tác Đại Lý Giáo Viên (B2B Teacher Outreach)
+    </div>
+
+    <div class="card">
+      <h3>👨‍🏫 Mẫu Tin Nhắn Chào Hợp Tác Với Giáo Viên Tin Học THPT</h3>
+      <p style="font-size:13.5px; color:var(--text-muted); margin-bottom:12px;">Dùng để gửi Zalo / Facebook cho các thầy cô đang dạy môn Tin học tại các trường THPT.</p>
+      
+      <div class="script-box">
+        <div class="script-header">
+          <span class="script-title">Teacher Outreach Script</span>
+          <button class="btn-copy" onclick="copyText('s5')">📋 Sao chép</button>
+        </div>
+        <div class="script-content" id="s5">Kính chào Thầy/Cô, em là Tuấn từ nền tảng Ôn thi Tin học THPT Quốc gia (GDPT 2018). 
+
+Em biết Thầy/Cô đang mất rất nhiều thời gian ra đề thi thử và chấm bài code Python/SQL thủ công cho các em học sinh. 
+
+Bên em xây dựng hệ thống chấm code tự động 100%, sơ đồ mô phỏng trực quan và kho 2.000+ câu hỏi chuẩn cấu trúc Bộ 2025. Em xin phép tặng Thầy/Cô một Tài khoản Giáo viên MIỄN PHÍ để tạo lớp và giao bài cho học sinh. Đồng thời bên em có chính sách đối tác với hoa hồng 30% khi học sinh đăng ký gói ôn thi. 
+
+Nếu Thầy/Cô quan tâm, em xin phép gửi link trải nghiệm thử ạ!</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div id="toast">✅ Đã sao chép kịch bản vào bộ nhớ tạm!</div>
+
+  <script>
+    function copyText(elementId) {
+      const text = document.getElementById(elementId).innerText;
+      navigator.clipboard.writeText(text).then(() => {
+        const toast = document.getElementById('toast');
+        toast.classList.add('show');
+        setTimeout(() => {
+          toast.classList.remove('show');
+        }, 2500);
+      });
+    }
+  </script>
+</body>
+</html>

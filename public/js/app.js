@@ -364,6 +364,10 @@ function renderFromHashThat() {
   if (view === "quiz" && !(typeof State !== "undefined" && State.quiz)) { go("home"); return; }
   if (view === "result" && !d) { go("history"); return; }
   State.view = view;
+  // Đồng bộ trạng thái active của Bottom Nav di động
+  document.querySelectorAll(".bottom-nav .bnav-btn").forEach((b) => {
+    b.classList.toggle("active", b.dataset.nav === view);
+  });
   if (view !== "lesson") LESSON_DANG_MO = null; // robot trợ lý dựa vào đây để biết ngữ cảnh
   const keepScroll = keepScrollOnce;
   keepScrollOnce = false;
@@ -1964,6 +1968,102 @@ function renderLesson(data) {
     sgkT.querySelector(".sgk-chev").innerHTML = aIco(p.hidden ? "play" : "chevdown", null, 14);
   };
 
+  initStoryDeck(app, l);
+}
+
+function initStoryDeck(app, l) {
+  const isMobile = window.innerWidth <= 768;
+  const phas = Array.from(app.querySelectorAll(".ls-pha"));
+  if (phas.length <= 1) return;
+
+  const jumpBar = app.querySelector(".ls-jump");
+  if (!jumpBar) return;
+
+  // Story Mode Toggle Button
+  const toggleBtn = document.createElement("button");
+  toggleBtn.className = "story-view-toggle";
+  toggleBtn.innerHTML = aIco("sparkles", "#4f46e5", 14) + " Chế độ Thẻ (Wondering)";
+  jumpBar.parentNode.insertBefore(toggleBtn, jumpBar.nextSibling);
+
+  // Deck Wrap Container
+  const deckWrap = document.createElement("div");
+  deckWrap.className = "story-deck-wrap";
+  
+  let curCardIdx = 0;
+  const totalCards = phas.length;
+
+  deckWrap.innerHTML = `
+    <div class="story-header">
+      <div class="story-progress-track">
+        <div class="story-progress-fill" style="width: ${100 / totalCards}%"></div>
+      </div>
+      <span class="story-step-badge">Thẻ 1/${totalCards}</span>
+    </div>
+    <div class="story-card-list"></div>
+    <div class="story-controls">
+      <button class="btn btn-ghost" id="storyPrevBtn" disabled>${aIco("aleft", null, 14)} Thẻ trước</button>
+      <button class="btn btn-primary" id="storyNextBtn">Thẻ tiếp ▶</button>
+    </div>
+  `;
+
+  const listContainer = deckWrap.querySelector(".story-card-list");
+  phas.forEach((pha, i) => {
+    const cardBody = document.createElement("div");
+    cardBody.className = "story-card-body" + (i === 0 ? " active" : "");
+    const clonedPha = pha.cloneNode(true);
+    clonedPha.querySelectorAll(".ls-pha-bd").forEach((bd) => { bd.style.display = "block"; bd.hidden = false; });
+    cardBody.appendChild(clonedPha);
+    listContainer.appendChild(cardBody);
+  });
+
+  const firstPha = phas[0];
+  if (firstPha && firstPha.parentNode) {
+    firstPha.parentNode.insertBefore(deckWrap, firstPha);
+  }
+
+  const updateCard = () => {
+    const fill = deckWrap.querySelector(".story-progress-fill");
+    const badge = deckWrap.querySelector(".story-step-badge");
+    if (fill) fill.style.width = ((curCardIdx + 1) / totalCards * 100) + "%";
+    if (badge) badge.textContent = `Thẻ ${curCardIdx + 1}/${totalCards}`;
+    
+    const bodies = deckWrap.querySelectorAll(".story-card-body");
+    bodies.forEach((b, i) => b.classList.toggle("active", i === curCardIdx));
+    
+    const prevB = deckWrap.querySelector("#storyPrevBtn");
+    const nextB = deckWrap.querySelector("#storyNextBtn");
+    if (prevB) prevB.disabled = curCardIdx === 0;
+    if (nextB) nextB.textContent = curCardIdx === totalCards - 1 ? "Hoàn thành Thẻ 🏆" : "Thẻ tiếp ▶";
+  };
+
+  const toggleView = (enableDeck) => {
+    deckWrap.hidden = !enableDeck;
+    phas.forEach((p) => p.style.display = enableDeck ? "none" : "");
+    toggleBtn.classList.toggle("active", enableDeck);
+    toggleBtn.style.color = enableDeck ? "var(--primary)" : "var(--text-soft)";
+  };
+
+  toggleBtn.onclick = () => toggleView(deckWrap.hidden);
+
+  // On mobile (screen <= 768px), default to Story Deck view
+  if (isMobile) {
+    toggleView(true);
+  } else {
+    toggleView(false);
+  }
+
+  deckWrap.querySelector("#storyPrevBtn").onclick = () => {
+    if (curCardIdx > 0) { curCardIdx--; updateCard(); }
+  };
+  deckWrap.querySelector("#storyNextBtn").onclick = () => {
+    if (curCardIdx < totalCards - 1) {
+      curCardIdx++;
+      updateCard();
+    } else {
+      const doneBtn = document.getElementById("doneBtn");
+      if (doneBtn) doneBtn.scrollIntoView({ behavior: "smooth" });
+    }
+  };
 }
 
 function practiceLesson(l) {
@@ -3673,7 +3773,7 @@ function initNav() {
   document.getElementById("themeToggle").onclick = toggleTheme;
   document.getElementById("homeLink").onclick = () => guardLeave(() => go("home"));
   document.getElementById("homeLink").onkeydown = (e) => { if (e.key === "Enter") go("home"); };
-  document.querySelectorAll(".nav-btn[data-nav]").forEach((b) => b.onclick = () => guardLeave(() => go(b.dataset.nav)));
+  document.querySelectorAll(".nav-btn[data-nav], .bottom-nav .bnav-btn[data-nav]").forEach((b) => b.onclick = () => guardLeave(() => go(b.dataset.nav)));
   initUserMenu();
 }
 
