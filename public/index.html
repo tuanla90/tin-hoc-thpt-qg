@@ -54,54 +54,49 @@
       <button class="nav-btn" data-nav="vocab" title="Từ vựng"><span class="nav-ic" data-ic="book"></span><span class="nav-label">Từ vựng</span></button>
       <button class="nav-btn" data-nav="history" title="Kết quả"><span class="nav-ic" data-ic="chart"></span><span class="nav-label">Kết quả</span></button>
       <button class="nav-btn" data-nav="achievements" title="Thành tựu"><span class="nav-ic" data-ic="trophy"></span><span class="nav-label">Thành tựu</span></button>
-      <!-- Khối tài khoản: gộp Hồ sơ / Tài khoản / âm thanh / giao diện vào một
-           menu thả xuống kiểu SaaS thay vì 4 nút rời. Mở/đóng do initUserMenu()
-           trong app.js; nội dung (avatar, tên, gói) do veUserMenu() trong
-           account.js — hai tệp cùng lo một khối vì trigger phải hoạt động được
-           ngay cả khi account.js lỗi, còn nội dung thì cần dữ liệu tài khoản. -->
-      <div class="um-wrap" id="umWrap">
-        <button class="um-trigger" id="umTrigger" type="button" aria-haspopup="true" aria-expanded="false" title="Tài khoản và cài đặt">
-          <span class="um-avatar" id="umAvatar"></span>
-          <span class="um-name" id="umName">Khách</span>
-          <span class="um-chev" data-ic="chevdown" data-ic-size="14"></span>
-        </button>
-        <div class="um-menu" id="umMenu" hidden>
-          <div class="um-head">
-            <span class="um-head-ava" id="umHeadAvatar"></span>
-            <div class="um-head-txt">
-              <b id="umHeadName">Khách</b>
-              <small id="umHeadSub"></small>
-            </div>
-          </div>
-          <button class="nav-btn um-item" data-nav="profile"><span class="um-item-ic" data-ic="user"></span>Hồ sơ</button>
-          <button class="nav-btn um-item" data-nav="account"><span class="um-item-ic" data-ic="globe"></span>Tài khoản</button>
-          <div class="um-sep"></div>
-          <div class="um-row" id="umRowSound">
-            <span class="um-row-txt">Âm thanh</span>
-            <button class="um-switch" id="amToggle" type="button" title="Tắt âm thanh" aria-pressed="true"></button>
-          </div>
-          <div class="um-row" id="umRowTheme">
-            <span class="um-row-txt">Giao diện tối</span>
-            <button class="um-switch" id="themeToggle" type="button" title="Chế độ sáng/tối"></button>
-          </div>
-          <!-- Cách hiển thị bài học: chọn MỘT LẦN ở đây rồi mọi bài đều theo, thay
-               cho nút bật/tắt cũ nằm trong từng trang bài (bấm lại từng bài, không
-               nhớ gì). Ba lựa chọn nên dùng dải chọn chứ không phải công tắc. -->
-          <div class="um-block">
-            <span class="um-row-txt">Cách hiển thị bài học</span>
-            <div class="um-seg" id="umDocBai" role="radiogroup" aria-label="Cách hiển thị bài học">
-              <button type="button" data-doc="auto" role="radio" aria-checked="true" title="Điện thoại chia thẻ, máy tính cuộn dài">Tự động</button>
-              <button type="button" data-doc="the" role="radio" aria-checked="false" title="Mỗi phần của bài là một thẻ, đi tới bằng nút Thẻ tiếp">Thẻ</button>
-              <button type="button" data-doc="cuon" role="radio" aria-checked="false" title="Cả bài trên một trang, cuộn từ đầu đến cuối">Cuộn dài</button>
-            </div>
-            <small class="um-hint" id="umDocBaiHint"></small>
-          </div>
-          <div class="um-sep" id="umSepOut" hidden></div>
-          <button class="um-item" id="umSwitchBtn" type="button" hidden><span class="um-item-ic" data-ic="refresh"></span>Đổi hồ sơ</button>
-          <button class="um-item um-danger" id="umAuthBtn" type="button" hidden>Đăng xuất</button>
-        </div>
-      </div>
     </nav>
+    <!-- Khối tài khoản: gộp Hồ sơ / Tài khoản / âm thanh / giao diện vào một
+         menu thả xuống kiểu SaaS. Đặt trực tiếp trong topbar để không bị overflow clip. -->
+    <div class="um-wrap" id="umWrap">
+      <button class="um-trigger" id="umTrigger" type="button" aria-haspopup="true" aria-expanded="false" title="Tài khoản và cài đặt">
+        <span class="um-avatar" id="umAvatar"></span>
+        <span class="um-name" id="umName">Khách</span>
+        <span class="um-chev" data-ic="chevdown" data-ic-size="14"></span>
+      </button>
+      <div class="um-menu" id="umMenu" hidden>
+        <div class="um-head">
+          <span class="um-head-ava" id="umHeadAvatar"></span>
+          <div class="um-head-txt">
+            <b id="umHeadName">Khách</b>
+            <small id="umHeadSub"></small>
+          </div>
+        </div>
+        <button class="nav-btn um-item" data-nav="profile"><span class="um-item-ic" data-ic="user"></span>Hồ sơ học sinh</button>
+        <button class="nav-btn um-item" data-nav="account"><span class="um-item-ic" data-ic="globe"></span>Tài khoản &amp; Gói học</button>
+        <div class="um-sep"></div>
+        <div class="um-row" id="umRowSound">
+          <span class="um-row-txt">Âm thanh</span>
+          <button class="um-switch" id="amToggle" type="button" title="Tắt âm thanh" aria-pressed="true"></button>
+        </div>
+        <div class="um-row" id="umRowTheme">
+          <span class="um-row-txt">Giao diện tối</span>
+          <button class="um-switch" id="themeToggle" type="button" title="Chế độ sáng/tối"></button>
+        </div>
+        <!-- Cách hiển thị bài học -->
+        <div class="um-block">
+          <span class="um-row-txt">Cách hiển thị bài học</span>
+          <div class="um-seg" id="umDocBai" role="radiogroup" aria-label="Cách hiển thị bài học">
+            <button type="button" data-doc="auto" role="radio" aria-checked="true" title="Điện thoại chia thẻ, máy tính cuộn dài">Tự động</button>
+            <button type="button" data-doc="the" role="radio" aria-checked="false" title="Mỗi phần của bài là một thẻ, đi tới bằng nút Thẻ tiếp">Thẻ</button>
+            <button type="button" data-doc="cuon" role="radio" aria-checked="false" title="Cả bài trên một trang, cuộn từ đầu đến cuối">Cuộn dài</button>
+          </div>
+          <small class="um-hint" id="umDocBaiHint"></small>
+        </div>
+        <div class="um-sep" id="umSepOut" hidden></div>
+        <button class="um-item" id="umSwitchBtn" type="button" hidden><span class="um-item-ic" data-ic="refresh"></span>Đổi hồ sơ</button>
+        <button class="um-item um-danger" id="umAuthBtn" type="button" hidden>Đăng xuất</button>
+      </div>
+    </div>
   </header>
 
   <!-- ===================== NỘI DUNG CHÍNH ===================== -->

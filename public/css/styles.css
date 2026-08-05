@@ -1427,12 +1427,13 @@ code.ic {
  *  logic điều hướng có chặn (guardLeave) và ẩn/hiện lúc chờ đăng nhập, nên phải
  *  đặt luật ghi đè ở đây thay vì sửa rải rác .nav-btn phía trên.
  * ========================================================================= */
-.um-wrap { position: relative; }
+.um-wrap { position: relative; flex: none; }
 .um-trigger {
   display: flex; align-items: center; gap: 8px; border: 1px solid transparent; background: transparent;
   padding: 5px 10px 5px 6px; border-radius: 999px; cursor: pointer; font-family: var(--font-sans);
-  color: var(--text);
+  color: var(--text); user-select: none;
 }
+.um-trigger * { pointer-events: none; }
 .um-trigger:hover, .um-trigger.open { background: var(--bg-soft); border-color: var(--border); }
 .um-name { font-size: 13.5px; font-weight: 700; max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .um-chev { display: flex; color: var(--text-soft); transition: transform 0.18s; }
@@ -1447,7 +1448,7 @@ code.ic {
 .um-avatar img, .um-head-ava img { width: 100%; height: 100%; object-fit: cover; }
 
 .um-menu {
-  position: absolute; top: calc(100% + 10px); right: 0; z-index: 5;
+  position: absolute; top: calc(100% + 10px); right: 0; z-index: 1000;
   width: 268px; max-width: calc(100vw - 20px); box-sizing: border-box;
   background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px;
   box-shadow: var(--shadow-lg); padding: 8px; animation: umPop 0.15s ease;
