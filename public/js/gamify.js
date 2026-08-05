@@ -23,13 +23,13 @@
     /* Bản GỌN chỉ cho bảng ở trang chủ (#gamDash). Trang Thành tựu dùng lại đúng
        các lớp trên với cỡ lớn — có cả trang cho nó, không cần bóp. Đừng sửa các
        luật trên để làm gọn trang chủ: làm thế là bóp luôn trang Thành tựu. */
-    "#gamDash .gam-card{gap:8px;padding:10px 12px}" +
+    "#gamDash .gam-card{gap:8px;padding:10px 12px;margin-bottom:16px}" +
     /* Chip cấp bo 14px chứ không 99px như chip tròn khác: nó cao gấp đôi vì có
        vạch tiến độ bên trong, bo 99px thì hai đầu phình thành hình viên thuốc. */
     "#gamDash .gam-chip-cap{border-radius:14px;padding:6px 12px 8px 6px;gap:4px 9px;flex-wrap:wrap;flex:1 1 auto;min-width:230px;max-width:340px}" +
     ".gam-ngan{display:none}" +
-    "#gamDash .gam-ring{width:34px;height:34px;border-width:2px}" +
-    "#gamDash .gam-ring .ic{width:19px;height:19px}" +
+    "#gamDash .gam-ring{width:34px;height:34px;border-width:2px;display:flex;align-items:center;justify-content:center;padding:0}" +
+    "#gamDash .gam-ring .ic,#gamDash .gam-ring svg{width:19px;height:19px;display:flex;align-items:center;justify-content:center;margin:0 auto;line-height:1}" +
     "#gamDash .gam-cap-txt{flex:1;min-width:0;display:block;line-height:1.15}" +
     "#gamDash .gam-cap-txt b{font-size:13.5px;color:var(--text)}" +
     "#gamDash .gam-cap-txt small{color:var(--text-soft);font-size:11.5px;margin-left:5px}" +

@@ -76,8 +76,8 @@
     ".pf-avatar{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:34px;" +
       "background:var(--primary-soft);border:1px solid var(--primary);flex:0 0 auto;overflow:hidden}" +
     ".pf-avatar img{width:100%;height:100%;object-fit:contain}" +
-    ".pf-hello{font-size:13px;color:var(--text-soft);font-weight:600}" +
-    ".pf-hello b{color:var(--text);font-size:17px;display:block;margin-top:1px}";
+    ".pf-hello{font-size:13.5px;color:var(--text-soft);font-weight:600;display:flex;align-items:baseline;gap:6px;flex-wrap:wrap}" +
+    ".pf-hello b{color:var(--text);font-size:16.5px;font-weight:800;display:inline}";
   var st = document.createElement("style");
   st.textContent = css;
   (document.head || document.documentElement).appendChild(st);
