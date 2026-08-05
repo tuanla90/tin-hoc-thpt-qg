@@ -3939,6 +3939,9 @@ function initFloatingMascot() {
 
   document.body.appendChild(container);
 
+  const bnavImg = document.getElementById("bnavMascotImg");
+  if (bnavImg) bnavImg.src = randomPose;
+
   const btn = document.getElementById("mascotBtn");
   const bubble = document.getElementById("mascotBubble");
   const closeBtn = document.getElementById("closeMascotBubble");
