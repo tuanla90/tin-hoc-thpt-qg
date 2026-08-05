@@ -100,62 +100,67 @@
          xem luật prefers-reduced-motion ở css/styles.css. */
       "@keyframes mhPop{0%{transform:translateY(-3px) scale(1)}45%{transform:translateY(-6px) scale(1.14)}100%{transform:translateY(-3px) scale(1)}}" +
       ".mh-bit.on .mh-bit-o{animation:mhPop .26s ease}" +
-
-      /* Ô giữa: vòng sáng loang ra một nhịp, đủ để mắt bắt được "đang xét ô này". */
       "@keyframes mhLoang{0%{box-shadow:0 0 0 0 var(--primary)}100%{box-shadow:0 0 0 11px transparent}}" +
       ".mh-o.giua{animation:mhLoang .5s ease-out}" +
-
-      /* Đổi chỗ: lắc ngang — trực giác "hai ô vừa tráo nhau". */
       "@keyframes mhLac{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}" +
       ".mh-o.doi{animation:mhLac .3s ease}" +
-
-      /* Tìm thấy / đã đúng chỗ: nảy lên một cái cho ra cảm giác chốt hạ. */
       "@keyframes mhNay{0%{transform:scale(1)}40%{transform:scale(1.22)}100%{transform:scale(1)}}" +
       ".mh-o.thay{animation:mhNay .42s cubic-bezier(.34,1.56,.64,1)}" +
-
-      /* Chặng DNS vừa sáng: trôi lên vào chỗ, thấy rõ "câu hỏi đi tiếp một chặng". */
       "@keyframes mhTroi{0%{opacity:.35;transform:translateY(7px)}100%{opacity:1;transform:translateY(-3px)}}" +
       ".mh-hop.sang{animation:mhTroi .34s ease-out}" +
-
-      /* Ô bị loại khỏi vùng tìm mờ dần thay vì tắt đột ngột. */
       ".mh-o{transition:opacity .3s ease,border-color .25s,background .25s,color .25s,transform .25s}" +
-
-      /* Thanh tổng nhấp một nhịp khi số đổi, để không ai bấm bit mà không nhận ra. */
       "@keyframes mhSang{0%{background:var(--primary-soft)}100%{background:transparent}}" +
-      ".mh-tong.doi{animation:mhSang .5s ease-out;border-radius:9px}";
+      ".mh-tong.doi{animation:mhSang .5s ease-out;border-radius:99px}";
     (document.head || document.documentElement).appendChild(st);
   }
 
   function el(html) { var d = document.createElement("div"); d.innerHTML = html; return d.firstElementChild; }
-  /* icons.js nạp SAU tệp này trong index.html, nhưng khung()/ganTuChay() chỉ
-     chạy khi có người mở một bài — luôn sau khi mọi tệp đã nạp xong, nên ICON
-     luôn sẵn sàng. Vẫn kiểm phòng khi thiếu, để lỗ hổng mạng không làm nổ trang. */
   function mhIco(n, s) { return typeof ICON === "function" ? ICON(n, s) : ""; }
   function khung(tieuDe, moTa, than, nhap) {
     return '<div class="mh"><h4>' + tieuDe + "</h4><p class=\"mh-mo\">" + moTa + "</p>" +
       (nhap ? '<div class="mh-nhap">' + nhap + "</div>" : "") +
       '<div class="mh-khung">' + than + "</div>" +
-      '<div class="mh-thanh"><button class="mh-btn chinh" data-mh="tien">Bước tiếp →</button>' +
+      '<div class="mh-thanh">' +
+      '<button class="mh-btn" data-mh="lui" disabled title="Lùi lại 1 bước">' + mhIco("aleft", 14) + ' Lùi</button>' +
+      '<button class="mh-btn chinh" data-mh="tien">Bước tiếp →</button>' +
       '<button class="mh-btn" data-mh="auto">' + mhIco("play", 14) + ' Tự chạy</button>' +
+      '<select class="mh-toc-do" data-mh="tocdo" title="Tốc độ tự chạy">' +
+      '<option value="1500">0.5x (Chậm)</option>' +
+      '<option value="1000" selected>1.0x (Chuẩn)</option>' +
+      '<option value="500">2.0x (Nhanh)</option>' +
+      '</select>' +
       '<button class="mh-btn" data-mh="lai">Làm lại</button>' +
       '<span class="mh-loi" data-mh="loi"></span></div></div>';
   }
 
-  /* ------------------------------------------------------------ TỰ CHẠY
-     Gắn CHUNG cho cả bốn minh hoạ nên không phải sửa từng cái. Cách biết đã hết
-     bước: chụp lại nội dung khung + dòng giải thích trước và sau khi bấm; không
-     có gì đổi nghĩa là đã tới trạng thái cuối, tự dừng. Nhờ vậy không cần mỗi
-     minh hoạ khai báo riêng "tôi xong rồi". */
-  var NHIP = 1000;   // mỗi giây một bước — kịp đọc dòng giải thích
-
+  /* ------------------------------------------------------------ TỰ CHẠY & TỚI/LÙI
+     Gắn CHUNG cho mọi minh hoạ: Tự động lưu lịch sử Snapshot để học sinh lùi lại
+     bất kỳ lúc nào, cùng khả năng điều chỉnh tốc độ tự chạy. */
   function ganTuChay(node) {
     var btn = node.querySelector('[data-mh="auto"]');
     var tien = node.querySelector('[data-mh="tien"]');
+    var lui = node.querySelector('[data-mh="lui"]');
+    var tocdo = node.querySelector('[data-mh="tocdo"]');
     var lai = node.querySelector('[data-mh="lai"]');
     var oKhung = node.querySelector(".mh-khung");
     var oLoi = node.querySelector('[data-mh="loi"]');
     if (!btn || !tien) return;
     var hen = null;
+    var NHIP = 1000;
+    var LICH_SU = [];
+
+    function laySnapshot() {
+      return { khungHtml: oKhung ? oKhung.innerHTML : "", loiHtml: oLoi ? oLoi.innerHTML : "" };
+    }
+
+    function luuSnapshot() {
+      if (LICH_SU.length > 50) LICH_SU.shift();
+      LICH_SU.push(laySnapshot());
+      if (lui) lui.disabled = LICH_SU.length <= 1;
+    }
+
+    // Lưu trạng thái ban đầu
+    luuSnapshot();
 
     function anh() { return oKhung.innerHTML + "\u0000" + oLoi.innerHTML; }
     function dung() {
@@ -166,24 +171,71 @@
     function chay() {
       btn.innerHTML = mhIco("pause", 14) + " Tạm dừng";
       btn.classList.add("dang");
+      if (tocdo) NHIP = parseInt(tocdo.value, 10) || 1000;
+      if (hen) clearInterval(hen);
       hen = setInterval(function () {
-        /* Đổi bài là trang bị dựng lại, node này rời khỏi DOM. Không kiểm thì bộ
-           đếm chạy mãi và bấm vào phần tử đã biến mất. */
         if (!node.isConnected) { clearInterval(hen); hen = null; return; }
         var truoc = anh();
+        luuSnapshot();
         tien.click();
         if (anh() === truoc) dung();   // không còn gì đổi -> hết bước
       }, NHIP);
     }
 
+    if (tocdo) {
+      tocdo.onchange = function () {
+        NHIP = parseInt(tocdo.value, 10) || 1000;
+        if (hen) chay(); // Đang tự chạy thì đổi nhịp ngay
+      };
+    }
+
     btn.onclick = function () { if (hen) dung(); else chay(); };
+
+    // Nút Lùi 1 bước (Backward)
+    if (lui) {
+      lui.onclick = function () {
+        dung();
+        if (LICH_SU.length > 1) {
+          LICH_SU.pop(); // Bỏ trạng thái hiện tại
+          var prevSnap = LICH_SU[LICH_SU.length - 1];
+          if (prevSnap && oKhung && oLoi) {
+            oKhung.innerHTML = prevSnap.khungHtml;
+            oLoi.innerHTML = prevSnap.loiHtml;
+          }
+        }
+        lui.disabled = LICH_SU.length <= 1;
+      };
+    }
 
     /* Học sinh bấm tay hoặc gõ lại dữ liệu thì dừng tự chạy, kẻo hai bên tranh
        nhau. isTrusted phân biệt cú bấm THẬT với cú tien.click() do bộ đếm gọi. */
-    tien.addEventListener("click", function (e) { if (e.isTrusted) dung(); });
-    if (lai) lai.addEventListener("click", dung);
+    tien.addEventListener("click", function (e) {
+      if (e.isTrusted) {
+        dung();
+        luuSnapshot();
+      }
+    });
+
+    if (lai) {
+      lai.addEventListener("click", function () {
+        dung();
+        if (LICH_SU.length > 0) {
+          var firstSnap = LICH_SU[0];
+          LICH_SU = [firstSnap];
+          if (oKhung && oLoi) {
+            oKhung.innerHTML = firstSnap.khungHtml;
+            oLoi.innerHTML = firstSnap.loiHtml;
+          }
+        }
+        if (lui) lui.disabled = true;
+      });
+    }
+
     node.querySelectorAll(".mh-o-nhap").forEach(function (o) {
-      o.addEventListener("input", dung);
+      o.addEventListener("input", function () {
+        dung();
+        setTimeout(function () { LICH_SU = []; luuSnapshot(); }, 50);
+      });
     });
   }
 
